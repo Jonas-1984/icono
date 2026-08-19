@@ -1,0 +1,56 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="Colors.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="{StaticResource WindowBackgroundColor}" />
+    <SolidColorBrush x:Key="PanelBackgroundBrush" Color="{StaticResource PanelBackgroundColor}" />
+    <SolidColorBrush x:Key="ToolbarBackgroundBrush" Color="{StaticResource ToolbarBackgroundColor}" />
+    <SolidColorBrush x:Key="CanvasSurroundBrush" Color="{StaticResource CanvasSurroundColor}" />
+    <SolidColorBrush x:Key="BorderLineBrush" Color="{StaticResource BorderLineColor}" />
+    <SolidColorBrush x:Key="ForegroundTextBrush" Color="{StaticResource ForegroundTextColor}" />
+    <SolidColorBrush x:Key="MutedTextBrush" Color="{StaticResource MutedTextColor}" />
+
+    <!-- Glossy blue: vertical light-to-dark sweep simulates a glass/gloss highlight -->
+    <LinearGradientBrush x:Key="GlossyBlueBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="{StaticResource AccentBlueLightColor}" Offset="0.0" />
+        <GradientStop Color="{StaticResource AccentBlueMidColor}" Offset="0.45" />
+        <GradientStop Color="{StaticResource AccentBlueDarkColor}" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="GlossyBlueBrushHorizontal" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="{StaticResource AccentBlueLightColor}" Offset="0.0" />
+        <GradientStop Color="{StaticResource AccentBlueMidColor}" Offset="0.45" />
+        <GradientStop Color="{StaticResource AccentBlueDarkColor}" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <!-- Translucent specular overlay for pressed/hover "glass" look -->
+    <LinearGradientBrush x:Key="GlossHighlightOverlayBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#55FFFFFF" Offset="0.0" />
+        <GradientStop Color="#00FFFFFF" Offset="0.55" />
+    </LinearGradientBrush>
+
+    <SolidColorBrush x:Key="AccentBlueMidBrush" Color="{StaticResource AccentBlueMidColor}" />
+    <SolidColorBrush x:Key="AccentBlueDarkBrush" Color="{StaticResource AccentBlueDarkColor}" />
+
+    <!-- Thin window-edge hairline: white-blue glossy sweep -->
+    <LinearGradientBrush x:Key="WindowEdgeBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="{StaticResource AccentBlueHighlightColor}" Offset="0.0" />
+        <GradientStop Color="{StaticResource AccentBlueLightColor}" Offset="0.5" />
+        <GradientStop Color="{StaticResource AccentBlueMidColor}" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <!-- Rainbow hue strip for the color picker -->
+    <LinearGradientBrush x:Key="RainbowHueBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#FFFF0000" Offset="0.0" />
+        <GradientStop Color="#FFFF9900" Offset="0.1667" />
+        <GradientStop Color="#FFFFFF00" Offset="0.3333" />
+        <GradientStop Color="#FF00FF00" Offset="0.5" />
+        <GradientStop Color="#FF00FFFF" Offset="0.6667" />
+        <GradientStop Color="#FF0000FF" Offset="0.8333" />
+        <GradientStop Color="#FFFF00FF" Offset="1.0" />
+    </LinearGradientBrush>
+
+</ResourceDictionary>

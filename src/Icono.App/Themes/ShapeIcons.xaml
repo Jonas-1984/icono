@@ -1,0 +1,37 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Tool icons, 24x24 nominal box, line-art (consumed with Stroke, no Fill) -->
+    <PathGeometry x:Key="SelectToolGeometry" Figures="M4,3 L4,19 L9,15 L13,21 L16,19 L12,13 L18,13 Z" />
+    <PathGeometry x:Key="PanZoomToolGeometry" Figures="M12,3 L12,21 M3,12 L21,12 M8,7 L12,3 L16,7 M8,17 L12,21 L16,17" />
+
+    <PathGeometry x:Key="RectangleToolGeometry" Figures="M3,5 L21,5 L21,19 L3,19 Z" />
+    <RectangleGeometry x:Key="RoundedRectangleToolGeometry" Rect="3,5,18,14" RadiusX="4" RadiusY="4" />
+    <EllipseGeometry x:Key="EllipseToolGeometry" Center="12,12" RadiusX="9" RadiusY="7" />
+    <PathGeometry x:Key="TriangleToolGeometry" Figures="M12,4 L21,20 L3,20 Z" />
+    <PathGeometry x:Key="DiamondToolGeometry" Figures="M12,3 L21,12 L12,21 L3,12 Z" />
+    <PathGeometry x:Key="PentagonToolGeometry" Figures="M12,3 L21,9.5 L17.5,20 L6.5,20 L3,9.5 Z" />
+    <PathGeometry x:Key="HexagonToolGeometry" Figures="M8,3 L16,3 L21,12 L16,21 L8,21 L3,12 Z" />
+    <PathGeometry x:Key="StarToolGeometry"
+                  Figures="M12,1 L15.09,8.26 L22.9,9.27 L17,14.97 L18.18,22.72 L12,18.9 L5.82,22.72 L7,14.97 L1.09,9.27 L8.91,8.26 Z" />
+    <PathGeometry x:Key="ParallelogramToolGeometry" Figures="M8,6 L22,6 L16,18 L2,18 Z" />
+    <PathGeometry x:Key="TrapezoidToolGeometry" Figures="M8,6 L16,6 L21,18 L3,18 Z" />
+    <PathGeometry x:Key="CrossToolGeometry"
+                  Figures="M9,3 L15,3 L15,9 L21,9 L21,15 L15,15 L15,21 L9,21 L9,15 L3,15 L3,9 L9,9 Z" />
+    <PathGeometry x:Key="HalfCircleToolGeometry" Figures="M3,15 A9,9 0 0 1 21,15 Z" />
+    <GeometryGroup x:Key="RingToolGeometry">
+        <EllipseGeometry Center="12,12" RadiusX="9" RadiusY="9" />
+        <EllipseGeometry Center="12,12" RadiusX="4" RadiusY="4" />
+    </GeometryGroup>
+    <PathGeometry x:Key="SpeechBubbleToolGeometry" Figures="M3,4 L21,4 L21,16 L10,16 L6,21 L6,16 L3,16 Z" />
+
+    <PathGeometry x:Key="LineToolGeometry" Figures="M4,20 L20,4" />
+    <PathGeometry x:Key="ArrowToolGeometry" Figures="M3,12 L18,12 M13,6 L19,12 L13,18" />
+    <PathGeometry x:Key="DoubleArrowToolGeometry"
+                  Figures="M2,12 L9,6 M2,12 L9,18 M2,12 L22,12 M22,12 L15,6 M22,12 L15,18" />
+
+    <PathGeometry x:Key="TextToolGeometry" Figures="M4,5 L20,5 M12,5 L12,20" />
+    <PathGeometry x:Key="BorderToolGeometry"
+                  Figures="M2,7 L2,2 L7,2 M17,2 L22,2 L22,7 M22,17 L22,22 L17,22 M7,22 L2,22 L2,17" />
+
+</ResourceDictionary>
