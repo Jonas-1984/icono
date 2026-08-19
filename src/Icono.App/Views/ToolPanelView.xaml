@@ -6,70 +6,80 @@
             <StackPanel>
                 <TextBlock Text="Tools" Style="{StaticResource PanelHeaderTextStyle}" />
 
-                <WrapPanel Margin="6,0">
-                    <RadioButton GroupName="ToolSelection" IsChecked="True"
-                                 Style="{StaticResource ShapeIconRadioButtonStyle}"
-                                 Tag="{StaticResource SelectToolGeometry}" ToolTip="Select" />
-                    <RadioButton GroupName="ToolSelection"
-                                 Style="{StaticResource ShapeIconRadioButtonStyle}"
-                                 Tag="{StaticResource PanZoomToolGeometry}" ToolTip="Pan / Zoom" />
-                </WrapPanel>
+                <Border Style="{StaticResource CardBorderStyle}">
+                    <WrapPanel Margin="6,0">
+                        <RadioButton GroupName="ToolSelection" IsChecked="True" Checked="ToolRadioButton_OnChecked"
+                                     Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                     Tag="{StaticResource SelectToolGeometry}" CommandParameter="Select" ToolTip="Select" />
+                        <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked"
+                                     Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                     Tag="{StaticResource PanZoomToolGeometry}" CommandParameter="PanZoom" ToolTip="Pan / Zoom" />
+                    </WrapPanel>
+                </Border>
 
-                <Separator Margin="10,8" />
+                <Border Style="{StaticResource CardBorderStyle}">
+                    <StackPanel>
+                        <TextBlock Text="SHAPES" Style="{StaticResource CardHeaderTextStyle}" />
+                        <WrapPanel Margin="6,0">
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource RectangleToolGeometry}" CommandParameter="Rectangle" ToolTip="Rectangle" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource RoundedRectangleToolGeometry}" CommandParameter="RoundedRectangle" ToolTip="Rounded Rectangle" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource EllipseToolGeometry}" CommandParameter="Ellipse" ToolTip="Ellipse" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource TriangleToolGeometry}" CommandParameter="Triangle" ToolTip="Triangle" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource DiamondToolGeometry}" CommandParameter="Diamond" ToolTip="Diamond" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource PentagonToolGeometry}" CommandParameter="Pentagon" ToolTip="Pentagon" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource HexagonToolGeometry}" CommandParameter="Hexagon" ToolTip="Hexagon" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource StarToolGeometry}" CommandParameter="Star" ToolTip="Star" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource ParallelogramToolGeometry}" CommandParameter="Parallelogram" ToolTip="Parallelogram" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource TrapezoidToolGeometry}" CommandParameter="Trapezoid" ToolTip="Trapezoid" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource CrossToolGeometry}" CommandParameter="Cross" ToolTip="Cross" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource HalfCircleToolGeometry}" CommandParameter="HalfCircle" ToolTip="Half Circle" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource RingToolGeometry}" CommandParameter="Ring" ToolTip="Ring" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource SpeechBubbleToolGeometry}" CommandParameter="SpeechBubble" ToolTip="Speech Bubble" />
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
 
-                <TextBlock Text="SHAPES" Style="{StaticResource PanelLabelTextStyle}" />
-                <WrapPanel Margin="6,0">
-                    <RadioButton GroupName="ToolSelection" Style="{StaticResource ShapeIconRadioButtonStyle}"
-                                 Tag="{StaticResource RectangleToolGeometry}" ToolTip="Rectangle" />
-                    <RadioButton GroupName="ToolSelection" Style="{StaticResource ShapeIconRadioButtonStyle}"
-                                 Tag="{StaticResource RoundedRectangleToolGeometry}" ToolTip="Rounded Rectangle" />
-                    <RadioButton GroupName="ToolSelection" Style="{StaticResource ShapeIconRadioButtonStyle}"
-                                 Tag="{StaticResource EllipseToolGeometry}" ToolTip="Ellipse" />
-                    <RadioButton GroupName="ToolSelection" Style="{StaticResource ShapeIconRadioButtonStyle}"
-                                 Tag="{StaticResource TriangleToolGeometry}" ToolTip="Triangle" />
-                    <RadioButton GroupName="ToolSelection" Style="{StaticResource ShapeIconRadioButtonStyle}"
-                                 Tag="{StaticResource DiamondToolGeometry}" ToolTip="Diamond" />
-                    <RadioButton GroupName="ToolSelection" Style="{StaticResource ShapeIconRadioButtonStyle}"
-                                 Tag="{StaticResource PentagonToolGeometry}" ToolTip="Pentagon" />
-                    <RadioButton GroupName="ToolSelection" Style="{StaticResource ShapeIconRadioButtonStyle}"
-                                 Tag="{StaticResource HexagonToolGeometry}" ToolTip="Hexagon" />
-                    <RadioButton GroupName="ToolSelection" Style="{StaticResource ShapeIconRadioButtonStyle}"
-                                 Tag="{StaticResource StarToolGeometry}" ToolTip="Star" />
-                    <RadioButton GroupName="ToolSelection" Style="{StaticResource ShapeIconRadioButtonStyle}"
-                                 Tag="{StaticResource ParallelogramToolGeometry}" ToolTip="Parallelogram" />
-                    <RadioButton GroupName="ToolSelection" Style="{StaticResource ShapeIconRadioButtonStyle}"
-                                 Tag="{StaticResource TrapezoidToolGeometry}" ToolTip="Trapezoid" />
-                    <RadioButton GroupName="ToolSelection" Style="{StaticResource ShapeIconRadioButtonStyle}"
-                                 Tag="{StaticResource CrossToolGeometry}" ToolTip="Cross" />
-                    <RadioButton GroupName="ToolSelection" Style="{StaticResource ShapeIconRadioButtonStyle}"
-                                 Tag="{StaticResource HalfCircleToolGeometry}" ToolTip="Half Circle" />
-                    <RadioButton GroupName="ToolSelection" Style="{StaticResource ShapeIconRadioButtonStyle}"
-                                 Tag="{StaticResource RingToolGeometry}" ToolTip="Ring" />
-                    <RadioButton GroupName="ToolSelection" Style="{StaticResource ShapeIconRadioButtonStyle}"
-                                 Tag="{StaticResource SpeechBubbleToolGeometry}" ToolTip="Speech Bubble" />
-                </WrapPanel>
+                <Border Style="{StaticResource CardBorderStyle}">
+                    <StackPanel>
+                        <TextBlock Text="LINES &amp; ARROWS" Style="{StaticResource CardHeaderTextStyle}" />
+                        <WrapPanel Margin="6,0">
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource LineToolGeometry}" CommandParameter="Line" ToolTip="Line" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource ArrowToolGeometry}" CommandParameter="Arrow" ToolTip="Arrow" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource DoubleArrowToolGeometry}" CommandParameter="DoubleArrow" ToolTip="Double Arrow" />
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
 
-                <Separator Margin="10,8" />
-
-                <TextBlock Text="LINES &amp; ARROWS" Style="{StaticResource PanelLabelTextStyle}" />
-                <WrapPanel Margin="6,0">
-                    <RadioButton GroupName="ToolSelection" Style="{StaticResource ShapeIconRadioButtonStyle}"
-                                 Tag="{StaticResource LineToolGeometry}" ToolTip="Line" />
-                    <RadioButton GroupName="ToolSelection" Style="{StaticResource ShapeIconRadioButtonStyle}"
-                                 Tag="{StaticResource ArrowToolGeometry}" ToolTip="Arrow" />
-                    <RadioButton GroupName="ToolSelection" Style="{StaticResource ShapeIconRadioButtonStyle}"
-                                 Tag="{StaticResource DoubleArrowToolGeometry}" ToolTip="Double Arrow" />
-                </WrapPanel>
-
-                <Separator Margin="10,8" />
-
-                <TextBlock Text="OTHER" Style="{StaticResource PanelLabelTextStyle}" />
-                <WrapPanel Margin="6,0">
-                    <RadioButton GroupName="ToolSelection" Style="{StaticResource ShapeIconRadioButtonStyle}"
-                                 Tag="{StaticResource TextToolGeometry}" ToolTip="Text" />
-                    <RadioButton GroupName="ToolSelection" Style="{StaticResource ShapeIconRadioButtonStyle}"
-                                 Tag="{StaticResource BorderToolGeometry}" ToolTip="Border" />
-                </WrapPanel>
+                <Border Style="{StaticResource CardBorderStyle}">
+                    <StackPanel>
+                        <TextBlock Text="OTHER" Style="{StaticResource CardHeaderTextStyle}" />
+                        <WrapPanel Margin="6,0">
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource TextToolGeometry}" CommandParameter="Text" ToolTip="Text" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource BorderToolGeometry}" CommandParameter="Border" ToolTip="Border" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource PaintBucketToolGeometry}" CommandParameter="PaintBucket" ToolTip="Paint Bucket" />
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
             </StackPanel>
         </ScrollViewer>
     </Border>

@@ -33,5 +33,7 @@
     <PathGeometry x:Key="TextToolGeometry" Figures="M4,5 L20,5 M12,5 L12,20" />
     <PathGeometry x:Key="BorderToolGeometry"
                   Figures="M2,7 L2,2 L7,2 M17,2 L22,2 L22,7 M22,17 L22,22 L17,22 M7,22 L2,22 L2,17" />
+    <PathGeometry x:Key="PaintBucketToolGeometry"
+                  Figures="M4,11 L12,4 L20,11 L16,16 L8,16 Z M11,16 L11,20 L14,22 L17,20 L17,16" />
 
 </ResourceDictionary>

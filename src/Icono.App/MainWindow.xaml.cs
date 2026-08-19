@@ -1,16 +1,32 @@
+using System.ComponentModel;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using Icono.App.State;
+using Icono.Core;
 
 namespace Icono.App;
 
 public partial class MainWindow : Window
 {
+    private readonly EditorContext _context = new();
+
     public MainWindow()
     {
         InitializeComponent();
 
+        _context.Document.Layers.Add(new Layer { Name = "Layer 1" });
+        _context.SelectedLayer = _context.Document.Layers[0];
+
+        ToolPanel.Context = _context;
+        CanvasHost.Context = _context;
+        PropertiesPanel.Context = _context;
+
         StateChanged += MainWindow_OnStateChanged;
+        Closing += MainWindow_OnClosing;
+        PreviewKeyDown += MainWindow_OnPreviewKeyDown;
     }
 
     protected override void OnSourceInitialized(EventArgs e)
@@ -37,6 +53,53 @@ public partial class MainWindow : Window
     {
         var isMaximized = WindowState == WindowState.Maximized;
         RootChrome.CornerRadius = new CornerRadius(isMaximized ? 0 : 8);
+    }
+
+    private void MainWindow_OnClosing(object? sender, CancelEventArgs e)
+    {
+        var result = MessageBox.Show(
+            this,
+            "Are you sure you want to close the app?",
+            "icono",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question,
+            MessageBoxResult.No);
+
+        if (result != MessageBoxResult.Yes)
+        {
+            e.Cancel = true;
+        }
+    }
+
+    private void MainWindow_OnPreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Delete)
+        {
+            return;
+        }
+
+        if (Keyboard.FocusedElement is TextBox)
+        {
+            // A layer name, size, or hex field is being edited — let Delete edit text, not shapes.
+            return;
+        }
+
+        if (_context.SelectedShapes.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var shape in _context.SelectedShapes.ToList())
+        {
+            foreach (var layer in _context.Document.Layers)
+            {
+                layer.Shapes.Remove(shape);
+            }
+        }
+
+        _context.SelectedShapes.Clear();
+        _context.RequestRedraw();
+        e.Handled = true;
     }
 
     private void ExitMenuItem_OnClick(object sender, RoutedEventArgs e)

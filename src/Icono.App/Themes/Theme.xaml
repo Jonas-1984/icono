@@ -9,5 +9,6 @@
         <ResourceDictionary Source="SliderStyle.xaml" />
         <ResourceDictionary Source="ShapeIcons.xaml" />
         <ResourceDictionary Source="ToolIconStyles.xaml" />
+        <ResourceDictionary Source="CardStyle.xaml" />
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

@@ -121,12 +121,12 @@
                 <ColumnDefinition Width="260" />
             </Grid.ColumnDefinitions>
 
-            <views:ToolPanelView Grid.Column="0" />
+            <views:ToolPanelView Grid.Column="0" x:Name="ToolPanel" />
             <GridSplitter Grid.Column="1" Style="{StaticResource GlossyBlueSplitterStyle}" />
             <views:CanvasHostView Grid.Column="2" x:Name="CanvasHost"
                                    Zoom="{Binding ElementName=StatusBar, Path=ZoomValue}" />
             <GridSplitter Grid.Column="3" Style="{StaticResource GlossyBlueSplitterStyle}" />
-            <views:PropertiesPanelView Grid.Column="4" />
+            <views:PropertiesPanelView Grid.Column="4" x:Name="PropertiesPanel" />
         </Grid>
 
         <views:StatusBarView Grid.Row="4" x:Name="StatusBar" />
