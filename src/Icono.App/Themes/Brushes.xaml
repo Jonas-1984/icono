@@ -32,6 +32,17 @@
         <GradientStop Color="#00FFFFFF" Offset="0.55" />
     </LinearGradientBrush>
 
+    <!-- Soft, translucent frosted-blue glow for hover/selected chrome (tool icons, buttons,
+         canvas selection accent) — replaces flat, fully-opaque saturated fills so the UI reads
+         as a gentle glass tint rather than a hard, "stark white" highlight. -->
+    <RadialGradientBrush x:Key="SoftAccentGlowBrush" Center="0.5,0.4" RadiusX="0.9" RadiusY="0.9">
+        <GradientStop Color="#8C6FB1FF" Offset="0.0" />
+        <GradientStop Color="#5A2E86FF" Offset="0.55" />
+        <GradientStop Color="#332E86FF" Offset="1.0" />
+    </RadialGradientBrush>
+
+    <SolidColorBrush x:Key="SoftAccentHoverBrush" Color="#2A6FB1FF" />
+
     <SolidColorBrush x:Key="AccentBlueMidBrush" Color="{StaticResource AccentBlueMidColor}" />
     <SolidColorBrush x:Key="AccentBlueDarkBrush" Color="{StaticResource AccentBlueDarkColor}" />
 

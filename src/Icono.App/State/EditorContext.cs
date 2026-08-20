@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
+using Icono.App.State.Undo;
 using Icono.Core;
+using Icono.Rendering;
 
 namespace Icono.App.State;
 
@@ -9,6 +11,7 @@ public enum ActiveTool
     PanZoom,
     Shape,
     PaintBucket,
+    PathDraw,
 }
 
 /// <summary>
@@ -21,9 +24,14 @@ public sealed class EditorContext : ObservableObject
     private ActiveTool _activeTool = ActiveTool.Select;
     private ShapeKind _selectedShapeKind = ShapeKind.Rectangle;
     private Layer? _selectedLayer;
-    private ArgbColor _currentFillColor = ArgbColor.FromRgb(0x2E, 0x86, 0xFF);
+    private ArgbColor _currentFillColor = ArgbColor.FromRgb(0x9E, 0xD9, 0xD1);
+    private bool _showGrid;
+    private bool _snapToGrid;
+    private double _gridSize = 8;
 
     public Document Document { get; } = new();
+
+    public UndoManager UndoManager { get; } = new();
 
     public ActiveTool ActiveTool { get => _activeTool; set => SetField(ref _activeTool, value); }
 
@@ -51,6 +59,16 @@ public sealed class EditorContext : ObservableObject
 
     public ArgbColor CurrentFillColor { get => _currentFillColor; set => SetField(ref _currentFillColor, value); }
 
+    /// <summary>Holds clones of the last Cut/Copy selection, ready for Paste. Plain in-memory
+    /// list (no OS clipboard integration) — scoped to this document/session only.</summary>
+    public List<Shape> Clipboard { get; } = new();
+
+    public bool ShowGrid { get => _showGrid; set => SetField(ref _showGrid, value); }
+
+    public bool SnapToGrid { get => _snapToGrid; set => SetField(ref _snapToGrid, value); }
+
+    public double GridSize { get => _gridSize; set => SetField(ref _gridSize, value); }
+
     public event EventHandler? Invalidated;
 
     public EditorContext()
@@ -59,4 +77,330 @@ public sealed class EditorContext : ObservableObject
     }
 
     public void RequestRedraw() => Invalidated?.Invoke(this, EventArgs.Empty);
+
+    public void Undo()
+    {
+        UndoManager.Undo();
+        RequestRedraw();
+    }
+
+    public void Redo()
+    {
+        UndoManager.Redo();
+        RequestRedraw();
+    }
+
+    /// <summary>Clones the current selection into <see cref="Clipboard"/>, then deletes the
+    /// originals (skipping any that are locked — see <see cref="DeleteSelection"/>).</summary>
+    public void CutSelection()
+    {
+        if (SelectedShapes.Count == 0)
+        {
+            return;
+        }
+
+        Clipboard.Clear();
+        Clipboard.AddRange(SelectedShapes.Where(s => !s.Locked).Select(CloneShape));
+        DeleteSelection();
+    }
+
+    /// <summary>Clones the current selection into the clipboard without touching the originals.</summary>
+    public void CopySelection()
+    {
+        if (SelectedShapes.Count == 0)
+        {
+            return;
+        }
+
+        Clipboard.Clear();
+        Clipboard.AddRange(SelectedShapes.Select(CloneShape));
+    }
+
+    /// <summary>Inserts fresh clones of the clipboard contents, offset slightly so a paste never
+    /// sits exactly on top of the shapes it came from.</summary>
+    public void PasteClipboard()
+    {
+        if (Clipboard.Count == 0)
+        {
+            return;
+        }
+
+        var layer = SelectedLayer ?? Document.Layers.FirstOrDefault();
+        if (layer is null)
+        {
+            return;
+        }
+
+        var pasted = Clipboard.Select(CloneShape).ToList();
+        foreach (var shape in pasted)
+        {
+            shape.X += 12;
+            shape.Y += 12;
+        }
+
+        var undoActions = new List<UndoableAction>();
+        foreach (var shape in pasted)
+        {
+            layer.Shapes.Insert(0, shape);
+            undoActions.Add(UndoableAction.ForInsert(layer.Shapes, shape, 0));
+        }
+
+        UndoManager.Push(UndoableAction.Combine(undoActions));
+
+        SelectedShapes.Clear();
+        foreach (var shape in pasted)
+        {
+            SelectedShapes.Add(shape);
+        }
+
+        SelectedLayer = layer;
+        RequestRedraw();
+    }
+
+    /// <summary>Removes every selected shape that isn't locked (and isn't in a locked layer) —
+    /// locked shapes stay selected so the user notices nothing happened and can unlock first.</summary>
+    public void DeleteSelection()
+    {
+        if (SelectedShapes.Count == 0)
+        {
+            return;
+        }
+
+        var removals = new List<(ObservableCollection<Shape> Collection, Shape Shape, int Index)>();
+
+        foreach (var shape in SelectedShapes.ToList())
+        {
+            foreach (var layer in Document.Layers)
+            {
+                if (shape.Locked || layer.Locked || !layer.Shapes.Contains(shape))
+                {
+                    continue;
+                }
+
+                var index = layer.Shapes.IndexOf(shape);
+                removals.Add((layer.Shapes, shape, index));
+                layer.Shapes.RemoveAt(index);
+                break;
+            }
+        }
+
+        if (removals.Count > 0)
+        {
+            UndoManager.Push(UndoableAction.ForRemove(removals));
+        }
+
+        foreach (var (_, shape, _) in removals)
+        {
+            SelectedShapes.Remove(shape);
+        }
+
+        RequestRedraw();
+    }
+
+    /// <summary>Assigns a fresh shared GroupId to every selected shape, so clicking any one of
+    /// them afterward re-selects the whole group.</summary>
+    public void GroupSelection()
+    {
+        if (SelectedShapes.Count < 2)
+        {
+            return;
+        }
+
+        var shapes = SelectedShapes.ToList();
+        var before = shapes.Select(ShapeSnapshot.Capture).ToList();
+
+        var groupId = Guid.NewGuid();
+        foreach (var shape in shapes)
+        {
+            shape.GroupId = groupId;
+        }
+
+        var after = shapes.Select(ShapeSnapshot.Capture).ToList();
+        UndoManager.Push(UndoableAction.ForPropertyEdit(shapes, before, after));
+        RequestRedraw();
+    }
+
+    /// <summary>Clears GroupId on every currently selected shape.</summary>
+    public void UngroupSelection()
+    {
+        var shapes = SelectedShapes.Where(s => s.GroupId is not null).ToList();
+        if (shapes.Count == 0)
+        {
+            return;
+        }
+
+        var before = shapes.Select(ShapeSnapshot.Capture).ToList();
+
+        foreach (var shape in shapes)
+        {
+            shape.GroupId = null;
+        }
+
+        var after = shapes.Select(ShapeSnapshot.Capture).ToList();
+        UndoManager.Push(UndoableAction.ForPropertyEdit(shapes, before, after));
+        RequestRedraw();
+    }
+
+    /// <summary>Sets <see cref="Shape.Locked"/> on every currently selected shape.</summary>
+    public void SetSelectionLocked(bool locked)
+    {
+        if (SelectedShapes.Count == 0)
+        {
+            return;
+        }
+
+        var shapes = SelectedShapes.ToList();
+        var before = shapes.Select(ShapeSnapshot.Capture).ToList();
+
+        foreach (var shape in shapes)
+        {
+            shape.Locked = locked;
+        }
+
+        var after = shapes.Select(ShapeSnapshot.Capture).ToList();
+        UndoManager.Push(UndoableAction.ForPropertyEdit(shapes, before, after));
+        RequestRedraw();
+    }
+
+    /// <summary>Moves every selected (unlocked) shape to the front (index 0) of its own layer.</summary>
+    public void BringSelectionToFront() => ReorderSelection(toFront: true);
+
+    /// <summary>Moves every selected (unlocked) shape to the back (last index) of its own layer.</summary>
+    public void SendSelectionToBack() => ReorderSelection(toFront: false);
+
+    private void ReorderSelection(bool toFront)
+    {
+        var moveActions = new List<UndoableAction>();
+
+        foreach (var shape in SelectedShapes.ToList())
+        {
+            if (shape.Locked)
+            {
+                continue;
+            }
+
+            var layer = Document.Layers.FirstOrDefault(l => !l.Locked && l.Shapes.Contains(shape));
+            if (layer is null)
+            {
+                continue;
+            }
+
+            var fromIndex = layer.Shapes.IndexOf(shape);
+            var toIndex = toFront ? 0 : layer.Shapes.Count - 1;
+            if (fromIndex == toIndex)
+            {
+                continue;
+            }
+
+            layer.Shapes.Move(fromIndex, toIndex);
+            moveActions.Add(UndoableAction.ForMove(layer.Shapes, fromIndex, toIndex));
+        }
+
+        if (moveActions.Count > 0)
+        {
+            UndoManager.Push(UndoableAction.Combine(moveActions));
+            RequestRedraw();
+        }
+    }
+
+    private static Shape CloneShape(Shape source)
+    {
+        var clone = new Shape { Kind = source.Kind };
+        ShapeSnapshot.Capture(source).ApplyTo(clone);
+        return clone;
+    }
+
+    /// <summary>Merges 2+ selected shapes (all in the same layer) into one combined shape, using
+    /// the union of their outlines (overlap included).</summary>
+    public void UnionSelection()
+    {
+        var shapes = SelectedShapes.ToList();
+        if (shapes.Count < 2)
+        {
+            return;
+        }
+
+        var layer = Document.Layers.FirstOrDefault(l => shapes.All(l.Shapes.Contains));
+        if (layer is null)
+        {
+            return;
+        }
+
+        // Front-most first (index 0 = front-most) so the combined shape's colors come from
+        // whichever shape is visually on top.
+        var ordered = shapes.OrderBy(s => layer.Shapes.IndexOf(s)).ToList();
+        var combined = ShapeCombiner.Union(ordered);
+        if (combined is not null)
+        {
+            ReplaceWithCombinedShape(layer, ordered, combined);
+        }
+    }
+
+    /// <summary>Cuts away the part of the second selected shape ("target") covered by the first
+    /// ("cutter") — selection order picks the roles, not automatic z-order, so the user controls
+    /// which shape actually gets trimmed.</summary>
+    public void TrimSelection()
+    {
+        var shapes = SelectedShapes.ToList();
+        if (shapes.Count != 2)
+        {
+            return;
+        }
+
+        var layer = Document.Layers.FirstOrDefault(l => shapes.All(l.Shapes.Contains));
+        if (layer is null)
+        {
+            return;
+        }
+
+        var front = shapes[0];
+        var back = shapes[1];
+
+        var trimmed = ShapeCombiner.Trim(front, back);
+        if (trimmed is not null)
+        {
+            ReplaceWithCombinedShape(layer, [front, back], trimmed);
+        }
+    }
+
+    private void ReplaceWithCombinedShape(Layer layer, IReadOnlyList<Shape> sources, Shape combined)
+    {
+        var removals = sources.Select(s => (layer.Shapes, s, layer.Shapes.IndexOf(s))).ToList();
+        foreach (var (collection, shape, _) in removals)
+        {
+            collection.Remove(shape);
+        }
+
+        layer.Shapes.Insert(0, combined);
+
+        UndoManager.Push(UndoableAction.Combine(
+            [UndoableAction.ForRemove(removals), UndoableAction.ForInsert(layer.Shapes, combined, 0)]));
+
+        SelectedShapes.Clear();
+        SelectedShapes.Add(combined);
+        SelectedLayer = layer;
+        RequestRedraw();
+    }
+
+    /// <summary>Converts a fixed-geometry shape (Star, Cross, etc.) into a freeform points-based
+    /// shape so every vertex becomes independently draggable via the existing point-edit handles.
+    /// No-op if the kind doesn't support it (see <see cref="ShapeGeometryFactory.SupportsPointEditing"/>)
+    /// or it's already points-based.</summary>
+    public void ConvertToEditablePoints(Shape shape)
+    {
+        if (shape.Points is not null || !ShapeGeometryFactory.SupportsPointEditing(shape.Kind))
+        {
+            return;
+        }
+
+        var before = ShapeSnapshot.Capture(shape);
+
+        // Already shape-local (origin = this shape's own X,Y) — ExtractEditablePoints mirrors
+        // BuildLocal's un-offset local template, matching Shape.Points' documented convention.
+        shape.Points = ShapeGeometryFactory.ExtractEditablePoints(shape);
+
+        var after = ShapeSnapshot.Capture(shape);
+        UndoManager.Push(UndoableAction.ForPropertyEdit([shape], [before], [after]));
+        RequestRedraw();
+    }
 }

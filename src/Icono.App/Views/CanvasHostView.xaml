@@ -16,5 +16,6 @@
             </Border.RenderTransform>
             <skia:SKElement x:Name="SkiaCanvas" PaintSurface="SkiaCanvas_OnPaintSurface" />
         </Border>
+        <Canvas x:Name="TextEditOverlay" IsHitTestVisible="True" />
     </Grid>
 </UserControl>

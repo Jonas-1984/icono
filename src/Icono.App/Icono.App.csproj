@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Icono.Rendering\Icono.Rendering.csproj" />
     <ProjectReference Include="..\Icono.Core\Icono.Core.csproj" />
+    <ProjectReference Include="..\Icono.IO\Icono.IO.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -11,6 +12,7 @@
 
   <ItemGroup>
     <Resource Include="Assets\icono.ico" />
+    <Resource Include="Assets\Icons\*.ico" />
   </ItemGroup>
 
   <PropertyGroup>

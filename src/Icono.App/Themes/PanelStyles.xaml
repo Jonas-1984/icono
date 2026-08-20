@@ -4,6 +4,7 @@
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="Colors.xaml" />
         <ResourceDictionary Source="Brushes.xaml" />
+        <ResourceDictionary Source="ShapeIcons.xaml" />
     </ResourceDictionary.MergedDictionaries>
 
     <Style x:Key="SidePanelBorderStyle" TargetType="Border">
@@ -23,6 +24,28 @@
         <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}" />
         <Setter Property="FontSize" Value="11" />
         <Setter Property="Margin" Value="10,8,10,2" />
+    </Style>
+
+    <!-- Small collapse/expand chevron placed next to a card/section header; rotated in
+         code-behind (not a trigger) since the toggle state lives on the sibling content panel,
+         not on this Path itself. -->
+    <Style x:Key="CardChevronPathStyle" TargetType="Path">
+        <Setter Property="Data" Value="{StaticResource ChevronDownGeometry}" />
+        <Setter Property="Stroke" Value="{StaticResource MutedTextBrush}" />
+        <Setter Property="StrokeThickness" Value="1.4" />
+        <Setter Property="StrokeStartLineCap" Value="Round" />
+        <Setter Property="StrokeEndLineCap" Value="Round" />
+        <Setter Property="StrokeLineJoin" Value="Round" />
+        <Setter Property="Width" Value="10" />
+        <Setter Property="Height" Value="10" />
+        <Setter Property="Stretch" Value="Uniform" />
+        <Setter Property="Margin" Value="0,10,10,0" />
+        <Setter Property="VerticalAlignment" Value="Top" />
+        <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
+    </Style>
+
+    <Style x:Key="CollapsibleCardHeaderStyle" TargetType="Grid">
+        <Setter Property="Cursor" Value="Hand" />
     </Style>
 
     <Style x:Key="StatusBarBorderStyle" TargetType="Border">

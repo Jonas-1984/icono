@@ -8,6 +8,7 @@
         <ResourceDictionary Source="PanelStyles.xaml" />
         <ResourceDictionary Source="SliderStyle.xaml" />
         <ResourceDictionary Source="ShapeIcons.xaml" />
+        <ResourceDictionary Source="ImageIcons.xaml" />
         <ResourceDictionary Source="ToolIconStyles.xaml" />
         <ResourceDictionary Source="CardStyle.xaml" />
     </ResourceDictionary.MergedDictionaries>

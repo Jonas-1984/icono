@@ -1,0 +1,33 @@
+<Window x:Class="Icono.App.Views.ImportSvgDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Import SVG" Width="520" Height="420"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource PanelBackgroundBrush}"
+        ResizeMode="CanResizeWithGrip">
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="SVG-Code einfügen" FontSize="14" FontWeight="Bold"
+                   Foreground="{StaticResource ForegroundTextBrush}" Margin="0,0,0,6" />
+        <TextBlock Grid.Row="1" Foreground="{StaticResource MutedTextBrush}" FontSize="11"
+                   TextWrapping="Wrap" Margin="0,0,0,10"
+                   Text="Ganzes &lt;svg&gt;-Markup, einzelne &lt;path&gt;-Elemente oder nur ein 'd'-Pfadwert — mehrere Pfade werden zu mehreren, zueinander ausgerichteten Shapes." />
+
+        <TextBox x:Name="CodeTextBox" Grid.Row="2"
+                 AcceptsReturn="True" AcceptsTab="True"
+                 TextWrapping="Wrap"
+                 VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                 FontFamily="Consolas" FontSize="12" />
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button Content="Abbrechen" Width="90" Margin="0,0,8,0" Click="CancelButton_OnClick" />
+            <Button Content="Importieren" Width="100" Click="ImportButton_OnClick" IsDefault="True" />
+        </StackPanel>
+    </Grid>
+</Window>

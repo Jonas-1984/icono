@@ -56,12 +56,12 @@
                 <MenuItem Header="Exit" Click="ExitMenuItem_OnClick" />
             </MenuItem>
             <MenuItem Header="Home">
-                <MenuItem Header="Undo" IsEnabled="False" />
-                <MenuItem Header="Redo" IsEnabled="False" />
+                <MenuItem Header="Undo" Click="UndoMenuItem_OnClick" InputGestureText="Ctrl+Z" />
+                <MenuItem Header="Redo" Click="RedoMenuItem_OnClick" InputGestureText="Ctrl+Y" />
                 <Separator />
-                <MenuItem Header="Cut" IsEnabled="False" />
-                <MenuItem Header="Copy" IsEnabled="False" />
-                <MenuItem Header="Paste" IsEnabled="False" />
+                <MenuItem Header="Cut" Click="CutMenuItem_OnClick" InputGestureText="Ctrl+X" />
+                <MenuItem Header="Copy" Click="CopyMenuItem_OnClick" InputGestureText="Ctrl+C" />
+                <MenuItem Header="Paste" Click="PasteMenuItem_OnClick" InputGestureText="Ctrl+V" />
                 <Separator />
                 <MenuItem Header="Zoom In" IsEnabled="False" />
                 <MenuItem Header="Zoom Out" IsEnabled="False" />
@@ -104,11 +104,60 @@
 
         <Border Grid.Row="2" Style="{StaticResource ToolBarBorderStyle}">
             <StackPanel Orientation="Horizontal">
-                <Button Content="New" Margin="2,0" IsEnabled="False" />
-                <Button Content="Open" Margin="2,0" IsEnabled="False" />
-                <Button Content="Save" Margin="2,0" IsEnabled="False" />
-                <Separator Width="1" Margin="6,2" />
-                <Button Content="Export" Margin="2,0" IsEnabled="False" />
+                <Button Content="New" Margin="3,0" IsEnabled="False" />
+                <Button Content="Open" Margin="3,0" IsEnabled="False" />
+                <Button Content="Save" Margin="3,0" IsEnabled="False" />
+                <Separator Width="1" Margin="6,0" />
+                <Button Margin="3,0" Click="UndoMenuItem_OnClick" ToolTip="Undo (Ctrl+Z)">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{StaticResource UndoIconImage}" Width="14" Height="14" Stretch="Uniform" Margin="0,0,4,0" />
+                        <TextBlock Text="Undo" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Margin="3,0" Click="RedoMenuItem_OnClick" ToolTip="Redo (Ctrl+Y)">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{StaticResource RedoIconImage}" Width="14" Height="14" Stretch="Uniform" Margin="0,0,4,0" />
+                        <TextBlock Text="Redo" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Margin="3,0" Click="CutButton_OnClick" ToolTip="Cut (Ctrl+X)">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{StaticResource CutIconImage}" Width="14" Height="14" Stretch="Uniform" Margin="0,0,4,0" />
+                        <TextBlock Text="Cut" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Margin="3,0" Click="DeleteButton_OnClick" ToolTip="Delete (Del)">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Data="{StaticResource DeleteToolGeometry}" Stroke="{StaticResource ForegroundTextBrush}"
+                              StrokeThickness="1.1" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Width="14" Height="14" Stretch="Uniform" Margin="0,0,4,0" />
+                        <TextBlock Text="Delete" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Margin="3,0" Click="TextButton_OnClick" ToolTip="Insert Text">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Data="{StaticResource TextToolGeometry}" Stroke="{StaticResource ForegroundTextBrush}"
+                              StrokeThickness="1.1" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Width="14" Height="14" Stretch="Uniform" Margin="0,0,4,0" />
+                        <TextBlock Text="Text" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Separator Width="1" Margin="6,0" />
+                <ToggleButton x:Name="GridToggleButton" Margin="3,0" Padding="6,4" Checked="GridToggleButton_OnToggled" Unchecked="GridToggleButton_OnToggled" ToolTip="Show Grid">
+                    <Path Data="{StaticResource GridToolGeometry}" Stroke="{StaticResource ForegroundTextBrush}"
+                          StrokeThickness="1.1" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                          Width="14" Height="14" Stretch="Uniform" />
+                </ToggleButton>
+                <ToggleButton x:Name="SnapToggleButton" Margin="3,0" Padding="6,4" Checked="SnapToggleButton_OnToggled" Unchecked="SnapToggleButton_OnToggled" ToolTip="Snap to Grid">
+                    <Path Data="{StaticResource SnapToolGeometry}" Stroke="{StaticResource ForegroundTextBrush}"
+                          StrokeThickness="1.1" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                          Width="14" Height="14" Stretch="Uniform" />
+                </ToggleButton>
+                <TextBox x:Name="GridSizeTextBox" Width="34" Margin="3,0" VerticalContentAlignment="Center"
+                         TextAlignment="Center" ToolTip="Grid square size, px"
+                         LostFocus="GridSizeTextBox_OnLostFocus" KeyDown="GridSizeTextBox_OnKeyDown" />
+                <Separator Width="1" Margin="6,0" />
+                <Button Content="Export" Margin="3,0" IsEnabled="False" />
             </StackPanel>
         </Border>
 

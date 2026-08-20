@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -5,6 +6,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using Icono.App.State;
+using Icono.App.State.Undo;
 using Icono.Core;
 
 namespace Icono.App;
@@ -23,6 +25,8 @@ public partial class MainWindow : Window
         ToolPanel.Context = _context;
         CanvasHost.Context = _context;
         PropertiesPanel.Context = _context;
+
+        GridSizeTextBox.Text = _context.GridSize.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
         StateChanged += MainWindow_OnStateChanged;
         Closing += MainWindow_OnClosing;
@@ -73,33 +77,131 @@ public partial class MainWindow : Window
 
     private void MainWindow_OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key != Key.Delete)
-        {
-            return;
-        }
-
         if (Keyboard.FocusedElement is TextBox)
         {
-            // A layer name, size, or hex field is being edited — let Delete edit text, not shapes.
+            // A layer name, size, or hex field is being edited — let these keys edit text, not shapes.
             return;
         }
 
-        if (_context.SelectedShapes.Count == 0)
+        if (e.Key == Key.Delete)
         {
+            DeleteSelectedShapes();
+            e.Handled = true;
             return;
         }
 
-        foreach (var shape in _context.SelectedShapes.ToList())
+        if (_context.ActiveTool == ActiveTool.PathDraw)
         {
-            foreach (var layer in _context.Document.Layers)
+            if (e.Key == Key.Escape)
             {
-                layer.Shapes.Remove(shape);
+                CanvasHost.CancelPathDraw();
+                e.Handled = true;
+                return;
+            }
+
+            if (e.Key == Key.Enter)
+            {
+                CanvasHost.FinishPathDraw();
+                e.Handled = true;
+                return;
             }
         }
 
-        _context.SelectedShapes.Clear();
+        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && e.Key == Key.Z)
+        {
+            _context.Undo();
+            e.Handled = true;
+            return;
+        }
+
+        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && e.Key is Key.Y)
+        {
+            _context.Redo();
+            e.Handled = true;
+            return;
+        }
+
+        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && e.Key == Key.X)
+        {
+            CutSelectedShapes();
+            e.Handled = true;
+            return;
+        }
+
+        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && e.Key == Key.C)
+        {
+            CopySelectedShapes();
+            e.Handled = true;
+            return;
+        }
+
+        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && e.Key == Key.V)
+        {
+            PasteClipboard();
+            e.Handled = true;
+        }
+    }
+
+    private void DeleteSelectedShapes() => _context.DeleteSelection();
+
+    private void CutSelectedShapes() => _context.CutSelection();
+
+    private void CopySelectedShapes() => _context.CopySelection();
+
+    private void PasteClipboard() => _context.PasteClipboard();
+
+    private void UndoMenuItem_OnClick(object sender, RoutedEventArgs e) => _context.Undo();
+
+    private void RedoMenuItem_OnClick(object sender, RoutedEventArgs e) => _context.Redo();
+
+    private void CutButton_OnClick(object sender, RoutedEventArgs e) => CutSelectedShapes();
+
+    private void CutMenuItem_OnClick(object sender, RoutedEventArgs e) => CutSelectedShapes();
+
+    private void CopyMenuItem_OnClick(object sender, RoutedEventArgs e) => CopySelectedShapes();
+
+    private void PasteMenuItem_OnClick(object sender, RoutedEventArgs e) => PasteClipboard();
+
+    private void DeleteButton_OnClick(object sender, RoutedEventArgs e) => DeleteSelectedShapes();
+
+    private void TextButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        _context.ActiveTool = ActiveTool.Shape;
+        _context.SelectedShapeKind = ShapeKind.Text;
+    }
+
+    private void GridToggleButton_OnToggled(object sender, RoutedEventArgs e)
+    {
+        _context.ShowGrid = GridToggleButton.IsChecked == true;
         _context.RequestRedraw();
-        e.Handled = true;
+    }
+
+    private void SnapToggleButton_OnToggled(object sender, RoutedEventArgs e)
+    {
+        _context.SnapToGrid = SnapToggleButton.IsChecked == true;
+    }
+
+    private void GridSizeTextBox_OnLostFocus(object sender, RoutedEventArgs e) => ApplyGridSizeTextBox();
+
+    private void GridSizeTextBox_OnKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            ApplyGridSizeTextBox();
+        }
+    }
+
+    private void ApplyGridSizeTextBox()
+    {
+        if (!double.TryParse(GridSizeTextBox.Text, System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out var value) || value < 1)
+        {
+            GridSizeTextBox.Text = _context.GridSize.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            return;
+        }
+
+        _context.GridSize = value;
+        _context.RequestRedraw();
     }
 
     private void ExitMenuItem_OnClick(object sender, RoutedEventArgs e)

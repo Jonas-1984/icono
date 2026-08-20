@@ -14,6 +14,13 @@
         <Setter Property="FontSize" Value="13" />
     </Style>
 
+    <Style TargetType="ContextMenu">
+        <Setter Property="Background" Value="{StaticResource PanelBackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource AccentBlueMidBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="2" />
+    </Style>
+
     <Style TargetType="MenuItem">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{StaticResource ForegroundTextBrush}" />

@@ -32,7 +32,7 @@
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bg" Property="Background" Value="{StaticResource GlossyBlueBrush}" />
+                            <Setter TargetName="Bg" Property="Background" Value="{StaticResource SoftAccentGlowBrush}" />
                             <Setter TargetName="Bg" Property="BorderBrush" Value="{StaticResource AccentBlueDarkBrush}" />
                             <Setter TargetName="Gloss" Property="Opacity" Value="1" />
                         </Trigger>
@@ -82,7 +82,7 @@
                             <Setter TargetName="Bg" Property="BorderBrush" Value="{StaticResource AccentBlueMidBrush}" />
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="Bg" Property="Background" Value="{StaticResource GlossyBlueBrush}" />
+                            <Setter TargetName="Bg" Property="Background" Value="{StaticResource SoftAccentGlowBrush}" />
                             <Setter TargetName="Bg" Property="BorderBrush" Value="{StaticResource AccentBlueDarkBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
@@ -99,7 +99,7 @@
         <Setter Property="ResizeBehavior" Value="PreviousAndNext" />
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="{StaticResource GlossyBlueBrush}" />
+                <Setter Property="Background" Value="{StaticResource SoftAccentHoverBrush}" />
             </Trigger>
         </Style.Triggers>
     </Style>

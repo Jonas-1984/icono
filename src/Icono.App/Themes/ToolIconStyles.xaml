@@ -6,14 +6,14 @@
         <ResourceDictionary Source="Brushes.xaml" />
     </ResourceDictionary.MergedDictionaries>
 
-    <SolidColorBrush x:Key="ToolIconHoverBrush" Color="#1FFFFFFF" />
+    <SolidColorBrush x:Key="ToolIconHoverBrush" Color="#2A6FB1FF" />
 
     <!-- Plain icon button, no square frame: content is a Path bound via Tag to a *ToolGeometry
          resource. Selection/hover shown as a soft rounded fill only, no border outline. -->
     <Style x:Key="ShapeIconRadioButtonStyle" TargetType="RadioButton">
-        <Setter Property="Width" Value="38" />
-        <Setter Property="Height" Value="38" />
-        <Setter Property="Margin" Value="2" />
+        <Setter Property="Width" Value="34" />
+        <Setter Property="Height" Value="34" />
+        <Setter Property="Margin" Value="1.5" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Foreground" Value="{StaticResource ForegroundTextBrush}" />
         <Setter Property="Template">
@@ -22,20 +22,77 @@
                     <Border x:Name="Bg" Background="Transparent" CornerRadius="8">
                         <Path Data="{TemplateBinding Tag}"
                               Stroke="{TemplateBinding Foreground}"
-                              StrokeThickness="1.6"
+                              StrokeThickness="1.1"
                               StrokeStartLineCap="Round"
                               StrokeEndLineCap="Round"
                               StrokeLineJoin="Round"
                               Stretch="Uniform"
-                              Margin="9" />
+                              Margin="8" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Bg" Property="Background" Value="{StaticResource ToolIconHoverBrush}" />
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="Bg" Property="Background" Value="{StaticResource GlossyBlueBrush}" />
+                            <Setter TargetName="Bg" Property="Background" Value="{StaticResource SoftAccentGlowBrush}" />
                             <Setter Property="Foreground" Value="White" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Square icon toggle (Bold/Italic text-format toggles): fixed 28x28 box, icon centered both
+         ways, background gets progressively darker hover -> pressed, plus a distinct checked look. -->
+    <Style x:Key="IconToggleButtonStyle" TargetType="ToggleButton">
+        <Setter Property="Width" Value="28" />
+        <Setter Property="Height" Value="28" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="Bg" Background="{StaticResource ToolbarBackgroundBrush}"
+                            BorderBrush="{StaticResource BorderLineBrush}" BorderThickness="1" CornerRadius="4">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="{StaticResource ToolIconHoverBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="{StaticResource AccentBlueDarkBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="{StaticResource SoftAccentGlowBrush}" />
+                            <Setter TargetName="Bg" Property="BorderBrush" Value="{StaticResource AccentBlueDarkBrush}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Same sizing/hover/checked look as ShapeIconRadioButtonStyle, but for a raster icon: Tag
+         holds a BitmapImage (see Themes/ImageIcons.xaml) instead of a Geometry. -->
+    <Style x:Key="ImageIconRadioButtonStyle" TargetType="RadioButton">
+        <Setter Property="Width" Value="34" />
+        <Setter Property="Height" Value="34" />
+        <Setter Property="Margin" Value="1.5" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="Bg" Background="Transparent" CornerRadius="8">
+                        <Image Source="{TemplateBinding Tag}" Stretch="Uniform" Margin="8" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="{StaticResource ToolIconHoverBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="{StaticResource SoftAccentGlowBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
