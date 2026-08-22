@@ -33,7 +33,8 @@ public partial class CanvasHostView : UserControl
     private Shape? _pendingShape;
 
     private bool _isMovingSelection;
-    private Point _moveLastPoint;
+    private Point _moveStartPoint;
+    private List<(double X, double Y)> _moveStartPositions = [];
     private List<ShapeSnapshot>? _moveUndoBefore;
 
     private bool _isResizing;
@@ -44,6 +45,14 @@ public partial class CanvasHostView : UserControl
     private Point _resizeCenter;
     private double _resizeRotation;
     private ShapeSnapshot _resizeUndoBefore;
+
+    private bool _isGroupResizing;
+    private ResizeHandle _groupResizeHandle;
+    private List<Shape> _groupResizeShapes = [];
+    private List<(double X, double Y, double W, double H)> _groupResizeStartRects = [];
+    private List<ShapeSnapshot> _groupResizeUndoBefore = [];
+    private (double X, double Y, double W, double H) _groupResizeStartBounds;
+    private Point _groupResizeStartPoint;
 
     private bool _isRotating;
     private Shape? _rotateShape;
@@ -145,6 +154,13 @@ public partial class CanvasHostView : UserControl
 
         var selected = _context.SelectedShapes.ToList();
         var menu = new ContextMenu { PlacementTarget = this, Placement = PlacementMode.MousePoint };
+        // A ContextMenu opened via IsOpen = true (instead of assigning FrameworkElement.ContextMenu)
+        // isn't inserted into this control's logical tree, so it can silently fall back to the OS's
+        // light default chrome instead of the app's dark theme — force our themed Style explicitly.
+        if (TryFindResource(typeof(ContextMenu)) is Style contextMenuStyle)
+        {
+            menu.Style = contextMenuStyle;
+        }
 
         void AddItem(string header, Action action, bool enabled = true)
         {
@@ -159,18 +175,35 @@ public partial class CanvasHostView : UserControl
         AddItem("Delete", _context.DeleteSelection, selected.Count > 0 && selected.Any(s => !IsLocked(s)));
         menu.Items.Add(new Separator());
 
-        AddItem("Union", _context.UnionSelection, selected.Count >= 2);
-        AddItem("Trim (first selected = cutter)", _context.TrimSelection, selected.Count == 2);
+        var allUnlocked = selected.Count > 0 && selected.All(s => !IsLocked(s));
+        AddItem("Union", _context.UnionSelection, selected.Count >= 2 && allUnlocked);
+        AddItem("Trim (first selected = cutter)", _context.TrimSelection, selected.Count == 2 && allUnlocked);
+        AddItem("Merge to One Shape", _context.MergeSelection, selected.Count >= 2 && allUnlocked);
+        AddItem("Reflect", _context.ReflectSelection, selected.Count >= 1 && allUnlocked);
+        AddItem("Offset...", ShowOffsetDialog, selected.Count >= 1 && allUnlocked);
 
-        if (selected.Count == 1 && selected[0].Points is null && ShapeGeometryFactory.SupportsPointEditing(selected[0].Kind))
+        if (selected.Count == 1 && !IsLocked(selected[0]) && selected[0].Points is null &&
+            ShapeGeometryFactory.SupportsPointEditing(selected[0].Kind))
         {
             var shape = selected[0];
             AddItem("Edit Points", () => _context.ConvertToEditablePoints(shape));
         }
 
+        if (selected.Count == 1 && !IsLocked(selected[0]) && selected[0].Kind == ShapeKind.Text)
+        {
+            var shape = selected[0];
+            AddItem("Convert to Shape", () => _context.ConvertTextToShape(shape));
+        }
+
         menu.Items.Add(new Separator());
 
-        AddItem("Group", _context.GroupSelection, selected.Count >= 2);
+        // Disabled when the selection is already exactly one existing group (clicking any grouped
+        // shape auto-selects every shape sharing its GroupId — see OnMouseDown) — re-grouping an
+        // already-fully-grouped selection is a no-op, so offering it as if it did something is
+        // just confusing.
+        var alreadyOneGroup = selected.Count >= 2 &&
+            selected.All(s => s.GroupId is { } gid && gid == selected[0].GroupId);
+        AddItem("Group", _context.GroupSelection, selected.Count >= 2 && !alreadyOneGroup);
         AddItem("Ungroup", _context.UngroupSelection, selected.Any(s => s.GroupId is not null));
 
         var allLocked = selected.Count > 0 && selected.All(s => s.Locked);
@@ -181,6 +214,20 @@ public partial class CanvasHostView : UserControl
         AddItem("Send to Back", _context.SendSelectionToBack, selected.Count > 0);
 
         menu.IsOpen = true;
+    }
+
+    private void ShowOffsetDialog()
+    {
+        if (_context is null)
+        {
+            return;
+        }
+
+        var dialog = new OffsetDialog { Owner = Window.GetWindow(this) };
+        if (dialog.ShowDialog() == true)
+        {
+            _context.OffsetSelection(dialog.Distance);
+        }
     }
 
     /// <summary>Called from MainWindow's window-level PreviewKeyDown (Escape), since this control
@@ -257,7 +304,13 @@ public partial class CanvasHostView : UserControl
     /// Skia-internal raster scale used only inside <see cref="SkiaCanvas_OnPaintSurface"/>.</summary>
     private Point ToDocumentSpace(Point viewPoint) => new(viewPoint.X / Zoom, viewPoint.Y / Zoom);
 
-    private void OnContextInvalidated(object? sender, EventArgs e) => SkiaCanvas.InvalidateVisual();
+    // Cheap to call on every redraw — keeps the frame in sync whenever Document.Width/Height
+    // changes (e.g. the Canvas Size panel), not just on Zoom changes.
+    private void OnContextInvalidated(object? sender, EventArgs e)
+    {
+        UpdateCanvasFrameSize();
+        SkiaCanvas.InvalidateVisual();
+    }
 
     private void SkiaCanvas_OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
     {
@@ -347,6 +400,10 @@ public partial class CanvasHostView : UserControl
         {
             DrawResizeHandles(canvas, selected[0], scaleX, scaleY);
         }
+        else if (selected.Count > 1 && selected.All(s => !IsLocked(s)))
+        {
+            DrawGroupResizeHandles(canvas, ComputeGroupBounds(selected), scaleX, scaleY);
+        }
 
         if (_isMarqueeSelecting)
         {
@@ -418,6 +475,74 @@ public partial class CanvasHostView : UserControl
         }
     }
 
+    /// <summary>Union bounding box (unrotated — a per-shape Rotation is ignored for this purpose,
+    /// same simplification <see cref="DrawSelectionOutline"/> already makes) across every shape in
+    /// a multi-selection, e.g. the several CombinedPath pieces a multi-element SVG import splits
+    /// into. Lets a multi-selection be resized as one unit instead of offering no resize handles
+    /// at all (the old behavior — <see cref="DrawResizeHandles"/> only ever ran for a lone shape).</summary>
+    private static (double X, double Y, double W, double H) ComputeGroupBounds(IReadOnlyList<Shape> shapes)
+    {
+        var minX = shapes.Min(s => s.X);
+        var minY = shapes.Min(s => s.Y);
+        var maxX = shapes.Max(s => s.X + s.Width);
+        var maxY = shapes.Max(s => s.Y + s.Height);
+        return (minX, minY, maxX - minX, maxY - minY);
+    }
+
+    private static IEnumerable<(ResizeHandle Handle, double X, double Y)> EnumerateBoundsHandlePositions(
+        (double X, double Y, double W, double H) bounds)
+    {
+        var left = bounds.X;
+        var top = bounds.Y;
+        var right = bounds.X + bounds.W;
+        var bottom = bounds.Y + bounds.H;
+        var midX = bounds.X + bounds.W / 2;
+        var midY = bounds.Y + bounds.H / 2;
+
+        yield return (ResizeHandle.TopLeft, left, top);
+        yield return (ResizeHandle.Top, midX, top);
+        yield return (ResizeHandle.TopRight, right, top);
+        yield return (ResizeHandle.Right, right, midY);
+        yield return (ResizeHandle.BottomRight, right, bottom);
+        yield return (ResizeHandle.Bottom, midX, bottom);
+        yield return (ResizeHandle.BottomLeft, left, bottom);
+        yield return (ResizeHandle.Left, left, midY);
+    }
+
+    /// <summary>Simplified sibling of <see cref="DrawResizeHandles"/> for a multi-selection — just
+    /// the 8 corner/edge handles around the group's bounding box, no rotate or depth handle (those
+    /// stay single-shape-only).</summary>
+    private void DrawGroupResizeHandles(SKCanvas canvas, (double X, double Y, double W, double H) bounds, float scaleX, float scaleY)
+    {
+        using var fillPaint = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill, Color = SKColors.White };
+        using var strokePaint = new SKPaint
+        {
+            IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 1.2f, Color = AccentColor,
+        };
+
+        foreach (var (_, x, y) in EnumerateBoundsHandlePositions(bounds))
+        {
+            var rect = SKRect.Create(
+                (float)x * scaleX - HandleScreenSize / 2, (float)y * scaleY - HandleScreenSize / 2,
+                HandleScreenSize, HandleScreenSize);
+            canvas.DrawRect(rect, fillPaint);
+            canvas.DrawRect(rect, strokePaint);
+        }
+    }
+
+    private static ResizeHandle? HitTestBoundsHandle(Point docPoint, (double X, double Y, double W, double H) bounds, double tolerance)
+    {
+        foreach (var (handle, x, y) in EnumerateBoundsHandlePositions(bounds))
+        {
+            if (Math.Abs(docPoint.X - x) <= tolerance && Math.Abs(docPoint.Y - y) <= tolerance)
+            {
+                return handle;
+            }
+        }
+
+        return null;
+    }
+
     /// <summary>The 3D-box's depth control — a distinct orange handle (vs. the white resize
     /// handles) sitting at the midpoint of the front-face-to-back-corner diagonal.</summary>
     private static void DrawDepthHandle(SKCanvas canvas, Shape shape, float scaleX, float scaleY)
@@ -467,33 +592,49 @@ public partial class CanvasHostView : UserControl
     }
 
     /// <summary>Point-editing handles for a Points-based shape (Line/Arrow/DoubleArrow/Polyline/Curve)
-    /// — a square handle per anchor point, plus a smaller "insert here" ghost dot at each segment
-    /// midpoint, replacing the 8 bounding-box handles for these kinds.</summary>
+    /// — a square handle per anchor point (draggable in both Select and Delete Point tools), plus
+    /// a smaller "insert here" ghost dot at each segment midpoint — only shown for the dedicated
+    /// Add Point tool, since Select itself no longer creates points.</summary>
     private void DrawPointHandles(SKCanvas canvas, Shape shape, float scaleX, float scaleY)
     {
         var points = shape.Points!;
 
-        using var fillPaint = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill, Color = SKColors.White };
-        using var strokePaint = new SKPaint
+        // Anchors render as SOLID filled circles and midpoint "click to add" ghosts as HOLLOW
+        // dashed-ring circles — filled-vs-hollow is an unambiguous visual language for "this is a
+        // real point you can drag" vs. "this is where a new point would go", so the point
+        // situation reads clearly at a glance instead of every handle looking like the same square.
+        using var anchorFillPaint = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill, Color = AccentColor };
+        using var anchorRingPaint = new SKPaint
         {
-            IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 1.2f, Color = AccentColor,
+            IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 1.5f, Color = SKColors.White,
         };
-        using var ghostPaint = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill, Color = AccentColor.WithAlpha(120) };
 
-        for (var i = 0; i < points.Count - 1; i++)
+        if (_context?.ActiveTool == ActiveTool.AddPoint)
         {
-            var midX = (float)(shape.X + (points[i].X + points[i + 1].X) / 2) * scaleX;
-            var midY = (float)(shape.Y + (points[i].Y + points[i + 1].Y) / 2) * scaleY;
-            canvas.DrawCircle(midX, midY, HandleScreenSize / 2.5f, ghostPaint);
+            using var ghostFillPaint = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill, Color = SKColors.White.WithAlpha(210) };
+            using var ghostRingPaint = new SKPaint
+            {
+                IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 1.2f, Color = AccentColor,
+                PathEffect = SKPathEffect.CreateDash([2, 2], 0),
+            };
+
+            for (var i = 0; i < points.Count - 1; i++)
+            {
+                var midX = (float)(shape.X + (points[i].X + points[i + 1].X) / 2) * scaleX;
+                var midY = (float)(shape.Y + (points[i].Y + points[i + 1].Y) / 2) * scaleY;
+                var midRadius = HandleScreenSize / 2.6f;
+                canvas.DrawCircle(midX, midY, midRadius, ghostFillPaint);
+                canvas.DrawCircle(midX, midY, midRadius, ghostRingPaint);
+            }
         }
 
         foreach (var p in points)
         {
             var x = (float)(shape.X + p.X) * scaleX;
             var y = (float)(shape.Y + p.Y) * scaleY;
-            var rect = SKRect.Create(x - HandleScreenSize / 2, y - HandleScreenSize / 2, HandleScreenSize, HandleScreenSize);
-            canvas.DrawRect(rect, fillPaint);
-            canvas.DrawRect(rect, strokePaint);
+            var radius = HandleScreenSize / 2f;
+            canvas.DrawCircle(x, y, radius, anchorFillPaint);
+            canvas.DrawCircle(x, y, radius, anchorRingPaint);
         }
     }
 
@@ -680,9 +821,44 @@ public partial class CanvasHostView : UserControl
             return;
         }
 
-        if (_context.ActiveTool == ActiveTool.PaintBucket)
+        // Dedicated Add Point / Delete Point tools — same hit-testing as the Select tool's
+        // built-in midpoint-click-to-add / Ctrl+click-to-delete gestures (see below), just
+        // exposed as their own explicit modes so neither needs a modifier key or the Select
+        // tool's overloaded click behavior to discover.
+        if (_context.ActiveTool == ActiveTool.AddPoint)
         {
-            HandlePaintBucketClick(point);
+            if (_context.SelectedShapes.Count == 1 && !IsLocked(_context.SelectedShapes[0]) &&
+                _context.SelectedShapes[0].Points is { Count: > 0 })
+            {
+                var pointShape = _context.SelectedShapes[0];
+                if (HitTestPointHandle(point, pointShape) is { IsMidpoint: true } pointHit)
+                {
+                    InsertPointAt(pointShape, pointHit.Index, point);
+                }
+            }
+
+            return;
+        }
+
+        if (_context.ActiveTool == ActiveTool.DeletePoint)
+        {
+            if (_context.SelectedShapes.Count == 1 && !IsLocked(_context.SelectedShapes[0]) &&
+                _context.SelectedShapes[0].Points is { Count: > 0 })
+            {
+                var pointShape = _context.SelectedShapes[0];
+                if (HitTestPointHandle(point, pointShape) is { IsMidpoint: false } pointHit &&
+                    pointShape.Points!.Count > 2)
+                {
+                    RemovePointAt(pointShape, pointHit.Index);
+                }
+            }
+
+            return;
+        }
+
+        if (_context.ActiveTool == ActiveTool.RegionColor)
+        {
+            HandleRegionColorClick(point);
             return;
         }
 
@@ -700,28 +876,16 @@ public partial class CanvasHostView : UserControl
         var ctrlHeld = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
         var soleSelectionEditable = _context.SelectedShapes.Count == 1 && !IsLocked(_context.SelectedShapes[0]);
 
+        // Select only selects/moves — dragging an existing anchor point is still a "move", but
+        // creating or deleting points is the dedicated Add Point / Delete Point tools' job now.
         if (soleSelectionEditable && _context.SelectedShapes[0].Points is { Count: > 0 })
         {
             var pointShape = _context.SelectedShapes[0];
             var pointHit = HitTestPointHandle(point, pointShape);
 
-            if (pointHit is { IsMidpoint: true })
-            {
-                InsertPointAt(pointShape, pointHit.Value.Index, point);
-                return;
-            }
-
             if (pointHit is { IsMidpoint: false })
             {
-                if (ctrlHeld && pointShape.Points!.Count > 2)
-                {
-                    RemovePointAt(pointShape, pointHit.Value.Index);
-                }
-                else
-                {
-                    BeginDragPoint(pointShape, pointHit.Value.Index);
-                }
-
+                BeginDragPoint(pointShape, pointHit.Value.Index);
                 return;
             }
         }
@@ -740,6 +904,16 @@ public partial class CanvasHostView : UserControl
         {
             BeginResize(handle, _context.SelectedShapes[0], point);
             return;
+        }
+        else if (!ctrlHeld && _context.SelectedShapes.Count > 1 && _context.SelectedShapes.All(s => !IsLocked(s)))
+        {
+            var groupBounds = ComputeGroupBounds(_context.SelectedShapes);
+            var groupTolerance = HandleHitToleranceDip / Zoom;
+            if (HitTestBoundsHandle(point, groupBounds, groupTolerance) is { } groupHandle)
+            {
+                BeginGroupResize(groupHandle, groupBounds, point);
+                return;
+            }
         }
 
         var hit = HitTestShape(point);
@@ -782,7 +956,8 @@ public partial class CanvasHostView : UserControl
             if (!IsLocked(shape))
             {
                 _isMovingSelection = true;
-                _moveLastPoint = point;
+                _moveStartPoint = point;
+                _moveStartPositions = _context.SelectedShapes.Select(s => (s.X, s.Y)).ToList();
                 _moveUndoBefore = _context.SelectedShapes.Select(ShapeSnapshot.Capture).ToList();
                 CaptureMouse();
             }
@@ -858,15 +1033,21 @@ public partial class CanvasHostView : UserControl
 
         if (TwoPointLineKinds.Contains(_context.SelectedShapeKind))
         {
+            var kind = _context.SelectedShapeKind;
             _pendingShape = new Shape
             {
-                Kind = _context.SelectedShapeKind,
+                Kind = kind,
                 X = point.X,
                 Y = point.Y,
                 Width = 1,
                 Height = 1,
                 FillColor = _context.CurrentFillColor,
                 Points = [new CorePoint(0, 0), new CorePoint(0, 0)],
+                // The Arrow/Double Arrow tools' historical look — a plain open V head — is now just
+                // the default for their LineStartHead/LineEndHead, freely reconfigurable afterwards
+                // in the Properties panel (any Line-family shape can carry any head style).
+                LineEndHead = kind is ShapeKind.Arrow or ShapeKind.DoubleArrow ? ArrowHeadKind.Open : ArrowHeadKind.None,
+                LineStartHead = kind == ShapeKind.DoubleArrow ? ArrowHeadKind.Open : ArrowHeadKind.None,
             };
         }
         else
@@ -897,6 +1078,86 @@ public partial class CanvasHostView : UserControl
         _resizeRotation = shape.Rotation;
         _resizeUndoBefore = ShapeSnapshot.Capture(shape);
         CaptureMouse();
+    }
+
+    private void BeginGroupResize(ResizeHandle handle, (double X, double Y, double W, double H) bounds, Point point)
+    {
+        _isGroupResizing = true;
+        _groupResizeHandle = handle;
+        _groupResizeShapes = _context!.SelectedShapes.ToList();
+        _groupResizeStartRects = _groupResizeShapes.Select(s => (s.X, s.Y, s.Width, s.Height)).ToList();
+        _groupResizeUndoBefore = _groupResizeShapes.Select(ShapeSnapshot.Capture).ToList();
+        _groupResizeStartBounds = bounds;
+        _groupResizeStartPoint = point;
+        CaptureMouse();
+    }
+
+    /// <summary>Scales every shape in the group proportionally within the resized bounding box —
+    /// each shape's position/size relative to the ORIGINAL group bounds is preserved, so a
+    /// multi-piece import (several CombinedPath shapes sharing one placement, or any other
+    /// multi-shape selection) resizes as one coherent unit instead of each piece drifting apart.
+    /// No rotation compensation (unlike the single-shape <see cref="ApplyResize"/>) — a reasonable
+    /// simplification since the group bounds themselves are always axis-aligned.</summary>
+    private void ApplyGroupResize(Point point)
+    {
+        var dx = point.X - _groupResizeStartPoint.X;
+        var dy = point.Y - _groupResizeStartPoint.Y;
+        var (startX, startY, startW, startH) = _groupResizeStartBounds;
+
+        double newX = startX, newY = startY, newW = startW, newH = startH;
+
+        var affectsLeft = _groupResizeHandle is ResizeHandle.TopLeft or ResizeHandle.Left or ResizeHandle.BottomLeft;
+        var affectsRight = _groupResizeHandle is ResizeHandle.TopRight or ResizeHandle.Right or ResizeHandle.BottomRight;
+        var affectsTop = _groupResizeHandle is ResizeHandle.TopLeft or ResizeHandle.Top or ResizeHandle.TopRight;
+        var affectsBottom = _groupResizeHandle is ResizeHandle.BottomLeft or ResizeHandle.Bottom or ResizeHandle.BottomRight;
+
+        if (affectsLeft)
+        {
+            newW = Math.Max(MinShapeSize, startW - dx);
+            newX = startX + (startW - newW);
+        }
+        else if (affectsRight)
+        {
+            newW = Math.Max(MinShapeSize, startW + dx);
+        }
+
+        if (affectsTop)
+        {
+            newH = Math.Max(MinShapeSize, startH - dy);
+            newY = startY + (startH - newH);
+        }
+        else if (affectsBottom)
+        {
+            newH = Math.Max(MinShapeSize, startH + dy);
+        }
+
+        newX = SnapIfEnabled(newX);
+        newY = SnapIfEnabled(newY);
+        newW = SnapIfEnabled(newW);
+        newH = SnapIfEnabled(newH);
+
+        var safeStartW = startW > 0.0001 ? startW : 0.0001;
+        var safeStartH = startH > 0.0001 ? startH : 0.0001;
+
+        // Ratios MUST come from each shape's FROZEN starting rect, not its current (already
+        // mutated-this-gesture) X/Y/Width/Height — reading live state here re-derives the ratios
+        // from an already-resized rect on every subsequent mouse-move frame, compounding a drift
+        // that made the shape visibly jump around while dragging.
+        for (var i = 0; i < _groupResizeShapes.Count; i++)
+        {
+            var shape = _groupResizeShapes[i];
+            var (shapeStartX, shapeStartY, shapeStartW, shapeStartH) = _groupResizeStartRects[i];
+
+            var relX = (shapeStartX - startX) / safeStartW;
+            var relY = (shapeStartY - startY) / safeStartH;
+            var relW = shapeStartW / safeStartW;
+            var relH = shapeStartH / safeStartH;
+
+            shape.X = newX + relX * newW;
+            shape.Y = newY + relY * newH;
+            shape.Width = relW * newW;
+            shape.Height = relH * newH;
+        }
     }
 
     private void BeginRotate(Shape shape)
@@ -937,7 +1198,6 @@ public partial class CanvasHostView : UserControl
                 Width = 1,
                 Height = 1,
                 FillColor = _context.CurrentFillColor,
-                Dashed = _context.SelectedShapeKind == ShapeKind.Polyline,
                 Points = [new CorePoint(0, 0), new CorePoint(0, 0)],
             };
             _context.RequestRedraw();
@@ -1001,38 +1261,181 @@ public partial class CanvasHostView : UserControl
         CaptureMouse();
     }
 
-    private void HandlePaintBucketClick(Point point)
+    /// <summary>Region Color's click handler: finds the front-most shape whose ACTUAL geometry
+    /// (not just its bounding box — <see cref="HitTestShape"/> only checks that, which can't tell
+    /// apart several same-bbox pieces, e.g. an SVG-imported icon's parts) contains the click point,
+    /// then colors just the specific closed region that was clicked. An already-multi-piece
+    /// CombinedPath shape (imported, or a previously split multi-region kind) just gets that one
+    /// piece recolored. A not-yet-split shape with curated real sub-regions (Traffic Cone's
+    /// cap/bands/base — see <see cref="ShapeGeometryFactory.GetColorableRegions"/>) gets split into
+    /// one CombinedPath per region on first click, each keeping the original border look, and the
+    /// clicked region takes the new color. Any other ordinary (single-region) shape just gets its
+    /// whole FillColor set directly — this tool doubles as a quick "set fill and turn it on" click
+    /// for normal shapes, not just multi-region ones.</summary>
+    private void HandleRegionColorClick(Point point)
     {
         if (_context is null)
         {
             return;
         }
 
-        var hit = HitTestShape(point);
-        if (hit is null)
+        foreach (var layer in _context.Document.Layers)
+        {
+            if (!layer.Visible)
+            {
+                continue;
+            }
+
+            foreach (var shape in layer.Shapes)
+            {
+                if (point.X < shape.X || point.X > shape.X + shape.Width ||
+                    point.Y < shape.Y || point.Y > shape.Y + shape.Height)
+                {
+                    continue;
+                }
+
+                if (shape.Kind is ShapeKind.Box3D or ShapeKind.RasterImage or ShapeKind.Text)
+                {
+                    return;
+                }
+
+                if (shape.Kind != ShapeKind.CombinedPath)
+                {
+                    var curatedRegions = ShapeGeometryFactory.GetColorableRegions(shape.Kind);
+                    if (curatedRegions is not null)
+                    {
+                        using var whole = ShapeGeometryFactory.Build(shape);
+                        if (!whole.Contains((float)point.X, (float)point.Y))
+                        {
+                            continue;
+                        }
+
+                        if (!IsLocked(shape))
+                        {
+                            ExplodeShapeIntoRegions(shape, layer, curatedRegions, point);
+                        }
+
+                        return;
+                    }
+                }
+
+                using var built = ShapeGeometryFactory.Build(shape);
+                if (!built.Contains((float)point.X, (float)point.Y))
+                {
+                    // Bbox matched but the click missed this piece's actual ink — a stacked
+                    // sibling piece under it might still match, so keep scanning.
+                    continue;
+                }
+
+                if (!IsLocked(shape))
+                {
+                    var before = ShapeSnapshot.Capture(shape);
+                    shape.FillColor = _context.CurrentFillColor;
+                    shape.FillEnabled = true;
+                    if (shape.Kind == ShapeKind.CombinedPath)
+                    {
+                        shape.CustomPathStrokeOnly = false;
+                    }
+
+                    var after = ShapeSnapshot.Capture(shape);
+                    _context.UndoManager.Push(UndoableAction.ForPropertyEdit([shape], [before], [after]));
+
+                    _context.SelectedShape = shape;
+                    _context.SelectedLayer = layer;
+                    _context.RequestRedraw();
+                }
+
+                return;
+            }
+        }
+    }
+
+    /// <summary>Replaces a not-yet-split shape with one <see cref="ShapeKind.CombinedPath"/> per
+    /// curated region (see <see cref="ShapeGeometryFactory.GetColorableRegions"/>), all sharing the
+    /// original's placement/rotation/border so nothing shifts, then colors whichever region was
+    /// actually clicked (smallest-area containing match, so a small piece wins over a larger one it
+    /// happens to overlap, e.g. Traffic Cone's base plate slightly overlapping its bottom band).</summary>
+    private void ExplodeShapeIntoRegions(Shape shape, Layer layer, IReadOnlyList<string> regionPathData, Point clickPoint)
+    {
+        if (_context is null)
         {
             return;
         }
 
-        var (shape, layer) = hit.Value;
-
-        var distanceToEdge = Math.Min(
-            Math.Min(point.X - shape.X, shape.X + shape.Width - point.X),
-            Math.Min(point.Y - shape.Y, shape.Y + shape.Height - point.Y));
-
-        const double toleranceDocPx = 3.0;
-        var borderBand = shape.BorderThickness / 2.0 + toleranceDocPx;
-
-        if (shape.BorderThickness > 0 && distanceToEdge <= borderBand)
+        var originalIndex = layer.Shapes.IndexOf(shape);
+        if (originalIndex < 0)
         {
-            shape.BorderColor = _context.CurrentFillColor;
-        }
-        else
-        {
-            shape.FillColor = _context.CurrentFillColor;
+            return;
         }
 
-        _context.SelectedShape = shape;
+        var hitIndex = 0;
+        var hitArea = float.MaxValue;
+        for (var i = 0; i < regionPathData.Count; i++)
+        {
+            var probe = new Shape
+            {
+                Kind = ShapeKind.CombinedPath,
+                X = shape.X,
+                Y = shape.Y,
+                Width = shape.Width,
+                Height = shape.Height,
+                Rotation = shape.Rotation,
+                FlipHorizontal = shape.FlipHorizontal,
+                FlipVertical = shape.FlipVertical,
+                CustomPathData = regionPathData[i],
+            };
+
+            using var probePath = ShapeGeometryFactory.Build(probe);
+            if (!probePath.Contains((float)clickPoint.X, (float)clickPoint.Y))
+            {
+                continue;
+            }
+
+            var area = probePath.Bounds.Width * probePath.Bounds.Height;
+            if (area < hitArea)
+            {
+                hitArea = area;
+                hitIndex = i;
+            }
+        }
+
+        layer.Shapes.RemoveAt(originalIndex);
+        var combinedActions = new List<UndoableAction> { UndoableAction.ForRemove([(layer.Shapes, shape, originalIndex)]) };
+
+        var newShapes = new List<Shape>();
+        for (var i = 0; i < regionPathData.Count; i++)
+        {
+            var piece = new Shape
+            {
+                Kind = ShapeKind.CombinedPath,
+                X = shape.X,
+                Y = shape.Y,
+                Width = shape.Width,
+                Height = shape.Height,
+                Rotation = shape.Rotation,
+                FlipHorizontal = shape.FlipHorizontal,
+                FlipVertical = shape.FlipVertical,
+                Opacity = shape.Opacity,
+                FillColor = i == hitIndex ? _context.CurrentFillColor : shape.FillColor,
+                FillEnabled = true,
+                BorderColor = shape.BorderColor,
+                BorderThickness = shape.BorderThickness,
+                CustomPathData = regionPathData[i],
+                CustomPathStrokeOnly = false,
+            };
+
+            newShapes.Add(piece);
+            layer.Shapes.Insert(originalIndex + i, piece);
+        }
+
+        for (var i = 0; i < newShapes.Count; i++)
+        {
+            combinedActions.Add(UndoableAction.ForInsert(layer.Shapes, newShapes[i], originalIndex + i));
+        }
+
+        _context.UndoManager.Push(UndoableAction.Combine(combinedActions));
+
+        _context.SelectedShape = newShapes[hitIndex];
         _context.SelectedLayer = layer;
         _context.RequestRedraw();
     }
@@ -1183,6 +1586,9 @@ public partial class CanvasHostView : UserControl
             _context.UndoManager.Push(UndoableAction.ForInsert(layer.Shapes, shape, 0));
             _context.SelectedShape = shape;
             _context.SelectedLayer = layer;
+            // Same rule as shape placement: after creating new text, drop back to Select so a
+            // second text shape requires deliberately choosing the Text tool again.
+            _context.ActiveTool = ActiveTool.Select;
         }
 
         _context.RequestRedraw();
@@ -1277,6 +1683,14 @@ public partial class CanvasHostView : UserControl
             return;
         }
 
+        if (_isGroupResizing)
+        {
+            var point = ToDocumentSpace(e.GetPosition(SkiaCanvas));
+            ApplyGroupResize(point);
+            _context?.RequestRedraw();
+            return;
+        }
+
         if (_isRotating && _rotateShape is not null)
         {
             var point = ToDocumentSpace(e.GetPosition(SkiaCanvas));
@@ -1298,16 +1712,25 @@ public partial class CanvasHostView : UserControl
             return;
         }
 
-        if (_isMovingSelection && _context is not null)
+        if (_isMovingSelection && _context is not null && _moveStartPositions.Count == _context.SelectedShapes.Count)
         {
             var point = ToDocumentSpace(e.GetPosition(SkiaCanvas));
-            var dx = point.X - _moveLastPoint.X;
-            var dy = point.Y - _moveLastPoint.Y;
+            // Total delta from the FROZEN drag-start point, applied to each shape's FROZEN start
+            // position — not an incremental "+= dx" every frame. Snapping the incremental form
+            // permanently rounds shape.X/Y away on every single mouse-move event, discarding the
+            // sub-grid remainder of the true cursor movement each time; with a grid coarser than a
+            // typical per-frame mouse delta, that remainder never accumulates enough to cross a
+            // grid line, so the shape looked frozen in place. Recomputing from the start each frame
+            // keeps the true (unsnapped) position intact for the snap math to round correctly.
+            var totalDx = point.X - _moveStartPoint.X;
+            var totalDy = point.Y - _moveStartPoint.Y;
 
-            foreach (var shape in _context.SelectedShapes)
+            for (var i = 0; i < _context.SelectedShapes.Count; i++)
             {
-                shape.X += dx;
-                shape.Y += dy;
+                var shape = _context.SelectedShapes[i];
+                var (startX, startY) = _moveStartPositions[i];
+                shape.X = startX + totalDx;
+                shape.Y = startY + totalDy;
             }
 
             // Snapping a multi-shape drag would distort relative offsets between shapes, so only
@@ -1319,7 +1742,6 @@ public partial class CanvasHostView : UserControl
                 shape.Y = SnapIfEnabled(shape.Y);
             }
 
-            _moveLastPoint = point;
             _context.RequestRedraw();
             return;
         }
@@ -1439,6 +1861,27 @@ public partial class CanvasHostView : UserControl
             return;
         }
 
+        if (_isGroupResizing)
+        {
+            _isGroupResizing = false;
+            ReleaseMouseCapture();
+
+            if (_context is not null && _groupResizeShapes.Count == _groupResizeUndoBefore.Count)
+            {
+                var after = _groupResizeShapes.Select(ShapeSnapshot.Capture).ToList();
+                if (!after.SequenceEqual(_groupResizeUndoBefore))
+                {
+                    _context.UndoManager.Push(
+                        UndoableAction.ForPropertyEdit(_groupResizeShapes, _groupResizeUndoBefore, after));
+                }
+            }
+
+            _groupResizeShapes = [];
+            _groupResizeStartRects = [];
+            _groupResizeUndoBefore = [];
+            return;
+        }
+
         if (_isRotating)
         {
             _isRotating = false;
@@ -1510,6 +1953,7 @@ public partial class CanvasHostView : UserControl
             }
 
             _moveUndoBefore = null;
+            _moveStartPositions = [];
             return;
         }
 
@@ -1597,6 +2041,10 @@ public partial class CanvasHostView : UserControl
                 _context.UndoManager.Push(UndoableAction.ForInsert(layer.Shapes, shape, 0));
                 _context.SelectedLayer = layer;
                 _context.SelectedShape = shape;
+                // After placing a shape, drop back to Select so the user reviews/moves it rather
+                // than immediately stamping out another one — placing a second shape requires
+                // choosing the Shape tool again.
+                _context.ActiveTool = ActiveTool.Select;
             }
         }
 

@@ -9,12 +9,21 @@
 
                 <Border Style="{StaticResource CardBorderStyle}">
                     <WrapPanel Margin="6,0">
-                        <RadioButton GroupName="ToolSelection" IsChecked="True" Checked="ToolRadioButton_OnChecked"
+                        <RadioButton x:Name="SelectToolRadioButton" GroupName="ToolSelection" IsChecked="True"
+                                     Checked="ToolRadioButton_OnChecked"
                                      Style="{StaticResource ShapeIconRadioButtonStyle}"
                                      Tag="{StaticResource SelectToolGeometry}" CommandParameter="Select" ToolTip="Select" />
                         <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked"
                                      Style="{StaticResource ShapeIconRadioButtonStyle}"
                                      Tag="{StaticResource PanZoomToolGeometry}" CommandParameter="PanZoom" ToolTip="Pan / Zoom" />
+                        <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked"
+                                     Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                     Tag="{StaticResource AddPointToolGeometry}" CommandParameter="AddPoint"
+                                     ToolTip="Add Point (click a segment's midpoint on the selected line/shape)" />
+                        <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked"
+                                     Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                     Tag="{StaticResource DeletePointToolGeometry}" CommandParameter="DeletePoint"
+                                     ToolTip="Delete Point (click a point on the selected line/shape)" />
                     </WrapPanel>
                 </Border>
 
@@ -74,8 +83,110 @@
                                          Tag="{StaticResource ClubToolGeometry}" CommandParameter="Club" ToolTip="Club" />
                             <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
                                          Tag="{StaticResource Box3DToolGeometry}" CommandParameter="Box3D" ToolTip="3D Box (drag the orange handle to adjust depth)" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource StarCheckToolGeometry}" CommandParameter="StarCheck" ToolTip="Star Check" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource StarPlusToolGeometry}" CommandParameter="StarPlus" ToolTip="Star Plus" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource StarMinusToolGeometry}" CommandParameter="StarMinus" ToolTip="Star Minus" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource SquareArrowOutUpRightToolGeometry}" CommandParameter="SquareArrowOutUpRight" ToolTip="Square Arrow Out" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource BlocksToolGeometry}" CommandParameter="Blocks" ToolTip="Blocks" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource SwatchBookToolGeometry}" CommandParameter="SwatchBook" ToolTip="Swatch Book" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource LensConcaveToolGeometry}" CommandParameter="LensConcave" ToolTip="Concave Lens" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource CylinderToolGeometry}" CommandParameter="Cylinder" ToolTip="Cylinder" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource ConeToolGeometry}" CommandParameter="Cone" ToolTip="Cone" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource PyramidToolGeometry}" CommandParameter="Pyramid" ToolTip="Pyramid" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource TriangleAlertToolGeometry}" CommandParameter="TriangleAlert" ToolTip="Triangle Alert" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource SpadeToolGeometry}" CommandParameter="Spade" ToolTip="Spade" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource SquareDashedBottomToolGeometry}" CommandParameter="SquareDashedBottom" ToolTip="Square Dashed Bottom" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource ShareToolGeometry}" CommandParameter="Share" ToolTip="Share" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource ShieldCogToolGeometry}" CommandParameter="ShieldCog" ToolTip="Shield Cog" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource UmbrellaToolGeometry}" CommandParameter="Umbrella" ToolTip="Umbrella" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource CloudyToolGeometry}" CommandParameter="Cloudy" ToolTip="Cloudy" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource TrafficConeToolGeometry}" CommandParameter="TrafficCone" ToolTip="Traffic Cone" />
                         </WrapPanel>
                         <StackPanel x:Name="ShapesPagerDots" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,2,0,6" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource CardBorderStyle}">
+                    <StackPanel>
+                        <Grid Style="{StaticResource CollapsibleCardHeaderStyle}" MouseLeftButtonDown="CardHeader_OnToggle">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="OBJECTS" Style="{StaticResource CardHeaderTextStyle}" />
+                            <Path Grid.Column="1" Style="{StaticResource CardChevronPathStyle}" />
+                        </Grid>
+                        <StackPanel>
+                        <WrapPanel x:Name="FurnitureWrapPanel" Margin="6,0" MinHeight="114">
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource WorktableToolGeometry}" CommandParameter="Worktable" ToolTip="Worktable" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource RoundTableToolGeometry}" CommandParameter="RoundTable" ToolTip="Round Table" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource OfficeChairToolGeometry}" CommandParameter="OfficeChair" ToolTip="Office Chair" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource MonitorToolGeometry}" CommandParameter="Monitor" ToolTip="Monitor / PC" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource SofaToolGeometry}" CommandParameter="Sofa" ToolTip="Sofa" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource BookshelfToolGeometry}" CommandParameter="Bookshelf" ToolTip="Bookshelf / Cabinet" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource DoorToolGeometry}" CommandParameter="Door" ToolTip="Door" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource PlantToolGeometry}" CommandParameter="Plant" ToolTip="Plant" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource WorkstationToolGeometry}" CommandParameter="Workstation"
+                                         ToolTip="Workstation (desk with laptop, keyboard, notebook &amp; mouse)" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource FlowerClusterToolGeometry}" CommandParameter="FlowerCluster" ToolTip="Flower Cluster" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource StarFlowerToolGeometry}" CommandParameter="StarFlower" ToolTip="Star Flower" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource DaisyFlowerToolGeometry}" CommandParameter="DaisyFlower" ToolTip="Daisy Flower" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource WorkplaceToolGeometry}" CommandParameter="Workplace"
+                                         ToolTip="Workplace (desk with legs, monitor, keyboard, mouse &amp; dial)" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource FilingCabinetToolGeometry}" CommandParameter="FilingCabinet" ToolTip="Filing Cabinet" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource PrinterToolGeometry}" CommandParameter="Printer" ToolTip="Printer" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource TrashBinToolGeometry}" CommandParameter="TrashBin" ToolTip="Trash Bin" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource WhiteboardToolGeometry}" CommandParameter="Whiteboard" ToolTip="Whiteboard" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource WindowToolGeometry}" CommandParameter="Window" ToolTip="Window" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource StairsToolGeometry}" CommandParameter="Stairs" ToolTip="Stairs" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource PottedTreeToolGeometry}" CommandParameter="PottedTree" ToolTip="Potted Tree" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource RugToolGeometry}" CommandParameter="Rug" ToolTip="Rug" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource BedToolGeometry}" CommandParameter="Bed" ToolTip="Bed" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource LampToolGeometry}" CommandParameter="Lamp" ToolTip="Lamp" />
+                        </WrapPanel>
+                        <StackPanel x:Name="FurniturePagerDots" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,2,0,6" />
                         </StackPanel>
                     </StackPanel>
                 </Border>
@@ -98,7 +209,8 @@
                             <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
                                          Tag="{StaticResource DoubleArrowToolGeometry}" CommandParameter="DoubleArrow" ToolTip="Double Arrow" />
                             <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
-                                         Tag="{StaticResource PolylineToolGeometry}" CommandParameter="Polyline" ToolTip="Polyline (click to add points, double-click/Enter to finish)" />
+                                         Tag="{StaticResource PolylineToolGeometry}" CommandParameter="Polyline"
+                                         ToolTip="Multi-Point Line: click each corner, double-click or Enter to finish, Escape to cancel (like AutoCAD's LINE command)" />
                             <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
                                          Tag="{StaticResource CurveToolGeometry}" CommandParameter="Curve" ToolTip="Curve (click to add points, double-click/Enter to finish)" />
                         </WrapPanel>
@@ -155,66 +267,6 @@
                                          Tag="{StaticResource StripedArrowRightToolGeometry}" CommandParameter="StripedArrowRight" ToolTip="Motion Arrow" />
                         </WrapPanel>
                         <StackPanel x:Name="ArrowsPagerDots" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,2,0,6" />
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
-
-                <Border Style="{StaticResource CardBorderStyle}">
-                    <StackPanel>
-                        <Grid Style="{StaticResource CollapsibleCardHeaderStyle}" MouseLeftButtonDown="CardHeader_OnToggle">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="TOOLS" Style="{StaticResource CardHeaderTextStyle}" />
-                            <Path Grid.Column="1" Style="{StaticResource CardChevronPathStyle}" />
-                        </Grid>
-                        <StackPanel>
-                        <WrapPanel Margin="6,0">
-                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
-                                         Tag="{StaticResource TextToolGeometry}" CommandParameter="Text" ToolTip="Text" />
-                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ImageIconRadioButtonStyle}"
-                                         Tag="{StaticResource BorderIconImage}" CommandParameter="Border" ToolTip="Border" />
-                            <RadioButton x:Name="PaintBucketRadioButton" GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ImageIconRadioButtonStyle}"
-                                         Tag="{StaticResource BucketIconImage}" CommandParameter="PaintBucket" ToolTip="Paint Bucket" />
-                        </WrapPanel>
-                        <Popup x:Name="PaintBucketColorPopup" PlacementTarget="{Binding ElementName=PaintBucketRadioButton}"
-                               Placement="Bottom" StaysOpen="False" AllowsTransparency="True">
-                            <Border Background="{StaticResource PanelBackgroundBrush}" BorderBrush="{StaticResource BorderLineBrush}"
-                                    BorderThickness="1" CornerRadius="6" Padding="6">
-                                <ItemsControl x:Name="PaintBucketSwatchList">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <UniformGrid Columns="6" />
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Width="22" Height="22" Margin="2" CornerRadius="4"
-                                                    BorderBrush="{StaticResource BorderLineBrush}" BorderThickness="1"
-                                                    Background="{Binding}" Cursor="Hand"
-                                                    MouseLeftButtonDown="PaintBucketSwatch_OnMouseLeftButtonDown" />
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </Border>
-                        </Popup>
-                        <StackPanel Orientation="Horizontal" Margin="6,2,6,6">
-                            <Button Margin="0,0,4,0" Click="UnionButton_OnClick" ToolTip="Union: merge 2+ selected shapes into one (overlap included)">
-                                <StackPanel Orientation="Horizontal">
-                                    <Image Source="{StaticResource CombinationIconImage}" Width="16" Height="16" Stretch="Uniform" Margin="0,0,4,0" />
-                                    <TextBlock Text="Union" VerticalAlignment="Center" FontSize="11" />
-                                </StackPanel>
-                            </Button>
-                            <Button Click="TrimButton_OnClick" ToolTip="Trim: select exactly 2 shapes — click the CUTTER first, then Ctrl+click the TARGET; the cutter is removed, the target keeps only what wasn't covered">
-                                <StackPanel Orientation="Horizontal">
-                                    <Path Data="{StaticResource TrimToolGeometry}" Stroke="{StaticResource ForegroundTextBrush}"
-                                          StrokeThickness="1.1" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
-                                          Width="16" Height="16" Stretch="Uniform" Margin="0,0,4,0" />
-                                    <TextBlock Text="Trim" VerticalAlignment="Center" FontSize="11" />
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
                         </StackPanel>
                     </StackPanel>
                 </Border>

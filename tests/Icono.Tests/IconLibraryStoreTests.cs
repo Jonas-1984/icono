@@ -34,10 +34,11 @@ public class IconLibraryStoreTests : IDisposable
         var loaded = store.LoadAll();
 
         Assert.Single(loaded);
-        Assert.Equal("My Icon", loaded[0].Name);
-        Assert.Single(loaded[0].Shapes);
+        Assert.Equal("My Icon", loaded[0].Entry.Name);
+        Assert.Single(loaded[0].Entry.Shapes);
+        Assert.True(File.Exists(loaded[0].FilePath));
 
-        var shape = loaded[0].Shapes[0];
+        var shape = loaded[0].Entry.Shapes[0];
         Assert.Equal(ShapeKind.Star, shape.Kind);
         Assert.Equal(10, shape.X);
         Assert.Equal(20, shape.Y);
@@ -71,7 +72,7 @@ public class IconLibraryStoreTests : IDisposable
         store.Save(entry);
         var loaded = store.LoadAll();
 
-        var shape = Assert.Single(loaded[0].Shapes);
+        var shape = Assert.Single(loaded[0].Entry.Shapes);
         Assert.NotNull(shape.Points);
         Assert.Equal(3, shape.Points!.Count);
         Assert.Equal(new CorePoint(10, 5), shape.Points[1]);
@@ -84,6 +85,30 @@ public class IconLibraryStoreTests : IDisposable
         var store = new IconLibraryStore(Path.Combine(_tempDir, "does-not-exist"));
 
         Assert.Empty(store.LoadAll());
+    }
+
+    [Fact]
+    public void Delete_RemovesTheEntrySoItNoLongerLoads()
+    {
+        var store = new IconLibraryStore(_tempDir);
+        var entry = new IconLibraryEntry { Name = "Removable", Shapes = [new Shape { Kind = ShapeKind.Star }] };
+
+        store.Save(entry);
+        var filePath = Assert.Single(store.LoadAll()).FilePath;
+
+        store.Delete(filePath);
+
+        Assert.Empty(store.LoadAll());
+    }
+
+    [Fact]
+    public void Delete_OnAlreadyMissingFile_DoesNotThrow()
+    {
+        var store = new IconLibraryStore(_tempDir);
+
+        var exception = Record.Exception(() => store.Delete(Path.Combine(_tempDir, "nonexistent.json")));
+
+        Assert.Null(exception);
     }
 
     public void Dispose()

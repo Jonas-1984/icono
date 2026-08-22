@@ -10,8 +10,10 @@ public enum ActiveTool
     Select,
     PanZoom,
     Shape,
-    PaintBucket,
     PathDraw,
+    AddPoint,
+    DeletePoint,
+    RegionColor,
 }
 
 /// <summary>
@@ -310,12 +312,135 @@ public sealed class EditorContext : ObservableObject
         return clone;
     }
 
+    /// <summary>Moves every selected (unlocked) shape by a fixed offset — the Arrow-key nudge
+    /// (see MainWindow's PreviewKeyDown), one undo entry per key press.</summary>
+    public void NudgeSelection(double dx, double dy)
+    {
+        var shapes = SelectedShapes.Where(s => !s.Locked).ToList();
+        if (shapes.Count == 0)
+        {
+            return;
+        }
+
+        var before = shapes.Select(ShapeSnapshot.Capture).ToList();
+
+        foreach (var shape in shapes)
+        {
+            shape.X += dx;
+            shape.Y += dy;
+        }
+
+        var after = shapes.Select(ShapeSnapshot.Capture).ToList();
+        UndoManager.Push(UndoableAction.ForPropertyEdit(shapes, before, after));
+        RequestRedraw();
+    }
+
+    /// <summary>Adds a mirrored, fading copy directly below each selected (unlocked) shape — a
+    /// classic "water reflection" effect. FadeAmount already fades solid-top to transparent-bottom
+    /// in plain document space regardless of FlipVertical, so the reflection reads as attached at
+    /// the original's bottom edge and fading away below it with no extra rendering logic needed.</summary>
+    public void ReflectSelection()
+    {
+        var shapes = SelectedShapes.Where(s => !s.Locked).ToList();
+        if (shapes.Count == 0)
+        {
+            return;
+        }
+
+        var reflections = new List<Shape>();
+        var undoActions = new List<UndoableAction>();
+
+        foreach (var shape in shapes)
+        {
+            var layer = Document.Layers.FirstOrDefault(l => l.Shapes.Contains(shape));
+            if (layer is null || layer.Locked)
+            {
+                continue;
+            }
+
+            var reflection = CloneShape(shape);
+            reflection.FlipVertical = !shape.FlipVertical;
+            reflection.Y = shape.Y + shape.Height;
+            reflection.FadeAmount = Math.Max(shape.FadeAmount, 55);
+            reflection.GroupId = null;
+
+            layer.Shapes.Insert(0, reflection);
+            undoActions.Add(UndoableAction.ForInsert(layer.Shapes, reflection, 0));
+            reflections.Add(reflection);
+        }
+
+        if (reflections.Count == 0)
+        {
+            return;
+        }
+
+        UndoManager.Push(UndoableAction.Combine(undoActions));
+
+        SelectedShapes.Clear();
+        foreach (var reflection in reflections)
+        {
+            SelectedShapes.Add(reflection);
+        }
+
+        RequestRedraw();
+    }
+
+    /// <summary>Adds a border-offset copy of each selected (unlocked) shape — see
+    /// <see cref="PathOffsetter.Offset"/>. <paramref name="distance"/> is signed: positive grows a
+    /// closed shape outward / thickens an open line's outline, negative shrinks a closed shape
+    /// inward (clamped so it can't collapse past nothing).</summary>
+    public void OffsetSelection(double distance)
+    {
+        var shapes = SelectedShapes.Where(s => !s.Locked).ToList();
+        if (shapes.Count == 0 || distance == 0)
+        {
+            return;
+        }
+
+        var offsets = new List<Shape>();
+        var undoActions = new List<UndoableAction>();
+
+        foreach (var shape in shapes)
+        {
+            var layer = Document.Layers.FirstOrDefault(l => l.Shapes.Contains(shape));
+            if (layer is null || layer.Locked)
+            {
+                continue;
+            }
+
+            var offsetShape = PathOffsetter.Offset(shape, distance);
+            if (offsetShape is null)
+            {
+                continue;
+            }
+
+            layer.Shapes.Insert(0, offsetShape);
+            undoActions.Add(UndoableAction.ForInsert(layer.Shapes, offsetShape, 0));
+            offsets.Add(offsetShape);
+        }
+
+        if (offsets.Count == 0)
+        {
+            return;
+        }
+
+        UndoManager.Push(UndoableAction.Combine(undoActions));
+
+        SelectedShapes.Clear();
+        foreach (var offsetShape in offsets)
+        {
+            SelectedShapes.Add(offsetShape);
+        }
+
+        RequestRedraw();
+    }
+
     /// <summary>Merges 2+ selected shapes (all in the same layer) into one combined shape, using
     /// the union of their outlines (overlap included).</summary>
     public void UnionSelection()
     {
         var shapes = SelectedShapes.ToList();
-        if (shapes.Count < 2)
+        if (shapes.Count < 2 || shapes.Any(s => s.Locked))
         {
             return;
         }
@@ -336,13 +461,38 @@ public sealed class EditorContext : ObservableObject
         }
     }
 
+    /// <summary>Combines every selected shape's geometry into ONE object (see
+    /// <see cref="ShapeCombiner.Merge"/>) — unlike <see cref="UnionSelection"/>, works for lines
+    /// and stroke-only icons too, and never distorts a piece's own look (no boolean fill-merge).</summary>
+    public void MergeSelection()
+    {
+        var shapes = SelectedShapes.ToList();
+        if (shapes.Count < 2 || shapes.Any(s => s.Locked))
+        {
+            return;
+        }
+
+        var layer = Document.Layers.FirstOrDefault(l => shapes.All(l.Shapes.Contains));
+        if (layer is null)
+        {
+            return;
+        }
+
+        var ordered = shapes.OrderBy(s => layer.Shapes.IndexOf(s)).ToList();
+        var merged = ShapeCombiner.Merge(ordered);
+        if (merged is not null)
+        {
+            ReplaceWithCombinedShape(layer, ordered, merged);
+        }
+    }
+
     /// <summary>Cuts away the part of the second selected shape ("target") covered by the first
     /// ("cutter") — selection order picks the roles, not automatic z-order, so the user controls
     /// which shape actually gets trimmed.</summary>
     public void TrimSelection()
     {
         var shapes = SelectedShapes.ToList();
-        if (shapes.Count != 2)
+        if (shapes.Count != 2 || shapes.Any(s => s.Locked))
         {
             return;
         }
@@ -386,9 +536,32 @@ public sealed class EditorContext : ObservableObject
     /// shape so every vertex becomes independently draggable via the existing point-edit handles.
     /// No-op if the kind doesn't support it (see <see cref="ShapeGeometryFactory.SupportsPointEditing"/>)
     /// or it's already points-based.</summary>
+    /// <summary>Replaces a Text shape with an outlined <see cref="ShapeKind.CombinedPath"/> (see
+    /// <see cref="TextOutliner.ConvertToShape"/>) — <see cref="Shape.Kind"/> is <c>init</c>-only,
+    /// so this can never be an in-place mutation like <see cref="ConvertToEditablePoints"/>.</summary>
+    public void ConvertTextToShape(Shape shape)
+    {
+        if (shape.Locked || shape.Kind != ShapeKind.Text)
+        {
+            return;
+        }
+
+        var layer = Document.Layers.FirstOrDefault(l => l.Shapes.Contains(shape));
+        if (layer is null || layer.Locked)
+        {
+            return;
+        }
+
+        var converted = TextOutliner.ConvertToShape(shape);
+        if (converted is not null)
+        {
+            ReplaceWithCombinedShape(layer, [shape], converted);
+        }
+    }
+
     public void ConvertToEditablePoints(Shape shape)
     {
-        if (shape.Points is not null || !ShapeGeometryFactory.SupportsPointEditing(shape.Kind))
+        if (shape.Locked || shape.Points is not null || !ShapeGeometryFactory.SupportsPointEditing(shape.Kind))
         {
             return;
         }

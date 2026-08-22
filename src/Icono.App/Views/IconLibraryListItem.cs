@@ -13,9 +13,14 @@ public sealed class IconLibraryListItem
 
     public BitmapImage Thumbnail { get; }
 
-    public IconLibraryListItem(IconLibraryEntry entry, BitmapImage thumbnail)
+    /// <summary>The on-disk JSON file this entry was loaded from — round-tripped straight into
+    /// <see cref="IconLibraryStore.Delete"/> when the user removes it.</summary>
+    public string FilePath { get; }
+
+    public IconLibraryListItem(IconLibraryEntry entry, BitmapImage thumbnail, string filePath)
     {
         Entry = entry;
         Thumbnail = thumbnail;
+        FilePath = filePath;
     }
 }

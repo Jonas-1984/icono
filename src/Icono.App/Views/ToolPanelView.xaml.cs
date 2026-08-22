@@ -11,16 +11,6 @@ public partial class ToolPanelView : UserControl
 {
     private const int IconsPerPage = 12;
 
-    // Same soft pastel spread as PropertiesPanelView's fill swatches, so the Paint Bucket's
-    // quick-pick palette reads consistently with the rest of the app.
-    private static readonly Color[] PaintBucketSwatchColors =
-    [
-        Colors.White, Color.FromRgb(0x3A, 0x3A, 0x3A), Color.FromRgb(0xD8, 0xDC, 0xE0),
-        Color.FromRgb(0x9E, 0xD9, 0xD1), Color.FromRgb(0xA9, 0xD6, 0xF5), Color.FromRgb(0x8F, 0xB8, 0xE0),
-        Color.FromRgb(0xF3, 0xA9, 0xA5), Color.FromRgb(0xF7, 0xC9, 0x8E), Color.FromRgb(0xF3, 0xE0, 0x8C),
-        Color.FromRgb(0xB8, 0xDD, 0xA8), Color.FromRgb(0xCB, 0xB3, 0xE0), Color.FromRgb(0x9C, 0xD6, 0xD9),
-    ];
-
     private EditorContext? _context;
 
     public EditorContext? Context
@@ -28,8 +18,31 @@ public partial class ToolPanelView : UserControl
         get => _context;
         set
         {
+            if (_context is not null)
+            {
+                _context.PropertyChanged -= Context_OnPropertyChanged;
+            }
+
             _context = value;
             IconLibrary.Context = value;
+
+            if (_context is not null)
+            {
+                _context.PropertyChanged += Context_OnPropertyChanged;
+            }
+        }
+    }
+
+    /// <summary>Keeps the tool-panel radio buttons in sync when something OTHER than a direct
+    /// click on a radio button changes the active tool — e.g. the canvas auto-reverting to Select
+    /// right after a shape/text is placed. Only the Select button needs an explicit x:Name/handler:
+    /// switching TO any other tool always originates from that tool's own radio button being
+    /// clicked, so it's already checked by the time ActiveTool changes.</summary>
+    private void Context_OnPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(EditorContext.ActiveTool) && Context?.ActiveTool == ActiveTool.Select)
+        {
+            SelectToolRadioButton.IsChecked = true;
         }
     }
 
@@ -38,9 +51,8 @@ public partial class ToolPanelView : UserControl
         InitializeComponent();
 
         _ = new IconPager(ShapesWrapPanel, ShapesPagerDots, IconsPerPage);
+        _ = new IconPager(FurnitureWrapPanel, FurniturePagerDots, IconsPerPage);
         _ = new IconPager(ArrowsWrapPanel, ArrowsPagerDots, IconsPerPage);
-
-        PaintBucketSwatchList.ItemsSource = PaintBucketSwatchColors.Select(c => (Brush)new SolidColorBrush(c)).ToList();
     }
 
     /// <summary>Collapses/expands the single sibling element right after a clicked card header —
@@ -82,14 +94,11 @@ public partial class ToolPanelView : UserControl
             case "PanZoom":
                 Context.ActiveTool = ActiveTool.PanZoom;
                 break;
-            case "PaintBucket":
-                Context.ActiveTool = ActiveTool.PaintBucket;
-                PaintBucketColorPopup.IsOpen = true;
+            case "AddPoint":
+                Context.ActiveTool = ActiveTool.AddPoint;
                 break;
-            case "Border":
-                // The Border tool's exact meaning (frame-around-canvas vs. a shape kind) is
-                // ambiguous — treated as a Select alias for now, pending clarification.
-                Context.ActiveTool = ActiveTool.Select;
+            case "DeletePoint":
+                Context.ActiveTool = ActiveTool.DeletePoint;
                 break;
             case "Polyline":
             case "Curve":
@@ -102,19 +111,4 @@ public partial class ToolPanelView : UserControl
                 break;
         }
     }
-
-    private void PaintBucketSwatch_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        if (Context is null || sender is not Border { Background: SolidColorBrush brush })
-        {
-            return;
-        }
-
-        Context.CurrentFillColor = brush.Color.FromMediaColor();
-        PaintBucketColorPopup.IsOpen = false;
-    }
-
-    private void UnionButton_OnClick(object sender, RoutedEventArgs e) => Context?.UnionSelection();
-
-    private void TrimButton_OnClick(object sender, RoutedEventArgs e) => Context?.TrimSelection();
 }

@@ -16,6 +16,7 @@ public partial class ColorPickerView : UserControl
     private double _hue;
     private double _saturation = 1;
     private double _value = 1;
+    private double _alpha = 255;
     private bool _isDraggingSv;
     private bool _isSyncingFromColor;
     private bool _suppressColorCallback;
@@ -40,12 +41,22 @@ public partial class ColorPickerView : UserControl
     {
         var view = (ColorPickerView)d;
 
-        if (!view._suppressColorCallback)
+        if (view._suppressColorCallback)
         {
+            // This assignment came from our own CommitColor() (the user dragging the hue/SV/alpha
+            // controls or typing a hex value) — the sliders are already in sync (that's WHY we're
+            // here), so re-syncing them would be redundant; do notify external listeners though.
+            view.ColorChanged?.Invoke(view, (Color)e.NewValue);
+        }
+        else
+        {
+            // An EXTERNAL assignment — e.g. PropertiesPanelView refreshing the picker to display a
+            // newly bound/selected shape's color. Sync the sliders/preview/hex to match, but this
+            // is NOT a user pick, so must NOT fire ColorChanged: doing so used to re-apply this
+            // "just displaying" color onto every shape in the current selection (visible as fill
+            // colors silently flipping to match whenever a second shape got selected).
             view.SyncFromColor((Color)e.NewValue);
         }
-
-        view.ColorChanged?.Invoke(view, (Color)e.NewValue);
     }
 
     private void SyncFromColor(Color color)
@@ -56,8 +67,10 @@ public partial class ColorPickerView : UserControl
         _hue = h;
         _saturation = s;
         _value = v;
+        _alpha = color.A;
 
         HueSlider.Value = h;
+        AlphaSlider.Value = color.A / 255.0 * 100;
         UpdateHueBase();
         UpdateThumbPosition();
         UpdatePreviewAndHex(color);
@@ -90,6 +103,22 @@ public partial class ColorPickerView : UserControl
 
         _hue = e.NewValue;
         UpdateHueBase();
+        CommitColor();
+    }
+
+    private void AlphaSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (AlphaValueText is not null)
+        {
+            AlphaValueText.Text = $"{e.NewValue:0}%";
+        }
+
+        if (_isSyncingFromColor)
+        {
+            return;
+        }
+
+        _alpha = e.NewValue / 100.0 * 255;
         CommitColor();
     }
 
@@ -126,7 +155,8 @@ public partial class ColorPickerView : UserControl
 
     private void CommitColor()
     {
-        var color = ColorConversions.FromHsv(_hue, _saturation, _value);
+        var rgb = ColorConversions.FromHsv(_hue, _saturation, _value);
+        var color = Color.FromArgb((byte)Math.Clamp(_alpha, 0, 255), rgb.R, rgb.G, rgb.B);
         UpdatePreviewAndHex(color);
 
         _suppressColorCallback = true;
@@ -154,8 +184,10 @@ public partial class ColorPickerView : UserControl
 
         try
         {
-            var color = (Color)ColorConverter.ConvertFromString(text)!;
-            SelectedColor = color;
+            var parsed = (Color)ColorConverter.ConvertFromString(text)!;
+            // Hex input is RGB-only — keep whatever opacity the Alpha slider is currently set to
+            // rather than snapping back to fully opaque.
+            SelectedColor = Color.FromArgb((byte)Math.Clamp(_alpha, 0, 255), parsed.R, parsed.G, parsed.B);
         }
         catch
         {

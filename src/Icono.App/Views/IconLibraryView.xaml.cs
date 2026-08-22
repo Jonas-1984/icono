@@ -65,12 +65,31 @@ public partial class IconLibraryView : UserControl
     private void RefreshLibrary()
     {
         var entries = _store.LoadAll();
-        var items = entries.Select(entry => new IconLibraryListItem(entry, RenderThumbnail(entry, 52))).ToList();
+        var items = entries
+            .Select(e => new IconLibraryListItem(e.Entry, RenderThumbnail(e.Entry, 52), e.FilePath))
+            .ToList();
 
         LibraryItemsControl.ItemsSource = items;
         EmptyHint.Visibility = items.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
+    private void DeleteLibraryItem_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { Tag: IconLibraryListItem item })
+        {
+            return;
+        }
+
+        _store.Delete(item.FilePath);
+        RefreshLibrary();
+    }
+
+    /// <summary>Saves the current selection as a reusable "MY ICONS" entry — expanded to every
+    /// OTHER shape sharing a GroupId with anything selected, not just whatever's literally in
+    /// SelectedShapes. Needed because a click can only ever hit the TOPMOST shape at a given
+    /// point: for two shapes placed exactly on top of each other (e.g. a colored base + a faded
+    /// highlight layer), only that topmost one may have actually made it into the selection even
+    /// though the whole group visually reads as one icon — saving must still capture all of it.</summary>
     private void SaveSelectionButton_OnClick(object sender, RoutedEventArgs e)
     {
         if (_context is null || _context.SelectedShapes.Count == 0)
@@ -78,21 +97,35 @@ public partial class IconLibraryView : UserControl
             return;
         }
 
+        var groupIds = _context.SelectedShapes
+            .Select(s => s.GroupId)
+            .Where(id => id is not null)
+            .ToHashSet();
+
+        var shapesToSave = _context.SelectedShapes
+            .Concat(_context.Document.Layers.SelectMany(l => l.Shapes)
+                .Where(s => s.GroupId is not null && groupIds.Contains(s.GroupId)))
+            .Distinct()
+            .ToList();
+
         var name = $"Icon {DateTime.Now:HH:mm:ss}";
         var entry = new IconLibraryEntry
         {
             Name = name,
-            Shapes = _context.SelectedShapes.Select(CloneShape).ToList(),
+            Shapes = shapesToSave.Select(CloneShape).ToList(),
         };
 
         _store.Save(entry);
         RefreshLibrary();
     }
 
-    /// <summary>Opens <see cref="ImportSvgDialog"/>, extracts every path's "d" data from what was
-    /// pasted, builds one CombinedPath shape per path (all sharing one placement, so a multi-path
-    /// icon stays aligned — see <see cref="SvgImporter.BuildShapes"/>), inserts them onto the
-    /// canvas, and also saves them as a reusable "MY ICONS" entry.</summary>
+    /// <summary>Opens <see cref="ImportSvgDialog"/>, extracts every path/circle/ellipse/rect's
+    /// equivalent "d" data from what was pasted, builds one CombinedPath shape per element (all
+    /// sharing one placement, so a multi-element icon stays aligned — see
+    /// <see cref="SvgImporter.BuildShapes"/>), inserts them onto the canvas, and also saves them as
+    /// a reusable "MY ICONS" entry. A stroke-style source (fill="none" — the Lucide/Feather/Tabler
+    /// convention almost every hand-pasted icon uses) imports as an outline instead of a solid
+    /// fill, matching how the source actually looks instead of a garbled filled blob.</summary>
     private void ImportSvgButton_OnClick(object sender, RoutedEventArgs e)
     {
         if (_context is null)
@@ -106,29 +139,67 @@ public partial class IconLibraryView : UserControl
             return;
         }
 
-        var layer = _context.SelectedLayer ?? _context.Document.Layers.FirstOrDefault();
-        var pathData = SvgImporter.ExtractPathData(dialog.SvgCode);
+        ImportSvgMarkupAsShapes(dialog.SvgCode);
+    }
 
-        if (layer is null || pathData.Count == 0)
+    /// <summary>Extracts every path/circle/ellipse/rect element from <paramref name="svgMarkup"/>
+    /// (each keeping its OWN fill color if it declared one — see <see cref="SvgImporter.ExtractElements"/>),
+    /// builds one CombinedPath shape per element (all sharing one placement, so a multi-element
+    /// icon stays aligned — see <see cref="SvgImporter.BuildShapes(IReadOnlyList{SvgImporter.SvgElement},ArgbColor,ArgbColor,double,double,double,double,double,bool)"/>),
+    /// inserts them onto the canvas, and also saves them as a reusable "MY ICONS" entry. A
+    /// stroke-style source (fill="none" — the Lucide/Feather/Tabler convention almost every icon
+    /// library uses) imports as an outline instead of a solid fill, matching how the source
+    /// actually looks instead of a garbled filled blob; a multi-color source (e.g. a two-tone logo)
+    /// keeps each piece's own color instead of flattening everything to the app's current fill
+    /// color. Shared by both the paste-code dialog (<see cref="ImportSvgButton_OnClick"/>) and
+    /// picking an .svg file (<see cref="ImportImageButton_OnClick"/>) — same markup, same import
+    /// rules either way.</summary>
+    private bool ImportSvgMarkupAsShapes(string svgMarkup)
+    {
+        if (_context is null)
+        {
+            return false;
+        }
+
+        var layer = _context.SelectedLayer ?? _context.Document.Layers.FirstOrDefault();
+        var elements = SvgImporter.ExtractElements(svgMarkup);
+
+        if (layer is null || elements.Count == 0)
         {
             MessageBox.Show(Window.GetWindow(this), "Kein gültiger SVG-Pfad im eingefügten Code gefunden.",
                 "SVG importieren", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
+            return false;
         }
 
+        // Size the placement box to the source's OWN aspect ratio (capped so the larger side is
+        // placeSize) instead of always forcing a fixed 80x80 square — BuildShapes stretches its
+        // normalized geometry non-uniformly to fill whatever box it's given, so a square box used
+        // to squash/stretch every non-square icon into a distorted square on import.
         const double placeSize = 80;
-        var placeX = Math.Max(0, (_context.Document.Width - placeSize) / 2);
-        var placeY = Math.Max(0, (_context.Document.Height - placeSize) / 2);
+        var placeWidth = placeSize;
+        var placeHeight = placeSize;
+        if (SvgImporter.MeasureBounds(elements.Select(el => el.PathData).ToList()) is { } measured)
+        {
+            var scale = placeSize / Math.Max(measured.Width, measured.Height);
+            placeWidth = measured.Width * scale;
+            placeHeight = measured.Height * scale;
+        }
+
+        var placeX = Math.Max(0, (_context.Document.Width - placeWidth) / 2);
+        var placeY = Math.Max(0, (_context.Document.Height - placeHeight) / 2);
+
+        var strokeOnly = SvgImporter.IsStrokeStyleSvg(svgMarkup);
+        var borderThickness = strokeOnly ? 2 : 0;
 
         var imported = SvgImporter.BuildShapes(
-            pathData, _context.CurrentFillColor, _context.CurrentFillColor, 0,
-            placeX, placeY, placeSize, placeSize);
+            elements, _context.CurrentFillColor, _context.CurrentFillColor, borderThickness,
+            placeX, placeY, placeWidth, placeHeight, strokeOnly);
 
         if (imported.Count == 0)
         {
             MessageBox.Show(Window.GetWindow(this), "Der SVG-Code enthält keinen gültigen Pfad.",
                 "SVG importieren", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
+            return false;
         }
 
         var undoActions = new List<UndoableAction>();
@@ -153,6 +224,121 @@ public partial class IconLibraryView : UserControl
         {
             Name = $"SVG {DateTime.Now:HH:mm:ss}",
             Shapes = imported.Select(CloneShape).ToList(),
+        };
+        _store.Save(entry);
+        RefreshLibrary();
+        return true;
+    }
+
+    /// <summary>Opens a native file picker for .png/.ico/.svg. An .svg file is read as text and
+    /// handed to the same <see cref="ImportSvgMarkupAsShapes"/> path the paste-code dialog uses —
+    /// vector shapes, not a rasterized image. A .png/.ico decodes into PNG bytes (an .ico's largest
+    /// frame is picked and re-encoded — SkiaSharp can't decode the .ico container itself, so this
+    /// normalizes to PNG once at import time so <c>Icono.Rendering.ShapeRenderer</c> only ever has
+    /// to handle one raster format), inserted as a <see cref="ShapeKind.RasterImage"/> shape sized
+    /// to the source pixel dimensions (capped so huge source images don't dwarf the canvas), and
+    /// also saved as a reusable "MY ICONS" entry.</summary>
+    private void ImportImageButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (_context is null)
+        {
+            return;
+        }
+
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Filter = "Image files (*.png;*.ico;*.svg)|*.png;*.ico;*.svg",
+            Title = "Import Image",
+        };
+
+        if (dialog.ShowDialog(Window.GetWindow(this)) != true)
+        {
+            return;
+        }
+
+        if (Path.GetExtension(dialog.FileName).Equals(".svg", StringComparison.OrdinalIgnoreCase))
+        {
+            string svgMarkup;
+            try
+            {
+                svgMarkup = File.ReadAllText(dialog.FileName);
+            }
+            catch (Exception)
+            {
+                MessageBox.Show(Window.GetWindow(this), "Die Datei konnte nicht gelesen werden.",
+                    "Bild importieren", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            ImportSvgMarkupAsShapes(svgMarkup);
+            return;
+        }
+
+        byte[] pngBytes;
+        int pixelWidth;
+        int pixelHeight;
+
+        try
+        {
+            using var stream = File.OpenRead(dialog.FileName);
+            var extension = Path.GetExtension(dialog.FileName).ToLowerInvariant();
+
+            var bitmapSource = extension == ".ico"
+                ? new IconBitmapDecoder(stream, BitmapCreateOptions.None, BitmapCacheOption.OnLoad)
+                    .Frames.OrderByDescending(f => f.PixelWidth * f.PixelHeight).First()
+                : BitmapDecoder.Create(stream, BitmapCreateOptions.None, BitmapCacheOption.OnLoad).Frames[0];
+
+            pixelWidth = bitmapSource.PixelWidth;
+            pixelHeight = bitmapSource.PixelHeight;
+
+            var encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(bitmapSource));
+            using var outStream = new MemoryStream();
+            encoder.Save(outStream);
+            pngBytes = outStream.ToArray();
+        }
+        catch (Exception)
+        {
+            MessageBox.Show(Window.GetWindow(this), "Die Datei konnte nicht als Bild gelesen werden.",
+                "Bild importieren", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var layer = _context.SelectedLayer ?? _context.Document.Layers.FirstOrDefault();
+        if (layer is null)
+        {
+            return;
+        }
+
+        const double maxPlaceSize = 160;
+        var scale = Math.Min(1.0, maxPlaceSize / Math.Max(pixelWidth, pixelHeight));
+        var placeWidth = Math.Max(1, pixelWidth * scale);
+        var placeHeight = Math.Max(1, pixelHeight * scale);
+        var placeX = Math.Max(0, (_context.Document.Width - placeWidth) / 2);
+        var placeY = Math.Max(0, (_context.Document.Height - placeHeight) / 2);
+
+        var shape = new Shape
+        {
+            Kind = ShapeKind.RasterImage,
+            X = placeX,
+            Y = placeY,
+            Width = placeWidth,
+            Height = placeHeight,
+            ImageBytes = pngBytes,
+        };
+
+        layer.Shapes.Insert(0, shape);
+        _context.UndoManager.Push(UndoableAction.ForInsert(layer.Shapes, shape, 0));
+
+        _context.SelectedShapes.Clear();
+        _context.SelectedShapes.Add(shape);
+        _context.SelectedLayer = layer;
+        _context.RequestRedraw();
+
+        var entry = new IconLibraryEntry
+        {
+            Name = $"Image {DateTime.Now:HH:mm:ss}",
+            Shapes = [CloneShape(shape)],
         };
         _store.Save(entry);
         RefreshLibrary();

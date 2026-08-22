@@ -16,9 +16,34 @@
 
     <Style TargetType="ContextMenu">
         <Setter Property="Background" Value="{StaticResource PanelBackgroundBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource ForegroundTextBrush}" />
         <Setter Property="BorderBrush" Value="{StaticResource AccentBlueMidBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="2" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContextMenu">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            SnapsToDevicePixels="True">
+                        <!-- Flipping the ScrollViewer's flow direction moves its vertical scrollbar
+                             from the (default) right edge to the left; the inner panel is flipped
+                             back so item text still reads left-to-right, per the user's request that
+                             the scrollbar sit thin on the LEFT side of the menu. -->
+                        <ScrollViewer FlowDirection="RightToLeft"
+                                      VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      CanContentScroll="True"
+                                      Focusable="False">
+                            <StackPanel FlowDirection="LeftToRight"
+                                        IsItemsHost="True"
+                                        Margin="{TemplateBinding Padding}" />
+                        </ScrollViewer>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <Style TargetType="MenuItem">

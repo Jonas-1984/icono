@@ -7,6 +7,7 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using Icono.App.State;
 using Icono.App.State.Undo;
+using Icono.App.Views;
 using Icono.Core;
 
 namespace Icono.App;
@@ -83,9 +84,35 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (Keyboard.FocusedElement is ComboBox or Slider)
+        {
+            // Arrow keys are that control's own way to change its value/navigate its list — don't
+            // steal them for shape-nudging while one of these has focus.
+            return;
+        }
+
         if (e.Key == Key.Delete)
         {
             DeleteSelectedShapes();
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key is Key.Up or Key.Down or Key.Left or Key.Right && _context.SelectedShapes.Count > 0)
+        {
+            // Only swallow the key when there's actually a selection to move — otherwise leave
+            // arrow keys alone so RadioButton-group keyboard navigation (the tool/shape pickers)
+            // keeps working as normal.
+            var step = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) ? 10.0 : 1.0;
+            var (dx, dy) = e.Key switch
+            {
+                Key.Up => (0.0, -step),
+                Key.Down => (0.0, step),
+                Key.Left => (-step, 0.0),
+                _ => (step, 0.0),
+            };
+
+            _context.NudgeSelection(dx, dy);
             e.Handled = true;
             return;
         }
@@ -163,6 +190,49 @@ public partial class MainWindow : Window
     private void PasteMenuItem_OnClick(object sender, RoutedEventArgs e) => PasteClipboard();
 
     private void DeleteButton_OnClick(object sender, RoutedEventArgs e) => DeleteSelectedShapes();
+
+    private void CopyButton_OnClick(object sender, RoutedEventArgs e) => CopySelectedShapes();
+
+    private void PasteButton_OnClick(object sender, RoutedEventArgs e) => PasteClipboard();
+
+    private void MergeButton_OnClick(object sender, RoutedEventArgs e) => _context.MergeSelection();
+
+    private void GroupButton_OnClick(object sender, RoutedEventArgs e) => _context.GroupSelection();
+
+    private void UngroupButton_OnClick(object sender, RoutedEventArgs e) => _context.UngroupSelection();
+
+    private void LockButton_OnClick(object sender, RoutedEventArgs e) => _context.SetSelectionLocked(true);
+
+    private void UnlockButton_OnClick(object sender, RoutedEventArgs e) => _context.SetSelectionLocked(false);
+
+    private void BringToFrontButton_OnClick(object sender, RoutedEventArgs e) => _context.BringSelectionToFront();
+
+    private void SendToBackButton_OnClick(object sender, RoutedEventArgs e) => _context.SendSelectionToBack();
+
+    private void UnionButton_OnClick(object sender, RoutedEventArgs e) => _context.UnionSelection();
+
+    private void TrimButton_OnClick(object sender, RoutedEventArgs e) => _context.TrimSelection();
+
+    private void ReflectButton_OnClick(object sender, RoutedEventArgs e) => _context.ReflectSelection();
+
+    private void OffsetButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OffsetDialog { Owner = this };
+        if (dialog.ShowDialog() == true)
+        {
+            _context.OffsetSelection(dialog.Distance);
+        }
+    }
+
+    private void RegionColorToolRadioButton_OnChecked(object sender, RoutedEventArgs e) =>
+        _context.ActiveTool = ActiveTool.RegionColor;
+
+    private void BorderToolRadioButton_OnChecked(object sender, RoutedEventArgs e)
+    {
+        // The Border tool's exact meaning (frame-around-canvas vs. a shape kind) is ambiguous —
+        // treated as a Select alias for now, pending clarification.
+        _context.ActiveTool = ActiveTool.Select;
+    }
 
     private void TextButton_OnClick(object sender, RoutedEventArgs e)
     {

@@ -40,6 +40,63 @@ public static class ShapeCombiner
         return BuildCombinedShape(current, shapes[0]);
     }
 
+    /// <summary>Combines every shape's geometry into ONE shape object — each input's own sub-path
+    /// is kept exactly as drawn (no boolean fill-merge), just concatenated and re-normalized into
+    /// the shared 24x24 space. Unlike <see cref="Union"/> (which needs real fillable areas to
+    /// union and mangles open line geometry), this works for ANY mix of lines, stroke-only icons,
+    /// and filled shapes — useful for turning several separate pieces (e.g. a multi-path SVG
+    /// import's several CombinedPath shapes) into one object that moves/resizes/selects as a
+    /// single unit without changing how any piece looks.</summary>
+    public static Shape? Merge(IReadOnlyList<Shape> shapes)
+    {
+        if (shapes.Count < 2)
+        {
+            return null;
+        }
+
+        using var combined = new SKPath();
+        foreach (var shape in shapes)
+        {
+            using var piece = ShapeGeometryFactory.Build(shape);
+            combined.AddPath(piece);
+        }
+
+        var bounds = combined.Bounds;
+        if (bounds.Width <= 0 || bounds.Height <= 0)
+        {
+            return null;
+        }
+
+        using var normalized = new SKPath(combined);
+        normalized.Offset(-bounds.Left, -bounds.Top);
+        normalized.Transform(SKMatrix.CreateScale(24f / bounds.Width, 24f / bounds.Height));
+
+        var template = shapes[0];
+
+        // If ANY piece is a line/stroke-only icon, the merged result must stay in "fill closed
+        // contours only" mode too — otherwise the generic fill pass would treat the whole
+        // concatenated path as one nonzero-winding region and auto-fill that piece's open contour
+        // into an unwanted blob (the exact bug already fixed for the fixed-geometry icon kinds).
+        var strokeOnly = shapes.Any(IsEffectivelyStrokeOnly);
+
+        return new Shape
+        {
+            Kind = ShapeKind.CombinedPath,
+            X = bounds.Left,
+            Y = bounds.Top,
+            Width = Math.Max(1, bounds.Width),
+            Height = Math.Max(1, bounds.Height),
+            FillColor = template.FillColor,
+            BorderColor = template.BorderColor,
+            BorderThickness = template.BorderThickness,
+            CustomPathData = normalized.ToSvgPathData(),
+            CustomPathStrokeOnly = strokeOnly,
+        };
+    }
+
+    private static bool IsEffectivelyStrokeOnly(Shape shape) =>
+        shape.Kind == ShapeKind.CombinedPath ? shape.CustomPathStrokeOnly : ShapeGeometryFactory.IsStrokeOnly(shape.Kind);
+
     /// <summary>Cuts away the part of <paramref name="back"/> that <paramref name="front"/>
     /// covers — the front shape is used as a cutter and isn't kept itself.</summary>
     public static Shape? Trim(Shape front, Shape back)

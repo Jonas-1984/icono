@@ -15,6 +15,7 @@ public class ShapeSnapshotTests
             Width = 30,
             Height = 40,
             FillColor = ArgbColor.FromRgb(1, 2, 3),
+            FillEnabled = false,
             BorderColor = ArgbColor.FromRgb(4, 5, 6),
             BorderThickness = 2,
             CornerRadius = 5,
@@ -24,6 +25,7 @@ public class ShapeSnapshotTests
             ShadowEnabled = true,
             ShadowDistance = 7,
             ShadowStrength = 60,
+            ShadowBlurRadius = 12,
             Rotation = 45,
             FlipHorizontal = true,
             FlipVertical = false,
@@ -31,6 +33,8 @@ public class ShapeSnapshotTests
             TextFontSize = 32,
             TextBold = true,
             TextItalic = true,
+            TextUnderline = true,
+            Name = "My Rectangle",
         };
 
         var snapshot = ShapeSnapshot.Capture(original);
@@ -43,6 +47,7 @@ public class ShapeSnapshotTests
         Assert.Equal(original.Width, target.Width);
         Assert.Equal(original.Height, target.Height);
         Assert.Equal(original.FillColor, target.FillColor);
+        Assert.Equal(original.FillEnabled, target.FillEnabled);
         Assert.Equal(original.BorderColor, target.BorderColor);
         Assert.Equal(original.BorderThickness, target.BorderThickness);
         Assert.Equal(original.CornerRadius, target.CornerRadius);
@@ -52,6 +57,7 @@ public class ShapeSnapshotTests
         Assert.Equal(original.ShadowEnabled, target.ShadowEnabled);
         Assert.Equal(original.ShadowDistance, target.ShadowDistance);
         Assert.Equal(original.ShadowStrength, target.ShadowStrength);
+        Assert.Equal(original.ShadowBlurRadius, target.ShadowBlurRadius);
         Assert.Equal(original.Rotation, target.Rotation);
         Assert.Equal(original.FlipHorizontal, target.FlipHorizontal);
         Assert.Equal(original.FlipVertical, target.FlipVertical);
@@ -59,6 +65,8 @@ public class ShapeSnapshotTests
         Assert.Equal(original.TextFontSize, target.TextFontSize);
         Assert.Equal(original.TextBold, target.TextBold);
         Assert.Equal(original.TextItalic, target.TextItalic);
+        Assert.Equal(original.TextUnderline, target.TextUnderline);
+        Assert.Equal(original.Name, target.Name);
     }
 
     [Fact]

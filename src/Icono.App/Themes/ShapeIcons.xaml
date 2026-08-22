@@ -3,7 +3,12 @@
 
     <!-- Tool icons, 24x24 nominal box, line-art (consumed with Stroke, no Fill) -->
     <PathGeometry x:Key="SelectToolGeometry" Figures="M4,3 L4,19 L9,15 L13,21 L16,19 L12,13 L18,13 Z" />
-    <PathGeometry x:Key="PanZoomToolGeometry" Figures="M12,3 L12,21 M3,12 L21,12 M8,7 L12,3 L16,7 M8,17 L12,21 L16,17" />
+    <PathGeometry x:Key="PanZoomToolGeometry"
+                  Figures="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2 M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2 M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8 M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15" />
+    <PathGeometry x:Key="AddPointToolGeometry"
+                  Figures="M14 4.1 12 6 M5.1,8 l-2.9,-0.8 M6,12 l-1.9,2 M7.2 2.2 8 5.1 M9.037 9.69a.498.498 0 0 1 .653-.653l11 4.5a.5.5 0 0 1-.074.949l-4.349 1.041a1 1 0 0 0-.74.739l-1.04 4.35a.5.5 0 0 1-.95.074z" />
+    <PathGeometry x:Key="DeletePointToolGeometry"
+                  Figures="M4.037 4.688a.495.495 0 0 1 .651-.651l16 6.5a.5.5 0 0 1-.063.947l-6.124 1.58a2 2 0 0 0-1.438 1.435l-1.579 6.126a.5.5 0 0 1-.947.063z" />
 
     <PathGeometry x:Key="RectangleToolGeometry" Figures="M3,5 L21,5 L21,19 L3,19 Z" />
     <RectangleGeometry x:Key="RoundedRectangleToolGeometry" Rect="3,5,18,14" RadiusX="4" RadiusY="4" />
@@ -35,7 +40,8 @@
     <PathGeometry x:Key="OctagonToolGeometry" Figures="M8,4 L16,4 L20,8 L20,16 L16,20 L8,20 L4,16 L4,8 Z" />
     <PathGeometry x:Key="HeartToolGeometry" Figures="M12,7 L9,3 L4,3 L2,7 L2,11 L12,21 L22,11 L22,7 L20,3 L15,3 Z" />
     <PathGeometry x:Key="CloudToolGeometry" Figures="M5,17 A4,4 0 0 1 9,13 A5,5 0 0 1 15,9 A4,4 0 0 1 19,13 A4,4 0 0 1 21,17 L5,17 Z" />
-    <PathGeometry x:Key="ShieldToolGeometry" Figures="M4,4 L20,4 L20,12 L12,21 L4,12 Z" />
+    <PathGeometry x:Key="ShieldToolGeometry"
+                  Figures="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
     <PathGeometry x:Key="BookmarkToolGeometry" Figures="M5,3 L19,3 L19,21 L12,15 L5,21 Z" />
     <PathGeometry x:Key="Box3DToolGeometry"
                   Figures="M4,9 L15,9 L15,20 L4,20 Z M4,9 L8,4 L19,4 L15,9 M15,9 L19,4 L19,15 L15,20" />
@@ -67,35 +73,184 @@
 
     <PathGeometry x:Key="ClubToolGeometry"
                   Figures="M17.28 9.05a5.5 5.5 0 1 0-10.56 0A5.5 5.5 0 1 0 12 17.66a5.5 5.5 0 1 0 5.28-8.6Z M12 17.66L12 22" />
-    <PathGeometry x:Key="TextToolGeometry" Figures="M4,5 L20,5 M12,5 L12,20" />
-    <PathGeometry x:Key="UndoToolGeometry" Figures="M13,5 A8,8 0 1 1 6.5,8.5 M4,5 L6.5,8.5 L10,7" />
-    <PathGeometry x:Key="RedoToolGeometry" Figures="M11,5 A8,8 0 1 0 17.5,8.5 M20,5 L17.5,8.5 L14,7" />
+
+    <PathGeometry x:Key="StarCheckToolGeometry"
+                  Figures="m19.06 12.501 2.78-2.707a.53.53 0 0 0-.294-.905l-5.166-.755a2.1 2.1 0 0 1-1.595-1.16l-2.31-4.68a.53.53 0 0 0-.95.001L9.216 6.974a2.1 2.1 0 0 1-1.597 1.16l-5.165.755a.53.53 0 0 0-.294.906l3.736 3.637a2.1 2.1 0 0 1 .611 1.879l-.88 5.139a.53.53 0 0 0 .769.56l4.617-2.428.027-.014 M15,18 l2,2 l4,-4" />
+    <PathGeometry x:Key="StarPlusToolGeometry"
+                  Figures="M11.013 18.582 6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.12 2.12 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.12 2.12 0 0 0 1.597-1.16l2.309-4.679a.53.53 0 0 1 .95 0l2.31 4.679a2.12 2.12 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904L20 11.5 M15 18h6 M18 15v6" />
+    <PathGeometry x:Key="StarMinusToolGeometry"
+                  Figures="M15 18h6 M17.688 14a2.1 2.1 0 0 1 .416-.568l3.736-3.638a.53.53 0 0 0-.294-.905l-5.166-.755a2.1 2.1 0 0 1-1.595-1.16l-2.31-4.68a.53.53 0 0 0-.95.001L9.216 6.974a2.1 2.1 0 0 1-1.597 1.16l-5.165.755a.53.53 0 0 0-.294.906l3.736 3.637a2.1 2.1 0 0 1 .611 1.879l-.88 5.139a.53.53 0 0 0 .769.56l4.617-2.428.027-.014" />
+    <PathGeometry x:Key="SquareArrowOutUpRightToolGeometry"
+                  Figures="M21 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6 M21,3 l-9,9 M15 3h6v6" />
+    <PathGeometry x:Key="BlocksToolGeometry"
+                  Figures="M10 22V7a1 1 0 0 0-1-1H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5a1 1 0 0 0-1-1H2 M15,2 H21 A1,1 0 0 1 22,3 V9 A1,1 0 0 1 21,10 H15 A1,1 0 0 1 14,9 V3 A1,1 0 0 1 15,2 Z" />
+    <PathGeometry x:Key="SwatchBookToolGeometry"
+                  Figures="M11 17a4 4 0 0 1-8 0V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2Z M16.7 13H19a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H7 M7 17h.01 M11,8 l2.3,-2.3 a2.4 2.4 0 0 1 3.404 .004 L18.6 7.6 a2.4 2.4 0 0 1 .026 3.434 L9.9 19.8" />
+    <PathGeometry x:Key="LensConcaveToolGeometry"
+                  Figures="M7 2a1 1 0 0 0-.8 1.6 14 14 0 0 1 0 16.8A1 1 0 0 0 7 22h10a1 1 0 0 0 .8-1.6 14 14 0 0 1 0-16.8A1 1 0 0 0 17 2z" />
+    <GeometryGroup x:Key="CylinderToolGeometry">
+        <EllipseGeometry Center="12,5" RadiusX="9" RadiusY="3" />
+        <PathGeometry Figures="M3 5v14a9 3 0 0 0 18 0V5" />
+    </GeometryGroup>
+    <GeometryGroup x:Key="ConeToolGeometry">
+        <PathGeometry Figures="m20.9 18.55-8-15.98a1 1 0 0 0-1.8 0l-8 15.98" />
+        <EllipseGeometry Center="12,19" RadiusX="9" RadiusY="3" />
+    </GeometryGroup>
+    <PathGeometry x:Key="PyramidToolGeometry"
+                  Figures="M2.5 16.88a1 1 0 0 1-.32-1.43l9-13.02a1 1 0 0 1 1.64 0l9 13.01a1 1 0 0 1-.32 1.44l-8.51 4.86a2 2 0 0 1-1.98 0Z M12 2v20" />
+    <PathGeometry x:Key="TriangleAlertToolGeometry"
+                  Figures="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3 M12 9v4 M12 17h.01" />
+    <PathGeometry x:Key="SpadeToolGeometry"
+                  Figures="M2 14.499a5.5 5.5 0 0 0 9.591 3.675.6.6 0 0 1 .818.001A5.5 5.5 0 0 0 22 14.5c0-2.29-1.5-4-3-5.5l-5.492-5.312a2 2 0 0 0-3-.02L5 8.999c-1.5 1.5-3 3.2-3 5.5 M12 18v4" />
+    <PathGeometry x:Key="SquareDashedBottomToolGeometry"
+                  Figures="M5 21a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2 M9 21h1 M14 21h1" />
+    <PathGeometry x:Key="ShareToolGeometry"
+                  Figures="M12 2v13 M16,6 l-4,-4 l-4,4 M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+    <GeometryGroup x:Key="ShieldCogToolGeometry">
+        <PathGeometry Figures="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z M10.929,14.467 l-0.383,0.924 M10.929 8.923 10.546 8 M13.225 8.923 13.608 8 M13.607,15.391 l-0.382,-0.924 M14.849,10.547 l0.923,-0.383 M14.849,12.843 l0.923,0.383 M9.305,10.547 l-0.923,-0.383 M9.305,12.843 l-0.923,0.383" />
+        <EllipseGeometry Center="12.077,11.695" RadiusX="3" RadiusY="3" />
+    </GeometryGroup>
+    <PathGeometry x:Key="UmbrellaToolGeometry"
+                  Figures="M20.992 13a1 1 0 0 0 .97-1.274 10.284 10.284 0 0 0-19.923 0A1 1 0 0 0 3 13z M12 13v7a2 2 0 0 0 4 0 M12 2v2" />
+    <PathGeometry x:Key="CloudyToolGeometry"
+                  Figures="M17.5 12a1 1 0 1 1 0 9H9.006a7 7 0 1 1 6.702-9z M21.832 9A3 3 0 0 0 19 7h-2.207a5.5 5.5 0 0 0-10.72.61" />
+    <PathGeometry x:Key="TrafficConeToolGeometry"
+                  Figures="M16.949 14.14a5 2.5 0 1 1-9.9 0L10.063 3.5a2 2 0 0 1 3.874 0z M16.05 10.966a5 2.5 0 0 1-8.1 0 M9.194 6.57a5 2.5 0 0 0 5.61 0 M16.923,14.049 l4.48,2.04 a1 1 0 0 1 .001 1.831 l-8.574 3.9 a2 2 0 0 1-1.66 0 l-8.574-3.91 a1 1 0 0 1 0-1.83 l4.484-2.04" />
+    <PathGeometry x:Key="WorktableToolGeometry"
+                  Figures="M2,4 L22,4 L22,20 L15,20 L15,17 L9,17 L9,20 L2,20 Z" />
+    <PathGeometry x:Key="RoundTableToolGeometry"
+                  Figures="M3,12 A9,9 0 1 0 21,12 A9,9 0 1 0 3,12 Z M6.5,12 A5.5,5.5 0 1 0 17.5,12 A5.5,5.5 0 1 0 6.5,12 Z" />
+    <PathGeometry x:Key="OfficeChairToolGeometry"
+                  Figures="M6,13 A6,5 0 1 0 18,13 A6,5 0 1 0 6,13 Z M7,7 A5,3 0 0 1 17,7 M12,18 L12,21" />
+    <PathGeometry x:Key="MonitorToolGeometry"
+                  Figures="M4,7 L20,7 L20,10 L4,10 Z M9,13 L15,13 L15,19 L9,19 Z M12,10 L12,13" />
+    <PathGeometry x:Key="SofaToolGeometry"
+                  Figures="M3,9 L21,9 L21,18 L3,18 Z M3,6 L7,6 L7,20 L3,20 Z M17,6 L21,6 L21,20 L17,20 Z M8,11 L16,11" />
+    <PathGeometry x:Key="BookshelfToolGeometry"
+                  Figures="M3,4 L21,4 L21,20 L3,20 Z M9,4 L9,20 M15,4 L15,20" />
+    <PathGeometry x:Key="DoorToolGeometry"
+                  Figures="M4,20 L20,20 M4,20 L4,6 M4,6 A14,14 0 0 1 18,20" />
+    <PathGeometry x:Key="PlantToolGeometry"
+                  Figures="M7,15 A5,5 0 1 0 17,15 A5,5 0 1 0 7,15 Z M12,14 L12,4 M12,14 L6,7 M12,14 L18,7 M12,14 L5,13 M12,14 L19,13" />
+    <PathGeometry x:Key="WorkstationToolGeometry"
+                  Figures="M2,3 L22,3 L22,21 L2,21 Z M4,5 L10,5 L10,10 L4,10 Z M7,5 L7,10 M12,6 L20,6 L20,10 L12,10 Z M14,7.3 L14,8.7 M16,7.3 L16,8.7 M18,7.3 L18,8.7 M5,13 L11,13 L11,16.5 L5,16.5 Z M4,16.5 L12,16.5 L12,19 L4,19 Z M15,16.5 A2,2.5 0 1 0 19,16.5 A2,2.5 0 1 0 15,16.5 Z" />
+    <PathGeometry x:Key="FlowerClusterToolGeometry"
+                  Figures="M14.2,11 A2.3,2.3 0 1 0 18.8,11 A2.3,2.3 0 1 0 14.2,11 Z M11.95,14.9 A2.3,2.3 0 1 0 16.55,14.9 A2.3,2.3 0 1 0 11.95,14.9 Z M7.45,14.9 A2.3,2.3 0 1 0 12.05,14.9 A2.3,2.3 0 1 0 7.45,14.9 Z M5.2,11 A2.3,2.3 0 1 0 9.8,11 A2.3,2.3 0 1 0 5.2,11 Z M7.45,7.1 A2.3,2.3 0 1 0 12.05,7.1 A2.3,2.3 0 1 0 7.45,7.1 Z M11.95,7.1 A2.3,2.3 0 1 0 16.55,7.1 A2.3,2.3 0 1 0 11.95,7.1 Z M10.5,11 A1.5,1.5 0 1 0 13.5,11 A1.5,1.5 0 1 0 10.5,11 Z M15.5,17 A0.5,0.5 0 1 0 16.5,17 A0.5,0.5 0 1 0 15.5,17 Z M17.5,19 A0.5,0.5 0 1 0 18.5,19 A0.5,0.5 0 1 0 17.5,19 Z M13.5,20 A0.5,0.5 0 1 0 14.5,20 A0.5,0.5 0 1 0 13.5,20 Z" />
+    <PathGeometry x:Key="StarFlowerToolGeometry"
+                  Figures="M12,12.6 L21,11 L12,9.4 Z M10.61,11.8 L16.5,18.79 L13.39,10.2 Z M10.61,10.2 L7.5,18.79 L13.39,11.8 Z M12,9.4 L3,11 L12,12.6 Z M13.39,10.2 L7.5,3.21 L10.61,11.8 Z M13.39,11.8 L16.5,3.21 L10.61,10.2 Z M10,11 A2,2 0 1 0 14,11 A2,2 0 1 0 10,11 Z M11.3,10.3 A0.4,0.4 0 1 0 12.1,10.3 A0.4,0.4 0 1 0 11.3,10.3 Z" />
+    <PathGeometry x:Key="DaisyFlowerToolGeometry"
+                  Figures="M12,12.7 L21,12 L12,11.3 Z M11.5,12.5 L18.36,18.36 L12.5,11.5 Z M11.3,12 L12,21 L12.7,12 Z M11.5,11.5 L5.64,18.36 L12.5,12.5 Z M12,11.3 L3,12 L12,12.7 Z M12.5,11.5 L5.64,5.64 L11.5,12.5 Z M12.7,12 L12,3 L11.3,12 Z M12.5,12.5 L18.36,5.64 L11.5,11.5 Z M10.7,12 A1.3,1.3 0 1 0 13.3,12 A1.3,1.3 0 1 0 10.7,12 Z" />
+    <PathGeometry x:Key="WorkplaceToolGeometry"
+                  Figures="M3,5 L21,5 L21,19 L3,19 Z M3,5 L1.5,3.5 M21,5 L22.5,3.5 M3,19 L1.5,20.5 M21,19 L22.5,20.5 M8,7 L16,7 L16,11 L8,11 Z M11,11 L13,11 L13,12.5 L11,12.5 Z M10,12.5 L14,12.5 L14,13.3 L10,13.3 Z M6,14.3 L15,14.3 L15,17.5 L6,17.5 Z M7.65,15.3 A0.35,0.35 0 1 0 8.35,15.3 A0.35,0.35 0 1 0 7.65,15.3 Z M10.15,15.3 A0.35,0.35 0 1 0 10.85,15.3 A0.35,0.35 0 1 0 10.15,15.3 Z M12.65,15.3 A0.35,0.35 0 1 0 13.35,15.3 A0.35,0.35 0 1 0 12.65,15.3 Z M7.65,16.7 A0.35,0.35 0 1 0 8.35,16.7 A0.35,0.35 0 1 0 7.65,16.7 Z M10.15,16.7 A0.35,0.35 0 1 0 10.85,16.7 A0.35,0.35 0 1 0 10.15,16.7 Z M12.65,16.7 A0.35,0.35 0 1 0 13.35,16.7 A0.35,0.35 0 1 0 12.65,16.7 Z M16.1,16.5 A1.4,1.8 0 1 0 18.9,16.5 A1.4,1.8 0 1 0 16.1,16.5 Z M16.4,8.5 A1.6,1.6 0 1 0 19.6,8.5 A1.6,1.6 0 1 0 16.4,8.5 Z M18,8.5 L18,7" />
+    <PathGeometry x:Key="FilingCabinetToolGeometry"
+                  Figures="M3,3 L21,3 L21,21 L3,21 Z M3,9 L21,9 M3,15 L21,15 M11,6 L13,6 M11,12 L13,12 M11,18 L13,18" />
+    <PathGeometry x:Key="PrinterToolGeometry"
+                  Figures="M3,8 L21,8 L21,19 L3,19 Z M6,8 L6,4 L18,4 L18,8 M6,12 L14,12 M15.8,15 A1.2,1.2 0 1 0 18.2,15 A1.2,1.2 0 1 0 15.8,15 Z" />
+    <PathGeometry x:Key="TrashBinToolGeometry"
+                  Figures="M4,12 A8,8 0 1 0 20,12 A8,8 0 1 0 4,12 Z M6,12 A6,6 0 1 0 18,12 A6,6 0 1 0 6,12 Z" />
+    <PathGeometry x:Key="WhiteboardToolGeometry" Figures="M3,9 L21,9 L21,15 L3,15 Z M4,9 L4,7 M20,9 L20,7" />
+    <PathGeometry x:Key="WindowToolGeometry" Figures="M3,9 L21,9 M3,13 L21,13 M3,9 L3,13 M21,9 L21,13" />
+    <PathGeometry x:Key="StairsToolGeometry"
+                  Figures="M4,4 L20,4 M4,8 L20,8 M4,12 L20,12 M4,16 L20,16 M4,20 L20,20 M12,20 L12,3 M9,6 L12,3 L15,6" />
+    <PathGeometry x:Key="PottedTreeToolGeometry"
+                  Figures="M5,9 A7,7 0 1 0 19,9 A7,7 0 1 0 5,9 Z M9,16 L15,16 L14,21 L10,21 Z" />
+    <PathGeometry x:Key="RugToolGeometry" Figures="M3,4 L21,4 L21,20 L3,20 Z M5,6 L19,6 L19,18 L5,18 Z" />
+    <PathGeometry x:Key="BedToolGeometry"
+                  Figures="M4,6 L20,6 L20,21 L4,21 Z M6,7.5 L18,7.5 L18,11.5 L6,11.5 Z M4,15 L20,15" />
+    <PathGeometry x:Key="LampToolGeometry"
+                  Figures="M5,12 A7,7 0 1 0 19,12 A7,7 0 1 0 5,12 Z M10.8,12 A1.2,1.2 0 1 0 13.2,12 A1.2,1.2 0 1 0 10.8,12 Z" />
+    <PathGeometry x:Key="TextToolGeometry" Figures="M12 4v16 M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2 M9 20h6" />
+    <PathGeometry x:Key="RegionColorToolGeometry"
+                  Figures="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.5-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z" />
+    <PathGeometry x:Key="UndoToolGeometry" Figures="M9 14 4 9l5-5 M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11" />
+    <PathGeometry x:Key="RedoToolGeometry" Figures="m15 14 5-5-5-5 M20 9H9.5A5.5 5.5 0 0 0 4 14.5A5.5 5.5 0 0 0 9.5 20H13" />
+    <PathGeometry x:Key="RotateCcwToolGeometry" Figures="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8 M3 3v5h5" />
+    <PathGeometry x:Key="RotateStepUpToolGeometry" Figures="m18 15-6-6-6 6" />
+    <PathGeometry x:Key="RotateStepDownToolGeometry" Figures="m6 9 6 6 6-6" />
+    <PathGeometry x:Key="BoldToolGeometry" Figures="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8" />
+    <PathGeometry x:Key="ItalicToolGeometry" Figures="M19,4 L10,4 M14,20 L5,20 M15,4 L9,20" />
+    <PathGeometry x:Key="UnderlineToolGeometry" Figures="M6 4v6a6 6 0 0 0 12 0V4 M4,20 L20,20" />
+    <GeometryGroup x:Key="CaseSensitiveToolGeometry">
+        <PathGeometry Figures="m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16 M22 9v7 M3.304 13h6.392" />
+        <EllipseGeometry Center="18.5,12.5" RadiusX="3.5" RadiusY="3.5" />
+    </GeometryGroup>
+    <PathGeometry x:Key="LayersToolGeometry"
+                  Figures="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12 M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17" />
+    <PathGeometry x:Key="LayersPlusToolGeometry"
+                  Figures="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 .83.18 2 2 0 0 0 .83-.18l8.58-3.9a1 1 0 0 0 0-1.831z M16 17h6 M19 14v6 M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 .825.178 M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l2.116-.962" />
+    <GeometryGroup x:Key="ImagePlusToolGeometry">
+        <PathGeometry Figures="M16 5h6 M19 2v6 M21 11.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7.5 M21,15 l-3.086,-3.086 a2 2 0 0 0-2.828 0 L6 21" />
+        <EllipseGeometry Center="9,9" RadiusX="2" RadiusY="2" />
+    </GeometryGroup>
     <PathGeometry x:Key="DeleteToolGeometry"
-                  Figures="M5,7 L19,7 M9,7 L9,4 L15,4 L15,7 M7,7 L8,20 L16,20 L17,7 M10,10 L10,17 M14,10 L14,17" />
+                  Figures="M10 11v6 M14 11v6 M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6 M3 6h18 M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
     <PathGeometry x:Key="FlipHorizontalToolGeometry"
                   Figures="M12,3 L12,21 M5,7 L9,7 L9,17 L5,17 Z M19,7 L15,7 L15,17 L19,17 Z" />
     <PathGeometry x:Key="FlipVerticalToolGeometry"
                   Figures="M3,12 L21,12 M7,5 L7,9 L17,9 L17,5 Z M7,19 L7,15 L17,15 L17,19 Z" />
     <PathGeometry x:Key="ChevronDownGeometry" Figures="M4,7 L10,13 L16,7" />
-    <GeometryGroup x:Key="UnionToolGeometry">
-        <EllipseGeometry Center="9,12" RadiusX="6" RadiusY="6" />
-        <EllipseGeometry Center="15,12" RadiusX="6" RadiusY="6" />
-    </GeometryGroup>
-    <GeometryGroup x:Key="TrimToolGeometry">
-        <EllipseGeometry Center="9,12" RadiusX="6" RadiusY="6" />
-        <EllipseGeometry Center="15,12" RadiusX="4.2" RadiusY="4.2" />
-    </GeometryGroup>
+    <PathGeometry x:Key="UnionToolGeometry"
+                  Figures="M4 16a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3a1 1 0 0 0 1 1h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-3a1 1 0 0 0-1-1z" />
+    <PathGeometry x:Key="TrimToolGeometry"
+                  Figures="M13 13.74a2 2 0 0 1-2 0L2.5 8.87a1 1 0 0 1 0-1.74L11 2.26a2 2 0 0 1 2 0l8.5 4.87a1 1 0 0 1 0 1.74z M20,14.285 l1.5,0.845 a1 1 0 0 1 0 1.74 L13,21.74 a2 2 0 0 1-2 0 l-8.5,-4.87 a1 1 0 0 1 0,-1.74 l1.5,-0.845" />
     <PathGeometry x:Key="GridToolGeometry" Figures="M3,3 L21,3 L21,21 L3,21 Z M3,9 L21,9 M3,15 L21,15 M9,3 L9,21 M15,3 L15,21" />
     <PathGeometry x:Key="SnapToolGeometry" Figures="M12,2 L12,7 M12,17 L12,22 M2,12 L7,12 M17,12 L22,12 M12,9 A3,3 0 1 0 12,15 A3,3 0 1 0 12,9 Z" />
     <PathGeometry x:Key="BorderToolGeometry"
                   Figures="M2,7 L2,2 L7,2 M17,2 L22,2 L22,7 M22,17 L22,22 L17,22 M7,22 L2,22 L2,17" />
-    <PathGeometry x:Key="EyeToolGeometry"
-                  Figures="M2,12 C5,6 9,4 12,4 C15,4 19,6 22,12 C19,18 15,20 12,20 C9,20 5,18 2,12 Z M12,9 A3,3 0 1 0 12,15 A3,3 0 1 0 12,9 Z" />
+    <GeometryGroup x:Key="EyeToolGeometry">
+        <PathGeometry Figures="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
+        <EllipseGeometry Center="12,12" RadiusX="3" RadiusY="3" />
+    </GeometryGroup>
     <PathGeometry x:Key="EyeOffToolGeometry"
-                  Figures="M3,3 L21,21 M9.9,5.1 C10.6,4.9 11.3,4.8 12,4.8 C15,4.8 19,6.6 22,12 C20.9,14 19.6,15.5 18.2,16.6 M6.1,7.3 C4.3,8.6 2.9,10.3 2,12 C5,17.4 9,19.2 12,19.2 C13.2,19.2 14.5,18.9 15.7,18.3 M9.5,9.9 A3,3 0 0 0 14.1,14.5" />
-    <PathGeometry x:Key="LockToolGeometry"
-                  Figures="M6,11 L6,8 A6,6 0 1 1 18,8 L18,11 M4,11 L20,11 L20,21 L4,21 Z" />
-    <PathGeometry x:Key="PaintBucketToolGeometry"
-                  Figures="M4,11 L12,4 L20,11 L16,16 L8,16 Z M11,16 L11,20 L14,22 L17,20 L17,16" />
+                  Figures="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49 M14.084 14.158a3 3 0 0 1-4.242-4.242 M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143 M2,2 l20,20" />
+    <GeometryGroup x:Key="LockToolGeometry">
+        <RectangleGeometry Rect="3,11,18,11" RadiusX="2" RadiusY="2" />
+        <PathGeometry Figures="M7 11V7a5 5 0 0 1 10 0v4" />
+    </GeometryGroup>
+    <GeometryGroup x:Key="UnlockToolGeometry">
+        <RectangleGeometry Rect="3,11,18,11" RadiusX="2" RadiusY="2" />
+        <PathGeometry Figures="M7 11V7a5 5 0 0 1 9.9 -1" />
+    </GeometryGroup>
+    <GeometryGroup x:Key="CutToolGeometry">
+        <EllipseGeometry Center="6,6" RadiusX="3" RadiusY="3" />
+        <EllipseGeometry Center="6,18" RadiusX="3" RadiusY="3" />
+        <PathGeometry Figures="M8.12 8.12 L12 12 M20 4 L8.12 15.88 M14.8 14.8 L20 20 M8.12 15.88 L12 12" />
+    </GeometryGroup>
+    <GeometryGroup x:Key="CopyToolGeometry">
+        <RectangleGeometry Rect="8,8,14,14" RadiusX="2" RadiusY="2" />
+        <PathGeometry Figures="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+    </GeometryGroup>
+    <GeometryGroup x:Key="PasteToolGeometry">
+        <RectangleGeometry Rect="8,2,8,4" RadiusX="1" RadiusY="1" />
+        <PathGeometry Figures="M11 14h10 M16 4h2a2 2 0 0 1 2 2v1.344 M17,18 L21,14 L17,10 M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 1.793-1.113" />
+    </GeometryGroup>
+    <GeometryGroup x:Key="MergeToolGeometry">
+        <RectangleGeometry Rect="14,14,7,7" RadiusX="1" RadiusY="1" />
+        <RectangleGeometry Rect="3,3,7,7" RadiusX="1" RadiusY="1" />
+        <PathGeometry Figures="M14 3a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1 M19 3a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1 M7,15 L10,18 M7,21 L10,18 L5,18 a2 2 0 0 1-2-2 v-2" />
+    </GeometryGroup>
+    <GeometryGroup x:Key="GroupToolGeometry">
+        <RectangleGeometry Rect="7,7,7,5" RadiusX="1" RadiusY="1" />
+        <RectangleGeometry Rect="10,12,7,5" RadiusX="1" RadiusY="1" />
+        <PathGeometry Figures="M3 7V5c0-1.1.9-2 2-2h2 M17 3h2c1.1 0 2 .9 2 2v2 M21 17v2c0 1.1-.9 2-2 2h-2 M7 21H5c-1.1 0-2-.9-2-2v-2" />
+    </GeometryGroup>
+    <GeometryGroup x:Key="UngroupToolGeometry">
+        <RectangleGeometry Rect="11,14,10,7" RadiusX="2" RadiusY="2" />
+        <RectangleGeometry Rect="3,3,10,7" RadiusX="2" RadiusY="2" />
+    </GeometryGroup>
+    <PathGeometry x:Key="BringToFrontToolGeometry"
+                  Figures="M12 12V2 M2 17.002 a1 1 0 0 0 .58 .91 l8.6 3.91 a2 2 0 0 0 1.65 0 l8.58 -3.9 a1 1 0 0 0 .59 -.92 M7.674 8.774 L2.58 11.09 a1 1 0 0 0 0 1.822 l8.6 3.91 a2 2 0 0 0 1.65 0 l8.58 -3.9 a1 1 0 0 0 .59 -.92 a1 1 0 0 0 -.59 -.922 l-5.078 -2.308 M9,5 L12,2 L15,5" />
+    <GeometryGroup x:Key="ImageDownToolGeometry">
+        <PathGeometry Figures="M10.3 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10 l-3.1,-3.1 a2 2 0 0 0-2.814.014 L6 21 M14,19 L17,22 L17,16.5 M17,22 L20,19" />
+        <EllipseGeometry Center="9,9" RadiusX="2" RadiusY="2" />
+    </GeometryGroup>
+    <PathGeometry x:Key="ReflectToolGeometry"
+                  Figures="M17,3 L12,8 L7,3 L17,3 M17,21 L12,16 L7,21 L17,21 M4,12 L2,12 M10,12 L8,12 M16,12 L14,12 M22,12 L20,12" />
+    <GeometryGroup x:Key="OffsetToolGeometry">
+        <EllipseGeometry Center="12,12" RadiusX="10" RadiusY="10" />
+        <EllipseGeometry Center="12,12" RadiusX="1" RadiusY="1" />
+    </GeometryGroup>
+    <PathGeometry x:Key="SendToBackToolGeometry"
+                  Figures="M12 7v15 M2 12 a1 1 0 0 0 .58 .91 l5.093 2.316 M22 12 a1 1 0 0 1 -.59 .92 l-5.077 2.308 M8 10.37 L2.6 7.91 a1 1 0 0 1 0 -1.831 l8.57 -3.9 a2 2 0 0 1 1.66 .001 l8.59 3.91 a1 1 0 0 1 0 1.831 l-5.392 2.45 M9,19 L12,22 L15,19" />
 
 </ResourceDictionary>

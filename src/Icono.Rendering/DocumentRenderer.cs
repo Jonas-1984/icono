@@ -21,7 +21,7 @@ public static class DocumentRenderer
                     canvas.Clear(document.BackgroundColor.ToSkColor());
                     break;
                 case BackgroundMode.Blur:
-                    BlurBackgroundRenderer.Render(canvas, width, height);
+                    BlurBackgroundRenderer.Render(canvas, width, height, document);
                     break;
                 default:
                     CheckerboardRenderer.Render(canvas, width, height);

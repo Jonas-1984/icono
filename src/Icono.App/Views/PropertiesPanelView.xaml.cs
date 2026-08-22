@@ -44,10 +44,46 @@ public partial class PropertiesPanelView : UserControl
         ("Mint", Color.FromRgb(0xA8, 0xE6, 0xCF)), ("Soft Navy", Color.FromRgb(0x3D, 0x6E, 0x8C)),
     ];
 
+    // Order matches the reference "line ends" picker: plain line first, then wing-shaped heads
+    // (open/filled/thin/half), then the dot-style markers (circle/diamond/square/bar).
+    private static readonly ArrowHeadOption[] ArrowHeadOptions =
+    [
+        new("None", ArrowHeadKind.None),
+        new("Open Arrow", ArrowHeadKind.Open),
+        new("Filled Arrow", ArrowHeadKind.Filled),
+        new("Thin Arrow", ArrowHeadKind.Thin),
+        new("Half Arrow", ArrowHeadKind.Half),
+        new("Circle", ArrowHeadKind.Circle),
+        new("Diamond", ArrowHeadKind.Diamond),
+        new("Square", ArrowHeadKind.Square),
+        new("Bar", ArrowHeadKind.Bar),
+    ];
+
+    private static readonly FadeDirectionOption[] FadeDirectionOptions =
+    [
+        new("Top → Bottom", FadeDirection.TopToBottom),
+        new("Bottom → Top", FadeDirection.BottomToTop),
+        new("Left → Right", FadeDirection.LeftToRight),
+        new("Right → Left", FadeDirection.RightToLeft),
+        new("Both Sides (Vertical)", FadeDirection.VerticalBothSides),
+        new("Both Sides (Horizontal)", FadeDirection.HorizontalBothSides),
+    ];
+
     private readonly ObservableCollection<LayerListItem> _layerItems = new();
     private EditorContext? _context;
     private Shape? _boundShape;
     private List<ShapeSnapshot>? _sliderUndoBefore;
+
+    /// <summary>True while <see cref="RefreshControlsFromShape"/> is programmatically setting
+    /// control values to DISPLAY the bound shape's state. Every control's change-event handler
+    /// funnels its actual shape mutation through <see cref="ApplyToSelection"/>/
+    /// <see cref="ApplyToSelectionWithUndo"/>, which both check this flag first — without it, a
+    /// control whose displayed value happens to differ from what a DIFFERENT selected shape has
+    /// (e.g. selecting a 50%-opacity shape together with a 100%-opacity one) fires its change
+    /// event purely from being re-displayed, silently overwriting every selected shape's property
+    /// to match whichever shape the panel happens to be showing.</summary>
+    private bool _isRefreshingControls;
+    private Layer? _accentColorTargetLayer;
 
     public EditorContext? Context
     {
@@ -69,6 +105,19 @@ public partial class PropertiesPanelView : UserControl
                 BgTransparentRadio.IsChecked = _context.Document.BackgroundMode == BackgroundMode.Transparent;
                 BgSolidRadio.IsChecked = _context.Document.BackgroundMode == BackgroundMode.SolidColor;
                 BgBlurRadio.IsChecked = _context.Document.BackgroundMode == BackgroundMode.Blur;
+                BackgroundColorPicker.Visibility =
+                    _context.Document.BackgroundMode == BackgroundMode.SolidColor ? Visibility.Visible : Visibility.Collapsed;
+                BackgroundBlurSettingsPanel.Visibility =
+                    _context.Document.BackgroundMode == BackgroundMode.Blur ? Visibility.Visible : Visibility.Collapsed;
+                BackgroundBlurColorPicker.SelectedColor = _context.Document.BackgroundBlurColor.ToMediaColor();
+                BackgroundBlurGradientCheckBox.IsChecked = _context.Document.BackgroundBlurGradientEnabled;
+                BackgroundBlurGradientColorPicker.Visibility =
+                    _context.Document.BackgroundBlurGradientEnabled ? Visibility.Visible : Visibility.Collapsed;
+                BackgroundBlurGradientColorPicker.SelectedColor = _context.Document.BackgroundBlurGradientColor.ToMediaColor();
+                BackgroundBlurAmountSlider.Value = _context.Document.BackgroundBlurAmount;
+                BackgroundFadeAmountSlider.Value = _context.Document.BackgroundFadeAmount;
+                BackgroundOpacitySlider.Value = _context.Document.BackgroundOpacity;
+                RefreshCanvasSizeTextBoxes();
             }
 
             RebuildLayerList();
@@ -95,8 +144,23 @@ public partial class PropertiesPanelView : UserControl
         BorderPresetList.ItemsSource = presets;
 
         LayerList.ItemsSource = _layerItems;
+        LineStartHeadComboBox.ItemsSource = ArrowHeadOptions;
+        LineEndHeadComboBox.ItemsSource = ArrowHeadOptions;
+        FadeDirectionComboBox.ItemsSource = FadeDirectionOptions;
+
+        // Every font Windows currently has installed — lets the user pick any of their own fonts
+        // instead of the app hard-coding a fixed "Segoe UI".
+        TextFontFamilyComboBox.ItemsSource = Fonts.SystemFontFamilies
+            .Select(f => f.Source)
+            .Distinct()
+            .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+            .Select(name => new FontFamilyOption(name))
+            .ToList();
+        LayerAccentColorSwatchList.ItemsSource = PresetColors.Select(pc => (Brush)new SolidColorBrush(pc.Color)).ToList();
         FillColorPicker.ColorChanged += FillColorPicker_OnColorChanged;
         BackgroundColorPicker.ColorChanged += BackgroundColorPicker_OnColorChanged;
+        BackgroundBlurColorPicker.ColorChanged += BackgroundBlurColorPicker_OnColorChanged;
+        BackgroundBlurGradientColorPicker.ColorChanged += BackgroundBlurGradientColorPicker_OnColorChanged;
         BorderColorPicker.ColorChanged += BorderColorPicker_OnColorChanged;
         BorderGradientColorPicker.ColorChanged += BorderGradientColorPicker_OnColorChanged;
         ShadowColorPicker.ColorChanged += ShadowColorPicker_OnColorChanged;
@@ -143,6 +207,11 @@ public partial class PropertiesPanelView : UserControl
             return;
         }
 
+        if (_boundShape.Locked)
+        {
+            return;
+        }
+
         _boundShape.X = Math.Max(0, (_context.Document.Width - _boundShape.Width) / 2);
         _boundShape.Y = Math.Max(0, (_context.Document.Height - _boundShape.Height) / 2);
         _context.RequestRedraw();
@@ -181,6 +250,19 @@ public partial class PropertiesPanelView : UserControl
             return;
         }
 
+        _isRefreshingControls = true;
+        try
+        {
+            RefreshControlsFromShapeCore(shape);
+        }
+        finally
+        {
+            _isRefreshingControls = false;
+        }
+    }
+
+    private void RefreshControlsFromShapeCore(Shape shape)
+    {
         XTextBox.Text = shape.X.ToString("0", CultureInfo.InvariantCulture);
         YTextBox.Text = shape.Y.ToString("0", CultureInfo.InvariantCulture);
         WidthTextBox.Text = shape.Width.ToString("0", CultureInfo.InvariantCulture);
@@ -188,6 +270,8 @@ public partial class PropertiesPanelView : UserControl
         RotationTextBox.Text = shape.Rotation.ToString("0", CultureInfo.InvariantCulture);
 
         Depth3DSlider.Value = shape.Depth3D;
+        LineStartHeadComboBox.SelectedItem = ArrowHeadOptions.First(o => o.Value == shape.LineStartHead);
+        LineEndHeadComboBox.SelectedItem = ArrowHeadOptions.First(o => o.Value == shape.LineEndHead);
         switch (shape.PathRoutingStyle)
         {
             case PathRoutingStyle.Orthogonal:
@@ -229,27 +313,39 @@ public partial class PropertiesPanelView : UserControl
         OpacitySlider.Value = shape.Opacity;
         BlurSlider.Value = shape.BlurRadius;
         FadeSlider.Value = shape.FadeAmount;
+        FadeDirectionComboBox.SelectedItem = FadeDirectionOptions.First(o => o.Value == shape.FadeDirection);
         ShadowCheckBox.IsChecked = shape.ShadowEnabled;
         ShadowDistanceSlider.Value = shape.ShadowDistance;
         ShadowStrengthSlider.Value = shape.ShadowStrength;
+        ShadowBlurSlider.Value = shape.ShadowBlurRadius;
         ShadowAngleSlider.Value = shape.ShadowAngle;
         ShadowColorPicker.SelectedColor = shape.ShadowColor.ToMediaColor();
 
         FillColorPicker.SelectedColor = shape.FillColor.ToMediaColor();
+        FillEnabledCheckBox.IsChecked = shape.FillEnabled;
+        FillColorControls.Visibility = shape.FillEnabled ? Visibility.Visible : Visibility.Collapsed;
 
+        var fontFamily = string.IsNullOrWhiteSpace(shape.TextFontFamily) ? "Segoe UI" : shape.TextFontFamily;
+        TextFontFamilyComboBox.SelectedItem = (TextFontFamilyComboBox.ItemsSource as IEnumerable<FontFamilyOption>)
+            ?.FirstOrDefault(o => o.Label == fontFamily);
         TextBoldToggle.IsChecked = shape.TextBold;
         TextItalicToggle.IsChecked = shape.TextItalic;
+        TextUnderlineToggle.IsChecked = shape.TextUnderline;
+        FontSizeTextBox.Text = shape.TextFontSize.ToString("0", CultureInfo.InvariantCulture);
     }
 
-    /// <summary>Applies an edit to every currently selected shape (or a no-op if none).</summary>
+    /// <summary>Applies an edit to every currently selected, UNLOCKED shape (or a no-op if none) —
+    /// a locked shape must not change via any Properties-panel control (color, opacity, blur,
+    /// shadow, border, corner radius, line ends, text formatting, ...), same as it already can't
+    /// be moved/resized/rotated on the canvas.</summary>
     private void ApplyToSelection(Action<Shape> apply)
     {
-        if (_context is null)
+        if (_context is null || _isRefreshingControls)
         {
             return;
         }
 
-        foreach (var shape in _context.SelectedShapes)
+        foreach (var shape in _context.SelectedShapes.Where(s => !s.Locked))
         {
             apply(shape);
         }
@@ -263,12 +359,17 @@ public partial class PropertiesPanelView : UserControl
     /// so one gesture yields one undo entry, not one per intermediate value.</summary>
     private void ApplyToSelectionWithUndo(Action<Shape> apply)
     {
-        if (_context is null || _context.SelectedShapes.Count == 0)
+        if (_context is null || _context.SelectedShapes.Count == 0 || _isRefreshingControls)
         {
             return;
         }
 
-        var shapes = _context.SelectedShapes.ToList();
+        var shapes = _context.SelectedShapes.Where(s => !s.Locked).ToList();
+        if (shapes.Count == 0)
+        {
+            return;
+        }
+
         var before = shapes.Select(ShapeSnapshot.Capture).ToList();
 
         foreach (var shape in shapes)
@@ -376,7 +477,7 @@ public partial class PropertiesPanelView : UserControl
 
     private void ApplySizeTextBox(object sender)
     {
-        if (_boundShape is null || sender is not TextBox { Tag: string field } textBox)
+        if (_boundShape is null || _boundShape.Locked || sender is not TextBox { Tag: string field } textBox)
         {
             return;
         }
@@ -408,6 +509,29 @@ public partial class PropertiesPanelView : UserControl
         _context?.RequestRedraw();
     }
 
+    private void RotateUpButton_OnClick(object sender, RoutedEventArgs e) => ApplyRotationDelta(1);
+
+    private void RotateDownButton_OnClick(object sender, RoutedEventArgs e) => ApplyRotationDelta(-1);
+
+    private void ApplyRotationDelta(double delta)
+    {
+        if (_boundShape is null || _boundShape.Locked)
+        {
+            return;
+        }
+
+        var before = ShapeSnapshot.Capture(_boundShape);
+        _boundShape.Rotation += delta;
+        var after = ShapeSnapshot.Capture(_boundShape);
+
+        if (_context is not null && !after.Equals(before))
+        {
+            _context.UndoManager.Push(UndoableAction.ForPropertyEdit([_boundShape], [before], [after]));
+        }
+
+        _context?.RequestRedraw();
+    }
+
     private void RotationTextBox_OnLostFocus(object sender, RoutedEventArgs e) => ApplyRotationTextBox();
 
     private void RotationTextBox_OnKeyDown(object sender, KeyEventArgs e)
@@ -420,7 +544,7 @@ public partial class PropertiesPanelView : UserControl
 
     private void ApplyRotationTextBox()
     {
-        if (_boundShape is null)
+        if (_boundShape is null || _boundShape.Locked)
         {
             return;
         }
@@ -454,6 +578,46 @@ public partial class PropertiesPanelView : UserControl
         ApplyToSelectionWithUndo(s => s.PathRoutingStyle = style);
     }
 
+    private void TextFontFamilyComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (TextFontFamilyComboBox.SelectedItem is not FontFamilyOption option)
+        {
+            return;
+        }
+
+        ApplyToSelectionWithUndo(s => s.TextFontFamily = option.Label);
+    }
+
+    private void FadeDirectionComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (FadeDirectionComboBox.SelectedItem is not FadeDirectionOption option)
+        {
+            return;
+        }
+
+        ApplyToSelectionWithUndo(s => s.FadeDirection = option.Value);
+    }
+
+    private void LineStartHeadComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (LineStartHeadComboBox.SelectedItem is not ArrowHeadOption option)
+        {
+            return;
+        }
+
+        ApplyToSelectionWithUndo(s => s.LineStartHead = option.Value);
+    }
+
+    private void LineEndHeadComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (LineEndHeadComboBox.SelectedItem is not ArrowHeadOption option)
+        {
+            return;
+        }
+
+        ApplyToSelectionWithUndo(s => s.LineEndHead = option.Value);
+    }
+
     private void Depth3DSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (Depth3DValueText is not null)
@@ -469,6 +633,9 @@ public partial class PropertiesPanelView : UserControl
 
     private void FlipVerticalButton_OnClick(object sender, RoutedEventArgs e) =>
         ApplyToSelectionWithUndo(s => s.FlipVertical = !s.FlipVertical);
+
+    private void RotateResetButton_OnClick(object sender, RoutedEventArgs e) =>
+        ApplyToSelectionWithUndo(s => s.Rotation = 0);
 
     private void BorderThicknessSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
@@ -512,6 +679,13 @@ public partial class PropertiesPanelView : UserControl
     {
         var dashed = DashedCheckBox.IsChecked == true;
         ApplyToSelectionWithUndo(s => s.Dashed = dashed);
+    }
+
+    private void FillEnabledCheckBox_OnCheckedChanged(object sender, RoutedEventArgs e)
+    {
+        var enabled = FillEnabledCheckBox.IsChecked == true;
+        FillColorControls.Visibility = enabled ? Visibility.Visible : Visibility.Collapsed;
+        ApplyToSelectionWithUndo(s => s.FillEnabled = enabled);
     }
 
     private void CornerRadiusSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -580,6 +754,16 @@ public partial class PropertiesPanelView : UserControl
         ApplyToSelection(s => s.ShadowStrength = e.NewValue);
     }
 
+    private void ShadowBlurSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (ShadowBlurValueText is not null)
+        {
+            ShadowBlurValueText.Text = $"{e.NewValue:0}px";
+        }
+
+        ApplyToSelection(s => s.ShadowBlurRadius = e.NewValue);
+    }
+
     private void ShadowAngleSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (ShadowAngleValueText is not null)
@@ -603,6 +787,47 @@ public partial class PropertiesPanelView : UserControl
     {
         var italic = TextItalicToggle.IsChecked == true;
         ApplyToSelectionWithUndo(s => s.TextItalic = italic);
+    }
+
+    private void TextUnderlineToggle_OnCheckedChanged(object sender, RoutedEventArgs e)
+    {
+        var underline = TextUnderlineToggle.IsChecked == true;
+        ApplyToSelectionWithUndo(s => s.TextUnderline = underline);
+    }
+
+    private void FontSizeTextBox_OnLostFocus(object sender, RoutedEventArgs e) => ApplyFontSizeTextBox();
+
+    private void FontSizeTextBox_OnKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            ApplyFontSizeTextBox();
+        }
+    }
+
+    private void ApplyFontSizeTextBox()
+    {
+        if (_boundShape is null || _boundShape.Locked)
+        {
+            return;
+        }
+
+        if (!double.TryParse(FontSizeTextBox.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out var value) || value < 1)
+        {
+            RefreshControlsFromShape();
+            return;
+        }
+
+        var before = ShapeSnapshot.Capture(_boundShape);
+        _boundShape.TextFontSize = value;
+        var after = ShapeSnapshot.Capture(_boundShape);
+
+        if (_context is not null && !after.Equals(before))
+        {
+            _context.UndoManager.Push(UndoableAction.ForPropertyEdit([_boundShape], [before], [after]));
+        }
+
+        _context?.RequestRedraw();
     }
 
     /// <summary>Collapses/expands the single sibling element right after a clicked card/section
@@ -640,6 +865,7 @@ public partial class PropertiesPanelView : UserControl
         var mode = Enum.Parse<BackgroundMode>(tag);
         _context.Document.BackgroundMode = mode;
         BackgroundColorPicker.Visibility = mode == BackgroundMode.SolidColor ? Visibility.Visible : Visibility.Collapsed;
+        BackgroundBlurSettingsPanel.Visibility = mode == BackgroundMode.Blur ? Visibility.Visible : Visibility.Collapsed;
         _context.RequestRedraw();
     }
 
@@ -651,6 +877,206 @@ public partial class PropertiesPanelView : UserControl
         }
 
         _context.Document.BackgroundColor = color.FromMediaColor();
+        _context.RequestRedraw();
+    }
+
+    private void BackgroundBlurColorPicker_OnColorChanged(object? sender, Color color)
+    {
+        if (_context is null)
+        {
+            return;
+        }
+
+        _context.Document.BackgroundBlurColor = color.FromMediaColor();
+        _context.RequestRedraw();
+    }
+
+    private void BackgroundBlurGradientCheckBox_OnCheckedChanged(object sender, RoutedEventArgs e)
+    {
+        if (_context is null)
+        {
+            return;
+        }
+
+        var enabled = BackgroundBlurGradientCheckBox.IsChecked == true;
+        _context.Document.BackgroundBlurGradientEnabled = enabled;
+        BackgroundBlurGradientColorPicker.Visibility = enabled ? Visibility.Visible : Visibility.Collapsed;
+        _context.RequestRedraw();
+    }
+
+    private void BackgroundBlurGradientColorPicker_OnColorChanged(object? sender, Color color)
+    {
+        if (_context is null)
+        {
+            return;
+        }
+
+        _context.Document.BackgroundBlurGradientColor = color.FromMediaColor();
+        _context.RequestRedraw();
+    }
+
+    private void BackgroundBlurAmountSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (BackgroundBlurAmountValueText is not null)
+        {
+            BackgroundBlurAmountValueText.Text = $"{e.NewValue:0}%";
+        }
+
+        if (_context is null)
+        {
+            return;
+        }
+
+        _context.Document.BackgroundBlurAmount = e.NewValue;
+        _context.RequestRedraw();
+    }
+
+    private void BackgroundFadeAmountSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (BackgroundFadeAmountValueText is not null)
+        {
+            BackgroundFadeAmountValueText.Text = $"{e.NewValue:0}%";
+        }
+
+        if (_context is null)
+        {
+            return;
+        }
+
+        _context.Document.BackgroundFadeAmount = e.NewValue;
+        _context.RequestRedraw();
+    }
+
+    private void BackgroundOpacitySlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (BackgroundOpacityValueText is not null)
+        {
+            BackgroundOpacityValueText.Text = $"{e.NewValue:0}%";
+        }
+
+        if (_context is null)
+        {
+            return;
+        }
+
+        _context.Document.BackgroundOpacity = e.NewValue;
+        _context.RequestRedraw();
+    }
+
+    private enum CanvasSizeUnit { Px, Cm, Mm }
+
+    private const double PxPerInch = 96.0;
+    private const double MmPerInch = 25.4;
+
+    private CanvasSizeUnit _canvasSizeUnit = CanvasSizeUnit.Px;
+
+    private static double PxToUnit(double px, CanvasSizeUnit unit) => unit switch
+    {
+        CanvasSizeUnit.Cm => px / PxPerInch * (MmPerInch / 10),
+        CanvasSizeUnit.Mm => px / PxPerInch * MmPerInch,
+        _ => px,
+    };
+
+    private static double UnitToPx(double value, CanvasSizeUnit unit) => unit switch
+    {
+        CanvasSizeUnit.Cm => value / (MmPerInch / 10) * PxPerInch,
+        CanvasSizeUnit.Mm => value / MmPerInch * PxPerInch,
+        _ => value,
+    };
+
+    private void RefreshCanvasSizeTextBoxes()
+    {
+        if (_context is null)
+        {
+            return;
+        }
+
+        var format = _canvasSizeUnit == CanvasSizeUnit.Px ? "0" : "0.##";
+        CanvasWidthTextBox.Text = PxToUnit(_context.Document.Width, _canvasSizeUnit).ToString(format, CultureInfo.InvariantCulture);
+        CanvasHeightTextBox.Text = PxToUnit(_context.Document.Height, _canvasSizeUnit).ToString(format, CultureInfo.InvariantCulture);
+    }
+
+    private void CanvasSizeUnitRadio_OnChecked(object sender, RoutedEventArgs e)
+    {
+        if (sender is not RadioButton { Tag: string tag })
+        {
+            return;
+        }
+
+        _canvasSizeUnit = Enum.Parse<CanvasSizeUnit>(tag);
+        RefreshCanvasSizeTextBoxes();
+    }
+
+    /// <summary>"NNpx" presets are plain pixel squares; the paper presets are converted from their
+    /// real-world mm size at <see cref="PxPerInch"/> (96 DPI — the standard CSS/screen mapping).</summary>
+    private void CanvasSizePreset_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (_context is null || sender is not Button { Tag: string tag })
+        {
+            return;
+        }
+
+        (int WidthPx, int HeightPx)? size = tag switch
+        {
+            "64px" => (64, 64),
+            "128px" => (128, 128),
+            "256px" => (256, 256),
+            "512px" => (512, 512),
+            "A5" => ((int)Math.Round(UnitToPx(148, CanvasSizeUnit.Mm)), (int)Math.Round(UnitToPx(210, CanvasSizeUnit.Mm))),
+            "A4" => ((int)Math.Round(UnitToPx(210, CanvasSizeUnit.Mm)), (int)Math.Round(UnitToPx(297, CanvasSizeUnit.Mm))),
+            "A3" => ((int)Math.Round(UnitToPx(297, CanvasSizeUnit.Mm)), (int)Math.Round(UnitToPx(420, CanvasSizeUnit.Mm))),
+            "Letter" => ((int)Math.Round(UnitToPx(215.9, CanvasSizeUnit.Mm)), (int)Math.Round(UnitToPx(279.4, CanvasSizeUnit.Mm))),
+            _ => null,
+        };
+
+        if (size is not { } s)
+        {
+            return;
+        }
+
+        ApplyCanvasSize(s.WidthPx, s.HeightPx);
+    }
+
+    private void CanvasSizeTextBox_OnLostFocus(object sender, RoutedEventArgs e) => ApplyCanvasSizeTextBoxes();
+
+    private void CanvasSizeTextBox_OnKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            ApplyCanvasSizeTextBoxes();
+        }
+    }
+
+    private void ApplyCanvasSizeTextBoxes()
+    {
+        if (_context is null)
+        {
+            return;
+        }
+
+        if (!double.TryParse(CanvasWidthTextBox.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out var widthValue) ||
+            !double.TryParse(CanvasHeightTextBox.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out var heightValue) ||
+            widthValue <= 0 || heightValue <= 0)
+        {
+            RefreshCanvasSizeTextBoxes();
+            return;
+        }
+
+        ApplyCanvasSize(
+            (int)Math.Round(UnitToPx(widthValue, _canvasSizeUnit)),
+            (int)Math.Round(UnitToPx(heightValue, _canvasSizeUnit)));
+    }
+
+    private void ApplyCanvasSize(int widthPx, int heightPx)
+    {
+        if (_context is null)
+        {
+            return;
+        }
+
+        _context.Document.Width = Math.Clamp(widthPx, 1, 10000);
+        _context.Document.Height = Math.Clamp(heightPx, 1, 10000);
+        RefreshCanvasSizeTextBoxes();
         _context.RequestRedraw();
     }
 
@@ -694,6 +1120,30 @@ public partial class PropertiesPanelView : UserControl
     /// <summary>The IsChecked TwoWay binding already flips Layer.Visible/Layer.Locked — this just
     /// forces a redraw, since hidden/locked shapes affect the canvas (and hit-testing) immediately.</summary>
     private void LayerToggle_OnClick(object sender, RoutedEventArgs e) => _context?.RequestRedraw();
+
+    private void LayerAccentSwatch_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not FrameworkElement { Tag: Layer layer } element)
+        {
+            return;
+        }
+
+        _accentColorTargetLayer = layer;
+        LayerAccentColorPopup.PlacementTarget = element;
+        LayerAccentColorPopup.IsOpen = true;
+    }
+
+    private void LayerAccentColorSwatch_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (_accentColorTargetLayer is not { } layer || sender is not Border { Background: SolidColorBrush brush })
+        {
+            return;
+        }
+
+        layer.AccentColor = brush.Color.FromMediaColor();
+        LayerAccentColorPopup.IsOpen = false;
+        RebuildLayerList();
+    }
 
     private void LayerForward_OnClick(object sender, RoutedEventArgs e) => MoveLayer(sender, -1);
 

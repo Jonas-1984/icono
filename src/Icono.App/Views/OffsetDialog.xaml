@@ -1,0 +1,30 @@
+<Window x:Class="Icono.App.Views.OffsetDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Offset" Width="320" Height="180" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource PanelBackgroundBrush}"
+        ResizeMode="NoResize">
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Offset Distance" FontSize="14" FontWeight="Bold"
+                   Foreground="{StaticResource ForegroundTextBrush}" Margin="0,0,0,6" />
+        <TextBlock Grid.Row="1" Foreground="{StaticResource MutedTextBrush}" FontSize="11"
+                   TextWrapping="Wrap" Margin="0,0,0,10"
+                   Text="Positive = grows the shape outward, negative = shrinks it inward. Adds a new copy — the original stays untouched." />
+
+        <TextBox x:Name="DistanceTextBox" Grid.Row="2" Text="4" TextAlignment="Center"
+                 FontSize="14" Padding="4" KeyDown="DistanceTextBox_OnKeyDown" />
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button Content="Abbrechen" Width="90" Margin="0,0,8,0" Click="CancelButton_OnClick" />
+            <Button Content="Anwenden" Width="100" Click="ApplyButton_OnClick" IsDefault="True" />
+        </StackPanel>
+    </Grid>
+</Window>

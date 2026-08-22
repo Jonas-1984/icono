@@ -4,14 +4,7 @@
     <!-- User-supplied raster icons (Assets/Icons/*.ico) — filled white glyphs, distinct in style
          from the hand-drawn stroke-only ShapeIcons.xaml vector set. Referenced from Image
          controls directly, and from ImageIconRadioButtonStyle's Tag for tool-palette buttons. -->
-    <BitmapImage x:Key="UndoIconImage" UriSource="pack://application:,,,/Assets/Icons/undo.ico" />
-    <BitmapImage x:Key="RedoIconImage" UriSource="pack://application:,,,/Assets/Icons/redo.ico" />
-    <BitmapImage x:Key="CutIconImage" UriSource="pack://application:,,,/Assets/Icons/cut.ico" />
     <BitmapImage x:Key="TextIconImage" UriSource="pack://application:,,,/Assets/Icons/text.ico" />
-    <BitmapImage x:Key="TextItalicIconImage" UriSource="pack://application:,,,/Assets/Icons/text-italic.ico" />
-    <BitmapImage x:Key="BoldIconImage" UriSource="pack://application:,,,/Assets/Icons/bold.ico" />
-    <BitmapImage x:Key="CombinationIconImage" UriSource="pack://application:,,,/Assets/Icons/combination.ico" />
     <BitmapImage x:Key="BorderIconImage" UriSource="pack://application:,,,/Assets/Icons/border.ico" />
-    <BitmapImage x:Key="BucketIconImage" UriSource="pack://application:,,,/Assets/Icons/bucket.ico" />
 
 </ResourceDictionary>

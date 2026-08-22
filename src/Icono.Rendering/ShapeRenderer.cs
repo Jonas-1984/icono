@@ -5,6 +5,17 @@ namespace Icono.Rendering;
 
 public static class ShapeRenderer
 {
+    /// <summary>Combines a color's OWN stored alpha (its own transparency, as picked in
+    /// <c>Icono.App.Views.ColorPickerView</c>) with the shape-level <paramref name="opacityAlpha"/>
+    /// (from <see cref="Shape.Opacity"/> or a shadow's strength) by multiplying them, instead of
+    /// the old behavior of just replacing the color's alpha with the shape's — which silently threw
+    /// away any transparency the user picked for that specific fill/border/shadow color.</summary>
+    private static SKColor WithCombinedAlpha(this ArgbColor color, byte opacityAlpha)
+    {
+        var sk = color.ToSkColor();
+        return sk.WithAlpha((byte)(sk.Alpha * opacityAlpha / 255.0));
+    }
+
     public static void Draw(SKCanvas canvas, Shape shape)
     {
         var alpha = (byte)Math.Clamp(shape.Opacity / 100.0 * 255, 0, 255);
@@ -27,16 +38,35 @@ public static class ShapeRenderer
             return;
         }
 
+        if (shape.Kind == ShapeKind.RasterImage && shape.ImageBytes is { Length: > 0 })
+        {
+            DrawRasterImageShape(canvas, shape, alpha);
+            return;
+        }
+
         using var path = ShapeGeometryFactory.Build(shape);
-        var strokeOnly = ShapeGeometryFactory.IsStrokeOnly(shape.Kind);
+        var strokeOnly = shape.Kind == ShapeKind.CombinedPath
+            ? shape.CustomPathStrokeOnly
+            : ShapeGeometryFactory.IsStrokeOnly(shape.Kind);
 
         if (shape.ShadowEnabled)
         {
             DrawShadow(canvas, path, shape, strokeOnly);
         }
 
-        if (!strokeOnly)
+        if (shape.FillEnabled)
         {
+            // A "stroke-only" kind (Traffic Cone, StarCheck, ShieldCog, ...) still fills whatever
+            // closed contour it has (Traffic Cone's cone + base plate, say) — it just draws that
+            // fill IN ADDITION TO the stroke below, rather than never filling at all. A pure
+            // open-line kind (Line, Arrow, ...) has no closed contour, so this ends up filling
+            // nothing for those — no visible change from before. Either way, an open detail line
+            // never gets auto-closed into a blob it was never meant to have; only the border
+            // stroke draws those, using the full path unchanged.
+            var fillClosedOnly = strokeOnly || ShapeGeometryFactory.HasMixedOpenAndClosedContours(shape.Kind);
+            using var fillablePath = fillClosedOnly ? ShapeGeometryFactory.ExtractClosedContoursOnly(path) : null;
+            var pathToFill = fillablePath ?? path;
+
             using var fillPaint = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill };
 
             if (shape.FadeAmount > 0)
@@ -45,7 +75,7 @@ public static class ShapeRenderer
             }
             else
             {
-                fillPaint.Color = shape.FillColor.ToSkColor().WithAlpha(alpha);
+                fillPaint.Color = shape.FillColor.WithCombinedAlpha(alpha);
             }
 
             if (shape.BlurRadius > 0)
@@ -53,7 +83,7 @@ public static class ShapeRenderer
                 fillPaint.ImageFilter = SKImageFilter.CreateBlur((float)shape.BlurRadius, (float)shape.BlurRadius);
             }
 
-            canvas.DrawPath(path, fillPaint);
+            canvas.DrawPath(pathToFill, fillPaint);
         }
 
         if (shape.BorderThickness > 0)
@@ -77,7 +107,7 @@ public static class ShapeRenderer
             }
             else
             {
-                strokePaint.Color = shape.BorderColor.ToSkColor().WithAlpha(alpha);
+                strokePaint.Color = shape.BorderColor.WithCombinedAlpha(alpha);
             }
 
             var effectiveBlur = shape.BorderBlurRadius > 0 ? shape.BorderBlurRadius : (strokeOnly ? shape.BlurRadius : 0);
@@ -106,9 +136,10 @@ public static class ShapeRenderer
         var text = shape.TextContent!;
         var weight = shape.TextBold ? SKFontStyleWeight.Bold : SKFontStyleWeight.Normal;
         var slant = shape.TextItalic ? SKFontStyleSlant.Italic : SKFontStyleSlant.Upright;
-        using var typeface = SKTypeface.FromFamilyName("Segoe UI", weight, SKFontStyleWidth.Normal, slant);
+        var fontFamily = string.IsNullOrWhiteSpace(shape.TextFontFamily) ? "Segoe UI" : shape.TextFontFamily;
+        using var typeface = SKTypeface.FromFamilyName(fontFamily, weight, SKFontStyleWidth.Normal, slant);
         using var font = new SKFont(typeface, (float)shape.TextFontSize);
-        using var paint = new SKPaint { IsAntialias = true, Color = shape.FillColor.ToSkColor().WithAlpha(alpha) };
+        using var paint = new SKPaint { IsAntialias = true, Color = shape.FillColor.WithCombinedAlpha(alpha) };
 
         var centerX = (float)(shape.X + shape.Width / 2);
         var centerY = (float)(shape.Y + shape.Height / 2);
@@ -120,26 +151,81 @@ public static class ShapeRenderer
         }
 
         font.MeasureText(text, out var bounds, paint);
-        canvas.DrawText(text, centerX - bounds.MidX, centerY - bounds.MidY, font, paint);
+        var textX = centerX - bounds.MidX;
+        var textY = centerY - bounds.MidY;
+        canvas.DrawText(text, textX, textY, font, paint);
+
+        if (shape.TextUnderline)
+        {
+            using var underlinePaint = new SKPaint
+            {
+                IsAntialias = true,
+                Style = SKPaintStyle.Stroke,
+                StrokeWidth = (float)Math.Max(1, shape.TextFontSize / 16),
+                Color = shape.FillColor.WithCombinedAlpha(alpha),
+            };
+
+            var underlineY = textY + (float)shape.TextFontSize * 0.12f;
+            canvas.DrawLine(textX + bounds.Left, underlineY, textX + bounds.Right, underlineY, underlinePaint);
+        }
+
         canvas.Restore();
     }
 
-    private static void DrawBox3D(SKCanvas canvas, Shape shape, byte alpha)
+    /// <summary>Draws an imported raster image (see <see cref="Shape.ImageBytes"/>), stretched to
+    /// fill X/Y/Width/Height and rotated like any other shape — bypasses the generic fill/stroke
+    /// pipeline entirely since a bitmap isn't a filled path (same approach as <see cref="DrawTextShape"/>).</summary>
+    /// <summary>Draws an imported raster image with the same adjustment set every other shape
+    /// gets — border, shadow, blur, corner-radius (as a clip mask), rotation, and flip — instead of
+    /// just a plain stretched bitmap. Only <see cref="Shape.FadeAmount"/> has no effect here (a
+    /// top-to-bottom alpha gradient over a bitmap needs blend-mode compositing, not yet wired up).</summary>
+    private static void DrawRasterImageShape(SKCanvas canvas, Shape shape, byte alpha)
     {
-        var (front, top, side) = ShapeGeometryFactory.BuildBox3DFaces(shape);
-        using var frontPath = front;
-        using var topPath = top;
-        using var sidePath = side;
+        using var bitmap = SKBitmap.Decode(shape.ImageBytes);
+        if (bitmap is null)
+        {
+            return;
+        }
 
-        var baseColor = shape.FillColor.ToSkColor().WithAlpha(alpha);
+        // Same outline ShapeGeometryFactory hands every other kind — already flip/rotate/corner-
+        // radius baked in — so the border stroke and the corner-radius clip both match exactly
+        // what a vector shape with this Width/Height/Rotation/CornerRadius would show.
+        using var outline = ShapeGeometryFactory.Build(shape);
 
-        using var facePaint = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill };
-        facePaint.Color = Lighten(baseColor, 0.22f);
-        canvas.DrawPath(topPath, facePaint);
-        facePaint.Color = baseColor;
-        canvas.DrawPath(frontPath, facePaint);
-        facePaint.Color = Darken(baseColor, 0.22f);
-        canvas.DrawPath(sidePath, facePaint);
+        if (shape.ShadowEnabled)
+        {
+            DrawShadow(canvas, outline, shape, strokeOnly: false);
+        }
+
+        var destRect = SKRect.Create((float)shape.X, (float)shape.Y, (float)shape.Width, (float)shape.Height);
+        var centerX = (float)(shape.X + shape.Width / 2);
+        var centerY = (float)(shape.Y + shape.Height / 2);
+
+        using var paint = new SKPaint { IsAntialias = true, Color = SKColors.White.WithAlpha(alpha) };
+        if (shape.BlurRadius > 0)
+        {
+            paint.ImageFilter = SKImageFilter.CreateBlur((float)shape.BlurRadius, (float)shape.BlurRadius);
+        }
+
+        canvas.Save();
+
+        if (shape.CornerRadius > 0)
+        {
+            canvas.ClipPath(outline, antialias: true);
+        }
+
+        if (shape.Rotation != 0)
+        {
+            canvas.RotateDegrees((float)shape.Rotation, centerX, centerY);
+        }
+
+        if (shape.FlipHorizontal || shape.FlipVertical)
+        {
+            canvas.Scale(shape.FlipHorizontal ? -1 : 1, shape.FlipVertical ? -1 : 1, centerX, centerY);
+        }
+
+        canvas.DrawBitmap(bitmap, destRect, paint);
+        canvas.Restore();
 
         if (shape.BorderThickness > 0)
         {
@@ -149,7 +235,42 @@ public static class ShapeRenderer
                 Style = SKPaintStyle.Stroke,
                 StrokeWidth = (float)shape.BorderThickness,
                 StrokeJoin = SKStrokeJoin.Round,
-                Color = shape.BorderColor.ToSkColor().WithAlpha(alpha),
+                Color = shape.BorderColor.WithCombinedAlpha(alpha),
+            };
+
+            canvas.DrawPath(outline, strokePaint);
+        }
+    }
+
+    private static void DrawBox3D(SKCanvas canvas, Shape shape, byte alpha)
+    {
+        var (front, top, side) = ShapeGeometryFactory.BuildBox3DFaces(shape);
+        using var frontPath = front;
+        using var topPath = top;
+        using var sidePath = side;
+
+        if (shape.FillEnabled)
+        {
+            var baseColor = shape.FillColor.WithCombinedAlpha(alpha);
+
+            using var facePaint = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill };
+            facePaint.Color = Lighten(baseColor, 0.22f);
+            canvas.DrawPath(topPath, facePaint);
+            facePaint.Color = baseColor;
+            canvas.DrawPath(frontPath, facePaint);
+            facePaint.Color = Darken(baseColor, 0.22f);
+            canvas.DrawPath(sidePath, facePaint);
+        }
+
+        if (shape.BorderThickness > 0)
+        {
+            using var strokePaint = new SKPaint
+            {
+                IsAntialias = true,
+                Style = SKPaintStyle.Stroke,
+                StrokeWidth = (float)shape.BorderThickness,
+                StrokeJoin = SKStrokeJoin.Round,
+                Color = shape.BorderColor.WithCombinedAlpha(alpha),
             };
 
             canvas.DrawPath(frontPath, strokePaint);
@@ -172,13 +293,13 @@ public static class ShapeRenderer
 
     private static void DrawShadow(SKCanvas canvas, SKPath path, Shape shape, bool strokeOnly)
     {
-        var blur = (float)(shape.ShadowStrength / 100.0 * 20);
-        var shadowAlpha = (byte)Math.Clamp(shape.ShadowStrength / 100.0 * 180, 0, 255);
+        var blur = (float)shape.ShadowBlurRadius;
+        var shadowAlpha = (byte)Math.Clamp(shape.ShadowStrength / 100.0 * 255, 0, 255);
 
         using var shadowPaint = new SKPaint
         {
             IsAntialias = true,
-            Color = shape.ShadowColor.ToSkColor().WithAlpha(shadowAlpha),
+            Color = shape.ShadowColor.WithCombinedAlpha(shadowAlpha),
             Style = strokeOnly ? SKPaintStyle.Stroke : SKPaintStyle.Fill,
             StrokeWidth = (float)Math.Max(shape.BorderThickness, 2),
             ImageFilter = SKImageFilter.CreateBlur(blur, blur),
@@ -199,8 +320,8 @@ public static class ShapeRenderer
     /// the fill's <see cref="BuildFadeShader"/> semantics.</summary>
     private static SKShader BuildBorderGradientShader(Shape shape, byte alpha, bool fadeToTransparent)
     {
-        var start = shape.BorderColor.ToSkColor().WithAlpha(alpha);
-        var end = fadeToTransparent ? start.WithAlpha(0) : shape.BorderGradientColor.ToSkColor().WithAlpha(alpha);
+        var start = shape.BorderColor.WithCombinedAlpha(alpha);
+        var end = fadeToTransparent ? start.WithAlpha(0) : shape.BorderGradientColor.WithCombinedAlpha(alpha);
 
         return SKShader.CreateLinearGradient(
             new SKPoint((float)shape.X, (float)shape.Y),
@@ -210,16 +331,53 @@ public static class ShapeRenderer
             SKShaderTileMode.Clamp);
     }
 
+    /// <summary>Builds the fill fade's alpha gradient — direction and single-vs-both-sides
+    /// controlled by <see cref="Shape.FadeDirection"/>. The two "BothSides" modes split
+    /// <see cref="Shape.FadeAmount"/> evenly between both ends and stay solid in the middle,
+    /// instead of the single-direction modes' solid-one-edge-to-transparent-other-edge ramp.</summary>
     private static SKShader BuildFadeShader(Shape shape, byte alpha)
     {
-        var color = shape.FillColor.ToSkColor();
-        var stop = Math.Clamp(1f - (float)(shape.FadeAmount / 100.0), 0f, 1f);
+        var color = shape.FillColor.WithCombinedAlpha(alpha);
+        var transparent = color.WithAlpha(0);
+        var fadeFraction = Math.Clamp((float)(shape.FadeAmount / 100.0), 0f, 1f);
 
-        return SKShader.CreateLinearGradient(
-            new SKPoint((float)shape.X, (float)shape.Y),
-            new SKPoint((float)shape.X, (float)(shape.Y + shape.Height)),
-            [color.WithAlpha(alpha), color.WithAlpha(0)],
-            [stop, 1f],
-            SKShaderTileMode.Clamp);
+        var left = (float)shape.X;
+        var top = (float)shape.Y;
+        var right = (float)(shape.X + shape.Width);
+        var bottom = (float)(shape.Y + shape.Height);
+
+        switch (shape.FadeDirection)
+        {
+            case FadeDirection.BottomToTop:
+                return SKShader.CreateLinearGradient(
+                    new SKPoint(left, bottom), new SKPoint(left, top),
+                    [color, transparent], [1f - fadeFraction, 1f], SKShaderTileMode.Clamp);
+            case FadeDirection.LeftToRight:
+                return SKShader.CreateLinearGradient(
+                    new SKPoint(left, top), new SKPoint(right, top),
+                    [color, transparent], [1f - fadeFraction, 1f], SKShaderTileMode.Clamp);
+            case FadeDirection.RightToLeft:
+                return SKShader.CreateLinearGradient(
+                    new SKPoint(right, top), new SKPoint(left, top),
+                    [color, transparent], [1f - fadeFraction, 1f], SKShaderTileMode.Clamp);
+            case FadeDirection.VerticalBothSides:
+            {
+                var half = Math.Clamp(fadeFraction / 2f, 0f, 0.5f);
+                return SKShader.CreateLinearGradient(
+                    new SKPoint(left, top), new SKPoint(left, bottom),
+                    [transparent, color, color, transparent], [0f, half, 1f - half, 1f], SKShaderTileMode.Clamp);
+            }
+            case FadeDirection.HorizontalBothSides:
+            {
+                var half = Math.Clamp(fadeFraction / 2f, 0f, 0.5f);
+                return SKShader.CreateLinearGradient(
+                    new SKPoint(left, top), new SKPoint(right, top),
+                    [transparent, color, color, transparent], [0f, half, 1f - half, 1f], SKShaderTileMode.Clamp);
+            }
+            default:
+                return SKShader.CreateLinearGradient(
+                    new SKPoint(left, top), new SKPoint(left, bottom),
+                    [color, transparent], [1f - fadeFraction, 1f], SKShaderTileMode.Clamp);
+        }
     }
 }

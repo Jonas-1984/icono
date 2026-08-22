@@ -11,6 +11,7 @@ public readonly record struct ShapeSnapshot(
     double Width,
     double Height,
     ArgbColor FillColor,
+    bool FillEnabled,
     ArgbColor BorderColor,
     double BorderThickness,
     BorderStyleKind BorderStyleKind,
@@ -20,9 +21,11 @@ public readonly record struct ShapeSnapshot(
     double Opacity,
     double BlurRadius,
     double FadeAmount,
+    FadeDirection FadeDirection,
     bool ShadowEnabled,
     double ShadowDistance,
     double ShadowStrength,
+    double ShadowBlurRadius,
     double ShadowAngle,
     ArgbColor ShadowColor,
     double Rotation,
@@ -31,14 +34,19 @@ public readonly record struct ShapeSnapshot(
     IReadOnlyList<CorePoint>? Points,
     bool Dashed,
     PathRoutingStyle PathRoutingStyle,
+    ArrowHeadKind LineStartHead,
+    ArrowHeadKind LineEndHead,
     double Depth3D,
     string? CustomPathData,
     bool Locked,
     Guid? GroupId,
     string? TextContent,
+    string? TextFontFamily,
     double TextFontSize,
     bool TextBold,
-    bool TextItalic)
+    bool TextItalic,
+    bool TextUnderline,
+    string? Name)
 {
     public static ShapeSnapshot Capture(Shape shape) => new(
         shape.X,
@@ -46,6 +54,7 @@ public readonly record struct ShapeSnapshot(
         shape.Width,
         shape.Height,
         shape.FillColor,
+        shape.FillEnabled,
         shape.BorderColor,
         shape.BorderThickness,
         shape.BorderStyleKind,
@@ -55,9 +64,11 @@ public readonly record struct ShapeSnapshot(
         shape.Opacity,
         shape.BlurRadius,
         shape.FadeAmount,
+        shape.FadeDirection,
         shape.ShadowEnabled,
         shape.ShadowDistance,
         shape.ShadowStrength,
+        shape.ShadowBlurRadius,
         shape.ShadowAngle,
         shape.ShadowColor,
         shape.Rotation,
@@ -66,14 +77,19 @@ public readonly record struct ShapeSnapshot(
         shape.Points,
         shape.Dashed,
         shape.PathRoutingStyle,
+        shape.LineStartHead,
+        shape.LineEndHead,
         shape.Depth3D,
         shape.CustomPathData,
         shape.Locked,
         shape.GroupId,
         shape.TextContent,
+        shape.TextFontFamily,
         shape.TextFontSize,
         shape.TextBold,
-        shape.TextItalic);
+        shape.TextItalic,
+        shape.TextUnderline,
+        shape.Name);
 
     public void ApplyTo(Shape shape)
     {
@@ -82,6 +98,7 @@ public readonly record struct ShapeSnapshot(
         shape.Width = Width;
         shape.Height = Height;
         shape.FillColor = FillColor;
+        shape.FillEnabled = FillEnabled;
         shape.BorderColor = BorderColor;
         shape.BorderThickness = BorderThickness;
         shape.BorderStyleKind = BorderStyleKind;
@@ -91,9 +108,11 @@ public readonly record struct ShapeSnapshot(
         shape.Opacity = Opacity;
         shape.BlurRadius = BlurRadius;
         shape.FadeAmount = FadeAmount;
+        shape.FadeDirection = FadeDirection;
         shape.ShadowEnabled = ShadowEnabled;
         shape.ShadowDistance = ShadowDistance;
         shape.ShadowStrength = ShadowStrength;
+        shape.ShadowBlurRadius = ShadowBlurRadius;
         shape.ShadowAngle = ShadowAngle;
         shape.ShadowColor = ShadowColor;
         shape.Rotation = Rotation;
@@ -102,13 +121,18 @@ public readonly record struct ShapeSnapshot(
         shape.Points = Points;
         shape.Dashed = Dashed;
         shape.PathRoutingStyle = PathRoutingStyle;
+        shape.LineStartHead = LineStartHead;
+        shape.LineEndHead = LineEndHead;
         shape.Depth3D = Depth3D;
         shape.CustomPathData = CustomPathData;
         shape.Locked = Locked;
         shape.GroupId = GroupId;
         shape.TextContent = TextContent;
+        shape.TextFontFamily = TextFontFamily;
         shape.TextFontSize = TextFontSize;
         shape.TextBold = TextBold;
         shape.TextItalic = TextItalic;
+        shape.TextUnderline = TextUnderline;
+        shape.Name = Name;
     }
 }
