@@ -20,6 +20,9 @@ public partial class StatusBarView : UserControl
         InitializeComponent();
     }
 
+    /// <summary>Sets the zoom (clamped to the slider range) — used for the initial "fit page to window" zoom.</summary>
+    public void SetZoom(double zoom) => ZoomSlider.Value = Math.Clamp(zoom, ZoomSlider.Minimum, ZoomSlider.Maximum);
+
     private void ZoomSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         ZoomValue = e.NewValue;

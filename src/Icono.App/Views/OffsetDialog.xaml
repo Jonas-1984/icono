@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Offset" Width="320" Height="180" SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
-        Background="{StaticResource PanelBackgroundBrush}"
+        Background="{DynamicResource PanelBackgroundBrush}"
         ResizeMode="NoResize">
     <Grid Margin="14">
         <Grid.RowDefinitions>
@@ -14,8 +14,8 @@
         </Grid.RowDefinitions>
 
         <TextBlock Grid.Row="0" Text="Offset Distance" FontSize="14" FontWeight="Bold"
-                   Foreground="{StaticResource ForegroundTextBrush}" Margin="0,0,0,6" />
-        <TextBlock Grid.Row="1" Foreground="{StaticResource MutedTextBrush}" FontSize="11"
+                   Foreground="{DynamicResource ForegroundTextBrush}" Margin="0,0,0,6" />
+        <TextBlock Grid.Row="1" Foreground="{DynamicResource MutedTextBrush}" FontSize="11"
                    TextWrapping="Wrap" Margin="0,0,0,10"
                    Text="Positive = grows the shape outward, negative = shrinks it inward. Adds a new copy — the original stays untouched." />
 

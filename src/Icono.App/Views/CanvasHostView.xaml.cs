@@ -17,7 +17,7 @@ public partial class CanvasHostView : UserControl
     private const double MinShapeSize = 4;
     private const double HandleHitToleranceDip = 6.0;
     private const float HandleScreenSize = 7f;
-    private static readonly SKColor AccentColor = new(0x6F, 0xB1, 0xFF);
+    private static readonly SKColor AccentColor = new(0x22, 0xD3, 0xEE);
 
     public static readonly DependencyProperty ZoomProperty = DependencyProperty.Register(
         nameof(Zoom), typeof(double), typeof(CanvasHostView),
@@ -112,6 +112,17 @@ public partial class CanvasHostView : UserControl
     public CanvasHostView()
     {
         InitializeComponent();
+
+        // Clicking the canvas takes keyboard focus away from whatever panel field had it, so keys such as
+        // Delete ("Entf") act on the selected drawing and a half-edited value field commits first.
+        Focusable = true;
+        PreviewMouseDown += (_, _) =>
+        {
+            if (TextEditOverlay.Children.Count == 0)
+            {
+                Focus();
+            }
+        };
 
         MouseDown += OnMouseDown;
         MouseMove += OnMouseMove;
@@ -1008,6 +1019,17 @@ public partial class CanvasHostView : UserControl
 
             foreach (var shape in layer.Shapes)
             {
+                if (shape.Kind == ShapeKind.DesignGrid)
+                {
+                    // The cell lookup undoes rotation and flips, so a rotated grid is hit exactly where it is drawn.
+                    if (DesignGridMath.TryGetCell(shape, point.X, point.Y, out _, out _))
+                    {
+                        return (shape, layer);
+                    }
+
+                    continue;
+                }
+
                 if (point.X < shape.X || point.X > shape.X + shape.Width ||
                     point.Y < shape.Y || point.Y > shape.Y + shape.Height)
                 {
@@ -1019,6 +1041,109 @@ public partial class CanvasHostView : UserControl
         }
 
         return null;
+    }
+
+    // ----- Design Grid painting (bucket tool) ----------------------------------------------------
+
+    private bool _isGridPainting;
+    private Shape? _gridPaintShape;
+    private ShapeSnapshot _gridPaintBefore;
+    private Dictionary<int, ArgbColor>? _gridPaintWorking;
+    private bool _gridPaintErase;
+    private bool _gridPaintChanged;
+    private Point _gridPaintLast;
+
+    /// <summary>Starts a bucket stroke on a design grid: the clicked square (and every square the mouse is then dragged
+    /// over) takes the current fill colour — or is cleared when Alt is held. The whole stroke is one undo step.</summary>
+    private void BeginGridPaint(Shape shape, Layer layer, Point point, int row, int col)
+    {
+        if (_context is null)
+        {
+            return;
+        }
+
+        _gridPaintShape = shape;
+        _gridPaintBefore = ShapeSnapshot.Capture(shape);
+        _gridPaintWorking = new Dictionary<int, ArgbColor>(shape.GridCells ?? new Dictionary<int, ArgbColor>());
+        shape.GridCells = _gridPaintWorking;
+        _gridPaintErase = Keyboard.Modifiers.HasFlag(ModifierKeys.Alt);
+        _gridPaintChanged = false;
+        _gridPaintLast = point;
+        _isGridPainting = true;
+
+        _context.SelectedLayer = layer;
+        _context.SelectedShape = shape;
+        CaptureMouse();
+
+        PaintGridCell(row, col);
+    }
+
+    private void PaintGridCell(int row, int col)
+    {
+        if (_context is null || _gridPaintWorking is null)
+        {
+            return;
+        }
+
+        var key = DesignGridMath.Key(row, col);
+        if (_gridPaintErase)
+        {
+            _gridPaintChanged |= _gridPaintWorking.Remove(key);
+        }
+        else if (!_gridPaintWorking.TryGetValue(key, out var existing) || !existing.Equals(_context.CurrentFillColor))
+        {
+            _gridPaintWorking[key] = _context.CurrentFillColor;
+            _gridPaintChanged = true;
+        }
+
+        _context.RequestRedraw();
+    }
+
+    /// <summary>Continues a bucket stroke to <paramref name="point"/>, painting every square on the way (the mouse can jump
+    /// several squares between two move events).</summary>
+    private void ContinueGridPaint(Point point)
+    {
+        if (_gridPaintShape is null)
+        {
+            return;
+        }
+
+        var cell = Math.Max(0.5, _gridPaintShape.GridCellSize);
+        var dx = point.X - _gridPaintLast.X;
+        var dy = point.Y - _gridPaintLast.Y;
+        var steps = Math.Max(1, (int)Math.Ceiling(Math.Sqrt(dx * dx + dy * dy) / (cell * 0.5)));
+
+        for (var i = 1; i <= steps; i++)
+        {
+            var t = i / (double)steps;
+            if (DesignGridMath.TryGetCell(_gridPaintShape, _gridPaintLast.X + dx * t, _gridPaintLast.Y + dy * t, out var row, out var col))
+            {
+                PaintGridCell(row, col);
+            }
+        }
+
+        _gridPaintLast = point;
+    }
+
+    private void EndGridPaint()
+    {
+        _isGridPainting = false;
+        ReleaseMouseCapture();
+
+        if (_context is not null && _gridPaintShape is not null && _gridPaintChanged)
+        {
+            var after = ShapeSnapshot.Capture(_gridPaintShape);
+            _context.UndoManager.Push(UndoableAction.ForPropertyEdit([_gridPaintShape], [_gridPaintBefore], [after]));
+        }
+        else if (_gridPaintShape is not null)
+        {
+            // Nothing changed: put the original dictionary back so no phantom edit is left behind.
+            _gridPaintShape.GridCells = _gridPaintBefore.GridCells;
+        }
+
+        _gridPaintShape = null;
+        _gridPaintWorking = null;
+        _context?.RequestRedraw();
     }
 
     private void BeginPlacing(Point point)
@@ -1062,6 +1187,13 @@ public partial class CanvasHostView : UserControl
                 FillColor = _context.CurrentFillColor,
                 CornerRadius = _context.SelectedShapeKind == ShapeKind.RoundedRectangle ? 12 : 0,
             };
+
+            if (_pendingShape.Kind == ShapeKind.DesignGrid)
+            {
+                // Fine, light hairlines so the coloured squares stay the star of the grid.
+                _pendingShape.BorderColor = ArgbColor.FromRgb(0xB4, 0xBA, 0xC4);
+                _pendingShape.BorderThickness = 0.5;
+            }
         }
 
         CaptureMouse();
@@ -1288,6 +1420,23 @@ public partial class CanvasHostView : UserControl
 
             foreach (var shape in layer.Shapes)
             {
+                if (shape.Kind == ShapeKind.DesignGrid)
+                {
+                    // Design grids are painted square by square (and not bounds-tested like the other shapes: the
+                    // cell lookup already undoes rotation and flips).
+                    if (!DesignGridMath.TryGetCell(shape, point.X, point.Y, out var gridRow, out var gridCol))
+                    {
+                        continue;
+                    }
+
+                    if (!IsLocked(shape))
+                    {
+                        BeginGridPaint(shape, layer, point, gridRow, gridCol);
+                    }
+
+                    return;
+                }
+
                 if (point.X < shape.X || point.X > shape.X + shape.Width ||
                     point.Y < shape.Y || point.Y > shape.Y + shape.Height)
                 {
@@ -1467,9 +1616,10 @@ public partial class CanvasHostView : UserControl
             FontSize = fontSize * Zoom,
             MinWidth = 40 * Zoom,
             Padding = new Thickness(2),
-            Background = Brushes.White,
-            Foreground = Brushes.Black,
-            BorderBrush = new SolidColorBrush(Color.FromRgb(0x6F, 0xB1, 0xFF)),
+            Background = (Brush)FindResource("InsetBrush"),
+            Foreground = (Brush)FindResource("ForegroundTextBrush"),
+            BorderBrush = (Brush)FindResource("AccentBlueMidBrush"),
+            CaretBrush = (Brush)FindResource("AccentBlueMidBrush"),
             BorderThickness = new Thickness(1),
             AcceptsReturn = false,
         };
@@ -1617,6 +1767,12 @@ public partial class CanvasHostView : UserControl
 
     private void OnMouseMove(object sender, MouseEventArgs e)
     {
+        if (_isGridPainting)
+        {
+            ContinueGridPaint(ToDocumentSpace(e.GetPosition(SkiaCanvas)));
+            return;
+        }
+
         if (_isPanning)
         {
             var screenPoint = e.GetPosition(this);
@@ -1836,6 +1992,12 @@ public partial class CanvasHostView : UserControl
             return;
         }
 
+        if (_isGridPainting)
+        {
+            EndGridPaint();
+            return;
+        }
+
         if (_isPlacing)
         {
             CommitPendingShape();
@@ -2027,6 +2189,16 @@ public partial class CanvasHostView : UserControl
         ReleaseMouseCapture();
 
         var shape = _pendingShape;
+
+        if (shape is { Kind: ShapeKind.DesignGrid })
+        {
+            // A grid always consists of whole squares; a plain click (no real drag) drops a 24 x 24 grid.
+            var cell = shape.GridCellSize;
+            var clickOnly = shape.Width < cell * 2 && shape.Height < cell * 2;
+            shape.Width = (clickOnly ? 24 : Math.Max(1, Math.Round(shape.Width / cell))) * cell;
+            shape.Height = (clickOnly ? 24 : Math.Max(1, Math.Round(shape.Height / cell))) * cell;
+        }
+
         var isValidBox = shape is { Width: >= 2, Height: >= 2 };
         // A 2-point line only needs ONE dimension to span >=2 (a perfectly horizontal/vertical
         // line has the other dimension clamped to a minimum of 1 by PathBoundsCalculator).

@@ -9,6 +9,10 @@ using System.Windows.Media;
 using Icono.App.State;
 using Icono.App.State.Undo;
 using Icono.Core;
+using Icono.Rendering;
+using SkiaSharp;
+using System.IO;
+using System.Windows.Media.Imaging;
 
 namespace Icono.App.Views;
 
@@ -105,10 +109,8 @@ public partial class PropertiesPanelView : UserControl
                 BgTransparentRadio.IsChecked = _context.Document.BackgroundMode == BackgroundMode.Transparent;
                 BgSolidRadio.IsChecked = _context.Document.BackgroundMode == BackgroundMode.SolidColor;
                 BgBlurRadio.IsChecked = _context.Document.BackgroundMode == BackgroundMode.Blur;
-                BackgroundColorPicker.Visibility =
-                    _context.Document.BackgroundMode == BackgroundMode.SolidColor ? Visibility.Visible : Visibility.Collapsed;
-                BackgroundBlurSettingsPanel.Visibility =
-                    _context.Document.BackgroundMode == BackgroundMode.Blur ? Visibility.Visible : Visibility.Collapsed;
+                BgImageRadio.IsChecked = _context.Document.BackgroundMode == BackgroundMode.Image;
+                UpdateBackgroundPanels();
                 BackgroundBlurColorPicker.SelectedColor = _context.Document.BackgroundBlurColor.ToMediaColor();
                 BackgroundBlurGradientCheckBox.IsChecked = _context.Document.BackgroundBlurGradientEnabled;
                 BackgroundBlurGradientColorPicker.Visibility =
@@ -128,12 +130,13 @@ public partial class PropertiesPanelView : UserControl
     public PropertiesPanelView()
     {
         InitializeComponent();
+        InitializeDesignStylePicker();
 
         SwatchList.ItemsSource = SwatchColors.Select(c => (Brush)new SolidColorBrush(c)).ToList();
 
         var presets = new List<BorderStylePreset>
         {
-            new("Blue Gloss", (Brush)FindResource("GlossyBlueBrush")),
+            new("Blue Gloss", (Brush)FindResource("BlueGlossPresetBrush")),
             new("Silver Gloss", new LinearGradientBrush(Colors.White, Color.FromRgb(0x8A, 0x8A, 0x8A), 90)),
             new("Gold Gloss", new LinearGradientBrush(Color.FromRgb(0xFF, 0xE6, 0x8A), Color.FromRgb(0xB8, 0x86, 0x0B), 90)),
             new("Red Gloss", new LinearGradientBrush(Color.FromRgb(0xFF, 0x8A, 0x80), Color.FromRgb(0x8E, 0x1B, 0x1B), 90)),
@@ -233,6 +236,13 @@ public partial class PropertiesPanelView : UserControl
         }
 
         NoSelectionHint.Visibility = shape is null ? Visibility.Visible : Visibility.Collapsed;
+        if (shape is null)
+        {
+            LineCard.Visibility = Visibility.Collapsed;
+            DesignStyleCard.Visibility = Visibility.Collapsed;
+            DesignGridCard.Visibility = Visibility.Collapsed;
+        }
+
         RefreshControlsFromShape();
     }
 
@@ -269,6 +279,9 @@ public partial class PropertiesPanelView : UserControl
         HeightTextBox.Text = shape.Height.ToString("0", CultureInfo.InvariantCulture);
         RotationTextBox.Text = shape.Rotation.ToString("0", CultureInfo.InvariantCulture);
 
+        RefreshLineControls(shape);
+        RefreshDesignStyleControls(shape);
+        RefreshDesignGridControls(shape);
         Depth3DSlider.Value = shape.Depth3D;
         LineStartHeadComboBox.SelectedItem = ArrowHeadOptions.First(o => o.Value == shape.LineStartHead);
         LineEndHeadComboBox.SelectedItem = ArrowHeadOptions.First(o => o.Value == shape.LineEndHead);
@@ -575,7 +588,17 @@ public partial class PropertiesPanelView : UserControl
         }
 
         var style = Enum.Parse<PathRoutingStyle>(tag);
-        ApplyToSelectionWithUndo(s => s.PathRoutingStyle = style);
+        ApplyToSelectionWithUndo(s =>
+        {
+            s.PathRoutingStyle = style;
+
+            // The Rounded connector needs a visible radius, otherwise the corner controls would read "sharp"
+            // while the line is drawn with a built-in fallback radius.
+            if (style == PathRoutingStyle.Rounded && s.CornerRadius <= 0 && IsLineFamily(s))
+            {
+                s.CornerRadius = 8;
+            }
+        });
     }
 
     private void TextFontFamilyComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -616,6 +639,315 @@ public partial class PropertiesPanelView : UserControl
         }
 
         ApplyToSelectionWithUndo(s => s.LineEndHead = option.Value);
+    }
+
+    // ----- Design style picker (Glassmorphism, Neumorphism, ...) ------------------------------------
+
+    private readonly List<DesignStyleOption> _designStyleOptions =
+    [
+        new() { Kind = DesignStyleKind.None, Label = "None (standard)", ToolTip = "Plain fill and border" },
+        new() { Kind = DesignStyleKind.Glassmorphism, Label = "Glassmorphism", ToolTip = "Glassmorphism — frosted translucent glass with a bright edge" },
+        new() { Kind = DesignStyleKind.Neumorphism, Label = "Neumorphism", ToolTip = "Neumorphism — soft extruded surface with light and dark shadows" },
+        new() { Kind = DesignStyleKind.FluentDesign, Label = "Fluent Design", ToolTip = "Fluent Design — acrylic surface with layered elevation and reveal light" },
+        new() { Kind = DesignStyleKind.AuroraGradients, Label = "Aurora Gradients", ToolTip = "Aurora Gradients — flowing multi-hue gradient with soft light blobs" },
+        new() { Kind = DesignStyleKind.BentoUI, Label = "Bento UI", ToolTip = "Bento UI — calm rounded tile with hairline border and soft shadow" },
+        new() { Kind = DesignStyleKind.Cyberpunk, Label = "Cyberpunk / Futuristic UI", ToolTip = "Cyberpunk / Futuristic UI — dark panel, scanlines, cyan neon and magenta offset edge" },
+        new() { Kind = DesignStyleKind.Claymorphism3D, Label = "3D Claymorphism", ToolTip = "3D Claymorphism — inflated puffy clay with inner light and shadow" },
+        new() { Kind = DesignStyleKind.DarkNeon, Label = "Dark UI + Neon Accents", ToolTip = "Dark UI + Neon Accents — dark card with a glowing neon edge" },
+    ];
+
+    private (ArgbColor Fill, ArgbColor Border)? _designStylePreviewColors;
+
+    private void InitializeDesignStylePicker() => DesignStyleList.ItemsSource = _designStyleOptions;
+
+    private void RefreshDesignStyleControls(Shape shape)
+    {
+        DesignStyleCard.Visibility = DesignStyleRenderer.Supports(shape) ? Visibility.Visible : Visibility.Collapsed;
+        if (DesignStyleCard.Visibility != Visibility.Visible)
+        {
+            return;
+        }
+
+        // The thumbnails show each style in the selected shape's own colour; re-render only when that colour changes.
+        var colors = (shape.FillColor, shape.BorderColor);
+        if (_designStylePreviewColors != colors)
+        {
+            _designStylePreviewColors = colors;
+            foreach (var option in _designStyleOptions)
+            {
+                option.Thumbnail = RenderDesignStylePreview(option.Kind, shape.FillColor, shape.BorderColor);
+            }
+        }
+
+        foreach (var option in _designStyleOptions)
+        {
+            option.IsSelected = option.Kind == shape.DesignStyle;
+        }
+    }
+
+    private void DesignStyle_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not FrameworkElement { Tag: DesignStyleOption option })
+        {
+            return;
+        }
+
+        ApplyToSelectionWithUndo(s => s.DesignStyle = option.Kind);
+        e.Handled = true;
+    }
+
+    /// <summary>A small rounded-square sample of one design style, rendered with the real shape renderer.</summary>
+    private static ImageSource RenderDesignStylePreview(DesignStyleKind kind, ArgbColor fill, ArgbColor border)
+    {
+        const int size = 96;
+        using var bitmap = new SKBitmap(size, size);
+        using var canvas = new SKCanvas(bitmap);
+        canvas.Clear(SKColors.Transparent);
+
+        var sample = new Shape
+        {
+            Kind = ShapeKind.RoundedRectangle,
+            X = 13,
+            Y = 13,
+            Width = size - 26,
+            Height = size - 26,
+            CornerRadius = 20,
+            FillColor = fill,
+            BorderColor = border,
+            BorderThickness = 3,
+            DesignStyle = kind,
+        };
+        ShapeRenderer.Draw(canvas, sample);
+
+        using var image = SKImage.FromBitmap(bitmap);
+        using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+        using var stream = new MemoryStream(data.ToArray());
+
+        var result = new BitmapImage();
+        result.BeginInit();
+        result.CacheOption = BitmapCacheOption.OnLoad;
+        result.StreamSource = stream;
+        result.EndInit();
+        result.Freeze();
+        return result;
+    }
+
+    // ----- Design grid options ------------------------------------------------------------------
+
+    private void RefreshDesignGridControls(Shape shape)
+    {
+        var isGrid = shape.Kind == ShapeKind.DesignGrid;
+        DesignGridCard.Visibility = isGrid ? Visibility.Visible : Visibility.Collapsed;
+        if (!isGrid)
+        {
+            return;
+        }
+
+        DesignGridCellSizeTextBox.Text = (shape.GridCellSize / DesignGridMath.PxPerMm).ToString("0.##", CultureInfo.InvariantCulture);
+        DesignGridColumnsTextBox.Text = DesignGridMath.Columns(shape).ToString(CultureInfo.InvariantCulture);
+        DesignGridRowsTextBox.Text = DesignGridMath.Rows(shape).ToString(CultureInfo.InvariantCulture);
+        DesignGridLinesCheckBox.IsChecked = shape.GridShowLines;
+    }
+
+    private void DesignGridCellSizeTextBox_OnLostFocus(object sender, RoutedEventArgs e)
+    {
+        if (_boundShape is null || _isRefreshingControls)
+        {
+            return;
+        }
+
+        if (!double.TryParse(DesignGridCellSizeTextBox.Text.Trim().Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out var mm))
+        {
+            RefreshControlsFromShape();
+            return;
+        }
+
+        var px = Math.Clamp(mm, 0.5, 50) * DesignGridMath.PxPerMm;
+
+        // Keep the number of squares and rescale the grid around them.
+        ApplyToSelectionWithUndo(s =>
+        {
+            if (s.Kind != ShapeKind.DesignGrid)
+            {
+                return;
+            }
+
+            var cols = DesignGridMath.Columns(s);
+            var rows = DesignGridMath.Rows(s);
+            s.GridCellSize = px;
+            s.Width = cols * px;
+            s.Height = rows * px;
+        });
+        RefreshControlsFromShape();
+    }
+
+    private void DesignGridColumnsTextBox_OnLostFocus(object sender, RoutedEventArgs e) =>
+        ApplyDesignGridCount(DesignGridColumnsTextBox, (s, count) => s.Width = count * s.GridCellSize);
+
+    private void DesignGridRowsTextBox_OnLostFocus(object sender, RoutedEventArgs e) =>
+        ApplyDesignGridCount(DesignGridRowsTextBox, (s, count) => s.Height = count * s.GridCellSize);
+
+    private void ApplyDesignGridCount(TextBox textBox, Action<Shape, int> apply)
+    {
+        if (_boundShape is null || _isRefreshingControls)
+        {
+            return;
+        }
+
+        if (!int.TryParse(textBox.Text.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var count))
+        {
+            RefreshControlsFromShape();
+            return;
+        }
+
+        count = Math.Clamp(count, 1, 2000);
+        ApplyToSelectionWithUndo(s =>
+        {
+            if (s.Kind == ShapeKind.DesignGrid)
+            {
+                apply(s, count);
+            }
+        });
+        RefreshControlsFromShape();
+    }
+
+    private void DesignGridLinesCheckBox_OnCheckedChanged(object sender, RoutedEventArgs e)
+    {
+        var show = DesignGridLinesCheckBox.IsChecked == true;
+        ApplyToSelectionWithUndo(s =>
+        {
+            if (s.Kind == ShapeKind.DesignGrid)
+            {
+                s.GridShowLines = show;
+            }
+        });
+    }
+
+    private void DesignGridClearButton_OnClick(object sender, RoutedEventArgs e) =>
+        ApplyToSelectionWithUndo(s =>
+        {
+            if (s.Kind == ShapeKind.DesignGrid)
+            {
+                s.GridCells = null;
+            }
+        });
+
+    // ----- Line options (thickness / corners, in cm) -------------------------------------------
+
+    private const double LinePxPerCm = PxPerInch / 2.54;
+    private const double DefaultRoundCornerCm = 0.3;
+
+    private static bool IsLineFamily(Shape shape) => ShapeGeometryFactory.IsLineFamily(shape.Kind);
+
+    private void RefreshLineControls(Shape shape)
+    {
+        LineCard.Visibility = IsLineFamily(shape) ? Visibility.Visible : Visibility.Collapsed;
+
+        var thicknessCm = shape.BorderThickness / LinePxPerCm;
+        var radiusCm = shape.CornerRadius / LinePxPerCm;
+
+        LineThicknessSlider.Value = Math.Clamp(thicknessCm, LineThicknessSlider.Minimum, LineThicknessSlider.Maximum);
+        LineThicknessTextBox.Text = thicknessCm.ToString("0.00", CultureInfo.InvariantCulture);
+        LineCornerRadiusSlider.Value = Math.Clamp(radiusCm, LineCornerRadiusSlider.Minimum, LineCornerRadiusSlider.Maximum);
+        LineCornerRadiusTextBox.Text = radiusCm.ToString("0.00", CultureInfo.InvariantCulture);
+
+        if (shape.CornerRadius > 0)
+        {
+            LineCornerRoundRadio.IsChecked = true;
+        }
+        else
+        {
+            LineCornerSharpRadio.IsChecked = true;
+        }
+    }
+
+    private void LineThicknessSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (LineThicknessTextBox is null)
+        {
+            return;
+        }
+
+        LineThicknessTextBox.Text = e.NewValue.ToString("0.00", CultureInfo.InvariantCulture);
+        ApplyToSelection(s => s.BorderThickness = e.NewValue * LinePxPerCm);
+    }
+
+    private void LineCornerRadiusSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (LineCornerRadiusTextBox is null)
+        {
+            return;
+        }
+
+        LineCornerRadiusTextBox.Text = e.NewValue.ToString("0.00", CultureInfo.InvariantCulture);
+        ApplyToSelection(s => s.CornerRadius = e.NewValue * LinePxPerCm);
+    }
+
+    private void LineCornersRadio_OnChecked(object sender, RoutedEventArgs e)
+    {
+        if (sender is not RadioButton { Tag: string tag })
+        {
+            return;
+        }
+
+        if (tag == "Sharp")
+        {
+            ApplyToSelectionWithUndo(s => s.CornerRadius = 0);
+        }
+        else
+        {
+            ApplyToSelectionWithUndo(s =>
+            {
+                if (s.CornerRadius <= 0)
+                {
+                    s.CornerRadius = DefaultRoundCornerCm * LinePxPerCm;
+                }
+            });
+        }
+    }
+
+    private void LineThicknessTextBox_OnLostFocus(object sender, RoutedEventArgs e) =>
+        ApplyLineCmTextBox(LineThicknessTextBox, minCm: 0.01, maxCm: 10, s => s.BorderThickness, (s, px) => s.BorderThickness = px);
+
+    private void LineCornerRadiusTextBox_OnLostFocus(object sender, RoutedEventArgs e) =>
+        ApplyLineCmTextBox(LineCornerRadiusTextBox, minCm: 0, maxCm: 20, s => s.CornerRadius, (s, px) => s.CornerRadius = px);
+
+    private void LineTextBox_OnKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            // Moving focus away commits the value through the TextBox's LostFocus handler.
+            Keyboard.ClearFocus();
+            FocusManager.SetFocusedElement(Window.GetWindow(this), Window.GetWindow(this));
+            e.Handled = true;
+        }
+    }
+
+    /// <summary>Commits a "value in cm" text field: parses it (comma or dot), clamps it, converts to px and applies
+    /// it to the selection as one undo step. Unparsable text snaps back to the shape's current value.</summary>
+    private void ApplyLineCmTextBox(TextBox textBox, double minCm, double maxCm, Func<Shape, double> read, Action<Shape, double> write)
+    {
+        if (_boundShape is null || _isRefreshingControls)
+        {
+            return;
+        }
+
+        var text = textBox.Text.Trim().Replace(',', '.');
+        if (!double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var cm))
+        {
+            RefreshControlsFromShape();
+            return;
+        }
+
+        var px = Math.Clamp(cm, minCm, maxCm) * LinePxPerCm;
+        if (Math.Abs(px - read(_boundShape)) < 0.0001)
+        {
+            RefreshControlsFromShape();
+            return;
+        }
+
+        ApplyToSelectionWithUndo(s => write(s, px));
+        RefreshControlsFromShape();
     }
 
     private void Depth3DSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -864,8 +1196,128 @@ public partial class PropertiesPanelView : UserControl
 
         var mode = Enum.Parse<BackgroundMode>(tag);
         _context.Document.BackgroundMode = mode;
-        BackgroundColorPicker.Visibility = mode == BackgroundMode.SolidColor ? Visibility.Visible : Visibility.Collapsed;
+        UpdateBackgroundPanels();
+
+        // Picking "Image" without a picture yet opens the chooser right away.
+        if (mode == BackgroundMode.Image && _context.Document.BackgroundImageBytes is not { Length: > 0 })
+        {
+            ChooseBackgroundImage();
+        }
+
+        _context.RequestRedraw();
+    }
+
+    // ----- Page background picture ------------------------------------------------------------
+
+    /// <summary>Shows only the settings that belong to the current background mode.</summary>
+    private void UpdateBackgroundPanels()
+    {
+        if (_context is null)
+        {
+            return;
+        }
+
+        var document = _context.Document;
+        var mode = document.BackgroundMode;
+        var showsPageColor = mode == BackgroundMode.SolidColor
+            || (mode == BackgroundMode.Image && document.BackgroundImageFit == BackgroundImageFit.Contain);
+
+        BackgroundColorPicker.Visibility = showsPageColor ? Visibility.Visible : Visibility.Collapsed;
         BackgroundBlurSettingsPanel.Visibility = mode == BackgroundMode.Blur ? Visibility.Visible : Visibility.Collapsed;
+        BackgroundImageSettingsPanel.Visibility = mode == BackgroundMode.Image ? Visibility.Visible : Visibility.Collapsed;
+
+        BackgroundImageNameText.Text = document.BackgroundImageBytes is { Length: > 0 }
+            ? document.BackgroundImageName ?? "Imported image"
+            : "No image chosen";
+        BackgroundImageRemoveButton.IsEnabled = document.BackgroundImageBytes is { Length: > 0 };
+
+        switch (document.BackgroundImageFit)
+        {
+            case BackgroundImageFit.Contain: BgImageFitContainRadio.IsChecked = true; break;
+            case BackgroundImageFit.Stretch: BgImageFitStretchRadio.IsChecked = true; break;
+            default: BgImageFitCoverRadio.IsChecked = true; break;
+        }
+    }
+
+    private void BackgroundImageChooseButton_OnClick(object sender, RoutedEventArgs e) => ChooseBackgroundImage();
+
+    private void BackgroundImageRemoveButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (_context is null)
+        {
+            return;
+        }
+
+        _context.Document.BackgroundImageBytes = null;
+        _context.Document.BackgroundImageName = null;
+        UpdateBackgroundPanels();
+        _context.RequestRedraw();
+    }
+
+    private void BackgroundImageFitRadio_OnChecked(object sender, RoutedEventArgs e)
+    {
+        if (_context is null || sender is not RadioButton { Tag: string tag })
+        {
+            return;
+        }
+
+        _context.Document.BackgroundImageFit = Enum.Parse<BackgroundImageFit>(tag);
+        UpdateBackgroundPanels();
+        _context.RequestRedraw();
+    }
+
+    /// <summary>Lets the user pick a picture and stores it (re-encoded as PNG, capped to 3000 px on the long side)
+    /// as the page background.</summary>
+    private void ChooseBackgroundImage()
+    {
+        if (_context is null)
+        {
+            return;
+        }
+
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Filter = "Images (*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.ico)|*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.ico",
+            Title = "Choose background image",
+        };
+
+        if (dialog.ShowDialog(Window.GetWindow(this)) != true)
+        {
+            return;
+        }
+
+        try
+        {
+            using var stream = File.OpenRead(dialog.FileName);
+            BitmapSource frame = Path.GetExtension(dialog.FileName).Equals(".ico", StringComparison.OrdinalIgnoreCase)
+                ? new IconBitmapDecoder(stream, BitmapCreateOptions.None, BitmapCacheOption.OnLoad)
+                    .Frames.OrderByDescending(f => f.PixelWidth * f.PixelHeight).First()
+                : BitmapDecoder.Create(stream, BitmapCreateOptions.None, BitmapCacheOption.OnLoad).Frames[0];
+
+            const double maxSide = 3000;
+            var longSide = Math.Max(frame.PixelWidth, frame.PixelHeight);
+            if (longSide > maxSide)
+            {
+                var scale = maxSide / longSide;
+                frame = new TransformedBitmap(frame, new ScaleTransform(scale, scale));
+            }
+
+            var encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(frame));
+            using var output = new MemoryStream();
+            encoder.Save(output);
+
+            _context.Document.BackgroundImageBytes = output.ToArray();
+            _context.Document.BackgroundImageName = Path.GetFileName(dialog.FileName);
+        }
+        catch (Exception)
+        {
+            MessageBox.Show(Window.GetWindow(this), "Die Datei konnte nicht als Bild gelesen werden.",
+                "Hintergrundbild", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        UpdateBackgroundPanels();
         _context.RequestRedraw();
     }
 

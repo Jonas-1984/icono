@@ -2,30 +2,26 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="Colors.xaml" />
-        <ResourceDictionary Source="Brushes.xaml" />
         <ResourceDictionary Source="PanelStyles.xaml" />
     </ResourceDictionary.MergedDictionaries>
 
+    <!-- Cards are recessed wells inside the raised side panel (dark top-left lip, lit bottom-right rim),
+         so the raised tool keys placed in them stand out. No Effect here on purpose — see
+         SidePanelBorderStyle. -->
     <Style x:Key="CardBorderStyle" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource ToolbarBackgroundBrush}" />
-        <Setter Property="BorderBrush" Value="{StaticResource BorderLineBrush}" />
+        <Setter Property="Background" Value="{DynamicResource InsetBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource InsetEdgeBrush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="CornerRadius" Value="14" />
         <Setter Property="Padding" Value="4,8" />
-        <Setter Property="Margin" Value="8,6" />
-        <Setter Property="Effect">
-            <Setter.Value>
-                <DropShadowEffect Color="#FF000000" BlurRadius="12" ShadowDepth="2" Direction="270" Opacity="0.35" />
-            </Setter.Value>
-        </Setter>
+        <Setter Property="Margin" Value="10,6" />
     </Style>
 
     <Style x:Key="CardHeaderTextStyle" TargetType="TextBlock" BasedOn="{StaticResource PanelLabelTextStyle}">
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="FontSize" Value="11" />
-        <Setter Property="Foreground" Value="{StaticResource ForegroundTextBrush}" />
-        <Setter Property="Margin" Value="6,2,6,4" />
+        <Setter Property="Foreground" Value="{DynamicResource ForegroundTextBrush}" />
+        <Setter Property="Margin" Value="8,2,6,4" />
     </Style>
 
 </ResourceDictionary>

@@ -99,4 +99,8 @@ public enum ShapeKind
     Rug,
     Bed,
     Lamp,
+
+    /// <summary>A checkered "design grid" (default 2 mm squares) whose individual squares can be coloured with the
+    /// bucket tool — see <see cref="Shape.GridCellSize"/> and <see cref="Shape.GridCells"/>.</summary>
+    DesignGrid,
 }

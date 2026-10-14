@@ -21,12 +21,12 @@
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
 
-        <Image Grid.Column="0" Width="18" Height="18" Margin="10,0,8,0"
+        <Image Grid.Column="0" Width="20" Height="20" Margin="10,0,8,0" RenderOptions.BitmapScalingMode="HighQuality"
                VerticalAlignment="Center"
                Source="{Binding Icon, RelativeSource={RelativeSource AncestorType=Window}}" />
 
         <TextBlock Grid.Column="1" Text="icono" VerticalAlignment="Center"
-                   Foreground="{StaticResource ForegroundTextBrush}"
+                   Foreground="{DynamicResource ForegroundTextBrush}"
                    FontSize="12" FontWeight="SemiBold" />
 
         <!-- Column 2 is empty draggable space (moves the window). -->
@@ -37,18 +37,18 @@
         <StackPanel Grid.Column="3" Orientation="Horizontal" shell:WindowChrome.IsHitTestVisibleInChrome="True">
             <Button x:Name="MinimizeButton" Style="{StaticResource CaptionButtonStyle}"
                     Click="MinimizeButton_OnClick" ToolTip="Minimize">
-                <Path Data="{StaticResource CaptionMinimizeGeometry}" Stroke="{StaticResource ForegroundTextBrush}"
+                <Path Data="{StaticResource CaptionMinimizeGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
                       StrokeThickness="1" Width="10" Height="10" Stretch="Uniform" />
             </Button>
             <Button x:Name="MaximizeRestoreButton" Style="{StaticResource CaptionButtonStyle}"
                     Click="MaximizeRestoreButton_OnClick" ToolTip="Maximize">
                 <Path x:Name="MaximizeRestoreIcon" Data="{StaticResource CaptionMaximizeGeometry}"
-                      Stroke="{StaticResource ForegroundTextBrush}"
+                      Stroke="{DynamicResource ForegroundTextBrush}"
                       StrokeThickness="1" Width="10" Height="10" Stretch="Uniform" />
             </Button>
             <Button x:Name="CloseButton" Style="{StaticResource CaptionCloseButtonStyle}"
                     Click="CloseButton_OnClick" ToolTip="Close">
-                <Path Data="{StaticResource CaptionCloseGeometry}" Stroke="{StaticResource ForegroundTextBrush}"
+                <Path Data="{StaticResource CaptionCloseGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
                       StrokeThickness="1" Width="10" Height="10" Stretch="Uniform" />
             </Button>
         </StackPanel>

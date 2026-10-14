@@ -32,6 +32,12 @@ public static class ShapeRenderer
             return;
         }
 
+        if (shape.Kind == ShapeKind.DesignGrid)
+        {
+            DesignGridRenderer.Draw(canvas, shape, alpha);
+            return;
+        }
+
         if (shape.Kind == ShapeKind.Text && !string.IsNullOrEmpty(shape.TextContent))
         {
             DrawTextShape(canvas, shape, alpha);
@@ -48,6 +54,18 @@ public static class ShapeRenderer
         var strokeOnly = shape.Kind == ShapeKind.CombinedPath
             ? shape.CustomPathStrokeOnly
             : ShapeGeometryFactory.IsStrokeOnly(shape.Kind);
+
+        // A design style (Glassmorphism, Neumorphism, ...) replaces the plain fill + border look.
+        if (shape.DesignStyle != DesignStyleKind.None && shape.FillEnabled && DesignStyleRenderer.Supports(shape))
+        {
+            if (shape.ShadowEnabled)
+            {
+                DrawShadow(canvas, path, shape, strokeOnly: false);
+            }
+
+            DesignStyleRenderer.Draw(canvas, path, shape, alpha);
+            return;
+        }
 
         if (shape.ShadowEnabled)
         {
@@ -94,7 +112,8 @@ public static class ShapeRenderer
                 Style = SKPaintStyle.Stroke,
                 StrokeWidth = (float)shape.BorderThickness,
                 StrokeCap = SKStrokeCap.Round,
-                StrokeJoin = SKStrokeJoin.Round,
+                StrokeJoin = ShapeGeometryFactory.UsesSharpStrokeJoin(shape) ? SKStrokeJoin.Miter : SKStrokeJoin.Round,
+                StrokeMiter = 10f,
             };
 
             if (shape.BorderStyleKind == BorderStyleKind.Gradient)

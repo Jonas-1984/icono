@@ -6,6 +6,10 @@ public sealed class Document
 {
     public const int PreviewSize = 256;
 
+    /// <summary>DIN A4 portrait (210 x 297 mm) at the editor's 96 DPI — the page a new session starts with.</summary>
+    public const int A4Width = 794;
+    public const int A4Height = 1123;
+
     public int Width { get; set; } = PreviewSize;
     public int Height { get; set; } = PreviewSize;
 
@@ -18,6 +22,14 @@ public sealed class Document
     public BackgroundMode BackgroundMode { get; set; } = BackgroundMode.Transparent;
 
     public ArgbColor BackgroundColor { get; set; } = ArgbColor.FromRgb(0xFF, 0xFF, 0xFF);
+
+    /// <summary>PNG bytes of the picture used by <see cref="BackgroundMode.Image"/> (null = none chosen yet). Also the
+    /// colour shown behind it is <see cref="BackgroundColor"/>.</summary>
+    public byte[]? BackgroundImageBytes { get; set; }
+
+    public string? BackgroundImageName { get; set; }
+
+    public BackgroundImageFit BackgroundImageFit { get; set; } = BackgroundImageFit.Cover;
 
     /// <summary>Base color of the <see cref="BackgroundMode.Blur"/> preview backdrop.</summary>
     public ArgbColor BackgroundBlurColor { get; set; } = ArgbColor.FromRgb(0x6F, 0xB1, 0xFF);

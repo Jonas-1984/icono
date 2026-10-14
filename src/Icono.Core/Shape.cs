@@ -8,6 +8,10 @@ public sealed class Shape : ObservableObject
     private double _height = 80;
     private ArgbColor _fillColor = ArgbColor.FromRgb(0x9E, 0xD9, 0xD1);
     private bool _fillEnabled = true;
+    private DesignStyleKind _designStyle = DesignStyleKind.None;
+    private double _gridCellSize = DesignGridMath.DefaultCellSizePx;
+    private bool _gridShowLines = true;
+    private IReadOnlyDictionary<int, ArgbColor>? _gridCells;
     private ArgbColor _borderColor = ArgbColor.FromRgb(0x4A, 0x8F, 0x9E);
     private double _borderThickness = 2;
     private BorderStyleKind _borderStyleKind = BorderStyleKind.Solid;
@@ -59,6 +63,21 @@ public sealed class Shape : ObservableObject
     /// shape that should read as an outline only, without switching its <see cref="ShapeKind"/> to
     /// a stroke-only kind. No effect on kinds that never draw a fill anyway (Line, Arrow, ...).</summary>
     public bool FillEnabled { get => _fillEnabled; set => SetField(ref _fillEnabled, value); }
+
+    /// <summary>Optional UI design language (Glassmorphism, Neumorphism, ...) the shape is rendered in. None = the
+    /// normal fill/border look. Only affects closed, fillable shapes — see <c>DesignStyleRenderer.Supports</c>.</summary>
+    public DesignStyleKind DesignStyle { get => _designStyle; set => SetField(ref _designStyle, value); }
+
+    /// <summary>Edge length of one square of a <see cref="ShapeKind.DesignGrid"/>, in px (default 2 mm at 96 DPI).</summary>
+    public double GridCellSize { get => _gridCellSize; set => SetField(ref _gridCellSize, Math.Max(0.5, value)); }
+
+    /// <summary>Whether a <see cref="ShapeKind.DesignGrid"/> draws its grid lines. Switching this off leaves the coloured
+    /// squares behind as a pure pixel picture.</summary>
+    public bool GridShowLines { get => _gridShowLines; set => SetField(ref _gridShowLines, value); }
+
+    /// <summary>Colours of the painted squares of a <see cref="ShapeKind.DesignGrid"/>, keyed by <see cref="DesignGridMath.Key"/>.
+    /// Treated as IMMUTABLE: every edit assigns a fresh dictionary, which is what lets undo snapshots just keep the reference.</summary>
+    public IReadOnlyDictionary<int, ArgbColor>? GridCells { get => _gridCells; set => SetField(ref _gridCells, value); }
     public ArgbColor BorderColor { get => _borderColor; set => SetField(ref _borderColor, value); }
     public double BorderThickness { get => _borderThickness; set => SetField(ref _borderThickness, value); }
 

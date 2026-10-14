@@ -2,15 +2,13 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="Colors.xaml" />
-        <ResourceDictionary Source="Brushes.xaml" />
     </ResourceDictionary.MergedDictionaries>
 
     <!-- App-wide thin scrollbars — replaces the thick default OS chrome everywhere (side panels,
          icon library, dropdowns, ...) with a flat 6px thumb-only bar, no arrow buttons. -->
 
     <Style x:Key="ThinScrollBarThumbStyle" TargetType="Thumb">
-        <Setter Property="Background" Value="{StaticResource AccentBlueMidBrush}" />
+        <Setter Property="Background" Value="{DynamicResource MutedTextBrush}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Thumb">
@@ -18,9 +16,11 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="ThumbBorder" Property="Opacity" Value="1" />
+                            <Setter TargetName="ThumbBorder" Property="Background" Value="{DynamicResource AccentBlueMidBrush}" />
                         </Trigger>
                         <Trigger Property="IsDragging" Value="True">
                             <Setter TargetName="ThumbBorder" Property="Opacity" Value="1" />
+                            <Setter TargetName="ThumbBorder" Property="Background" Value="{DynamicResource AccentBlueMidBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

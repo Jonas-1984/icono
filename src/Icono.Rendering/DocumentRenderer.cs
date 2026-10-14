@@ -23,6 +23,9 @@ public static class DocumentRenderer
                 case BackgroundMode.Blur:
                     BlurBackgroundRenderer.Render(canvas, width, height, document);
                     break;
+                case BackgroundMode.Image:
+                    BackgroundImageRenderer.Render(canvas, width, height, document);
+                    break;
                 default:
                     CheckerboardRenderer.Render(canvas, width, height);
                     break;

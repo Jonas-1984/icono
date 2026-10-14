@@ -2,30 +2,30 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="Colors.xaml" />
-        <ResourceDictionary Source="Brushes.xaml" />
     </ResourceDictionary.MergedDictionaries>
 
     <Style TargetType="Menu">
-        <Setter Property="Background" Value="{StaticResource ToolbarBackgroundBrush}" />
-        <Setter Property="Foreground" Value="{StaticResource ForegroundTextBrush}" />
-        <Setter Property="BorderBrush" Value="{StaticResource BorderLineBrush}" />
-        <Setter Property="BorderThickness" Value="0,0,0,1" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource ForegroundTextBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderLineBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Margin" Value="8,0,8,0" />
         <Setter Property="FontSize" Value="13" />
     </Style>
 
     <Style TargetType="ContextMenu">
-        <Setter Property="Background" Value="{StaticResource PanelBackgroundBrush}" />
-        <Setter Property="Foreground" Value="{StaticResource ForegroundTextBrush}" />
-        <Setter Property="BorderBrush" Value="{StaticResource AccentBlueMidBrush}" />
+        <Setter Property="Background" Value="{DynamicResource PanelSurfaceBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource ForegroundTextBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource RaisedEdgeBrush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="Padding" Value="2" />
+        <Setter Property="Padding" Value="4" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ContextMenu">
                     <Border Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="12"
                             SnapsToDevicePixels="True">
                         <!-- Flipping the ScrollViewer's flow direction moves its vertical scrollbar
                              from the (default) right edge to the left; the inner panel is flipped
@@ -48,7 +48,7 @@
 
     <Style TargetType="MenuItem">
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Foreground" Value="{StaticResource ForegroundTextBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource ForegroundTextBrush}" />
         <Setter Property="Padding" Value="8,4" />
         <Setter Property="Template">
             <Setter.Value>
@@ -56,8 +56,9 @@
                     <Grid>
                         <Border x:Name="Bg"
                                 Background="{TemplateBinding Background}"
-                                BorderBrush="{StaticResource AccentBlueMidBrush}"
-                                BorderThickness="0">
+                                BorderBrush="Transparent"
+                                BorderThickness="0"
+                                CornerRadius="8">
                             <Grid Margin="{TemplateBinding Padding}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
@@ -72,9 +73,10 @@
                                        AllowsTransparency="True"
                                        Focusable="False"
                                        PopupAnimation="Fade">
-                                    <Border Background="{StaticResource PanelBackgroundBrush}"
-                                            BorderBrush="{StaticResource AccentBlueMidBrush}"
-                                            BorderThickness="1">
+                                    <Border Background="{DynamicResource PanelSurfaceBrush}"
+                                            BorderBrush="{DynamicResource RaisedEdgeBrush}"
+                                            BorderThickness="1" CornerRadius="12" Padding="4" Margin="0,4,8,8"
+                                            Effect="{DynamicResource RaisedDarkShadow}">
                                         <StackPanel IsItemsHost="True" />
                                     </Border>
                                 </Popup>
@@ -83,7 +85,8 @@
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsHighlighted" Value="True">
-                            <Setter TargetName="Bg" Property="Background" Value="{StaticResource GlossyBlueBrush}" />
+                            <Setter TargetName="Bg" Property="Background" Value="{DynamicResource InsetBrush}" />
+                            <Setter Property="Foreground" Value="{DynamicResource AccentBlueLightBrush}" />
                         </Trigger>
                         <Trigger Property="Role" Value="TopLevelHeader">
                             <Setter Property="Padding" Value="12,6" />
@@ -94,14 +97,14 @@
         </Setter>
         <Style.Triggers>
             <Trigger Property="IsEnabled" Value="False">
-                <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}" />
+                <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
             </Trigger>
         </Style.Triggers>
     </Style>
 
     <Style TargetType="Separator">
-        <Setter Property="Background" Value="{StaticResource BorderLineBrush}" />
-        <Setter Property="Margin" Value="4,2" />
+        <Setter Property="Background" Value="{DynamicResource BorderLineBrush}" />
+        <Setter Property="Margin" Value="6,3" />
     </Style>
 
 </ResourceDictionary>

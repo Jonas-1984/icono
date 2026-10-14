@@ -20,6 +20,12 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
+        // A new session starts on an empty, white DIN A4 page.
+        _context.Document.Width = Document.A4Width;
+        _context.Document.Height = Document.A4Height;
+        _context.Document.BackgroundMode = BackgroundMode.SolidColor;
+        _context.Document.BackgroundColor = ArgbColor.FromRgb(0xFF, 0xFF, 0xFF);
+
         _context.Document.Layers.Add(new Layer { Name = "Layer 1" });
         _context.SelectedLayer = _context.Document.Layers[0];
 
@@ -32,6 +38,9 @@ public partial class MainWindow : Window
         StateChanged += MainWindow_OnStateChanged;
         Closing += MainWindow_OnClosing;
         PreviewKeyDown += MainWindow_OnPreviewKeyDown;
+        Loaded += (_, _) => FitPageToWindow();
+
+        UpdateThemeMenuMarkers();
     }
 
     protected override void OnSourceInitialized(EventArgs e)
@@ -42,22 +51,29 @@ public partial class MainWindow : Window
         NativeMethods.EnableDarkTitleBar(hwnd);
         NativeMethods.EnableRoundedCorners(hwnd);
 
-        if (NativeMethods.TryEnableMicaBackdrop(hwnd))
+        // The window paints its own opaque graphite gradient, so Mica is only requested for the OS material.
+        NativeMethods.TryEnableMicaBackdrop(hwnd);
+    }
+
+    /// <summary>Zooms so the whole page is visible in the work area (with a little breathing room).</summary>
+    private void FitPageToWindow()
+    {
+        if (CanvasHost.ActualWidth <= 0 || CanvasHost.ActualHeight <= 0)
         {
-            // Mostly-opaque anthracite tint: only a small fraction of the Mica material shows
-            // through ("very little blur"), and it still looks like today's anthracite theme
-            // if the OS/session falls back to a flat color instead of real Mica (e.g. over RDP
-            // or in some virtualized/sandboxed sessions where DWM composition effects are off).
-            var micaTint = Color.FromArgb(0xE6, 0x2B, 0x2B, 0x2B);
-            Background = new SolidColorBrush(micaTint);
-            RootChrome.Background = new SolidColorBrush(micaTint);
+            return;
         }
+
+        const double margin = 56;
+        var zoom = Math.Min(
+            (CanvasHost.ActualWidth - margin) / _context.Document.Width,
+            (CanvasHost.ActualHeight - margin) / _context.Document.Height);
+        StatusBar.SetZoom(Math.Floor(zoom * 100) / 100);
     }
 
     private void MainWindow_OnStateChanged(object? sender, EventArgs e)
     {
         var isMaximized = WindowState == WindowState.Maximized;
-        RootChrome.CornerRadius = new CornerRadius(isMaximized ? 0 : 8);
+        RootChrome.CornerRadius = new CornerRadius(isMaximized ? 0 : 12);
     }
 
     private void MainWindow_OnClosing(object? sender, CancelEventArgs e)
@@ -84,10 +100,11 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (Keyboard.FocusedElement is ComboBox or Slider)
+        if (Keyboard.FocusedElement is ComboBox or Slider && e.Key != Key.Delete)
         {
             // Arrow keys are that control's own way to change its value/navigate its list — don't
-            // steal them for shape-nudging while one of these has focus.
+            // steal them for shape-nudging while one of these has focus. Delete is not used by either
+            // control, so it still removes the selected drawing (e.g. right after dragging a slider).
             return;
         }
 
@@ -279,12 +296,42 @@ public partial class MainWindow : Window
         Close();
     }
 
+    private void DarkModeMenuItem_OnClick(object sender, RoutedEventArgs e) => SwitchTheme(ThemeMode.Dark);
+
+    private void LightModeMenuItem_OnClick(object sender, RoutedEventArgs e) => SwitchTheme(ThemeMode.Light);
+
+    private void SwitchTheme(ThemeMode mode)
+    {
+        ThemeManager.Apply(mode);
+        UpdateThemeMenuMarkers();
+    }
+
+    /// <summary>Marks the active theme in the Help menu with a cyan dot; the inactive entry gets an
+    /// invisible dot of the same size so both labels stay aligned.</summary>
+    private void UpdateThemeMenuMarkers()
+    {
+        DarkModeMenuItem.Icon = CreateThemeMarker(ThemeManager.Current == ThemeMode.Dark);
+        LightModeMenuItem.Icon = CreateThemeMarker(ThemeManager.Current == ThemeMode.Light);
+    }
+
+    private static System.Windows.Shapes.Ellipse CreateThemeMarker(bool active)
+    {
+        var dot = new System.Windows.Shapes.Ellipse { Width = 7, Height = 7 };
+        if (active)
+        {
+            dot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, "AccentBlueMidBrush");
+            dot.SetResourceReference(UIElement.EffectProperty, "AccentGlowEffect");
+        }
+        else
+        {
+            dot.Fill = Brushes.Transparent;
+        }
+
+        return dot;
+    }
+
     private void AboutMenuItem_OnClick(object sender, RoutedEventArgs e)
     {
-        MessageBox.Show(
-            "icono\nWindows Icon Editor\n\nMilestone 1 — Foundation Scaffold",
-            "About icono",
-            MessageBoxButton.OK,
-            MessageBoxImage.Information);
+        new Views.AboutDialog { Owner = this }.ShowDialog();
     }
 }

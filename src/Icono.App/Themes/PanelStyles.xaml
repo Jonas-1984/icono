@@ -2,26 +2,40 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="Colors.xaml" />
-        <ResourceDictionary Source="Brushes.xaml" />
         <ResourceDictionary Source="ShapeIcons.xaml" />
     </ResourceDictionary.MergedDictionaries>
 
+    <!-- Floating raised side panel. The drop shadows are NOT set here: an Effect on a container would
+         re-rasterize the whole subtree on every hover, so the shadows live on the empty backdrop borders
+         (NeuShadowDarkStyle / NeuShadowLightStyle) that MainWindow places behind each panel. -->
     <Style x:Key="SidePanelBorderStyle" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource PanelBackgroundBrush}" />
-        <Setter Property="BorderBrush" Value="{StaticResource BorderLineBrush}" />
-        <Setter Property="BorderThickness" Value="1,0,1,0" />
+        <Setter Property="Background" Value="{DynamicResource PanelSurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource RaisedEdgeBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="18" />
+        <Setter Property="Margin" Value="8,4,8,8" />
+    </Style>
+
+    <Style x:Key="NeuShadowDarkStyle" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource PanelBackgroundBrush}" />
+        <Setter Property="CornerRadius" Value="18" />
+        <Setter Property="IsHitTestVisible" Value="False" />
+        <Setter Property="Effect" Value="{DynamicResource RaisedDarkShadow}" />
+    </Style>
+
+    <Style x:Key="NeuShadowLightStyle" TargetType="Border" BasedOn="{StaticResource NeuShadowDarkStyle}">
+        <Setter Property="Effect" Value="{DynamicResource RaisedLightShadow}" />
     </Style>
 
     <Style x:Key="PanelHeaderTextStyle" TargetType="TextBlock">
-        <Setter Property="Foreground" Value="{StaticResource ForegroundTextBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource ForegroundTextBrush}" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="FontSize" Value="13" />
-        <Setter Property="Margin" Value="10,10,10,6" />
+        <Setter Property="Margin" Value="14,12,10,6" />
     </Style>
 
     <Style x:Key="PanelLabelTextStyle" TargetType="TextBlock">
-        <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
         <Setter Property="FontSize" Value="11" />
         <Setter Property="Margin" Value="10,8,10,2" />
     </Style>
@@ -31,7 +45,7 @@
          not on this Path itself. -->
     <Style x:Key="CardChevronPathStyle" TargetType="Path">
         <Setter Property="Data" Value="{StaticResource ChevronDownGeometry}" />
-        <Setter Property="Stroke" Value="{StaticResource MutedTextBrush}" />
+        <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}" />
         <Setter Property="StrokeThickness" Value="1.4" />
         <Setter Property="StrokeStartLineCap" Value="Round" />
         <Setter Property="StrokeEndLineCap" Value="Round" />
@@ -49,17 +63,17 @@
     </Style>
 
     <Style x:Key="StatusBarBorderStyle" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource ToolbarBackgroundBrush}" />
-        <Setter Property="BorderBrush" Value="{StaticResource BorderLineBrush}" />
-        <Setter Property="BorderThickness" Value="0,1,0,0" />
-        <Setter Property="Padding" Value="10,4" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Padding" Value="18,6,18,8" />
     </Style>
 
     <Style x:Key="ToolBarBorderStyle" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource ToolbarBackgroundBrush}" />
-        <Setter Property="BorderBrush" Value="{StaticResource BorderLineBrush}" />
-        <Setter Property="BorderThickness" Value="0,0,0,1" />
-        <Setter Property="Padding" Value="6,4" />
+        <Setter Property="Background" Value="{DynamicResource PanelSurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource RaisedEdgeBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="16" />
+        <Setter Property="Margin" Value="10,4,10,8" />
+        <Setter Property="Padding" Value="10,6" />
     </Style>
 
 </ResourceDictionary>

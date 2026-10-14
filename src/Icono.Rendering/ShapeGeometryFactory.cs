@@ -49,6 +49,20 @@ public static class ShapeGeometryFactory
 
     public static bool IsStrokeOnly(ShapeKind kind) => StrokeOnlyKinds.Contains(kind);
 
+    /// <summary>True for the open line-family kinds (Line, Arrow, DoubleArrow, Polyline, Curve) — the
+    /// shapes that get the dedicated line thickness / corner options in the Properties panel.</summary>
+    public static bool IsLineFamily(ShapeKind kind) =>
+        kind is ShapeKind.Line or ShapeKind.Arrow or ShapeKind.DoubleArrow or ShapeKind.Polyline or ShapeKind.Curve;
+
+    /// <summary>A line whose corners are set to "sharp" (corner radius 0, straight or elbow routing)
+    /// must stroke its bends with a mitered join; every other stroke keeps the round join.</summary>
+    public static bool UsesSharpStrokeJoin(Shape shape) =>
+        shape.Points is { Count: > 0 }
+        && IsLineFamily(shape.Kind)
+        && shape.Kind != ShapeKind.Curve
+        && shape.CornerRadius <= 0
+        && shape.PathRoutingStyle is PathRoutingStyle.Straight or PathRoutingStyle.Orthogonal;
+
     /// <summary>Filled kinds whose local template mixes a closed fillable body with a decorative
     /// OPEN detail line — Club's stem, Pyramid's ridge, Spade's stem, Umbrella's handle/nub,
     /// Cloudy's accent arc. <see cref="Build"/>'s returned path keeps that open contour (the border
@@ -318,6 +332,7 @@ public static class ShapeGeometryFactory
             case ShapeKind.Rectangle:
                 path.AddRect(SKRect.Create(3, 5, 18, 14));
                 break;
+            case ShapeKind.DesignGrid:
             case ShapeKind.RasterImage:
                 // Full-bleed, unlike the inset Rectangle template — the imported bitmap should
                 // fill exactly the shape's X/Y/Width/Height with no gap (ShapeRenderer draws the
@@ -1207,9 +1222,15 @@ public static class ShapeGeometryFactory
             return path;
         }
 
-        if (effectiveStyle == PathRoutingStyle.Rounded && pts.Length >= 2)
+        // The Rounded connector style always rounds its bends; plain Straight/Elbow lines round them
+        // as soon as the line's corner radius is above 0 (the "Round" corner option of a drawn line).
+        var roundBends = !closeForFill && cornerRadius > 0 && effectiveStyle != PathRoutingStyle.Curved;
+
+        if ((effectiveStyle == PathRoutingStyle.Rounded || roundBends) && pts.Length >= 2)
         {
-            var routed = BuildOrthogonalPoints(pts);
+            IReadOnlyList<SKPoint> routed = effectiveStyle is PathRoutingStyle.Rounded or PathRoutingStyle.Orthogonal
+                ? BuildOrthogonalPoints(pts)
+                : pts;
             var radius = (float)(cornerRadius > 0 ? cornerRadius : 8);
             AddRoundedOpenPolyline(path, radius, routed, closeForFill);
 

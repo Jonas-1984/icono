@@ -2,46 +2,47 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="Colors.xaml" />
-        <ResourceDictionary Source="Brushes.xaml" />
     </ResourceDictionary.MergedDictionaries>
 
+    <!-- Neumorphic push button: raised graphite key lit from the top-left. Hover adds a cyan rim,
+         pressed sinks into an inset well (no shadow, content nudged 1px). -->
     <Style TargetType="Button">
-        <Setter Property="Background" Value="{StaticResource ToolbarBackgroundBrush}" />
-        <Setter Property="Foreground" Value="{StaticResource ForegroundTextBrush}" />
-        <Setter Property="BorderBrush" Value="{StaticResource BorderLineBrush}" />
+        <Setter Property="FontFamily" Value="Segoe UI Semilight" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Background" Value="{DynamicResource RaisedBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource ForegroundTextBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource RaisedEdgeBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="10,4" />
         <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Margin" Value="2" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Grid>
-                        <Border x:Name="Bg"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="3">
-                            <Grid>
-                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                   Margin="{TemplateBinding Padding}" />
-                                <Border x:Name="Gloss" CornerRadius="3" Opacity="0"
-                                        Background="{StaticResource GlossHighlightOverlayBrush}" />
-                            </Grid>
-                        </Border>
-                    </Grid>
+                    <Border x:Name="Bg"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="10"
+                            Effect="{DynamicResource SmallRaisedShadow}">
+                        <ContentPresenter x:Name="Content" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          Margin="{TemplateBinding Padding}" />
+                    </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bg" Property="Background" Value="{StaticResource SoftAccentGlowBrush}" />
-                            <Setter TargetName="Bg" Property="BorderBrush" Value="{StaticResource AccentBlueDarkBrush}" />
-                            <Setter TargetName="Gloss" Property="Opacity" Value="1" />
+                            <Setter TargetName="Bg" Property="Background" Value="{DynamicResource RaisedHoverBrush}" />
+                            <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource AccentBlueDarkBrush}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Bg" Property="Background" Value="{StaticResource AccentBlueDarkBrush}" />
+                            <Setter TargetName="Bg" Property="Background" Value="{DynamicResource InsetBrush}" />
+                            <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource InsetEdgeBrush}" />
+                            <Setter TargetName="Bg" Property="Effect" Value="{x:Null}" />
+                            <Setter TargetName="Content" Property="RenderTransform"><Setter.Value><TranslateTransform X="1" Y="1" /></Setter.Value></Setter>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
-                            <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}" />
-                            <Setter TargetName="Bg" Property="Background" Value="{StaticResource PanelBackgroundBrush}" />
+                            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+                            <Setter TargetName="Bg" Property="Opacity" Value="0.6" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -49,17 +50,19 @@
         </Setter>
     </Style>
 
-    <Style x:Key="SizeStubButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+<Style x:Key="SizeStubButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
         <Setter Property="MinWidth" Value="52" />
-        <Setter Property="Margin" Value="3,0" />
+        <Setter Property="Margin" Value="4,0" />
         <Setter Property="Padding" Value="6,2" />
         <Setter Property="FontSize" Value="11" />
     </Style>
 
+    <!-- Toggle: raised when off, sunk into an inset well with a cyan rim when on -->
     <Style TargetType="ToggleButton">
-        <Setter Property="Background" Value="{StaticResource ToolbarBackgroundBrush}" />
-        <Setter Property="Foreground" Value="{StaticResource ForegroundTextBrush}" />
-        <Setter Property="BorderBrush" Value="{StaticResource BorderLineBrush}" />
+        <Setter Property="Margin" Value="2" />
+        <Setter Property="Background" Value="{DynamicResource RaisedBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource ForegroundTextBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource RaisedEdgeBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="8,6" />
         <Setter Property="HorizontalContentAlignment" Value="Left" />
@@ -71,19 +74,25 @@
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="3"
-                            Margin="0,1">
+                            CornerRadius="10"
+                            
+                            Effect="{DynamicResource SmallRaisedShadow}">
                         <ContentPresenter Margin="{TemplateBinding Padding}"
-                                           HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                           VerticalAlignment="Center" />
+                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bg" Property="BorderBrush" Value="{StaticResource AccentBlueMidBrush}" />
+                            <Setter TargetName="Bg" Property="Background" Value="{DynamicResource RaisedHoverBrush}" />
+                            <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource AccentBlueDarkBrush}" />
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="Bg" Property="Background" Value="{StaticResource SoftAccentGlowBrush}" />
-                            <Setter TargetName="Bg" Property="BorderBrush" Value="{StaticResource AccentBlueDarkBrush}" />
+                            <Setter TargetName="Bg" Property="Background" Value="{DynamicResource InsetBrush}" />
+                            <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource AccentBlueMidBrush}" />
+                            <Setter TargetName="Bg" Property="Effect" Value="{x:Null}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Bg" Property="Opacity" Value="0.6" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -91,15 +100,50 @@
         </Setter>
     </Style>
 
+    <!-- Uniform keys for the side-panel cards: every preset key is one size, every layer-row key is one size.
+         Label text is Segoe UI Semilight (thinner than the default weight, still crisp at small sizes). -->
+    <Style x:Key="PanelKeyButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Height" Value="28" />
+        <Setter Property="Margin" Value="3" />
+        <Setter Property="Padding" Value="4,0" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+    </Style>
+
+    <!-- Square 28x28 key for compact icon rows (rotation / flip / reset) -->
+    <Style x:Key="SquareKeyButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Width" Value="28" />
+        <Setter Property="Height" Value="28" />
+        <Setter Property="Margin" Value="2,0" />
+        <Setter Property="Padding" Value="0" />
+    </Style>
+
+    <Style x:Key="LayerKeyButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Width" Value="24" />
+        <Setter Property="Height" Value="24" />
+        <Setter Property="Margin" Value="1" />
+        <Setter Property="Padding" Value="0" />
+    </Style>
+
+    <Style x:Key="LayerKeyToggleStyle" TargetType="ToggleButton" BasedOn="{StaticResource {x:Type ToggleButton}}">
+        <Setter Property="Width" Value="24" />
+        <Setter Property="Height" Value="24" />
+        <Setter Property="Margin" Value="1" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+
+        <!-- Panels float on the window, so the gap between them stays empty; only a faint cyan line
+         shows while hovering/dragging a splitter. -->
     <Style x:Key="GlossyBlueSplitterStyle" TargetType="GridSplitter">
-        <Setter Property="Background" Value="{StaticResource BorderLineBrush}" />
+        <Setter Property="Background" Value="Transparent" />
         <Setter Property="Width" Value="4" />
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="VerticalAlignment" Value="Stretch" />
         <Setter Property="ResizeBehavior" Value="PreviousAndNext" />
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="{StaticResource SoftAccentHoverBrush}" />
+                <Setter Property="Background" Value="{DynamicResource SoftAccentHoverBrush}" />
             </Trigger>
         </Style.Triggers>
     </Style>

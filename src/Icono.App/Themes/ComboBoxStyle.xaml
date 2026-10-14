@@ -2,8 +2,6 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="Colors.xaml" />
-        <ResourceDictionary Source="Brushes.xaml" />
     </ResourceDictionary.MergedDictionaries>
 
     <Style x:Key="ComboBoxToggleButtonStyle" TargetType="ToggleButton">
@@ -11,20 +9,21 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ToggleButton">
-                    <Border x:Name="Bg" Background="{StaticResource ToolbarBackgroundBrush}"
-                            BorderBrush="{StaticResource BorderLineBrush}" BorderThickness="1" CornerRadius="3">
+                    <Border x:Name="Bg" Background="{DynamicResource InsetBrush}"
+                            BorderBrush="{DynamicResource InsetEdgeBrush}" BorderThickness="1" CornerRadius="9">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="18" />
+                                <ColumnDefinition Width="22" />
                             </Grid.ColumnDefinitions>
-                            <Path Grid.Column="1" Data="M0,0 L4,4 L8,0 Z" Fill="{StaticResource MutedTextBrush}"
-                                  HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <Path Grid.Column="1" Data="M0,0 L4,4 L8,0" Stroke="{DynamicResource AccentBlueMidBrush}"
+                                  StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                  StrokeLineJoin="Round" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bg" Property="BorderBrush" Value="{StaticResource AccentBlueMidBrush}" />
+                            <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource AccentBlueDarkBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -34,19 +33,20 @@
 
     <Style TargetType="ComboBoxItem">
         <Setter Property="Padding" Value="8,4" />
-        <Setter Property="Foreground" Value="{StaticResource ForegroundTextBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource ForegroundTextBrush}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ComboBoxItem">
-                    <Border x:Name="Bg" Background="Transparent" Padding="{TemplateBinding Padding}">
+                    <Border x:Name="Bg" Background="Transparent" Padding="{TemplateBinding Padding}"
+                            CornerRadius="7" Margin="2,1">
                         <ContentPresenter />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsHighlighted" Value="True">
-                            <Setter TargetName="Bg" Property="Background" Value="{StaticResource GlossyBlueBrush}" />
+                            <Setter TargetName="Bg" Property="Background" Value="{DynamicResource SoftAccentHoverBrush}" />
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter TargetName="Bg" Property="Background" Value="{StaticResource AccentBlueDarkBrush}" />
+                            <Setter TargetName="Bg" Property="Background" Value="{DynamicResource InsetBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -55,9 +55,9 @@
     </Style>
 
     <Style TargetType="ComboBox">
-        <Setter Property="Background" Value="{StaticResource ToolbarBackgroundBrush}" />
-        <Setter Property="Foreground" Value="{StaticResource ForegroundTextBrush}" />
-        <Setter Property="BorderBrush" Value="{StaticResource BorderLineBrush}" />
+        <Setter Property="Background" Value="{DynamicResource InsetBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource ForegroundTextBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource InsetEdgeBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="6,3" />
         <Setter Property="FontSize" Value="11" />
@@ -71,14 +71,15 @@
                         <ContentPresenter x:Name="ContentSite" IsHitTestVisible="False"
                                           Content="{TemplateBinding SelectionBoxItem}"
                                           ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                          Margin="8,3,20,3"
+                                          Margin="10,3,24,3"
                                           VerticalAlignment="Center" HorizontalAlignment="Left" />
                         <Popup x:Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}"
                                AllowsTransparency="True" Focusable="False" PopupAnimation="Fade">
-                            <Border Background="{StaticResource PanelBackgroundBrush}"
-                                    BorderBrush="{StaticResource AccentBlueMidBrush}" BorderThickness="1"
+                            <Border Background="{DynamicResource PanelSurfaceBrush}"
+                                    BorderBrush="{DynamicResource RaisedEdgeBrush}" BorderThickness="1"
+                                    CornerRadius="10" Padding="3" Margin="0,4,8,8"
                                     MinWidth="{Binding ActualWidth, ElementName=ToggleButton}"
-                                    MaxHeight="220">
+                                    MaxHeight="220" Effect="{DynamicResource RaisedDarkShadow}">
                                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                                     <ItemsPresenter />
                                 </ScrollViewer>

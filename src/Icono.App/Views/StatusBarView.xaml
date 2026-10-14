@@ -11,22 +11,13 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <TextBlock Grid.Column="0" Text="Zoom:" Foreground="{StaticResource ForegroundTextBrush}"
+            <TextBlock Grid.Column="0" Text="Zoom:" Foreground="{DynamicResource ForegroundTextBrush}"
                        VerticalAlignment="Center" Margin="0,0,6,0" />
-            <Slider x:Name="ZoomSlider" Grid.Column="1" Minimum="0.5" Maximum="3.0" Value="1.0"
+            <Slider x:Name="ZoomSlider" Grid.Column="1" Minimum="0.25" Maximum="3.0" Value="1.0"
                     VerticalAlignment="Center" ValueChanged="ZoomSlider_OnValueChanged" />
             <TextBlock x:Name="ZoomLabel" Grid.Column="2" Text="100%"
-                       Foreground="{StaticResource ForegroundTextBrush}"
+                       Foreground="{DynamicResource ForegroundTextBrush}"
                        VerticalAlignment="Center" Margin="6,0,0,0" Width="40" />
-
-            <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock Text="Export:" Foreground="{StaticResource MutedTextBrush}"
-                           VerticalAlignment="Center" Margin="0,0,8,0" />
-                <Button Content="64" Style="{StaticResource SizeStubButtonStyle}" IsEnabled="False" />
-                <Button Content="128" Style="{StaticResource SizeStubButtonStyle}" IsEnabled="False" />
-                <Button Content="256" Style="{StaticResource SizeStubButtonStyle}" IsEnabled="False" />
-                <Button Content="512" Style="{StaticResource SizeStubButtonStyle}" IsEnabled="False" />
-            </StackPanel>
         </Grid>
     </Border>
 </UserControl>

@@ -12,6 +12,10 @@ public readonly record struct ShapeSnapshot(
     double Height,
     ArgbColor FillColor,
     bool FillEnabled,
+    DesignStyleKind DesignStyle,
+    double GridCellSize,
+    bool GridShowLines,
+    IReadOnlyDictionary<int, ArgbColor>? GridCells,
     ArgbColor BorderColor,
     double BorderThickness,
     BorderStyleKind BorderStyleKind,
@@ -55,6 +59,10 @@ public readonly record struct ShapeSnapshot(
         shape.Height,
         shape.FillColor,
         shape.FillEnabled,
+        shape.DesignStyle,
+        shape.GridCellSize,
+        shape.GridShowLines,
+        shape.GridCells,
         shape.BorderColor,
         shape.BorderThickness,
         shape.BorderStyleKind,
@@ -99,6 +107,10 @@ public readonly record struct ShapeSnapshot(
         shape.Height = Height;
         shape.FillColor = FillColor;
         shape.FillEnabled = FillEnabled;
+        shape.DesignStyle = DesignStyle;
+        shape.GridCellSize = GridCellSize;
+        shape.GridShowLines = GridShowLines;
+        shape.GridCells = GridCells;
         shape.BorderColor = BorderColor;
         shape.BorderThickness = BorderThickness;
         shape.BorderStyleKind = BorderStyleKind;
