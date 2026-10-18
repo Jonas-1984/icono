@@ -12,7 +12,7 @@ namespace Icono.App.Views;
 /// </summary>
 public sealed class IconPager
 {
-    private static readonly Brush ActiveDotBrush = new SolidColorBrush(Color.FromRgb(0x22, 0xD3, 0xEE));
+    private static readonly Brush ActiveDotBrush = new SolidColorBrush(Color.FromRgb(0x5A, 0xB0, 0xFF));
     private static readonly Brush InactiveDotBrush = new SolidColorBrush(Color.FromArgb(0x80, 0xA0, 0xA0, 0xA0));
 
     private readonly WrapPanel _panel;
@@ -63,7 +63,7 @@ public sealed class IconPager
                 Margin = new Thickness(4, 0, 4, 0),
                 Cursor = System.Windows.Input.Cursors.Hand,
                 Background = i == _page ? ActiveDotBrush : InactiveDotBrush,
-                Effect = i == _page ? new System.Windows.Media.Effects.DropShadowEffect { Color = Color.FromRgb(0x22, 0xD3, 0xEE), BlurRadius = 8, ShadowDepth = 0, Opacity = 0.9 } : null,
+                Effect = i == _page ? new System.Windows.Media.Effects.DropShadowEffect { Color = Color.FromRgb(0x5A, 0xB0, 0xFF), BlurRadius = 8, ShadowDepth = 0, Opacity = 0.9 } : null,
             };
             dot.MouseLeftButtonDown += (_, _) => GoTo(pageIndex);
             _dots.Children.Add(dot);

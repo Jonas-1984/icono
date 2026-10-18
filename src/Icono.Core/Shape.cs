@@ -9,6 +9,7 @@ public sealed class Shape : ObservableObject
     private ArgbColor _fillColor = ArgbColor.FromRgb(0x9E, 0xD9, 0xD1);
     private bool _fillEnabled = true;
     private DesignStyleKind _designStyle = DesignStyleKind.None;
+    private GradientFill? _fillGradient;
     private double _gridCellSize = DesignGridMath.DefaultCellSizePx;
     private bool _gridShowLines = true;
     private IReadOnlyDictionary<int, ArgbColor>? _gridCells;
@@ -57,7 +58,18 @@ public sealed class Shape : ObservableObject
     public double Width { get => _width; set => SetField(ref _width, value); }
     public double Height { get => _height; set => SetField(ref _height, value); }
 
-    public ArgbColor FillColor { get => _fillColor; set => SetField(ref _fillColor, value); }
+    public ArgbColor FillColor
+    {
+        get => _fillColor;
+        set
+        {
+            if (SetField(ref _fillColor, value) && _fillGradient is not null)
+            {
+                // A deliberately chosen flat colour replaces an imported gradient.
+                FillGradient = null;
+            }
+        }
+    }
 
     /// <summary>False = draw no fill at all, only the border (and shadow/blur, if any) — for a
     /// shape that should read as an outline only, without switching its <see cref="ShapeKind"/> to
@@ -67,6 +79,10 @@ public sealed class Shape : ObservableObject
     /// <summary>Optional UI design language (Glassmorphism, Neumorphism, ...) the shape is rendered in. None = the
     /// normal fill/border look. Only affects closed, fillable shapes — see <c>DesignStyleRenderer.Supports</c>.</summary>
     public DesignStyleKind DesignStyle { get => _designStyle; set => SetField(ref _designStyle, value); }
+
+    /// <summary>Optional gradient fill (e.g. from an imported SVG) drawn instead of the flat <see cref="FillColor"/>. Picking a
+    /// new fill colour clears it.</summary>
+    public GradientFill? FillGradient { get => _fillGradient; set => SetField(ref _fillGradient, value); }
 
     /// <summary>Edge length of one square of a <see cref="ShapeKind.DesignGrid"/>, in px (default 2 mm at 96 DPI).</summary>
     public double GridCellSize { get => _gridCellSize; set => SetField(ref _gridCellSize, Math.Max(0.5, value)); }

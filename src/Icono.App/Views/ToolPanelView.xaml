@@ -139,9 +139,53 @@
                             <WrapPanel Margin="6,0">
                                 <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
                                              Tag="{StaticResource GridToolGeometry}" CommandParameter="DesignGrid"
-                                             ToolTip="Design Grid: drag to draw a checkered grid (2 mm squares). Colour its squares with the bucket tool (Region Color) — click or drag over them, Alt+click clears a square." />
+                                             ToolTip="Design Grid: drag to draw a checkered grid (2 mm squares)." />
+                                <RadioButton x:Name="GridBucketRadioButton" GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked"
+                                             Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                             Tag="{StaticResource RegionColorToolGeometry}" CommandParameter="RegionColor"
+                                             ToolTip="Region Color (bucket): click or drag over the squares of a design grid to paint them with the colour below. Alt+click clears a square." />
                             </WrapPanel>
-                            <TextBlock Text="Checkered grid of 2 mm squares. Pick a colour, then paint squares with the bucket tool."
+
+                            <TextBlock Text="PAINT COLOUR" Style="{StaticResource PanelLabelTextStyle}" />
+                            <Grid Margin="10,0,10,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Border x:Name="GridPaintColorChip" Grid.Column="0" Width="28" Height="28" CornerRadius="9"
+                                        BorderBrush="{DynamicResource InsetEdgeBrush}" BorderThickness="1" Background="#9ED9D1" />
+                                <TextBlock x:Name="GridPaintColorText" Grid.Column="1" Text="#9ED9D1" VerticalAlignment="Center" Margin="8,0"
+                                           Foreground="{DynamicResource ForegroundTextBrush}" FontSize="11" />
+                                <Button Grid.Column="2" Content="Custom..." Style="{StaticResource PanelKeyButtonStyle}" Height="26" Margin="0"
+                                        Padding="8,0" FontSize="11" Click="GridCustomColorButton_OnClick"
+                                        ToolTip="Mix any colour (with transparency)" />
+                                <Popup x:Name="GridColorPopup" PlacementTarget="{Binding ElementName=GridPaintColorChip}" Placement="Bottom"
+                                       StaysOpen="False" AllowsTransparency="True">
+                                    <Border Background="{DynamicResource PanelSurfaceBrush}" BorderBrush="{DynamicResource RaisedEdgeBrush}"
+                                            BorderThickness="1" CornerRadius="12" Padding="10" Margin="0,4,8,8"
+                                            Effect="{DynamicResource RaisedDarkShadow}">
+                                        <views:ColorPickerView x:Name="GridPaintColorPicker" />
+                                    </Border>
+                                </Popup>
+                            </Grid>
+
+                            <ItemsControl x:Name="GridPaintSwatchList" Margin="6,0,6,6">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="6" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Width="24" Height="24" Margin="3" CornerRadius="7" Cursor="Hand"
+                                                Background="{Binding}" BorderBrush="{DynamicResource RaisedEdgeBrush}" BorderThickness="1"
+                                                MouseLeftButtonDown="GridPaintSwatch_OnMouseLeftButtonDown" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <TextBlock Text="Pick a colour, then click or drag over the squares. Alt+click clears a square."
                                        TextWrapping="Wrap" FontSize="10" Margin="10,2,10,4"
                                        Foreground="{DynamicResource MutedTextBrush}" />
                         </StackPanel>

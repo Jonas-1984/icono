@@ -32,7 +32,8 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Bg" Property="Background" Value="{DynamicResource RaisedHoverBrush}" />
-                            <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource AccentBlueDarkBrush}" />
+                            <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource AccentBlueMidBrush}" />
+                            <Setter TargetName="Bg" Property="Effect" Value="{DynamicResource HoverGlowEffect}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
                             <Setter TargetName="Bg" Property="Background" Value="{DynamicResource InsetBrush}" />
@@ -84,7 +85,7 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Bg" Property="Background" Value="{DynamicResource RaisedHoverBrush}" />
-                            <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource AccentBlueDarkBrush}" />
+                            <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource AccentBlueMidBrush}" />
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="Bg" Property="Background" Value="{DynamicResource InsetBrush}" />

@@ -16,7 +16,7 @@
     <Style TargetType="ContextMenu">
         <Setter Property="Background" Value="{DynamicResource PanelSurfaceBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource ForegroundTextBrush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource RaisedEdgeBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource GlassEdgeBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="4" />
         <Setter Property="Template">
@@ -74,7 +74,7 @@
                                        Focusable="False"
                                        PopupAnimation="Fade">
                                     <Border Background="{DynamicResource PanelSurfaceBrush}"
-                                            BorderBrush="{DynamicResource RaisedEdgeBrush}"
+                                            BorderBrush="{DynamicResource GlassEdgeBrush}"
                                             BorderThickness="1" CornerRadius="12" Padding="4" Margin="0,4,8,8"
                                             Effect="{DynamicResource RaisedDarkShadow}">
                                         <StackPanel IsItemsHost="True" />

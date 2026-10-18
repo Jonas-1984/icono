@@ -17,7 +17,7 @@ public partial class CanvasHostView : UserControl
     private const double MinShapeSize = 4;
     private const double HandleHitToleranceDip = 6.0;
     private const float HandleScreenSize = 7f;
-    private static readonly SKColor AccentColor = new(0x22, 0xD3, 0xEE);
+    private static readonly SKColor AccentColor = new(0x5A, 0xB0, 0xFF);
 
     public static readonly DependencyProperty ZoomProperty = DependencyProperty.Register(
         nameof(Zoom), typeof(double), typeof(CanvasHostView),
@@ -1263,10 +1263,33 @@ public partial class CanvasHostView : UserControl
             newH = Math.Max(MinShapeSize, startH + dy);
         }
 
-        newX = SnapIfEnabled(newX);
-        newY = SnapIfEnabled(newY);
-        newW = SnapIfEnabled(newW);
-        newH = SnapIfEnabled(newH);
+        // Dragging a CORNER keeps the proportions (no deformation) and scales both sides together, anchored at the
+        // opposite corner. Hold Shift to stretch freely; the edge handles always stretch one side only.
+        var keepProportions = KeepProportions(_groupResizeHandle) && startW > 0.0001 && startH > 0.0001;
+        if (keepProportions)
+        {
+            var scale = Math.Max(newW / startW, newH / startH);
+            scale = Math.Max(scale, Math.Max(MinShapeSize / startW, MinShapeSize / startH));
+
+            newW = startW * scale;
+            if (SnapIfEnabled(newW) is var snappedW && Math.Abs(snappedW - newW) > 0.0001 && snappedW >= MinShapeSize)
+            {
+                newW = snappedW;
+                scale = newW / startW;
+            }
+
+            newH = startH * scale;
+            newX = affectsLeft ? startX + startW - newW : startX;
+            newY = affectsTop ? startY + startH - newH : startY;
+        }
+
+        if (!keepProportions)
+        {
+            newX = SnapIfEnabled(newX);
+            newY = SnapIfEnabled(newY);
+            newW = SnapIfEnabled(newW);
+            newH = SnapIfEnabled(newH);
+        }
 
         var safeStartW = startW > 0.0001 ? startW : 0.0001;
         var safeStartH = startH > 0.0001 ? startH : 0.0001;
@@ -1729,6 +1752,8 @@ public partial class CanvasHostView : UserControl
                 Width = width,
                 Height = height,
                 FillColor = _context.CurrentFillColor,
+                // Text has no outline until the user adds one in the BORDER card.
+                BorderThickness = 0,
                 TextContent = text,
             };
 
@@ -1909,6 +1934,12 @@ public partial class CanvasHostView : UserControl
         }
     }
 
+    /// <summary>Corner handles keep the aspect ratio (so imported SVGs, images and every other shape are never
+    /// deformed by a corner drag); Shift lifts that and stretches freely.</summary>
+    private static bool KeepProportions(ResizeHandle handle) =>
+        handle is ResizeHandle.TopLeft or ResizeHandle.TopRight or ResizeHandle.BottomLeft or ResizeHandle.BottomRight
+        && !Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
+
     private void ApplyResize(Point point)
     {
         if (_resizeShape is null)
@@ -1958,10 +1989,31 @@ public partial class CanvasHostView : UserControl
             newH = Math.Max(MinShapeSize, startH + dy);
         }
 
-        _resizeShape.X = SnapIfEnabled(newX);
-        _resizeShape.Y = SnapIfEnabled(newY);
-        _resizeShape.Width = SnapIfEnabled(newW);
-        _resizeShape.Height = SnapIfEnabled(newH);
+        // Dragging a CORNER keeps the proportions (no deformation) and scales both sides together, anchored at the
+        // opposite corner. Hold Shift to stretch freely; the edge handles always stretch one side only.
+        var keepProportions = KeepProportions(_resizeHandle) && startW > 0.0001 && startH > 0.0001;
+        if (keepProportions)
+        {
+            var scale = Math.Max(newW / startW, newH / startH);
+            scale = Math.Max(scale, Math.Max(MinShapeSize / startW, MinShapeSize / startH));
+
+            newW = startW * scale;
+            if (SnapIfEnabled(newW) is var snappedW && Math.Abs(snappedW - newW) > 0.0001 && snappedW >= MinShapeSize)
+            {
+                newW = snappedW;
+                scale = newW / startW;
+            }
+
+            newH = startH * scale;
+            newX = affectsLeft ? startX + startW - newW : startX;
+            newY = affectsTop ? startY + startH - newH : startY;
+        }
+
+        // Proportional corner drags were already snapped as a whole above (snapping X/Y/H separately would break the ratio).
+        _resizeShape.X = keepProportions ? newX : SnapIfEnabled(newX);
+        _resizeShape.Y = keepProportions ? newY : SnapIfEnabled(newY);
+        _resizeShape.Width = keepProportions ? newW : SnapIfEnabled(newW);
+        _resizeShape.Height = keepProportions ? newH : SnapIfEnabled(newH);
     }
 
     private SKRect BuildMarqueeDocRect()

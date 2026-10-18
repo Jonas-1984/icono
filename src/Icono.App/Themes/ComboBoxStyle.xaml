@@ -23,7 +23,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource AccentBlueDarkBrush}" />
+                            <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource AccentBlueMidBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -76,7 +76,7 @@
                         <Popup x:Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}"
                                AllowsTransparency="True" Focusable="False" PopupAnimation="Fade">
                             <Border Background="{DynamicResource PanelSurfaceBrush}"
-                                    BorderBrush="{DynamicResource RaisedEdgeBrush}" BorderThickness="1"
+                                    BorderBrush="{DynamicResource GlassEdgeBrush}" BorderThickness="1"
                                     CornerRadius="10" Padding="3" Margin="0,4,8,8"
                                     MinWidth="{Binding ActualWidth, ElementName=ToggleButton}"
                                     MaxHeight="220" Effect="{DynamicResource RaisedDarkShadow}">

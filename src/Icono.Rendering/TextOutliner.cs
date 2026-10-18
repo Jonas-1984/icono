@@ -9,6 +9,57 @@ namespace Icono.Rendering;
 /// longer needs to stay a live, re-typeable string.</summary>
 public static class TextOutliner
 {
+    /// <summary>The live text of a <see cref="ShapeKind.Text"/> shape as ONE outline path in document space, with the
+    /// shape's flips and rotation baked in (underline included). The renderer feeds it through the same fill / border /
+    /// shadow / blur / fade / design-style pipeline as every other shape, so all of those settings work on text too.
+    /// Returns null for empty text.</summary>
+    public static SKPath? BuildTextPath(Shape textShape)
+    {
+        if (textShape.Kind != ShapeKind.Text || string.IsNullOrEmpty(textShape.TextContent))
+        {
+            return null;
+        }
+
+        var weight = textShape.TextBold ? SKFontStyleWeight.Bold : SKFontStyleWeight.Normal;
+        var slant = textShape.TextItalic ? SKFontStyleSlant.Italic : SKFontStyleSlant.Upright;
+        var fontFamily = string.IsNullOrWhiteSpace(textShape.TextFontFamily) ? "Segoe UI" : textShape.TextFontFamily;
+        using var typeface = SKTypeface.FromFamilyName(fontFamily, weight, SKFontStyleWidth.Normal, slant);
+        using var font = new SKFont(typeface, (float)textShape.TextFontSize);
+        using var measurePaint = new SKPaint();
+
+        font.MeasureText(textShape.TextContent, out var textBounds, measurePaint);
+        var centerX = (float)(textShape.X + textShape.Width / 2);
+        var centerY = (float)(textShape.Y + textShape.Height / 2);
+        var originX = centerX - textBounds.MidX;
+        var originY = centerY - textBounds.MidY;
+
+        var path = font.GetTextPath(textShape.TextContent, new SKPoint(originX, originY));
+
+        if (textShape.TextUnderline)
+        {
+            var thickness = (float)Math.Max(1, textShape.TextFontSize / 16);
+            var underlineY = originY + (float)textShape.TextFontSize * 0.12f;
+            path.AddRect(new SKRect(originX + textBounds.Left, underlineY - thickness / 2, originX + textBounds.Right, underlineY + thickness / 2));
+        }
+
+        if (textShape.FlipHorizontal)
+        {
+            path.Transform(SKMatrix.CreateScale(-1, 1, centerX, centerY));
+        }
+
+        if (textShape.FlipVertical)
+        {
+            path.Transform(SKMatrix.CreateScale(1, -1, centerX, centerY));
+        }
+
+        if (textShape.Rotation != 0)
+        {
+            path.Transform(SKMatrix.CreateRotationDegrees((float)textShape.Rotation, centerX, centerY));
+        }
+
+        return path;
+    }
+
     public static Shape? ConvertToShape(Shape textShape)
     {
         if (textShape.Kind != ShapeKind.Text || string.IsNullOrEmpty(textShape.TextContent))

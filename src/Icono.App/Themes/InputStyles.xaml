@@ -31,7 +31,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBlueDarkBrush}" />
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBlueMidBrush}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
@@ -68,7 +68,7 @@
                             <Setter TargetName="Tick" Property="Visibility" Value="Visible" />
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource AccentBlueDarkBrush}" />
+                            <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource AccentBlueMidBrush}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.5" />
@@ -103,7 +103,7 @@
                             <Setter TargetName="Dot" Property="Visibility" Value="Visible" />
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Socket" Property="BorderBrush" Value="{DynamicResource AccentBlueDarkBrush}" />
+                            <Setter TargetName="Socket" Property="BorderBrush" Value="{DynamicResource AccentBlueMidBrush}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.5" />
@@ -146,7 +146,7 @@
     <Style TargetType="ToolTip">
         <Setter Property="Foreground" Value="{DynamicResource ForegroundTextBrush}" />
         <Setter Property="Background" Value="{DynamicResource PanelSurfaceBrush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource AccentBlueDarkBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBlueMidBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="8,5" />
         <Setter Property="FontSize" Value="11" />

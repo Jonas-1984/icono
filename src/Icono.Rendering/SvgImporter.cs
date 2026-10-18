@@ -33,7 +33,15 @@ public static class SvgImporter
     /// falls back to its caller-supplied default color for those, which is what keeps a
     /// single-color Lucide/Feather/Tabler icon (no per-element fill at all) working exactly as
     /// before this was added.</summary>
-    public readonly record struct SvgElement(string PathData, ArgbColor? Fill);
+    public readonly record struct SvgElement(string PathData, ArgbColor? Fill, GradientFill? Gradient = null, double Opacity = 1.0);
+
+    internal static string? CirclePathData(Dictionary<string, string> attrs) => BuildCirclePathData(attrs);
+
+    internal static string? EllipsePathData(Dictionary<string, string> attrs) => BuildEllipsePathData(attrs);
+
+    internal static string? RectPathData(Dictionary<string, string> attrs) => BuildRectPathData(attrs);
+
+    internal static bool TryParseColor(string raw, out ArgbColor color) => TryParseCssColor(raw, out color);
 
     /// <summary>Extracts one path-data ("d" attribute) string per &lt;path&gt;, &lt;circle&gt;,
     /// &lt;ellipse&gt;, and &lt;rect&gt; element found in <paramref name="svgMarkup"/>, in document
@@ -52,6 +60,13 @@ public static class SvgImporter
     /// <see cref="IsStrokeStyleSvg"/> targets.</summary>
     public static IReadOnlyList<SvgElement> ExtractElements(string svgMarkup)
     {
+        // The XML reader understands groups, transforms, clip paths and gradients; the regex scan below stays as the
+        // fallback for bare path data and fragments it cannot parse.
+        if (SvgDocumentReader.Read(svgMarkup) is { } read)
+        {
+            return read;
+        }
+
         var matches = ElementRegex.Matches(svgMarkup);
         if (matches.Count == 0)
         {
@@ -334,7 +349,7 @@ public static class SvgImporter
         double borderThickness, double placeX, double placeY, double placeWidth, double placeHeight,
         bool strokeOnly = false)
     {
-        var parsed = new List<(SKPath Path, ArgbColor? Fill)>();
+        var parsed = new List<(SKPath Path, SvgElement Element)>();
 
         try
         {
@@ -343,7 +358,7 @@ public static class SvgImporter
                 var path = SKPath.ParseSvgPathData(element.PathData);
                 if (path is not null)
                 {
-                    parsed.Add((path, element.Fill));
+                    parsed.Add((path, element));
                 }
             }
 
@@ -364,8 +379,9 @@ public static class SvgImporter
             }
 
             var result = new List<Shape>();
-            foreach (var (path, fill) in parsed)
+            foreach (var (path, element) in parsed)
             {
+                var fill = element.Fill;
                 using var normalized = new SKPath(path);
                 normalized.Offset(-bounds.Left, -bounds.Top);
                 normalized.Transform(SKMatrix.CreateScale(24f / bounds.Width, 24f / bounds.Height));
@@ -382,6 +398,8 @@ public static class SvgImporter
                     BorderThickness = borderThickness,
                     CustomPathData = normalized.ToSvgPathData(),
                     CustomPathStrokeOnly = strokeOnly,
+                    FillGradient = element.Gradient is { } gradient ? NormalizeGradient(gradient, bounds) : null,
+                    Opacity = element.Opacity < 1 ? Math.Round(element.Opacity * 100, 1) : 100,
                 });
             }
 
@@ -394,5 +412,23 @@ public static class SvgImporter
                 path.Dispose();
             }
         }
+    }
+
+    /// <summary>Re-expresses a gradient (whose matrix maps gradient space onto the SVG root space) in the shape-local
+    /// 24 x 24 path space: the same shift-and-scale that normalizes the path geometry.</summary>
+    private static GradientFill NormalizeGradient(GradientFill gradient, SKRect bounds)
+    {
+        var matrix = new SKMatrix
+        {
+            ScaleX = (float)gradient.A, SkewY = (float)gradient.B, SkewX = (float)gradient.C, ScaleY = (float)gradient.D,
+            TransX = (float)gradient.E, TransY = (float)gradient.F, Persp2 = 1,
+        };
+        matrix = matrix.PostConcat(SKMatrix.CreateTranslation(-bounds.Left, -bounds.Top));
+        matrix = matrix.PostConcat(SKMatrix.CreateScale(24f / bounds.Width, 24f / bounds.Height));
+
+        return gradient with
+        {
+            A = matrix.ScaleX, B = matrix.SkewY, C = matrix.SkewX, D = matrix.ScaleY, E = matrix.TransX, F = matrix.TransY,
+        };
     }
 }

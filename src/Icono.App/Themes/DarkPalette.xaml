@@ -1,42 +1,72 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- DARK MODE palette: warm graphite surfaces (slightly plum-tinted), cyan accent, violet glow.
-         Every colour-dependent resource of the UI lives in this file and in LightPalette.xaml under
-         identical keys; ThemeManager swaps the active one at runtime, and all styles reference these
-         keys with DynamicResource. Key names keep the old "AccentBlue*"/"GlossyBlue*" spelling — they
-         now hold the cyan ramp. -->
+    <!-- DARK MODE — "Premium": black stage, light-blue accent.
+         Design mix: ~70 % neumorphism (soft convex keys, deep soft shadows, recessed wells),
+                     ~20 % glassmorphism (translucent panels and toolbar, light reflections),
+                     ~10 % fluent (a restrained glow on hover/active, luminous edge lights).
+         Every colour-dependent resource lives in this file and in LightPalette.xaml under identical keys;
+         ThemeManager swaps the active one at runtime and all styles use DynamicResource. The old
+         "AccentBlue*"/"GlossyBlue*" key names now hold the light-blue ramp. -->
 
-    <!-- ===== Base ===== -->
-    <LinearGradientBrush x:Key="WindowBackgroundBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#FF3A3638" Offset="0.0" />
-        <GradientStop Color="#FF2B2729" Offset="0.5" />
-        <GradientStop Color="#FF211E20" Offset="1.0" />
-    </LinearGradientBrush>
+    <!-- ===== Stage ===== -->
+    <!-- Black base with two faint colour lights (blue top-left, violet bottom-right) so the translucent glass panels
+         above it have something to pick up. -->
+    <DrawingBrush x:Key="WindowBackgroundBrush" Stretch="Fill">
+        <DrawingBrush.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Geometry="M0,0 L100,0 L100,100 L0,100 Z">
+                    <GeometryDrawing.Brush>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#FF0D1016" Offset="0.0" />
+                            <GradientStop Color="#FF080A0E" Offset="0.55" />
+                            <GradientStop Color="#FF050608" Offset="1.0" />
+                        </LinearGradientBrush>
+                    </GeometryDrawing.Brush>
+                </GeometryDrawing>
+                <GeometryDrawing Geometry="M0,0 L100,0 L100,100 L0,100 Z">
+                    <GeometryDrawing.Brush>
+                        <RadialGradientBrush Center="0.08,0.02" GradientOrigin="0.08,0.02" RadiusX="0.75" RadiusY="0.7">
+                            <GradientStop Color="#552B6CB0" Offset="0.0" />
+                            <GradientStop Color="#00000000" Offset="1.0" />
+                        </RadialGradientBrush>
+                    </GeometryDrawing.Brush>
+                </GeometryDrawing>
+                <GeometryDrawing Geometry="M0,0 L100,0 L100,100 L0,100 Z">
+                    <GeometryDrawing.Brush>
+                        <RadialGradientBrush Center="0.98,1" GradientOrigin="0.98,1" RadiusX="0.7" RadiusY="0.65">
+                            <GradientStop Color="#403B2F7A" Offset="0.0" />
+                            <GradientStop Color="#00000000" Offset="1.0" />
+                        </RadialGradientBrush>
+                    </GeometryDrawing.Brush>
+                </GeometryDrawing>
+            </DrawingGroup>
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
 
-    <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#FF302C2E" />
-    <SolidColorBrush x:Key="ToolbarBackgroundBrush" Color="#FF353133" />
-    <SolidColorBrush x:Key="CanvasSurroundBrush" Color="#FF1F1C1E" />
-    <SolidColorBrush x:Key="BorderLineBrush" Color="#FF1B181A" />
-    <SolidColorBrush x:Key="ForegroundTextBrush" Color="#FFEDEBEE" />
-    <SolidColorBrush x:Key="MutedTextBrush" Color="#FF9A959C" />
+    <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#FF0B0D12" />
+    <SolidColorBrush x:Key="ToolbarBackgroundBrush" Color="#FF14171E" />
+    <SolidColorBrush x:Key="CanvasSurroundBrush" Color="#FF06070A" />
+    <SolidColorBrush x:Key="BorderLineBrush" Color="#FF030405" />
+    <SolidColorBrush x:Key="ForegroundTextBrush" Color="#FFE9F0FA" />
+    <SolidColorBrush x:Key="MutedTextBrush" Color="#FF8994A8" />
 
-    <!-- ===== Accent (cyan) ===== -->
-    <SolidColorBrush x:Key="AccentBlueMidBrush" Color="#FF22D3EE" />
-    <SolidColorBrush x:Key="AccentBlueLightBrush" Color="#FF6AEAFA" />
-    <SolidColorBrush x:Key="AccentBlueDarkBrush" Color="#FF0E7C90" />
-    <SolidColorBrush x:Key="AccentVioletBrush" Color="#FFA45CF5" />
+    <!-- ===== Accent (light blue) ===== -->
+    <SolidColorBrush x:Key="AccentBlueMidBrush" Color="#FF5AB0FF" />
+    <SolidColorBrush x:Key="AccentBlueLightBrush" Color="#FF9ED2FF" />
+    <SolidColorBrush x:Key="AccentBlueDarkBrush" Color="#FF2C6CB0" />
+    <SolidColorBrush x:Key="AccentVioletBrush" Color="#FF8E7CFF" />
 
     <LinearGradientBrush x:Key="GlossyBlueBrush" StartPoint="0,0" EndPoint="0,1">
-        <GradientStop Color="#FF6AEAFA" Offset="0.0" />
-        <GradientStop Color="#FF22D3EE" Offset="0.45" />
-        <GradientStop Color="#FF0E7C90" Offset="1.0" />
+        <GradientStop Color="#FF9ED2FF" Offset="0.0" />
+        <GradientStop Color="#FF5AB0FF" Offset="0.45" />
+        <GradientStop Color="#FF2C6CB0" Offset="1.0" />
     </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="GlossyBlueBrushHorizontal" StartPoint="0,0" EndPoint="1,0">
-        <GradientStop Color="#FF1AA9C0" Offset="0.0" />
-        <GradientStop Color="#FF22D3EE" Offset="0.7" />
-        <GradientStop Color="#FF6AEAFA" Offset="1.0" />
+        <GradientStop Color="#FF3A82CC" Offset="0.0" />
+        <GradientStop Color="#FF5AB0FF" Offset="0.7" />
+        <GradientStop Color="#FF9ED2FF" Offset="1.0" />
     </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="GlossHighlightOverlayBrush" StartPoint="0,0" EndPoint="0,1">
@@ -45,64 +75,81 @@
     </LinearGradientBrush>
 
     <RadialGradientBrush x:Key="SoftAccentGlowBrush" Center="0.5,0.5" RadiusX="0.8" RadiusY="0.8">
-        <GradientStop Color="#4022D3EE" Offset="0.0" />
-        <GradientStop Color="#1A22D3EE" Offset="0.7" />
-        <GradientStop Color="#0022D3EE" Offset="1.0" />
+        <GradientStop Color="#405AB0FF" Offset="0.0" />
+        <GradientStop Color="#1A5AB0FF" Offset="0.7" />
+        <GradientStop Color="#005AB0FF" Offset="1.0" />
     </RadialGradientBrush>
 
-    <SolidColorBrush x:Key="SoftAccentHoverBrush" Color="#3322D3EE" />
-    <SolidColorBrush x:Key="ToolIconHoverBrush" Color="#2222D3EE" />
+    <SolidColorBrush x:Key="SoftAccentHoverBrush" Color="#335AB0FF" />
+    <SolidColorBrush x:Key="ToolIconHoverBrush" Color="#225AB0FF" />
 
+    <!-- Luminous window edge: light blue top-left, violet bottom-right -->
     <LinearGradientBrush x:Key="WindowEdgeBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#9922D3EE" Offset="0.0" />
-        <GradientStop Color="#33FFFFFF" Offset="0.5" />
-        <GradientStop Color="#99A45CF5" Offset="1.0" />
+        <GradientStop Color="#AA7CC4FF" Offset="0.0" />
+        <GradientStop Color="#22FFFFFF" Offset="0.5" />
+        <GradientStop Color="#889E8CFF" Offset="1.0" />
     </LinearGradientBrush>
 
-    <!-- ===== Neumorphic surfaces ===== -->
+    <!-- ===== Glass (panels, toolbar, popups): translucent with a light reflection from the top-left ===== -->
     <LinearGradientBrush x:Key="PanelSurfaceBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#FF3D383A" Offset="0.0" />
-        <GradientStop Color="#FF2F2B2D" Offset="0.6" />
-        <GradientStop Color="#FF282426" Offset="1.0" />
+        <GradientStop Color="#E0262D3B" Offset="0.0" />
+        <GradientStop Color="#D01A1F29" Offset="0.22" />
+        <GradientStop Color="#D2131720" Offset="0.65" />
+        <GradientStop Color="#DC0D1015" Offset="1.0" />
     </LinearGradientBrush>
 
+    <LinearGradientBrush x:Key="GlassBarBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#C2303848" Offset="0.0" />
+        <GradientStop Color="#B21B212D" Offset="0.5" />
+        <GradientStop Color="#C0111520" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <!-- Fluent "dynamic light edge": bright blue-white at the lit corner, fading out, a faint violet return light -->
+    <LinearGradientBrush x:Key="GlassEdgeBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#8CBFE3FF" Offset="0.0" />
+        <GradientStop Color="#1FFFFFFF" Offset="0.28" />
+        <GradientStop Color="#0AFFFFFF" Offset="0.6" />
+        <GradientStop Color="#558E7CFF" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <!-- ===== Neumorphic keys and wells (soft convex / soft recessed) ===== -->
     <LinearGradientBrush x:Key="RaisedBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#FF433E40" Offset="0.0" />
-        <GradientStop Color="#FF2E2A2C" Offset="1.0" />
+        <GradientStop Color="#FF2B313D" Offset="0.0" />
+        <GradientStop Color="#FF181C24" Offset="1.0" />
     </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="RaisedHoverBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#FF4C4749" Offset="0.0" />
-        <GradientStop Color="#FF35302F" Offset="1.0" />
+        <GradientStop Color="#FF343B4A" Offset="0.0" />
+        <GradientStop Color="#FF1D222C" Offset="1.0" />
     </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="RaisedEdgeBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#FF5A5456" Offset="0.0" />
-        <GradientStop Color="#FF2A2628" Offset="0.5" />
-        <GradientStop Color="#FF151214" Offset="1.0" />
+        <GradientStop Color="#FF4A5368" Offset="0.0" />
+        <GradientStop Color="#FF1E2330" Offset="0.5" />
+        <GradientStop Color="#FF07080B" Offset="1.0" />
     </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="InsetBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#FF1D1A1C" Offset="0.0" />
-        <GradientStop Color="#FF2A2628" Offset="1.0" />
+        <GradientStop Color="#FF07090C" Offset="0.0" />
+        <GradientStop Color="#FF151920" Offset="1.0" />
     </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="InsetEdgeBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#FF121011" Offset="0.0" />
-        <GradientStop Color="#FF2B2729" Offset="0.5" />
-        <GradientStop Color="#FF48433F" Offset="1.0" />
+        <GradientStop Color="#FF040507" Offset="0.0" />
+        <GradientStop Color="#FF12151B" Offset="0.5" />
+        <GradientStop Color="#FF2D3544" Offset="1.0" />
     </LinearGradientBrush>
 
-    <!-- Active (selected) tool key: sunk-in well in the dark theme -->
+    <!-- Active (selected) tool key: sunk into its well with a thin blue-lit rim -->
     <LinearGradientBrush x:Key="ActiveKeyBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#FF1D1A1C" Offset="0.0" />
-        <GradientStop Color="#FF2A2628" Offset="1.0" />
+        <GradientStop Color="#FF07090C" Offset="0.0" />
+        <GradientStop Color="#FF131822" Offset="1.0" />
     </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="ActiveKeyEdgeBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#FF121011" Offset="0.0" />
-        <GradientStop Color="#FF2B2729" Offset="0.5" />
-        <GradientStop Color="#FF48433F" Offset="1.0" />
+        <GradientStop Color="#FF05070A" Offset="0.0" />
+        <GradientStop Color="#FF1B2A40" Offset="0.5" />
+        <GradientStop Color="#FF3F78B8" Offset="1.0" />
     </LinearGradientBrush>
 
     <!-- Window caption buttons -->
@@ -110,10 +157,11 @@
     <SolidColorBrush x:Key="CaptionButtonPressedBrush" Color="#33FFFFFF" />
 
     <!-- ===== Shadows / glows (light source top-left) ===== -->
-    <DropShadowEffect x:Key="RaisedDarkShadow" Color="#FF0E0C0D" BlurRadius="12" ShadowDepth="4" Direction="315" Opacity="0.75" />
-    <DropShadowEffect x:Key="RaisedLightShadow" Color="#FF55504F" BlurRadius="12" ShadowDepth="4" Direction="135" Opacity="0.35" />
-    <DropShadowEffect x:Key="SmallRaisedShadow" Color="#FF0E0C0D" BlurRadius="6" ShadowDepth="2.5" Direction="315" Opacity="0.7" />
-    <DropShadowEffect x:Key="AccentGlowEffect" Color="#FF22D3EE" BlurRadius="10" ShadowDepth="0" Opacity="0.85" />
-    <DropShadowEffect x:Key="VioletGlowEffect" Color="#FFA45CF5" BlurRadius="14" ShadowDepth="0" Opacity="0.6" />
+    <DropShadowEffect x:Key="RaisedDarkShadow" Color="#FF000000" BlurRadius="16" ShadowDepth="5" Direction="315" Opacity="0.85" />
+    <DropShadowEffect x:Key="RaisedLightShadow" Color="#FF3B4558" BlurRadius="16" ShadowDepth="5" Direction="135" Opacity="0.28" />
+    <DropShadowEffect x:Key="SmallRaisedShadow" Color="#FF000000" BlurRadius="8" ShadowDepth="3" Direction="315" Opacity="0.8" />
+    <DropShadowEffect x:Key="HoverGlowEffect" Color="#FF5AB0FF" BlurRadius="12" ShadowDepth="0" Opacity="0.5" />
+    <DropShadowEffect x:Key="AccentGlowEffect" Color="#FF5AB0FF" BlurRadius="10" ShadowDepth="0" Opacity="0.85" />
+    <DropShadowEffect x:Key="VioletGlowEffect" Color="#FF8E7CFF" BlurRadius="14" ShadowDepth="0" Opacity="0.55" />
 
 </ResourceDictionary>

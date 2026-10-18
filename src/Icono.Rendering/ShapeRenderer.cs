@@ -38,19 +38,15 @@ public static class ShapeRenderer
             return;
         }
 
-        if (shape.Kind == ShapeKind.Text && !string.IsNullOrEmpty(shape.TextContent))
-        {
-            DrawTextShape(canvas, shape, alpha);
-            return;
-        }
-
         if (shape.Kind == ShapeKind.RasterImage && shape.ImageBytes is { Length: > 0 })
         {
             DrawRasterImageShape(canvas, shape, alpha);
             return;
         }
 
-        using var path = ShapeGeometryFactory.Build(shape);
+        // Live text is drawn as its glyph outline so fill, border, shadow, blur, fade and design styles
+        // apply to it exactly like to any other shape.
+        using var path = TextOutliner.BuildTextPath(shape) ?? ShapeGeometryFactory.Build(shape);
         var strokeOnly = shape.Kind == ShapeKind.CombinedPath
             ? shape.CustomPathStrokeOnly
             : ShapeGeometryFactory.IsStrokeOnly(shape.Kind);
@@ -90,6 +86,10 @@ public static class ShapeRenderer
             if (shape.FadeAmount > 0)
             {
                 fillPaint.Shader = BuildFadeShader(shape, alpha);
+            }
+            else if (FillGradientShader.Create(shape, alpha) is { } gradientShader)
+            {
+                fillPaint.Shader = gradientShader;
             }
             else
             {
@@ -147,53 +147,9 @@ public static class ShapeRenderer
     /// <summary>Draws a Box3D's three faces with a fixed lighten/darken shading ramp (top
     /// lightest, front the base color, side darkest) so a single FillColor still reads as a
     /// believable extruded box, then strokes all three face outlines in BorderColor.</summary>
-    /// <summary>Draws the shape's actual typed text (see <see cref="Shape.TextContent"/>),
-    /// centered within its X/Y/Width/Height box and rotated like any other shape — bypasses the
-    /// generic fill/stroke/geometry pipeline entirely since text isn't a filled path.</summary>
-    private static void DrawTextShape(SKCanvas canvas, Shape shape, byte alpha)
-    {
-        var text = shape.TextContent!;
-        var weight = shape.TextBold ? SKFontStyleWeight.Bold : SKFontStyleWeight.Normal;
-        var slant = shape.TextItalic ? SKFontStyleSlant.Italic : SKFontStyleSlant.Upright;
-        var fontFamily = string.IsNullOrWhiteSpace(shape.TextFontFamily) ? "Segoe UI" : shape.TextFontFamily;
-        using var typeface = SKTypeface.FromFamilyName(fontFamily, weight, SKFontStyleWidth.Normal, slant);
-        using var font = new SKFont(typeface, (float)shape.TextFontSize);
-        using var paint = new SKPaint { IsAntialias = true, Color = shape.FillColor.WithCombinedAlpha(alpha) };
-
-        var centerX = (float)(shape.X + shape.Width / 2);
-        var centerY = (float)(shape.Y + shape.Height / 2);
-
-        canvas.Save();
-        if (shape.Rotation != 0)
-        {
-            canvas.RotateDegrees((float)shape.Rotation, centerX, centerY);
-        }
-
-        font.MeasureText(text, out var bounds, paint);
-        var textX = centerX - bounds.MidX;
-        var textY = centerY - bounds.MidY;
-        canvas.DrawText(text, textX, textY, font, paint);
-
-        if (shape.TextUnderline)
-        {
-            using var underlinePaint = new SKPaint
-            {
-                IsAntialias = true,
-                Style = SKPaintStyle.Stroke,
-                StrokeWidth = (float)Math.Max(1, shape.TextFontSize / 16),
-                Color = shape.FillColor.WithCombinedAlpha(alpha),
-            };
-
-            var underlineY = textY + (float)shape.TextFontSize * 0.12f;
-            canvas.DrawLine(textX + bounds.Left, underlineY, textX + bounds.Right, underlineY, underlinePaint);
-        }
-
-        canvas.Restore();
-    }
-
     /// <summary>Draws an imported raster image (see <see cref="Shape.ImageBytes"/>), stretched to
     /// fill X/Y/Width/Height and rotated like any other shape — bypasses the generic fill/stroke
-    /// pipeline entirely since a bitmap isn't a filled path (same approach as <see cref="DrawTextShape"/>).</summary>
+    /// pipeline entirely since a bitmap isn't a filled path.</summary>
     /// <summary>Draws an imported raster image with the same adjustment set every other shape
     /// gets — border, shadow, blur, corner-radius (as a clip mask), rotation, and flip — instead of
     /// just a plain stretched bitmap. Only <see cref="Shape.FadeAmount"/> has no effect here (a
@@ -337,7 +293,7 @@ public static class ShapeRenderer
     /// <summary>Builds the border's Gradient/Fade shader. Gradient blends BorderColor into
     /// BorderGradientColor top-to-bottom; Fade blends BorderColor into transparent, mirroring
     /// the fill's <see cref="BuildFadeShader"/> semantics.</summary>
-    private static SKShader BuildBorderGradientShader(Shape shape, byte alpha, bool fadeToTransparent)
+    internal static SKShader BuildBorderGradientShader(Shape shape, byte alpha, bool fadeToTransparent)
     {
         var start = shape.BorderColor.WithCombinedAlpha(alpha);
         var end = fadeToTransparent ? start.WithAlpha(0) : shape.BorderGradientColor.WithCombinedAlpha(alpha);
@@ -354,9 +310,12 @@ public static class ShapeRenderer
     /// controlled by <see cref="Shape.FadeDirection"/>. The two "BothSides" modes split
     /// <see cref="Shape.FadeAmount"/> evenly between both ends and stay solid in the middle,
     /// instead of the single-direction modes' solid-one-edge-to-transparent-other-edge ramp.</summary>
-    private static SKShader BuildFadeShader(Shape shape, byte alpha)
+    private static SKShader BuildFadeShader(Shape shape, byte alpha) =>
+        BuildFadeShader(shape, shape.FillColor.WithCombinedAlpha(alpha));
+
+    /// <summary>The same fade ramp for an arbitrary colour (the design styles use it as an alpha mask).</summary>
+    internal static SKShader BuildFadeShader(Shape shape, SKColor color)
     {
-        var color = shape.FillColor.WithCombinedAlpha(alpha);
         var transparent = color.WithAlpha(0);
         var fadeFraction = Math.Clamp((float)(shape.FadeAmount / 100.0), 0f, 1f);
 

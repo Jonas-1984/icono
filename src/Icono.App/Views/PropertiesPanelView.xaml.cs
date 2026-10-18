@@ -692,7 +692,8 @@ public partial class PropertiesPanelView : UserControl
             return;
         }
 
-        ApplyToSelectionWithUndo(s => s.DesignStyle = option.Kind);
+        // Choosing a style also fills BORDER / EFFECTS with values that suit it; the user edits them from there.
+        ApplyToSelectionWithUndo(s => DesignStylePresets.Apply(s, option.Kind));
         e.Handled = true;
     }
 
@@ -717,6 +718,7 @@ public partial class PropertiesPanelView : UserControl
             BorderThickness = 3,
             DesignStyle = kind,
         };
+        DesignStylePresets.Apply(sample, kind);
         ShapeRenderer.Draw(canvas, sample);
 
         using var image = SKImage.FromBitmap(bitmap);

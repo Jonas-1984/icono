@@ -49,6 +49,9 @@ public static class ShapeGeometryFactory
 
     public static bool IsStrokeOnly(ShapeKind kind) => StrokeOnlyKinds.Contains(kind);
 
+    /// <summary>Straight-edge polygon kinds whose corners the Corner Radius setting can round.</summary>
+    public static bool IsCornerRoundable(ShapeKind kind) => CornerRoundableKinds.Contains(kind);
+
     /// <summary>True for the open line-family kinds (Line, Arrow, DoubleArrow, Polyline, Curve) — the
     /// shapes that get the dedicated line thickness / corner options in the Properties panel.</summary>
     public static bool IsLineFamily(ShapeKind kind) =>

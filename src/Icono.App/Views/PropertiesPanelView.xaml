@@ -248,7 +248,7 @@
                             <Path Grid.Column="1" Style="{StaticResource CardChevronPathStyle}" />
                         </Grid>
                         <StackPanel>
-                            <TextBlock Text="Renders the shape in the chosen UI look, using its fill colour as the base."
+                            <TextBlock Text="Renders the shape in a UI look using its fill colour as the base. Fine-tune it afterwards with the BORDER and EFFECTS cards."
                                        TextWrapping="Wrap" FontSize="10" Margin="10,0,10,6"
                                        Foreground="{DynamicResource MutedTextBrush}" />
                             <ItemsControl x:Name="DesignStyleList" Margin="3,0,3,6">
