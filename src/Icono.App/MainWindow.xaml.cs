@@ -35,6 +35,20 @@ public partial class MainWindow : Window
             StatusBar.SetScale(denominator);
             UpdateScaleMenuMarkers();
         };
+        _context.SheetChanged += () => SheetMenuItem.IsChecked = _context.Document.Sheet.Enabled;
+
+        // A new page size (preset, portrait / landscape, typed size) is shown whole.
+        var shownPage = (_context.Document.Width, _context.Document.Height);
+        _context.Invalidated += (_, _) =>
+        {
+            var page = (_context.Document.Width, _context.Document.Height);
+            if (page != shownPage)
+            {
+                shownPage = page;
+                UpdatePageUi();
+                FitPageToWindow();
+            }
+        };
         ToolPanel.Context = _context;
         CanvasHost.Context = _context;
         PropertiesPanel.Context = _context;
@@ -53,6 +67,8 @@ public partial class MainWindow : Window
         InitializeDocumentTracking();
         BuildScaleMenu();
         StatusBar.SetScale(_context.Document.ScaleDenominator);
+        SyncToolUi();
+        UpdatePageUi();
     }
 
     protected override void OnSourceInitialized(EventArgs e)
@@ -280,9 +296,6 @@ public partial class MainWindow : Window
         }
     }
 
-    private void RegionColorToolRadioButton_OnChecked(object sender, RoutedEventArgs e) =>
-        _context.ActiveTool = ActiveTool.RegionColor;
-
     private void BorderToolRadioButton_OnChecked(object sender, RoutedEventArgs e)
     {
         // The toolbar's Border key is a shortcut to the BORDER card (thickness, colour, style, corners) of the selected shape.
@@ -351,13 +364,11 @@ public partial class MainWindow : Window
         UpdateThemeMenuMarkers();
     }
 
-    /// <summary>Marks the active theme with the menu's check dot (Help and View menus).</summary>
+    /// <summary>Marks the active theme with the menu check dot.</summary>
     private void UpdateThemeMenuMarkers()
     {
         var dark = ThemeManager.Current == ThemeMode.Dark;
-        DarkModeMenuItem.IsChecked = dark;
         ViewDarkModeMenuItem.IsChecked = dark;
-        LightModeMenuItem.IsChecked = !dark;
         ViewLightModeMenuItem.IsChecked = !dark;
     }
 

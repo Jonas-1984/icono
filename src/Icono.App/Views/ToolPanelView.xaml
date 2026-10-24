@@ -18,6 +18,14 @@
                                      Tag="{StaticResource PanZoomToolGeometry}" CommandParameter="PanZoom" ToolTip="Pan / Zoom" />
                         <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked"
                                      Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                     Tag="{StaticResource EyedropperToolGeometry}" CommandParameter="Eyedropper"
+                                     ToolTip="Eyedropper (I): take a colour from the page" />
+                        <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked"
+                                     Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                     Tag="{StaticResource RegionColorToolGeometry}" CommandParameter="RegionColor"
+                                     ToolTip="Region Color (G): click a closed area to colour just that piece" />
+                        <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked"
+                                     Style="{StaticResource ShapeIconRadioButtonStyle}"
                                      Tag="{StaticResource AddPointToolGeometry}" CommandParameter="AddPoint"
                                      ToolTip="Add Point (click a segment's midpoint on the selected line/shape)" />
                         <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked"

@@ -48,6 +48,40 @@ public sealed class EditorContext : ObservableObject
 
     public ShapeKind SelectedShapeKind { get => _selectedShapeKind; set => SetField(ref _selectedShapeKind, value); }
 
+    /// <summary>The name that identifies the active tool in the palettes and menus ("Select", "Wall", "DimAligned", "Rectangle" ...), or null.
+    /// The tool, the kind of shape being placed and the kind of dimension together decide it.</summary>
+    public string? ActiveToolTag => ActiveTool switch
+    {
+        ActiveTool.Select => "Select",
+        ActiveTool.PanZoom => "PanZoom",
+        ActiveTool.AddPoint => "AddPoint",
+        ActiveTool.DeletePoint => "DeletePoint",
+        ActiveTool.RegionColor => "RegionColor",
+        ActiveTool.Eyedropper => "Eyedropper",
+        ActiveTool.WallCut => "WallCut",
+        ActiveTool.Measure => "Measure",
+        ActiveTool.MeasureGap => "MeasureGap",
+        ActiveTool.Match => "Match",
+        ActiveTool.PathDraw when SelectedShapeKind == ShapeKind.Dimension => "Dim" + CurrentDimensionKind,
+        ActiveTool.Shape or ActiveTool.PathDraw => SelectedShapeKind.ToString(),
+        _ => null,
+    };
+
+    /// <summary>The active tool in words, for the status bar.</summary>
+    public string ActiveToolName => ActiveToolTag switch
+    {
+        null => "-",
+        "Select" => "Selection",
+        "PanZoom" => "Pan / Zoom",
+        "RegionColor" => "Region Color",
+        "WallCut" => "Cut Wall",
+        "Measure" => "Ruler",
+        "MeasureGap" => "Distance between objects",
+        "Match" => "Match Properties",
+        var tag when tag.StartsWith("Dim", StringComparison.Ordinal) => tag[3..] + " dimension",
+        var tag => System.Text.RegularExpressions.Regex.Replace(tag, "(?<=[a-z0-9])(?=[A-Z])", " "),
+    };
+
     /// <summary>Source of truth for selection. Index order has no meaning; multi-select is a set.</summary>
     public ObservableCollection<Shape> SelectedShapes { get; } = new();
 
@@ -260,6 +294,7 @@ public sealed class EditorContext : ObservableObject
     public void ResetAfterDocumentReplaced()
     {
         ScaleChanged?.Invoke(Document.ScaleDenominator);
+        SheetChanged?.Invoke();
         UndoManager.Clear();
         SelectedShapes.Clear();
         SelectedLayer = Document.Layers.FirstOrDefault();
@@ -467,6 +502,118 @@ public sealed class EditorContext : ObservableObject
         UndoManager.Push(UndoableAction.ForValue(() => Apply(before), () => Apply(denominator)));
         StatusMessage?.Invoke($"Scale {DrawingScale.Label(denominator)}");
     }
+
+    // ----- Arrange: align, distribute, flip, rotate ----------------------------------------------------------------
+
+    /// <summary>Applies a change to the selected (unlocked) shapes as ONE undo step; false when nothing changed.</summary>
+    private bool EditSelection(Func<IReadOnlyList<Shape>, IReadOnlyCollection<Shape>> edit)
+    {
+        var shapes = SelectedShapes.Where(s => !s.Locked).ToList();
+        if (shapes.Count == 0)
+        {
+            StatusMessage?.Invoke("Select a shape first.");
+            return false;
+        }
+
+        var before = shapes.Select(ShapeSnapshot.Capture).ToList();
+        var changed = edit(shapes);
+        if (changed.Count == 0)
+        {
+            return false;
+        }
+
+        UndoManager.Push(UndoableAction.ForPropertyEdit(shapes, before, shapes.Select(ShapeSnapshot.Capture).ToList()));
+        RequestRedraw();
+        return true;
+    }
+
+    /// <summary>Aligns the selection to a common edge or centre line; a single shape aligns to the page.</summary>
+    public void AlignSelection(AlignKind kind) =>
+        EditSelection(shapes => ShapeArranger.Align(shapes, kind, Document.Width, Document.Height));
+
+    /// <summary>Makes the gaps between three or more selected shapes equal.</summary>
+    public void DistributeSelection(bool horizontally)
+    {
+        if (SelectedShapes.Count < 3)
+        {
+            StatusMessage?.Invoke("Select three or more shapes to distribute them.");
+            return;
+        }
+
+        EditSelection(shapes => ShapeArranger.Distribute(shapes, horizontally));
+    }
+
+    public void FlipSelection(bool horizontally) => EditSelection(shapes =>
+    {
+        foreach (var shape in shapes)
+        {
+            if (horizontally)
+            {
+                shape.FlipHorizontal = !shape.FlipHorizontal;
+            }
+            else
+            {
+                shape.FlipVertical = !shape.FlipVertical;
+            }
+        }
+
+        return shapes.ToList();
+    });
+
+    /// <summary>Turns every selected shape by a number of degrees (clockwise) around its own centre.</summary>
+    public void RotateSelection(double degrees) => EditSelection(shapes =>
+    {
+        foreach (var shape in shapes)
+        {
+            shape.Rotation += degrees;
+        }
+
+        return shapes.ToList();
+    });
+
+    /// <summary>Raised when the sheet (frame and title block) of the page changed, also by undo / redo.</summary>
+    public event Action? SheetChanged;
+
+    /// <summary>Changes the sheet of the page as an undo step.</summary>
+    public void SetSheet(SheetInfo sheet)
+    {
+        var before = Document.Sheet;
+        if (before == sheet)
+        {
+            return;
+        }
+
+        void Apply(SheetInfo value)
+        {
+            Document.Sheet = value;
+            RequestRedraw();
+            SheetChanged?.Invoke();
+        }
+
+        Apply(sheet);
+        UndoManager.Push(UndoableAction.ForValue(() => Apply(before), () => Apply(sheet)));
+    }
+
+    /// <summary>Switches the sheet on or off. Switching it on fills an empty date with today's.</summary>
+    public void ToggleSheet()
+    {
+        var sheet = Document.Sheet;
+        if (sheet.Enabled)
+        {
+            SetSheet(sheet with { Enabled = false });
+            StatusMessage?.Invoke("Sheet removed from the page.");
+            return;
+        }
+
+        SetSheet(sheet with
+        {
+            Enabled = true,
+            Date = string.IsNullOrWhiteSpace(sheet.Date) ? TodayText() : sheet.Date,
+        });
+        StatusMessage?.Invoke("Sheet added: fill in the title block in the SHEET card on the right.");
+    }
+
+    public static string TodayText() => DateTime.Today.ToString("dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture);
 
     /// <summary>Creates the dimensions of every selected shape (width, height, diameter, angles, lengths ...) next to it, as ONE
     /// undo step. They stay attached: they follow the shape when it changes.</summary>

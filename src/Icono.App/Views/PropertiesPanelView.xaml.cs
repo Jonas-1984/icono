@@ -98,6 +98,7 @@ public partial class PropertiesPanelView : UserControl
             {
                 _context.PropertyChanged -= OnContextPropertyChanged;
                 _context.ScaleChanged -= OnScaleChanged;
+                _context.SheetChanged -= RefreshDocumentSettings;
                 _context.Document.Layers.CollectionChanged -= OnDocumentLayersChanged;
             }
 
@@ -107,6 +108,7 @@ public partial class PropertiesPanelView : UserControl
             {
                 _context.PropertyChanged += OnContextPropertyChanged;
                 _context.ScaleChanged += OnScaleChanged;
+                _context.SheetChanged += RefreshDocumentSettings;
                 _context.Document.Layers.CollectionChanged += OnDocumentLayersChanged;
                 RefreshDocumentSettings();
             }
@@ -133,6 +135,7 @@ public partial class PropertiesPanelView : UserControl
         try
         {
             SyncScaleControls();
+            SyncSheetControls();
             var document = _context.Document;
             BgTransparentRadio.IsChecked = document.BackgroundMode == BackgroundMode.Transparent;
             BgSolidRadio.IsChecked = document.BackgroundMode == BackgroundMode.SolidColor;
@@ -2325,6 +2328,114 @@ public partial class PropertiesPanelView : UserControl
         SyncScaleControls();
     }
 
+    // ----- Sheet (frame and title block) -------------------------------------------------------------
+
+    private void SyncSheetControls()
+    {
+        if (_context is null)
+        {
+            return;
+        }
+
+        var sheet = _context.Document.Sheet;
+        SheetEnabledCheckBox.IsChecked = sheet.Enabled;
+        SheetProjectTextBox.Text = sheet.Project;
+        SheetAddressTextBox.Text = sheet.Address;
+        SheetDateTextBox.Text = sheet.Date;
+        SheetPositionTextBox.Text = sheet.Position;
+        SheetScaleText.Text = $"Scale: {DrawingScale.Label(_context.Document.ScaleDenominator)} (from the page scale)";
+        SheetPlaceBottomRadio.IsChecked = sheet.Placement == SheetPlacement.Bottom;
+        SheetPlaceTopRadio.IsChecked = sheet.Placement == SheetPlacement.Top;
+        SheetPlaceLeftRadio.IsChecked = sheet.Placement == SheetPlacement.Left;
+        SheetPlaceRightRadio.IsChecked = sheet.Placement == SheetPlacement.Right;
+        SheetMarginTextBox.Text = sheet.MarginMm.ToString("0.##", CultureInfo.InvariantCulture);
+        SheetBlockSizeTextBox.Text = sheet.BlockSizeMm > 0 ? sheet.BlockSizeMm.ToString("0.##", CultureInfo.InvariantCulture) : string.Empty;
+        SheetBlockSizeTextBox.ToolTip = $"Height (top / bottom) or width (left / right) of the title block in mm; empty = automatic ({SheetInfo.AutomaticBlockSizeMm(sheet.Placement)} mm)";
+    }
+
+    private void SheetEnabledCheckBox_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (_context is null || _syncingDocumentSettings)
+        {
+            return;
+        }
+
+        // ToggleSheet also fills an empty date; the checkbox has already flipped itself, so only act when the state differs
+        if (_context.Document.Sheet.Enabled != (SheetEnabledCheckBox.IsChecked == true))
+        {
+            _context.ToggleSheet();
+        }
+    }
+
+    private void SheetTextBox_OnKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            Keyboard.ClearFocus();
+            e.Handled = true;
+        }
+    }
+
+    private void SheetTextBox_OnLostFocus(object sender, RoutedEventArgs e)
+    {
+        if (_context is null || _syncingDocumentSettings || sender is not TextBox { Tag: string field } box)
+        {
+            return;
+        }
+
+        var sheet = _context.Document.Sheet;
+        var text = box.Text.Trim();
+        var number = double.TryParse(text.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed) ? parsed : (double?)null;
+
+        var changed = field switch
+        {
+            "Project" => sheet with { Project = text },
+            "Address" => sheet with { Address = text },
+            "Date" => sheet with { Date = text },
+            "Position" => sheet with { Position = text },
+            "Margin" when number is >= 0 and <= 100 => sheet with { MarginMm = number.Value },
+            "Block" when text.Length == 0 => sheet with { BlockSizeMm = 0 },
+            "Block" when number is > 0 and <= 400 => sheet with { BlockSizeMm = number.Value },
+            _ => sheet,
+        };
+
+        _context.SetSheet(changed);
+        SyncSheetControlsGuarded();
+    }
+
+    private void SheetTodayButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (_context is not null)
+        {
+            _context.SetSheet(_context.Document.Sheet with { Date = EditorContext.TodayText() });
+        }
+    }
+
+    private void SheetPlacementRadio_OnChecked(object sender, RoutedEventArgs e)
+    {
+        if (_context is null || _syncingDocumentSettings || sender is not RadioButton { Tag: string tag } ||
+            !Enum.TryParse<SheetPlacement>(tag, out var placement))
+        {
+            return;
+        }
+
+        _context.SetSheet(_context.Document.Sheet with { Placement = placement });
+    }
+
+    /// <summary>Puts the stored values back into the boxes (a refused entry such as text in a number box shows the old value again).</summary>
+    private void SyncSheetControlsGuarded()
+    {
+        _syncingDocumentSettings = true;
+        try
+        {
+            SyncSheetControls();
+        }
+        finally
+        {
+            _syncingDocumentSettings = false;
+        }
+    }
+
     private enum CanvasSizeUnit { Px, Cm, Mm, In }
 
     private const double PxPerInch = 96.0;
@@ -2370,6 +2481,47 @@ public partial class PropertiesPanelView : UserControl
 
         CanvasWidthTextBox.Text = FormatInUnit(_context.Document.Width, _canvasSizeUnit);
         CanvasHeightTextBox.Text = FormatInUnit(_context.Document.Height, _canvasSizeUnit);
+
+        _syncingOrientation = true;
+        try
+        {
+            var landscape = _context.Document.Width > _context.Document.Height;
+            PagePortraitRadio.IsChecked = !landscape;
+            PageLandscapeRadio.IsChecked = landscape;
+        }
+        finally
+        {
+            _syncingOrientation = false;
+        }
+    }
+
+    private bool _syncingOrientation;
+
+    /// <summary>Portrait / Landscape: turns the page by swapping its width and height (the drawing stays where it is).</summary>
+    private void PageOrientationRadio_OnChecked(object sender, RoutedEventArgs e)
+    {
+        if (!_syncingOrientation && sender is RadioButton { Tag: string tag })
+        {
+            SetPageOrientation(tag == "Landscape");
+        }
+    }
+
+    /// <summary>Turns the page to landscape or portrait (swaps width and height). Used by the card and the Page menu.</summary>
+    public void SetPageOrientation(bool landscape)
+    {
+        if (_context is null)
+        {
+            return;
+        }
+
+        var document = _context.Document;
+        if (landscape == (document.Width > document.Height) || document.Width == document.Height)
+        {
+            RefreshCanvasSizeTextBoxes();
+            return;
+        }
+
+        ApplyCanvasSize(document.Height, document.Width);
     }
 
     private void ShapeSizeUnitRadio_OnChecked(object sender, RoutedEventArgs e)
@@ -2401,7 +2553,16 @@ public partial class PropertiesPanelView : UserControl
     /// real-world mm size at <see cref="PxPerInch"/> (96 DPI — the standard CSS/screen mapping).</summary>
     private void CanvasSizePreset_OnClick(object sender, RoutedEventArgs e)
     {
-        if (_context is null || sender is not Button { Tag: string tag })
+        if (sender is Button { Tag: string tag })
+        {
+            ApplyPagePreset(tag);
+        }
+    }
+
+    /// <summary>Sets the page to a named preset ("A4", "128px" ...), keeping its current orientation. Used by the card and the Page menu.</summary>
+    public void ApplyPagePreset(string tag)
+    {
+        if (_context is null)
         {
             return;
         }
@@ -2424,7 +2585,9 @@ public partial class PropertiesPanelView : UserControl
             return;
         }
 
-        ApplyCanvasSize(s.WidthPx, s.HeightPx);
+        // a paper preset keeps the orientation the page has now
+        var keepLandscape = _context.Document.Width > _context.Document.Height;
+        ApplyCanvasSize(keepLandscape ? s.HeightPx : s.WidthPx, keepLandscape ? s.WidthPx : s.HeightPx);
     }
 
     private void CanvasSizeTextBox_OnLostFocus(object sender, RoutedEventArgs e) => ApplyCanvasSizeTextBoxes();

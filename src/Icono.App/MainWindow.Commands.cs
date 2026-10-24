@@ -44,17 +44,9 @@ public partial class MainWindow
 
     private void Context_OnPropertyChangedForWindow(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(EditorContext.ActiveTool))
+        if (e.PropertyName is nameof(EditorContext.ActiveTool) or nameof(EditorContext.SelectedShapeKind) or nameof(EditorContext.CurrentDimensionKind))
         {
-            // Only the Region Color key lives in the toolbar; keep it in sync when the tool changes elsewhere (menu, shortcut, canvas).
-            if (_context.ActiveTool != ActiveTool.RegionColor && RegionColorToolbarRadio.IsChecked == true)
-            {
-                RegionColorToolbarRadio.IsChecked = false;
-            }
-            else if (_context.ActiveTool == ActiveTool.RegionColor && RegionColorToolbarRadio.IsChecked != true)
-            {
-                RegionColorToolbarRadio.IsChecked = true;
-            }
+            SyncToolUi();
         }
     }
 
@@ -496,6 +488,15 @@ public partial class MainWindow
                 }
 
                 break;
+        }
+    }
+
+    private void SheetMenuItem_OnClick(object sender, RoutedEventArgs e)
+    {
+        // the menu item flips its own check mark first; the document state decides
+        if (_context.Document.Sheet.Enabled != SheetMenuItem.IsChecked)
+        {
+            _context.ToggleSheet();
         }
     }
 

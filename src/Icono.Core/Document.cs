@@ -17,6 +17,9 @@ public sealed class Document
     /// reality, so measurements, wall sizes and dimensions are written in real-world units, and printing the page at 100% gives the exact scale.</summary>
     public double ScaleDenominator { get; set; } = 1;
 
+    /// <summary>The frame and title block of the page (see <see cref="SheetInfo"/>).</summary>
+    public SheetInfo Sheet { get; set; } = new();
+
     /// <summary>The scales offered in the menus (1:N).</summary>
     public static readonly double[] ScalePresets = [1, 2, 5, 10, 20, 25, 40, 50, 60, 75, 100, 200];
 

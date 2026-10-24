@@ -29,6 +29,17 @@ public partial class StatusBarView : UserControl
     public void SetScale(double denominator) =>
         ScaleText.Text = "Scale " + Icono.Rendering.DrawingScale.Label(denominator);
 
+    public void SetTool(string name) => ToolText.Text = "Tool: " + name;
+
+    /// <summary>Shows the page size and orientation, e.g. "Page 21.0 x 29.7 cm, portrait".</summary>
+    public void SetPage(int widthPx, int heightPx)
+    {
+        const double CmPerPx = 2.54 / 96;
+        var culture = System.Globalization.CultureInfo.InvariantCulture;
+        var orientation = widthPx > heightPx ? "landscape" : widthPx < heightPx ? "portrait" : "square";
+        PageText.Text = $"Page {(widthPx * CmPerPx).ToString("0.#", culture)} x {(heightPx * CmPerPx).ToString("0.#", culture)} cm, {orientation}";
+    }
+
     private readonly System.Windows.Threading.DispatcherTimer _messageTimer = new() { Interval = TimeSpan.FromSeconds(4) };
 
     /// <summary>Shows a short confirmation (saved, exported, ...) at the right end of the status bar; it fades out by itself.</summary>

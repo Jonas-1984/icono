@@ -152,6 +152,18 @@
                                         Click="CanvasSizePreset_OnClick" Tag="Letter" ToolTip="215.9 x 279.4 mm" />
                             </UniformGrid>
 
+                            <TextBlock Text="ORIENTATION" Style="{StaticResource PanelLabelTextStyle}" />
+                            <StackPanel Orientation="Horizontal" Margin="6,0,6,6">
+                                <RadioButton x:Name="PagePortraitRadio" GroupName="PageOrientation" Content="Portrait" Tag="Portrait"
+                                             Checked="PageOrientationRadio_OnChecked" Margin="0,0,14,0"
+                                             ToolTip="Page taller than wide"
+                                             Foreground="{DynamicResource MutedTextBrush}" FontSize="11" />
+                                <RadioButton x:Name="PageLandscapeRadio" GroupName="PageOrientation" Content="Landscape" Tag="Landscape"
+                                             Checked="PageOrientationRadio_OnChecked"
+                                             ToolTip="Page wider than tall"
+                                             Foreground="{DynamicResource MutedTextBrush}" FontSize="11" />
+                            </StackPanel>
+
                             <TextBlock Text="UNIT" Style="{StaticResource PanelLabelTextStyle}" />
                             <StackPanel Orientation="Horizontal" Margin="6,0,6,6">
                                 <RadioButton x:Name="CanvasUnitPxRadio" GroupName="CanvasSizeUnit" Content="px" IsChecked="True"
@@ -209,6 +221,86 @@
                                 <TextBlock Grid.Column="0" Text="Width" FontSize="9" HorizontalAlignment="Center"
                                            Foreground="{DynamicResource MutedTextBrush}" />
                                 <TextBlock Grid.Column="2" Text="Height" FontSize="9" HorizontalAlignment="Center"
+                                           Foreground="{DynamicResource MutedTextBrush}" />
+                            </Grid>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource CardBorderStyle}">
+                    <StackPanel>
+                        <Grid Style="{StaticResource CollapsibleCardHeaderStyle}" MouseLeftButtonDown="CardHeader_OnToggle">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="SHEET" Style="{StaticResource CardHeaderTextStyle}" />
+                            <Path Grid.Column="1" Style="{StaticResource CardChevronPathStyle}" />
+                        </Grid>
+                        <StackPanel>
+                            <CheckBox x:Name="SheetEnabledCheckBox" Content="Frame and title block" Margin="12,2,12,6"
+                                      Foreground="{DynamicResource ForegroundTextBrush}" FontSize="11"
+                                      ToolTip="A frame round the page with the project data, printed and exported with the drawing"
+                                      Click="SheetEnabledCheckBox_OnClick" />
+
+                            <TextBlock Text="PROJECT" Style="{StaticResource PanelLabelTextStyle}" />
+                            <TextBox x:Name="SheetProjectTextBox" Tag="Project" Margin="6,0,6,6"
+                                     LostFocus="SheetTextBox_OnLostFocus" KeyDown="SheetTextBox_OnKeyDown" />
+                            <TextBlock Text="ADDRESS" Style="{StaticResource PanelLabelTextStyle}" />
+                            <TextBox x:Name="SheetAddressTextBox" Tag="Address" Margin="6,0,6,6" AcceptsReturn="True" TextWrapping="Wrap" MaxHeight="64"
+                                     LostFocus="SheetTextBox_OnLostFocus" />
+                            <TextBlock x:Name="SheetScaleText" Foreground="{DynamicResource MutedTextBrush}" FontSize="11" Margin="12,0,12,6"
+                                       ToolTip="The scale of the page. Change it in the CANVAS SIZE card." />
+                            <TextBlock Text="DATE" Style="{StaticResource PanelLabelTextStyle}" />
+                            <Grid Margin="6,0,6,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="6" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="SheetDateTextBox" Grid.Column="0" Tag="Date"
+                                         LostFocus="SheetTextBox_OnLostFocus" KeyDown="SheetTextBox_OnKeyDown" />
+                                <Button Grid.Column="2" Content="Today" Style="{StaticResource PanelKeyButtonStyle}" Padding="10,2"
+                                        Click="SheetTodayButton_OnClick" />
+                            </Grid>
+                            <TextBlock Text="POSITION" Style="{StaticResource PanelLabelTextStyle}" />
+                            <TextBox x:Name="SheetPositionTextBox" Tag="Position" Margin="6,0,6,6"
+                                     LostFocus="SheetTextBox_OnLostFocus" KeyDown="SheetTextBox_OnKeyDown" />
+
+                            <TextBlock Text="TITLE BLOCK AT THE" Style="{StaticResource PanelLabelTextStyle}" />
+                            <UniformGrid Columns="2" Margin="3,0,3,4">
+                                <RadioButton x:Name="SheetPlaceBottomRadio" GroupName="SheetPlacement" Content="Bottom" Tag="Bottom"
+                                             Checked="SheetPlacementRadio_OnChecked" Foreground="{DynamicResource MutedTextBrush}" FontSize="11" />
+                                <RadioButton x:Name="SheetPlaceTopRadio" GroupName="SheetPlacement" Content="Top" Tag="Top"
+                                             Checked="SheetPlacementRadio_OnChecked" Foreground="{DynamicResource MutedTextBrush}" FontSize="11" />
+                                <RadioButton x:Name="SheetPlaceLeftRadio" GroupName="SheetPlacement" Content="Left" Tag="Left"
+                                             Checked="SheetPlacementRadio_OnChecked" Foreground="{DynamicResource MutedTextBrush}" FontSize="11" />
+                                <RadioButton x:Name="SheetPlaceRightRadio" GroupName="SheetPlacement" Content="Right" Tag="Right"
+                                             Checked="SheetPlacementRadio_OnChecked" Foreground="{DynamicResource MutedTextBrush}" FontSize="11" />
+                            </UniformGrid>
+
+                            <Grid Margin="6,2,6,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="6" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="SheetMarginTextBox" Grid.Column="0" Tag="Margin" TextAlignment="Center"
+                                         ToolTip="Distance of the frame from the page edge, in mm"
+                                         LostFocus="SheetTextBox_OnLostFocus" KeyDown="SheetTextBox_OnKeyDown" />
+                                <TextBox x:Name="SheetBlockSizeTextBox" Grid.Column="2" Tag="Block" TextAlignment="Center"
+                                         ToolTip="Height (top / bottom) or width (left / right) of the title block in mm; empty = automatic"
+                                         LostFocus="SheetTextBox_OnLostFocus" KeyDown="SheetTextBox_OnKeyDown" />
+                            </Grid>
+                            <Grid Margin="6,0,6,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="6" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Margin (mm)" FontSize="9" HorizontalAlignment="Center"
+                                           Foreground="{DynamicResource MutedTextBrush}" />
+                                <TextBlock Grid.Column="2" Text="Block size (mm)" FontSize="9" HorizontalAlignment="Center"
                                            Foreground="{DynamicResource MutedTextBrush}" />
                             </Grid>
                         </StackPanel>

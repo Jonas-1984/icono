@@ -90,5 +90,7 @@ public static class DocumentRenderer
         {
             ShapeRenderer.Draw(canvas, pending);
         }
+
+        SheetRenderer.Draw(canvas, document);
     }
 }

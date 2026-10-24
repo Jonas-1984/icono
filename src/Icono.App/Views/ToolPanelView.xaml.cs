@@ -154,24 +154,7 @@ public partial class ToolPanelView : UserControl
             return;
         }
 
-        var dimensionTag = Context.ActiveTool == ActiveTool.PathDraw && Context.SelectedShapeKind == ShapeKind.Dimension
-            ? "Dim" + Context.CurrentDimensionKind
-            : null;
-
-        string? tag = Context.ActiveTool switch
-        {
-            ActiveTool.Select => "Select",
-            ActiveTool.PanZoom => "PanZoom",
-            ActiveTool.AddPoint => "AddPoint",
-            ActiveTool.DeletePoint => "DeletePoint",
-            ActiveTool.RegionColor => "RegionColor",
-            ActiveTool.WallCut => "WallCut",
-            ActiveTool.Measure => "Measure",
-            ActiveTool.MeasureGap => "MeasureGap",
-            ActiveTool.Match => "Match",
-            ActiveTool.Shape or ActiveTool.PathDraw => dimensionTag ?? Context.SelectedShapeKind.ToString(),
-            _ => null,
-        };
+        var tag = Context.ActiveToolTag;
 
         foreach (var radio in FindRadios(this))
         {
@@ -328,6 +311,9 @@ public partial class ToolPanelView : UserControl
                 break;
             case "RegionColor":
                 Context.ActiveTool = ActiveTool.RegionColor;
+                break;
+            case "Eyedropper":
+                Context.ActiveTool = ActiveTool.Eyedropper;
                 break;
             case "WallCut":
                 Context.ActiveTool = ActiveTool.WallCut;
