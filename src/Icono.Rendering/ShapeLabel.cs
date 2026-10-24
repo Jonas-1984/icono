@@ -73,11 +73,8 @@ public static class ShapeLabel
             return null;
         }
 
-        var weight = shape.TextBold ? SKFontStyleWeight.Bold : SKFontStyleWeight.Normal;
-        var slant = shape.TextItalic ? SKFontStyleSlant.Italic : SKFontStyleSlant.Upright;
         var family = string.IsNullOrWhiteSpace(shape.TextFontFamily) ? "Segoe UI" : shape.TextFontFamily;
-        using var typeface = SKTypeface.FromFamilyName(family, weight, SKFontStyleWidth.Normal, slant);
-        using var font = new SKFont(typeface, (float)Math.Max(1, shape.TextFontSize));
+        using var font = new SKFont(FontCache.Get(family, shape.TextBold, shape.TextItalic), (float)Math.Max(1, shape.TextFontSize));
         using var measurePaint = new SKPaint();
 
         var box = ConnectionRouter.GetBox(shape);

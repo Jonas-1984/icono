@@ -24,7 +24,56 @@
                                      Style="{StaticResource ShapeIconRadioButtonStyle}"
                                      Tag="{StaticResource DeletePointToolGeometry}" CommandParameter="DeletePoint"
                                      ToolTip="Delete Point (click a point on the selected line/shape)" />
+                        <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked"
+                                     Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                     Tag="{StaticResource MatchToolGeometry}" CommandParameter="Match"
+                                     ToolTip="Match (Q): click the object whose look you want, then click the objects that should get it" />
                     </WrapPanel>
+                </Border>
+
+                <Border Style="{StaticResource CardBorderStyle}">
+                    <StackPanel>
+                        <Grid Style="{StaticResource CollapsibleCardHeaderStyle}" MouseLeftButtonDown="CardHeader_OnToggle">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="MATCH (Q)" Style="{StaticResource CardHeaderTextStyle}" />
+                            <Path Grid.Column="1" Style="{StaticResource CardChevronPathStyle}" />
+                        </Grid>
+                        <StackPanel>
+                            <TextBlock Text="Select the source (or click it), then click every object that should take over its look. Esc ends. Each click is one undo step."
+                                       Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="12,2,12,6" />
+                            <TextBlock Text="CARRY OVER" Style="{StaticResource PanelLabelTextStyle}" />
+                            <StackPanel Margin="10,0,6,6">
+                                <CheckBox Content="Fill and colour" Tag="Fill" IsChecked="True" Click="MatchAspectCheckBox_OnClick"
+                                          Foreground="{DynamicResource ForegroundTextBrush}" FontSize="11" Margin="0,2" />
+                                <CheckBox Content="Border / line" Tag="Border" IsChecked="True" Click="MatchAspectCheckBox_OnClick"
+                                          Foreground="{DynamicResource ForegroundTextBrush}" FontSize="11" Margin="0,2"
+                                          ToolTip="Colour, thickness, style, gradient and blur of the border or line" />
+                                <CheckBox Content="Effects" Tag="Effects" IsChecked="True" Click="MatchAspectCheckBox_OnClick"
+                                          Foreground="{DynamicResource ForegroundTextBrush}" FontSize="11" Margin="0,2"
+                                          ToolTip="Opacity, blur, fade and shadow" />
+                                <CheckBox Content="Corners and design style" Tag="Form" IsChecked="True" Click="MatchAspectCheckBox_OnClick"
+                                          Foreground="{DynamicResource ForegroundTextBrush}" FontSize="11" Margin="0,2"
+                                          ToolTip="Corner radius, design style (glass, neumorphism ...) and 3D depth" />
+                                <CheckBox Content="Text" Tag="Text" IsChecked="True" Click="MatchAspectCheckBox_OnClick"
+                                          Foreground="{DynamicResource ForegroundTextBrush}" FontSize="11" Margin="0,2"
+                                          ToolTip="Font, size, style and colour (not the words)" />
+                                <CheckBox Content="Line ends and dash" Tag="Line" IsChecked="True" Click="MatchAspectCheckBox_OnClick"
+                                          Foreground="{DynamicResource ForegroundTextBrush}" FontSize="11" Margin="0,2"
+                                          ToolTip="Dashed stroke and the markers at the ends of a line" />
+                                <CheckBox Content="Wall (thickness, hatch)" Tag="Wall" IsChecked="True" Click="MatchAspectCheckBox_OnClick"
+                                          Foreground="{DynamicResource ForegroundTextBrush}" FontSize="11" Margin="0,2" />
+                                <CheckBox Content="Dimension style" Tag="Dimension" IsChecked="True" Click="MatchAspectCheckBox_OnClick"
+                                          Foreground="{DynamicResource ForegroundTextBrush}" FontSize="11" Margin="0,2"
+                                          ToolTip="Text size, line width, end marks and number position of dimensions (also of a wall's dimensions)" />
+                                <CheckBox Content="Size (width and height)" Tag="Size" Click="MatchAspectCheckBox_OnClick"
+                                          Foreground="{DynamicResource ForegroundTextBrush}" FontSize="11" Margin="0,2"
+                                          ToolTip="Make the object as big as the source. Position and rotation stay." />
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
                 </Border>
 
                 <Border Style="{StaticResource CardBorderStyle}">
@@ -47,6 +96,46 @@
                                              ToolTip="Cut a wall (X): click the place where it should be split" />
                             </WrapPanel>
                             <TextBlock Text="Pick a wall, then set thickness, hatch and dimensions in the WALL card on the right."
+                                       Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="12,2,12,8" />
+                            <TextBlock Text="SNAPPING" Style="{StaticResource PanelLabelTextStyle}" />
+                            <StackPanel Margin="10,0,6,2">
+                                <CheckBox Content="Snap while drawing walls" Tag="Enabled" IsChecked="True" Click="WallSnapCheckBox_OnClick"
+                                          Foreground="{DynamicResource ForegroundTextBrush}" FontSize="11" Margin="0,2"
+                                          ToolTip="Master switch for all wall snapping. Hold Alt to snap off for one click." />
+                                <CheckBox Content="Horizontal / vertical" Tag="Axis" IsChecked="True" Click="WallSnapCheckBox_OnClick"
+                                          Foreground="{DynamicResource MutedTextBrush}" FontSize="11" Margin="12,2,0,2"
+                                          ToolTip="Snap to the horizontal and vertical direction from the last point. Hold Shift to force it." />
+                                <CheckBox Content="Line up with other points" Tag="Align" IsChecked="True" Click="WallSnapCheckBox_OnClick"
+                                          Foreground="{DynamicResource MutedTextBrush}" FontSize="11" Margin="12,2,0,2"
+                                          ToolTip="Guide lines show when a point is in a row (horizontal or vertical) with another point, so facing walls sit exactly opposite each other." />
+                                <CheckBox Content="Equal length" Tag="EqualLength" IsChecked="True" Click="WallSnapCheckBox_OnClick"
+                                          Foreground="{DynamicResource MutedTextBrush}" FontSize="11" Margin="12,2,0,2"
+                                          ToolTip="Snap the length of the new wall to the length of another wall segment." />
+                                <CheckBox Content="Parallel / perpendicular" Tag="Parallel" IsChecked="True" Click="WallSnapCheckBox_OnClick"
+                                          Foreground="{DynamicResource MutedTextBrush}" FontSize="11" Margin="12,2,0,2"
+                                          ToolTip="Snap to walls that run parallel or at a right angle to an existing wall." />
+                                <CheckBox Content="Corners and ends" Tag="Endpoints" IsChecked="True" Click="WallSnapCheckBox_OnClick"
+                                          Foreground="{DynamicResource MutedTextBrush}" FontSize="11" Margin="12,2,0,2"
+                                          ToolTip="Snap to the corners and ends of other walls." />
+                                <CheckBox Content="Midpoints" Tag="Midpoints" IsChecked="True" Click="WallSnapCheckBox_OnClick"
+                                          Foreground="{DynamicResource MutedTextBrush}" FontSize="11" Margin="12,2,0,2"
+                                          ToolTip="Snap to the middle of other wall segments." />
+                                <CheckBox Content="On the wall line" Tag="OnWall" Click="WallSnapCheckBox_OnClick"
+                                          Foreground="{DynamicResource MutedTextBrush}" FontSize="11" Margin="12,2,0,2"
+                                          ToolTip="Snap to the nearest place on another wall's centre line (for T-joints)." />
+                                <CheckBox Content="Angle steps (15°)" Tag="AngleSteps" Click="WallSnapCheckBox_OnClick"
+                                          Foreground="{DynamicResource MutedTextBrush}" FontSize="11" Margin="12,2,0,2"
+                                          ToolTip="Snap to 0, 15, 30, 45 ... degrees from the last point." />
+                                <StackPanel Orientation="Horizontal" Margin="12,2,0,2">
+                                    <CheckBox Content="Round length to" Tag="RoundLength" Click="WallSnapCheckBox_OnClick"
+                                              Foreground="{DynamicResource MutedTextBrush}" FontSize="11" VerticalAlignment="Center"
+                                              ToolTip="Round the length of every new wall segment to a multiple of this step." />
+                                    <TextBox x:Name="WallRoundStepTextBox" Width="40" Height="22" Margin="6,0,4,0" Text="5" TextAlignment="Center"
+                                             ToolTip="Step in cm" LostFocus="WallRoundStepTextBox_OnLostFocus" KeyDown="WallRoundStepTextBox_OnKeyDown" />
+                                    <TextBlock Text="cm" Foreground="{DynamicResource MutedTextBrush}" FontSize="11" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </StackPanel>
+                            <TextBlock Text="Shift forces horizontal / vertical. Alt switches snapping off while held."
                                        Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="12,2,12,8" />
                         </StackPanel>
                     </StackPanel>
@@ -83,6 +172,16 @@
                                 <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
                                              Tag="{StaticResource DimDiameterToolGeometry}" CommandParameter="DimDiameter"
                                              ToolTip="Diameter: click the centre, then a point on the circle" />
+                            </WrapPanel>
+
+                            <TextBlock Text="MEASURE ANYWHERE" Style="{StaticResource PanelLabelTextStyle}" />
+                            <WrapPanel Margin="6,0">
+                                <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                             Tag="{StaticResource MeasureGapToolGeometry}" CommandParameter="MeasureGap"
+                                             ToolTip="Distance between two objects (B): click one object, then the other. The dimension joins their nearest points and follows both." />
+                                <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                             Tag="{StaticResource MeasureToolGeometry}" CommandParameter="Measure"
+                                             ToolTip="Ruler (M): click two points anywhere - corners, middles, centres and edges of shapes and walls snap. Shows length, dX, dY and angle; nothing is added. Shift locks horizontal / vertical." />
                             </WrapPanel>
 
                             <TextBlock Text="ADD TO SELECTED SHAPE" Style="{StaticResource PanelLabelTextStyle}" />

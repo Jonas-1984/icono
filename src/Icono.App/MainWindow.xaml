@@ -53,6 +53,7 @@
                 <Separator />
                 <MenuItem Header="Export..." InputGestureText="Ctrl+E" Click="ExportMenuItem_OnClick" />
                 <MenuItem Header="Export PNG (page size)" Click="ExportPngQuickMenuItem_OnClick" />
+                <MenuItem Header="Print..." InputGestureText="Ctrl+P" Click="PrintMenuItem_OnClick" />
                 <Separator />
                 <MenuItem Header="Exit" InputGestureText="Alt+F4" Click="ExitMenuItem_OnClick" />
             </MenuItem>
@@ -91,6 +92,7 @@
                 <MenuItem Header="Pan / Zoom Tool" InputGestureText="H" Tag="PanZoom" Click="ToolMenuItem_OnClick" />
                 <MenuItem Header="Eyedropper" InputGestureText="I" Tag="Eyedropper" Click="ToolMenuItem_OnClick" />
                 <MenuItem Header="Region Color (Bucket)" InputGestureText="G" Tag="RegionColor" Click="ToolMenuItem_OnClick" />
+                <MenuItem Header="Match Properties" InputGestureText="Q" Tag="Match" Click="ToolMenuItem_OnClick" />
                 <Separator />
                 <MenuItem Header="Add Point" Tag="AddPoint" Click="ToolMenuItem_OnClick" />
                 <MenuItem Header="Delete Point" Tag="DeletePoint" Click="ToolMenuItem_OnClick" />
@@ -123,6 +125,9 @@
                     <MenuItem Header="Angle" Tag="DimAngular" Click="ToolMenuItem_OnClick" />
                     <MenuItem Header="Radius" Tag="DimRadius" Click="ToolMenuItem_OnClick" />
                     <MenuItem Header="Diameter" Tag="DimDiameter" Click="ToolMenuItem_OnClick" />
+                    <Separator />
+                    <MenuItem Header="Distance between objects" InputGestureText="B" Tag="MeasureGap" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Measure (ruler, nothing is added)" InputGestureText="M" Tag="Measure" Click="ToolMenuItem_OnClick" />
                 </MenuItem>
                 <MenuItem Header="Add Dimensions to Selection">
                     <MenuItem Header="Automatic (suits the shape)" Tag="Auto" Click="AddDimensionsMenuItem_OnClick" />
@@ -181,6 +186,7 @@
                 <Separator />
                 <MenuItem Header="Background..." Tag="BACKGROUND" Click="FocusCardMenuItem_OnClick" />
                 <MenuItem Header="Canvas Size..." Tag="CANVAS SIZE" Click="FocusCardMenuItem_OnClick" />
+                <MenuItem x:Name="ScaleMenuItem" Header="Scale (1:N)" />
             </MenuItem>
             <MenuItem Header="Help">
                 <MenuItem Header="Keyboard Shortcuts" Click="ShortcutsMenuItem_OnClick" />
@@ -195,8 +201,8 @@
         </Menu>
 
         <!-- Shadow backdrops (empty borders carrying the drop shadows, see PanelStyles.xaml) -->
-        <Border Grid.Row="2" Margin="10,4,10,8" CornerRadius="16" Style="{StaticResource NeuShadowLightStyle}" />
-        <Border Grid.Row="2" Margin="10,4,10,8" CornerRadius="16" Style="{StaticResource NeuShadowDarkStyle}" />
+        <Border Grid.Row="2" Margin="10,4,10,8" CornerRadius="0" Style="{StaticResource NeuShadowLightStyle}" />
+        <Border Grid.Row="2" Margin="10,4,10,8" CornerRadius="0" Style="{StaticResource NeuShadowDarkStyle}" />
         <Border Grid.Row="2" Style="{StaticResource ToolBarBorderStyle}">
             <WrapPanel>
                 <Button Content="New" Margin="3,0" Click="NewMenuItem_OnClick" ToolTip="New document (Ctrl+N)" />

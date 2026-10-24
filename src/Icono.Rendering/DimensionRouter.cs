@@ -46,15 +46,37 @@ public static class DimensionRouter
                         }
                     }
 
-                    continue;
+                    if (shape.Kind != ShapeKind.Wall)
+                    {
+                        continue;
+                    }
                 }
 
-                for (var i = 0; i <= CenterIndex; i++)
+                for (var i = 0; shape.Points is null && i <= CenterIndex; i++)
                 {
                     var p = AnchorPosition(shape, i);
                     if (Near(p.X, p.Y, x, y))
                     {
                         return new ShapeAnchor(shape.Id, i);
+                    }
+                }
+
+                // corners and edge middles of the drawn outline (also of walls: both faces)
+                var corners = OutlineGeometry.Corners(shape);
+                for (var i = 0; i < corners.Count; i++)
+                {
+                    if (Near(corners[i].X, corners[i].Y, x, y))
+                    {
+                        return new ShapeAnchor(shape.Id, OutlineGeometry.CornerBase + i);
+                    }
+                }
+
+                var middles = OutlineGeometry.EdgeMiddles(shape);
+                for (var i = 0; i < middles.Count; i++)
+                {
+                    if (Near(middles[i].X, middles[i].Y, x, y))
+                    {
+                        return new ShapeAnchor(shape.Id, OutlineGeometry.MidBase + i);
                     }
                 }
             }
@@ -65,8 +87,20 @@ public static class DimensionRouter
 
     private static bool Near(double ax, double ay, double bx, double by) => Math.Abs(ax - bx) <= Same && Math.Abs(ay - by) <= Same;
 
-    private static (double X, double Y) AnchorPosition(Shape shape, int index)
+    /// <summary>Position of an anchor (connection point, centre, vertex or outline corner) of a shape.</summary>
+    internal static (double X, double Y) AnchorPosition(Shape shape, int index)
     {
+        if (index >= OutlineGeometry.CornerBase)
+        {
+            if (OutlineGeometry.Position(shape, index) is { } onOutline)
+            {
+                return (onOutline.X, onOutline.Y);
+            }
+
+            var fallback = ShapeOutline.Box(shape);
+            return (fallback.X, fallback.Y);
+        }
+
         if (shape.Points is { Count: > 0 } points)
         {
             var i = Math.Clamp(index, 0, points.Count - 1);
@@ -204,7 +238,7 @@ public static class DimensionRouter
             return;
         }
 
-        var wanted = DimensionBuilder.Compute(target, dim.DimRole, dim.DimIndex, dim.DimOffset, dim.DimAngle);
+        var wanted = ComputeWanted(dim, target, byId);
         if (wanted is null)
         {
             dim.DimTarget = null;
@@ -238,6 +272,19 @@ public static class DimensionRouter
         memory.Points = null;
     }
 
+    private static DimensionBuilder.Result? ComputeWanted(Shape dim, Shape target, Dictionary<Guid, Shape> byId)
+    {
+        if (dim.DimRole == DimensionRole.Gap)
+        {
+            // the gap between two objects: needs both of them
+            return dim.DimTarget2 is { } second && byId.TryGetValue(second, out var other)
+                ? DimensionBuilder.ComputeGap(target, other, dim.DimOffset)
+                : null;
+        }
+
+        return DimensionBuilder.Compute(target, dim.DimRole, dim.DimIndex, dim.DimOffset, dim.DimAngle);
+    }
+
     private static void RefreshByHand(Shape dim, Dictionary<Guid, Shape> byId)
     {
         var anchors = dim.DimAnchors!;
@@ -261,6 +308,13 @@ public static class DimensionRouter
 
             next[i] = anchor;
             if (!byId.TryGetValue(anchor.ShapeId, out var target) || target.Kind == ShapeKind.Dimension)
+            {
+                next[i] = null;
+                continue;
+            }
+
+            // an outline corner or edge middle that the shape no longer has (its outline changed): let go instead of jumping to another place
+            if (anchor.Index >= OutlineGeometry.CornerBase && OutlineGeometry.Position(target, anchor.Index) is null)
             {
                 next[i] = null;
                 continue;

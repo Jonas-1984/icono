@@ -8,11 +8,16 @@ public static class WallRenderer
 {
     public static void Draw(SKCanvas canvas, Shape wall, byte opacityAlpha)
     {
-        using var outline = WallGeometry.BuildOutline(wall);
-        if (outline.IsEmpty)
+        using var ownOutline = WallGeometry.BuildOutline(wall);
+        if (ownOutline.IsEmpty)
         {
             return;
         }
+
+        // Where this wall meets others, the corner is closed with a mitre area and the border runs round the whole group.
+        var join = WallJoiner.For(wall);
+        using var joined = join?.Patch is { } patch ? ownOutline.Op(patch, SKPathOp.Union) : null;
+        var outline = joined ?? ownOutline;
 
         if (wall.FillEnabled)
         {
@@ -28,7 +33,8 @@ public static class WallRenderer
             canvas.Restore();
         }
 
-        if (wall.BorderThickness > 0)
+        // a wall that is part of a group leaves the border to the group's last wall, so no line runs through a joint
+        if (wall.BorderThickness > 0 && (join is null || join.GroupOutline is not null))
         {
             using var stroke = new SKPaint
             {
@@ -39,7 +45,7 @@ public static class WallRenderer
                 StrokeMiter = 8f,
                 Color = Multiply(wall.BorderColor, opacityAlpha),
             };
-            canvas.DrawPath(outline, stroke);
+            canvas.DrawPath(join?.GroupOutline ?? outline, stroke);
         }
 
         if (wall.WallShowDimensions)
@@ -177,62 +183,98 @@ public static class WallRenderer
         }
     }
 
+    /// <summary>The settings of one dimension of the wall (null = it follows the wall's own settings).</summary>
+    public static WallDimensionOverride? FindOverride(Shape wall, int segment) =>
+        wall.WallDimensionOverrides?.FirstOrDefault(o => o.Segment == segment);
+
+    /// <summary>Which side of the walking direction the dimension numbers go: for a ring (or a nearly closed wall) outside, otherwise the
+    /// left. Returns 1 for the left-hand normal, -1 for the right-hand one.</summary>
+    public static float DimensionSide(Shape wall)
+    {
+        var points = WallGeometry.AbsolutePoints(wall);
+        if (points.Count < 3)
+        {
+            return 1f;
+        }
+
+        double area = 0;
+        for (var i = 0; i < points.Count; i++)
+        {
+            var a = points[i];
+            var b = points[(i + 1) % points.Count];
+            area += (double)a.X * b.Y - (double)b.X * a.Y;
+        }
+
+        return Math.Abs(area) < 1 ? 1f : (area > 0 ? -1f : 1f);
+    }
+
+    /// <summary>The dimension of one segment of the wall, with the settings of that segment applied (null when it is hidden or has no length).</summary>
+    public static DimensionLayout? LayoutSegmentDimension(Shape wall, int index) =>
+        LayoutSegmentDimension(wall, index, WallGeometry.Segments(wall), DimensionSide(wall), DimensionStyle.For(wall));
+
+    /// <summary>Same, for callers that lay out every segment of a wall and compute the segment list, the side and the style once.</summary>
+    private static DimensionLayout? LayoutSegmentDimension(
+        Shape wall, int index, List<(SKPoint From, SKPoint To)> segments, float wallSide, DimensionStyle style)
+    {
+        if (index < 0 || index >= segments.Count)
+        {
+            return null;
+        }
+
+        var custom = FindOverride(wall, index);
+        if (custom is { Hidden: true })
+        {
+            return null;
+        }
+
+        var (from, to) = segments[index];
+        var dx = to.X - from.X;
+        var dy = to.Y - from.Y;
+        var length = MathF.Sqrt(dx * dx + dy * dy);
+        if (length < 1f)
+        {
+            return null;
+        }
+
+        var side = wallSide * (custom is { Flip: true } ? -1f : 1f);
+        var face = (float)(wall.WallThickness / 2);
+        var nx = -dy / length * side;
+        var ny = dx / length * side;
+        var p1 = new SKPoint(from.X + nx * face, from.Y + ny * face);
+        var p2 = new SKPoint(to.X + nx * face, to.Y + ny * face);
+
+        var distance = (float)(custom?.Offset ?? wall.DimOffset);
+        var along = (float)Math.Clamp(custom?.TextPosition ?? wall.DimTextPosition ?? 0.5, 0, 1);
+        var shift = (float)(custom?.TextShift ?? wall.DimTextShift);
+
+        var measured = DimensionRenderer.Format(length, wall.WallDimensionUnit, wall.DimPrecision);
+        var text = measured;
+        if (!string.IsNullOrWhiteSpace(custom?.Text))
+        {
+            text = custom!.Text!.Contains("<>") ? custom.Text.Replace("<>", measured) : custom.Text;
+        }
+
+        // LayoutAligned puts the line on the left of p1 to p2: turn the pair around when the dimension side is the right-hand one.
+        return side > 0
+            ? DimensionRenderer.LayoutAligned(p1, p2, distance, style, text, along, shift)
+            : DimensionRenderer.LayoutAligned(p2, p1, distance, style, text, 1 - along, shift);
+    }
+
     /// <summary>The length of every segment, as a real dimension next to the wall: extension lines from the wall's outer face, a
-    /// dimension line with arrowheads and the number in the middle of it (the line is broken behind the number).</summary>
+    /// dimension line with arrowheads and the number on the line (the line is broken behind the number). Each dimension can be
+    /// hidden, moved, flipped or given its own text (see <see cref="Shape.WallDimensionOverrides"/>).</summary>
     private static void DrawDimensions(SKCanvas canvas, Shape wall, byte opacityAlpha)
     {
         var segments = WallGeometry.Segments(wall);
-        if (segments.Count == 0)
-        {
-            return;
-        }
-
-        var points = WallGeometry.AbsolutePoints(wall);
-
-        // The left-hand normal of the walking direction. For a ring that points inside when it runs clockwise on screen,
-        // so flip it there: the numbers belong outside. A wall that only comes near to a ring (a cut room) is judged the same way;
-        // a straight run keeps the numbers on its left.
-        var side = 1f;
-        if (points.Count >= 3)
-        {
-            double area = 0;
-            for (var i = 0; i < points.Count; i++)
-            {
-                var a = points[i];
-                var b = points[(i + 1) % points.Count];
-                area += (double)a.X * b.Y - (double)b.X * a.Y;
-            }
-
-            side = Math.Abs(area) < 1 ? 1f : (area > 0 ? -1f : 1f);
-        }
-
+        var side = DimensionSide(wall);
         var style = DimensionStyle.For(wall);
         var color = new SKColor(0xC0, 0x39, 0x2B).WithAlpha(opacityAlpha);
-        var face = (float)(wall.WallThickness / 2);
-        var distance = (float)wall.DimOffset;
-
-        foreach (var (from, to) in segments)
+        for (var i = 0; i < segments.Count; i++)
         {
-            var dx = to.X - from.X;
-            var dy = to.Y - from.Y;
-            var length = MathF.Sqrt(dx * dx + dy * dy);
-            if (length < 1f)
+            if (LayoutSegmentDimension(wall, i, segments, side, style) is { } layout)
             {
-                continue;
+                DimensionRenderer.DrawLayout(canvas, layout, color);
             }
-
-            // the outer face of the wall on the dimension side
-            var nx = -dy / length * side;
-            var ny = dx / length * side;
-            var p1 = new SKPoint(from.X + nx * face, from.Y + ny * face);
-            var p2 = new SKPoint(to.X + nx * face, to.Y + ny * face);
-
-            // LayoutAligned puts the line on the left of p1 to p2; turn the pair around when the dimension side is the right one.
-            var text = DimensionRenderer.Format(length, wall.WallDimensionUnit, wall.DimPrecision);
-            var layout = side > 0
-                ? DimensionRenderer.LayoutAligned(p1, p2, distance, style, text)
-                : DimensionRenderer.LayoutAligned(p2, p1, distance, style, text);
-            DimensionRenderer.DrawLayout(canvas, layout, color);
         }
     }
 }

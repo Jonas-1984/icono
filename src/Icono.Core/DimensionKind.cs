@@ -42,4 +42,38 @@ public enum DimensionRole
 
     /// <summary>The angle at one corner of a polyline-like shape (see <see cref="Shape.DimIndex"/>).</summary>
     Corner,
+
+    /// <summary>The shortest distance between two objects (<see cref="Shape.DimTarget"/> and <see cref="Shape.DimTarget2"/>).</summary>
+    Gap,
+}
+
+/// <summary>The mark at the two ends of a dimension line.</summary>
+public enum DimensionArrowStyle
+{
+    /// <summary>A filled arrowhead (the AutoCAD default).</summary>
+    Arrow,
+
+    /// <summary>An arrowhead drawn as two lines.</summary>
+    OpenArrow,
+
+    /// <summary>A slash "/" across the line (architectural tick).</summary>
+    Slash,
+
+    /// <summary>A backslash "\" across the line.</summary>
+    Backslash,
+
+    /// <summary>Two slashes "//" across the line.</summary>
+    DoubleSlash,
+
+    /// <summary>A filled dot.</summary>
+    Dot,
+
+    /// <summary>A small ring.</summary>
+    OpenDot,
+
+    /// <summary>A small open square.</summary>
+    Box,
+
+    /// <summary>No mark: the line just ends.</summary>
+    None,
 }

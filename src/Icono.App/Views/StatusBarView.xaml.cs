@@ -25,6 +25,10 @@ public partial class StatusBarView : UserControl
 
     public double Zoom => ZoomSlider.Value;
 
+    /// <summary>Shows the drawing scale of the document (1:N) at the bottom of the window.</summary>
+    public void SetScale(double denominator) =>
+        ScaleText.Text = "Scale " + Icono.Rendering.DrawingScale.Label(denominator);
+
     private readonly System.Windows.Threading.DispatcherTimer _messageTimer = new() { Interval = TimeSpan.FromSeconds(4) };
 
     /// <summary>Shows a short confirmation (saved, exported, ...) at the right end of the status bar; it fades out by itself.</summary>

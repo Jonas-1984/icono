@@ -30,6 +30,11 @@ public partial class MainWindow : Window
         _context.SelectedLayer = _context.Document.Layers[0];
 
         _context.StatusMessage += message => StatusBar.ShowMessage(message);
+        _context.ScaleChanged += denominator =>
+        {
+            StatusBar.SetScale(denominator);
+            UpdateScaleMenuMarkers();
+        };
         ToolPanel.Context = _context;
         CanvasHost.Context = _context;
         PropertiesPanel.Context = _context;
@@ -46,6 +51,8 @@ public partial class MainWindow : Window
 
         UpdateThemeMenuMarkers();
         InitializeDocumentTracking();
+        BuildScaleMenu();
+        StatusBar.SetScale(_context.Document.ScaleDenominator);
     }
 
     protected override void OnSourceInitialized(EventArgs e)
@@ -79,6 +86,10 @@ public partial class MainWindow : Window
     {
         var isMaximized = WindowState == WindowState.Maximized;
         RootChrome.CornerRadius = new CornerRadius(isMaximized ? 0 : 12);
+
+        // A maximized borderless window overhangs the screen by its resize frame: pull the content back in so no edge or corner is cut off.
+        RootChrome.Margin = isMaximized ? SystemParameters.WindowResizeBorderThickness : new Thickness(0);
+        NativeMethods.SetCornerPreference(new WindowInteropHelper(this).Handle, round: !isMaximized);
     }
 
     private void MainWindow_OnClosing(object? sender, CancelEventArgs e)
@@ -92,7 +103,7 @@ public partial class MainWindow : Window
 
     private void MainWindow_OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
-        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && e.Key is Key.S or Key.E or Key.N or Key.O)
+        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && e.Key is Key.S or Key.E or Key.N or Key.O or Key.P)
         {
             CanvasHost.CommitActiveTextEdit();
         }

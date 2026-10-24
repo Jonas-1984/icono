@@ -61,6 +61,7 @@ public sealed class Shape : ObservableObject
     private DimensionKind _dimKind = DimensionKind.Aligned;
     private DimensionRole _dimRole;
     private Guid? _dimTarget;
+    private Guid? _dimTarget2;
     private int _dimIndex;
     private double _dimOffset = 28;
     private double _dimAngle = -45;
@@ -74,6 +75,10 @@ public sealed class Shape : ObservableObject
     private double? _dimArrowSize;
     private double? _dimExtGap;
     private double? _dimExtOvershoot;
+    private DimensionArrowStyle _dimArrowStyle;
+    private double? _dimTextPosition;
+    private double _dimTextShift;
+    private IReadOnlyList<WallDimensionOverride>? _wallDimensionOverrides;
     private ShapeAnchor? _startAnchor;
     private ShapeAnchor? _endAnchor;
 
@@ -295,6 +300,9 @@ public sealed class Shape : ObservableObject
     /// <summary>The shape this dimension is attached to; it then moves and changes with it. Null = free.</summary>
     public Guid? DimTarget { get => _dimTarget; set => SetField(ref _dimTarget, value); }
 
+    /// <summary>The second object of a <see cref="DimensionRole.Gap"/> dimension.</summary>
+    public Guid? DimTarget2 { get => _dimTarget2; set => SetField(ref _dimTarget2, value); }
+
     /// <summary>Segment or corner number for <see cref="DimensionRole.Segment"/> / <see cref="DimensionRole.Corner"/>.</summary>
     public int DimIndex { get => _dimIndex; set => SetField(ref _dimIndex, value); }
 
@@ -336,4 +344,16 @@ public sealed class Shape : ObservableObject
 
     /// <summary>How far in px the extension lines run past the dimension line.</summary>
     public double? DimExtOvershoot { get => _dimExtOvershoot; set => SetField(ref _dimExtOvershoot, value); }
+
+    /// <summary>The mark at both ends of the dimension line: arrowhead, slash, backslash, double slash, dot ... or nothing.</summary>
+    public DimensionArrowStyle DimArrowStyle { get => _dimArrowStyle; set => SetField(ref _dimArrowStyle, value); }
+
+    /// <summary>Where the number sits along the dimension line, 0 (start) to 1 (end); null = the middle. For a wall: the default of its dimensions.</summary>
+    public double? DimTextPosition { get => _dimTextPosition; set => SetField(ref _dimTextPosition, value); }
+
+    /// <summary>How far in px the number is moved off the dimension line (positive = to the upper side of the text).</summary>
+    public double DimTextShift { get => _dimTextShift; set => SetField(ref _dimTextShift, value); }
+
+    /// <summary>Settings of single dimensions of a <see cref="ShapeKind.Wall"/> (one per segment, only where they differ).</summary>
+    public IReadOnlyList<WallDimensionOverride>? WallDimensionOverrides { get => _wallDimensionOverrides; set => SetField(ref _wallDimensionOverrides, value); }
 }

@@ -357,3 +357,252 @@ public class DimensionLookTests
         Assert.Contains(reds, r => r.EndsWith(",79") || r.EndsWith(",80") || r.EndsWith(",78"));
     }
 }
+
+public class WallDimensionSettingsTests
+{
+    private static Shape TwoSegmentWall()
+    {
+        var wall = new Shape
+        {
+            Kind = ShapeKind.Wall, X = 100, Y = 100, WallThickness = 10, DimOffset = 14,
+            Points = [new CorePoint(0, 0), new CorePoint(300, 0), new CorePoint(300, 200)],
+        };
+        PathBoundsCalculator.Recompute(wall);
+        return wall;
+    }
+
+    [Fact]
+    public void TheNumberCanSitAnywhereAlongTheLine()
+    {
+        var style = DimensionStyle.For(new Shape { Kind = ShapeKind.Wall });
+        var a = new SKPoint(0, 0);
+        var b = new SKPoint(400, 0);
+
+        var middle = DimensionRenderer.LayoutAligned(a, b, 20, style, "3.00 m");
+        var quarter = DimensionRenderer.LayoutAligned(a, b, 20, style, "3.00 m", textPosition: 0.25f);
+        var end = DimensionRenderer.LayoutAligned(a, b, 20, style, "3.00 m", textPosition: 1f);
+
+        Assert.Equal(200, middle.TextPosition.X, 1);
+        Assert.Equal(100, quarter.TextPosition.X, 1);
+        Assert.False(quarter.Lines.Contains(100f, 20f), "the line is broken where the number is");
+        Assert.True(end.TextPosition.X > 300, "at the end of the line the number sits above it, not in a gap that has no room");
+    }
+
+    [Fact]
+    public void ANumberLiftedOffTheLine_LeavesTheLineWhole()
+    {
+        var style = DimensionStyle.For(new Shape { Kind = ShapeKind.Wall });
+        var a = new SKPoint(0, 0);
+        var b = new SKPoint(400, 0);
+
+        var onLine = DimensionRenderer.LayoutAligned(a, b, 20, style, "3.00 m");
+        var lifted = DimensionRenderer.LayoutAligned(a, b, 20, style, "3.00 m", textShift: 18f);
+        var below = DimensionRenderer.LayoutAligned(a, b, 20, style, "3.00 m", textShift: -18f);
+
+        Assert.Equal(20, onLine.TextPosition.Y, 1);
+        Assert.True(lifted.TextPosition.Y < onLine.TextPosition.Y - 10, "above the line");
+        Assert.True(below.TextPosition.Y > onLine.TextPosition.Y + 10, "below the line");
+        Assert.True(lifted.Lines.Contains(200f, 20f) || lifted.Lines.Bounds.Width > 399, "the line runs through");
+    }
+
+    [Fact]
+    public void EachSegmentHasItsOwnDimension_ThatCanBeHidden()
+    {
+        var wall = TwoSegmentWall();
+        wall.WallDimensionOverrides = [new WallDimensionOverride(1, Hidden: true)];
+
+        Assert.NotNull(WallRenderer.LayoutSegmentDimension(wall, 0));
+        Assert.Null(WallRenderer.LayoutSegmentDimension(wall, 1));
+        Assert.Null(WallRenderer.LayoutSegmentDimension(wall, 5));
+    }
+
+    [Fact]
+    public void ADimensionOfOneSegment_CanHaveItsOwnDistanceSideTextAndNumberPosition()
+    {
+        var wall = TwoSegmentWall();
+        var normal = WallRenderer.LayoutSegmentDimension(wall, 0)!;
+
+        wall.WallDimensionOverrides =
+        [
+            new WallDimensionOverride(0, Offset: 60, Flip: true, TextPosition: 0.25, Text: "Wall A: <>"),
+        ];
+        var custom = WallRenderer.LayoutSegmentDimension(wall, 0)!;
+        var other = WallRenderer.LayoutSegmentDimension(wall, 1)!;
+
+        // the corner makes this wall count as an outline, so its numbers go on the outer (upper) side; flipped they go below, further away
+        Assert.True(normal.Lines.Bounds.Top < 100, "default: above the wall");
+        Assert.True(custom.Lines.Bounds.Bottom > 100, "flipped: below the wall");
+        Assert.True(custom.Lines.Bounds.Bottom - 100 > 100 - normal.Lines.Bounds.Top, "further away");
+        Assert.StartsWith("Wall A: ", custom.Text);
+        Assert.True(custom.TextPosition.X < 100 + 150, "the number is nearer the start of the wall");
+        // the other segment is untouched
+        Assert.Equal(WallRenderer.LayoutSegmentDimension(TwoSegmentWall(), 1)!.TextPosition, other.TextPosition);
+    }
+
+    [Fact]
+    public void WallWideNumberPosition_IsTheDefaultOfItsDimensions()
+    {
+        var wall = TwoSegmentWall();
+        wall.DimTextPosition = 0.2;
+
+        var first = WallRenderer.LayoutSegmentDimension(wall, 0)!;
+
+        Assert.True(first.TextPosition.X < 100 + 100, "20 percent along a 300 px segment");
+    }
+
+    [Fact]
+    public void Settings_SurviveUndoSnapshotsAndAreDroppedWhenAWallIsCut()
+    {
+        var wall = TwoSegmentWall();
+        wall.WallDimensionOverrides = [new WallDimensionOverride(0, Offset: 40, Text: "x")];
+        wall.DimTextShift = 7;
+
+        var copy = new Shape { Kind = ShapeKind.Wall };
+        ShapeSnapshot.Capture(wall).ApplyTo(copy);
+        Assert.Equal(40, copy.WallDimensionOverrides![0].Offset);
+        Assert.Equal(7, copy.DimTextShift);
+
+        var spot = WallEditor.Nearest(wall, 200, 100, vertexReach: 5)!.Value;
+        var parts = WallEditor.SplitAt(wall, spot);
+        Assert.All(parts, p => Assert.Null(p.WallDimensionOverrides));
+    }
+
+    [Fact]
+    public void OverridesAreSavedWithTheDocument()
+    {
+        var document = new Document { Width = 500, Height = 400 };
+        var layer = new Layer { Name = "L" };
+        var wall = TwoSegmentWall();
+        wall.DimTextPosition = 0.3;
+        wall.WallDimensionOverrides = [new WallDimensionOverride(1, Hidden: true), new WallDimensionOverride(0, Flip: true, Text: "Hall")];
+        layer.Shapes.Add(wall);
+        document.Layers.Add(layer);
+        var path = Path.Combine(Path.GetTempPath(), $"icono-walldims-{Guid.NewGuid():N}{Icono.IO.DocumentFile.Extension}");
+
+        var loaded = new Document();
+        try
+        {
+            Icono.IO.DocumentFile.Save(document, path);
+            Icono.IO.DocumentFile.Load(path).ApplyTo(loaded);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+
+        var back = loaded.Layers[0].Shapes[0];
+        Assert.Equal(0.3, back.DimTextPosition);
+        Assert.Equal(2, back.WallDimensionOverrides!.Count);
+        Assert.True(back.WallDimensionOverrides.First(o => o.Segment == 1).Hidden);
+        Assert.Equal("Hall", back.WallDimensionOverrides.First(o => o.Segment == 0).Text);
+    }
+}
+
+public class DimensionEndMarkTests
+{
+    private static Shape Horizontal(DimensionArrowStyle style)
+    {
+        var dim = new Shape { Kind = ShapeKind.Dimension, DimKind = DimensionKind.Horizontal, X = 20, Y = 20, DimArrowStyle = style };
+        DimensionBuilder.ApplyStyle(dim);
+        dim.DimArrowSize = 16;
+        dim.DimLineWidth = 2;
+        dim.Points = [new CorePoint(0, 0), new CorePoint(160, 0), new CorePoint(0, 40)];
+        PathBoundsCalculator.Recompute(dim);
+        return dim;
+    }
+
+    private static SKBitmap Render(Shape dim)
+    {
+        var bitmap = new SKBitmap(220, 100);
+        using var canvas = new SKCanvas(bitmap);
+        canvas.Clear(SKColors.White);
+        ShapeRenderer.Draw(canvas, dim);
+        return bitmap;
+    }
+
+    private static int Dark(SKBitmap bitmap, int x0, int y0, int x1, int y1)
+    {
+        var count = 0;
+        for (var y = y0; y <= y1; y++)
+        {
+            for (var x = x0; x <= x1; x++)
+            {
+                var p = bitmap.GetPixel(x, y);
+                if (p.Red < 200 && p.Green < 160)
+                {
+                    count++;
+                }
+            }
+        }
+
+        return count;
+    }
+
+    [Fact]
+    public void TheDefaultIsAFilledArrow_AndTheStyleIsSavedInSnapshots()
+    {
+        var dim = Horizontal(DimensionArrowStyle.Arrow);
+        Assert.Equal(DimensionArrowStyle.Arrow, new Shape { Kind = ShapeKind.Dimension }.DimArrowStyle);
+
+        dim.DimArrowStyle = DimensionArrowStyle.DoubleSlash;
+        var copy = new Shape { Kind = ShapeKind.Dimension };
+        ShapeSnapshot.Capture(dim).ApplyTo(copy);
+
+        Assert.Equal(DimensionArrowStyle.DoubleSlash, copy.DimArrowStyle);
+        Assert.Equal(DimensionArrowStyle.DoubleSlash, DimensionStyle.For(copy).ArrowStyle);
+    }
+
+    [Fact]
+    public void WithNoMark_TheLineJustEnds()
+    {
+        using var none = Render(Horizontal(DimensionArrowStyle.None));
+        using var arrow = Render(Horizontal(DimensionArrowStyle.Arrow));
+
+        // beside the line, at its left end (x = 20, y = 60): an arrowhead is wide there, nothing is
+        Assert.Equal(0, Dark(none, 22, 54, 34, 57));
+        Assert.True(Dark(arrow, 22, 54, 34, 57) > 3);
+    }
+
+    [Fact]
+    public void ASlashCrossesTheLine_ABackslashTheOtherWay()
+    {
+        using var slash = Render(Horizontal(DimensionArrowStyle.Slash));
+        using var back = Render(Horizontal(DimensionArrowStyle.Backslash));
+
+        // at the left end (x = 20, line at y = 60): "/" reaches up-right above the line and down-left below it
+        Assert.True(Dark(slash, 23, 52, 28, 56) > 0, "slash above the line goes to the right");
+        Assert.Equal(0, Dark(slash, 12, 52, 17, 56));
+        Assert.True(Dark(back, 12, 52, 17, 56) > 0, "backslash above the line goes to the left");
+        Assert.Equal(0, Dark(back, 23, 52, 28, 56));
+    }
+
+    [Theory]
+    [InlineData(DimensionArrowStyle.Arrow)]
+    [InlineData(DimensionArrowStyle.OpenArrow)]
+    [InlineData(DimensionArrowStyle.Slash)]
+    [InlineData(DimensionArrowStyle.Backslash)]
+    [InlineData(DimensionArrowStyle.DoubleSlash)]
+    [InlineData(DimensionArrowStyle.Dot)]
+    [InlineData(DimensionArrowStyle.OpenDot)]
+    [InlineData(DimensionArrowStyle.Box)]
+    [InlineData(DimensionArrowStyle.None)]
+    public void EveryStyleDraws(DimensionArrowStyle style)
+    {
+        using var bitmap = Render(Horizontal(style));
+
+        Assert.True(Dark(bitmap, 0, 0, 219, 99) > 50, "something is drawn");
+    }
+
+    [Fact]
+    public void TheStyleAlsoAppliesToTheDimensionsOfAWall()
+    {
+        var wall = new Shape
+        {
+            Kind = ShapeKind.Wall, X = 30, Y = 40, WallThickness = 10, DimOffset = 14, DimArrowStyle = DimensionArrowStyle.None,
+            Points = [new CorePoint(0, 0), new CorePoint(160, 0)],
+        };
+        PathBoundsCalculator.Recompute(wall);
+
+        Assert.Equal(DimensionArrowStyle.None, DimensionStyle.For(wall).ArrowStyle);
+    }
+}

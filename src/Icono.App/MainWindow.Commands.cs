@@ -378,6 +378,48 @@ public partial class MainWindow
 
     // ----- tools / insert / draw ------------------------------------------------------------------
 
+    // ----- Drawing scale (1:N) -----------------------------------------------------------------------
+
+    /// <summary>Fills Design > Scale with the preset scales (1:1, 1:20, 1:40, 1:50, 1:60 ...).</summary>
+    private void BuildScaleMenu()
+    {
+        ScaleMenuItem.Items.Clear();
+        foreach (var denominator in Document.ScalePresets)
+        {
+            var item = new MenuItem
+            {
+                Header = DrawingScale.PresetLabel(denominator),
+                Tag = denominator,
+                IsCheckable = false,
+            };
+            item.Click += ScaleMenuItem_OnClick;
+            ScaleMenuItem.Items.Add(item);
+        }
+
+        ScaleMenuItem.Items.Add(new Separator());
+        var custom = new MenuItem { Header = "Other scale..." };
+        custom.Click += (_, _) => PropertiesPanel.FocusCard("CANVAS SIZE");
+        ScaleMenuItem.Items.Add(custom);
+        UpdateScaleMenuMarkers();
+    }
+
+    private void ScaleMenuItem_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is MenuItem { Tag: double denominator })
+        {
+            _context.SetScale(denominator);
+        }
+    }
+
+    /// <summary>Puts the check dot on the active scale.</summary>
+    private void UpdateScaleMenuMarkers()
+    {
+        foreach (var item in ScaleMenuItem.Items.OfType<MenuItem>())
+        {
+            item.IsChecked = item.Tag is double d && Math.Abs(d - _context.Document.ScaleDenominator) < 1e-9;
+        }
+    }
+
     private void AddDimensionsMenuItem_OnClick(object sender, RoutedEventArgs e)
     {
         if (sender is MenuItem { Tag: string tag } && Enum.TryParse<DimensionSet>(tag, out var set))
@@ -420,6 +462,15 @@ public partial class MainWindow
                 break;
             case "WallCut":
                 _context.ActiveTool = ActiveTool.WallCut;
+                break;
+            case "Measure":
+                _context.ActiveTool = ActiveTool.Measure;
+                break;
+            case "MeasureGap":
+                _context.ActiveTool = ActiveTool.MeasureGap;
+                break;
+            case "Match":
+                _context.BeginMatch();
                 break;
             case "DimHorizontal":
             case "DimVertical":
@@ -534,6 +585,9 @@ public partial class MainWindow
                 }
 
                 return true;
+            case Key.P:
+                PrintDocument();
+                return true;
             case Key.E:
                 ExportMenuItem_OnClick(this, new RoutedEventArgs());
                 return true;
@@ -564,7 +618,10 @@ public partial class MainWindow
                 Key.G => "RegionColor",
                 Key.W => "Wall",
                 Key.D => "DimAligned",
+                Key.M => "Measure",
+                Key.B => "MeasureGap",
                 Key.X => "WallCut",
+                Key.Q => "Match",
                 Key.T => "Text",
                 _ => null,
             };
@@ -585,7 +642,14 @@ public partial class MainWindow
 
             if (e.Key == Key.Escape)
             {
-                if (_context.ActiveTool is ActiveTool.Eyedropper or ActiveTool.RegionColor or ActiveTool.PanZoom or ActiveTool.Shape)
+                // first Esc drops a measurement in progress, the next one leaves the tool
+                if (CanvasHost.CancelMeasure())
+                {
+                    return true;
+                }
+
+                if (_context.ActiveTool is ActiveTool.Eyedropper or ActiveTool.RegionColor or ActiveTool.PanZoom or ActiveTool.Shape
+                    or ActiveTool.Measure or ActiveTool.MeasureGap or ActiveTool.Match)
                 {
                     _context.ActiveTool = ActiveTool.Select;
                 }

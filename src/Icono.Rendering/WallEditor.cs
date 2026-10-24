@@ -118,6 +118,62 @@ public static class WallEditor
         return result;
     }
 
+    // ----- keeping the per-dimension settings on the right segments when points are added or removed ----------
+
+    /// <summary>After a point was inserted after vertex <paramref name="afterIndex"/> (that segment was split in two): the settings stay on
+    /// the first half, later segments move up by one.</summary>
+    public static void RemapOverridesAfterInsert(Shape wall, int afterIndex) =>
+        Remap(wall, i => i <= afterIndex ? i : i + 1);
+
+    /// <summary>Call BEFORE vertex <paramref name="removedIndex"/> is removed: the two segments next to it become one; the settings of the
+    /// segment that disappears are dropped and the later segments move down by one.</summary>
+    public static void RemapOverridesBeforeRemove(Shape wall, int removedIndex)
+    {
+        var count = wall.Points?.Count ?? 0;
+        var closed = wall.WallClosed && count >= 3;
+        Func<int, int?> map;
+        if (removedIndex == 0)
+        {
+            map = i => i == 0 ? null : i - 1;
+        }
+        else if (!closed && removedIndex == count - 1)
+        {
+            map = i => i == count - 2 ? null : i;
+        }
+        else
+        {
+            map = i => i < removedIndex ? i : i == removedIndex ? null : i - 1;
+        }
+
+        Remap(wall, map);
+    }
+
+    /// <summary>Drops settings of segments the wall no longer has (after opening a ring or removing points).</summary>
+    public static void PruneOverrides(Shape wall)
+    {
+        var segments = WallGeometry.Segments(wall).Count;
+        Remap(wall, i => i < segments ? i : null);
+    }
+
+    private static void Remap(Shape wall, Func<int, int?> map)
+    {
+        if (wall.WallDimensionOverrides is not { Count: > 0 } overrides)
+        {
+            return;
+        }
+
+        var moved = new List<WallDimensionOverride>();
+        foreach (var o in overrides)
+        {
+            if (map(o.Segment) is { } index)
+            {
+                moved.Add(o with { Segment = index });
+            }
+        }
+
+        wall.WallDimensionOverrides = moved.Count == 0 ? null : moved.OrderBy(o => o.Segment).ToList();
+    }
+
     /// <summary>Breaks the wall into one wall per segment (cut at every point).</summary>
     public static List<Shape> SplitAtAllPoints(Shape wall)
     {
@@ -140,6 +196,7 @@ public static class WallEditor
         var wall = new Shape { Kind = ShapeKind.Wall };
         ShapeSnapshot.Capture(template).ApplyTo(wall);
         wall.StartAnchor = null;
+        wall.WallDimensionOverrides = null; // segment numbers change when a wall is cut
         wall.EndAnchor = null;
         wall.WallClosed = closed;
         wall.Rotation = 0;

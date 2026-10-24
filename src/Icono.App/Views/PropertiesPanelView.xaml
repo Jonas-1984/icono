@@ -168,6 +168,27 @@
                                              Foreground="{DynamicResource MutedTextBrush}" FontSize="11" />
                             </StackPanel>
 
+                            <TextBlock Text="SCALE" Style="{StaticResource PanelLabelTextStyle}" />
+                            <Grid Margin="6,0,6,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="6" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="60" />
+                                </Grid.ColumnDefinitions>
+                                <ComboBox x:Name="DocumentScaleComboBox" Grid.Column="0" DisplayMemberPath="Label"
+                                          ToolTip="Drawing scale like in AutoCAD: at 1:50 one cm on the page stands for 50 cm in reality"
+                                          SelectionChanged="DocumentScaleComboBox_OnSelectionChanged" />
+                                <TextBlock Grid.Column="2" Text="1 :" Foreground="{DynamicResource MutedTextBrush}" FontSize="11"
+                                           VerticalAlignment="Center" Margin="0,0,4,0" />
+                                <TextBox x:Name="DocumentScaleTextBox" Grid.Column="4" TextAlignment="Center"
+                                         ToolTip="Any other scale: type N for 1:N"
+                                         LostFocus="DocumentScaleTextBox_OnLostFocus" KeyDown="WallTextBox_OnKeyDown" />
+                            </Grid>
+                            <TextBlock x:Name="DocumentScaleNote" Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap"
+                                       Margin="12,0,12,8" />
+
                             <Grid Margin="6,0,6,6">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -360,6 +381,8 @@
                                              Checked="ShapeSizeUnitRadio_OnChecked" Tag="In"
                                              Foreground="{DynamicResource MutedTextBrush}" FontSize="11" />
                             </StackPanel>
+                            <TextBlock x:Name="ShapeScaleNote" Foreground="{DynamicResource AccentBlueLightBrush}" FontSize="10.5" TextWrapping="Wrap"
+                                       Margin="12,0,12,6" Visibility="Collapsed" />
                             <Grid Margin="6,0,6,6">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -474,6 +497,21 @@
                                         Click="DimensionDetachButton_OnClick" />
                             </StackPanel>
 
+                            <StackPanel x:Name="DimensionSegmentSection">
+                                <TextBlock Text="WHICH DIMENSION" Style="{StaticResource PanelLabelTextStyle}" />
+                                <ComboBox x:Name="DimensionSegmentComboBox" Margin="6,0,6,6" DisplayMemberPath="Label"
+                                          ToolTip="Every wall segment has its own dimension. Pick one to change just that one."
+                                          SelectionChanged="DimensionSegmentComboBox_OnSelectionChanged" />
+                                <StackPanel x:Name="DimensionSegmentOptions">
+                                    <CheckBox x:Name="DimensionShowCheckBox" Content="SHOW THIS DIMENSION" Margin="6,2,6,4"
+                                              Foreground="{DynamicResource MutedTextBrush}" FontSize="11"
+                                              Checked="DimensionShowCheckBox_OnCheckedChanged" Unchecked="DimensionShowCheckBox_OnCheckedChanged" />
+                                    <CheckBox x:Name="DimensionFlipCheckBox" Content="OTHER SIDE OF THE WALL" Margin="6,2,6,6"
+                                              Foreground="{DynamicResource MutedTextBrush}" FontSize="11"
+                                              Checked="DimensionFlipCheckBox_OnCheckedChanged" Unchecked="DimensionFlipCheckBox_OnCheckedChanged" />
+                                </StackPanel>
+                            </StackPanel>
+
                             <StackPanel x:Name="DimensionUnitSection">
                                 <TextBlock Text="UNIT" Style="{StaticResource PanelLabelTextStyle}" />
                                 <ComboBox x:Name="DimensionUnitComboBox" Margin="6,0,6,6" DisplayMemberPath="Label"
@@ -496,6 +534,16 @@
                                          LostFocus="DimensionOffsetTextBox_OnLostFocus" KeyDown="WallTextBox_OnKeyDown" />
                             </StackPanel>
 
+                            <TextBlock Text="NUMBER POSITION ALONG THE LINE (%)" Style="{StaticResource PanelLabelTextStyle}" />
+                            <TextBox x:Name="DimensionTextPositionTextBox" Margin="6,0,6,6"
+                                     ToolTip="0 = at the start of the dimension line, 50 = in the middle, 100 = at the end"
+                                     LostFocus="DimensionTextPositionTextBox_OnLostFocus" KeyDown="WallTextBox_OnKeyDown" />
+
+                            <TextBlock Text="NUMBER DISTANCE FROM THE LINE (px)" Style="{StaticResource PanelLabelTextStyle}" />
+                            <TextBox x:Name="DimensionTextShiftTextBox" Margin="6,0,6,6"
+                                     ToolTip="0 = on the line. Positive values lift the number above the line, negative ones put it below."
+                                     LostFocus="DimensionTextShiftTextBox_OnLostFocus" KeyDown="WallTextBox_OnKeyDown" />
+
                             <TextBlock Text="NUMBER SIZE (px)" Style="{StaticResource PanelLabelTextStyle}" />
                             <TextBox x:Name="DimensionFontSizeTextBox" Tag="Font" Margin="6,0,6,6" ToolTip="Size of the written number"
                                      LostFocus="DimensionStyleTextBox_OnLostFocus" KeyDown="WallTextBox_OnKeyDown" />
@@ -503,6 +551,11 @@
                             <TextBlock Text="LINE WIDTH (px)" Style="{StaticResource PanelLabelTextStyle}" />
                             <TextBox x:Name="DimensionLineWidthTextBox" Tag="Line" Margin="6,0,6,6" ToolTip="Width of the dimension and extension lines"
                                      LostFocus="DimensionStyleTextBox_OnLostFocus" KeyDown="WallTextBox_OnKeyDown" />
+
+                            <TextBlock Text="END MARK (ARROW SHAPE)" Style="{StaticResource PanelLabelTextStyle}" />
+                            <ComboBox x:Name="DimensionArrowStyleComboBox" Margin="6,0,6,6" DisplayMemberPath="Label"
+                                      ToolTip="The mark at both ends of the dimension line: arrowhead, slash, backslash, double slash, dot ... or none"
+                                      SelectionChanged="DimensionArrowStyleComboBox_OnSelectionChanged" />
 
                             <TextBlock Text="ARROWHEAD SIZE (px)" Style="{StaticResource PanelLabelTextStyle}" />
                             <TextBox x:Name="DimensionArrowSizeTextBox" Tag="Arrow" Margin="6,0,6,6" ToolTip="Length of the arrowheads"

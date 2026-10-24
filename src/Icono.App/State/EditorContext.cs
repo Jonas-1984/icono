@@ -16,6 +16,9 @@ public enum ActiveTool
     RegionColor,
     Eyedropper,
     WallCut,
+    Measure,
+    MeasureGap,
+    Match,
 }
 
 /// <summary>
@@ -35,6 +38,9 @@ public sealed class EditorContext : ObservableObject
     private double _gridSize = 8;
 
     public Document Document { get; } = new();
+
+    /// <summary>Which snapping helpers the wall tool uses (corners, horizontal / vertical, alignment, equal length ...).</summary>
+    public WallSnapOptions WallSnap { get; } = new();
 
     public UndoManager UndoManager { get; } = new();
 
@@ -79,6 +85,31 @@ public sealed class EditorContext : ObservableObject
     /// <summary>A short message for the status bar (what was created, why nothing happened, ...).</summary>
     public event Action<string>? StatusMessage;
 
+    /// <summary>Shows a short message in the status bar.</summary>
+    public void Notify(string message) => StatusMessage?.Invoke(message);
+
+    /// <summary>Raised when the drawing scale of the document changed (new value 1:N).</summary>
+    public event Action<double>? ScaleChanged;
+
+    /// <summary>The unit new dimensions are written in; it follows what the user last chose for a dimension.</summary>
+    public LengthUnit DimensionUnit { get; set; } = LengthUnit.Centimeter;
+
+    private int? _wallSegmentHighlight;
+
+    /// <summary>The wall segment whose dimension is being edited in the DIMENSION card (it is highlighted on the canvas).</summary>
+    public int? WallSegmentHighlight
+    {
+        get => _wallSegmentHighlight;
+        set
+        {
+            if (_wallSegmentHighlight != value)
+            {
+                _wallSegmentHighlight = value;
+                Invalidated?.Invoke(this, EventArgs.Empty);
+            }
+        }
+    }
+
     /// <summary>Which kind of dimension the dimension tool places next.</summary>
     public DimensionKind CurrentDimensionKind { get => _currentDimensionKind; set => SetField(ref _currentDimensionKind, value); }
 
@@ -97,6 +128,7 @@ public sealed class EditorContext : ObservableObject
             _refreshingConnections = true;
             try
             {
+                DrawingScale.Denominator = Document.ScaleDenominator;
                 ConnectionRouter.Refresh(Document);
                 DimensionRouter.Refresh(Document);
             }
@@ -227,6 +259,7 @@ public sealed class EditorContext : ObservableObject
     /// first layer active.</summary>
     public void ResetAfterDocumentReplaced()
     {
+        ScaleChanged?.Invoke(Document.ScaleDenominator);
         UndoManager.Clear();
         SelectedShapes.Clear();
         SelectedLayer = Document.Layers.FirstOrDefault();
@@ -412,6 +445,29 @@ public sealed class EditorContext : ObservableObject
         RequestRedraw();
     }
 
+    /// <summary>Sets the drawing scale 1:N (for example 50 for 1:50) as an undo step. Shapes keep their size on the page; what changes
+    /// is the real-world size they stand for, so every measurement is written at the new scale.</summary>
+    public void SetScale(double denominator)
+    {
+        denominator = Math.Clamp(denominator, 0.01, 100000);
+        var before = Document.ScaleDenominator;
+        if (Math.Abs(before - denominator) < 1e-9)
+        {
+            return;
+        }
+
+        void Apply(double value)
+        {
+            Document.ScaleDenominator = value;
+            RequestRedraw();
+            ScaleChanged?.Invoke(value);
+        }
+
+        Apply(denominator);
+        UndoManager.Push(UndoableAction.ForValue(() => Apply(before), () => Apply(denominator)));
+        StatusMessage?.Invoke($"Scale {DrawingScale.Label(denominator)}");
+    }
+
     /// <summary>Creates the dimensions of every selected shape (width, height, diameter, angles, lengths ...) next to it, as ONE
     /// undo step. They stay attached: they follow the shape when it changes.</summary>
     public void AddDimensionsToSelection(DimensionSet set)
@@ -427,7 +483,7 @@ public sealed class EditorContext : ObservableObject
                 continue;
             }
 
-            foreach (var dim in DimensionBuilder.Create(target, set))
+            foreach (var dim in DimensionBuilder.Create(target, set, DimensionUnit))
             {
                 layer.Shapes.Insert(0, dim);
                 actions.Add(UndoableAction.ForInsert(layer.Shapes, dim, 0));
@@ -445,6 +501,69 @@ public sealed class EditorContext : ObservableObject
 
         UndoManager.Push(UndoableAction.Combine(actions));
         StatusMessage?.Invoke(created == 1 ? "1 dimension added." : $"{created} dimensions added.");
+        RequestRedraw();
+    }
+
+    // ----- Match: carry the look of one object over to others ---------------------------------------------------
+
+    private Shape? _matchSource;
+
+    /// <summary>The object whose look the Match tool paints onto the shapes that are clicked. Null until one was picked.</summary>
+    public Shape? MatchSource
+    {
+        get => _matchSource;
+        set
+        {
+            if (SetField(ref _matchSource, value))
+            {
+                Invalidated?.Invoke(this, EventArgs.Empty);
+            }
+        }
+    }
+
+    /// <summary>Which groups of properties the Match tool carries over.</summary>
+    public MatchAspects MatchAspects { get; set; } = MatchAspects.Look;
+
+    /// <summary>Starts the Match tool. A single selected shape becomes the source right away; otherwise the first click picks it.</summary>
+    public void BeginMatch()
+    {
+        MatchSource = SelectedShapes.Count == 1 ? SelectedShapes[0] : null;
+        ActiveTool = ActiveTool.Match;
+        StatusMessage?.Invoke(MatchSource is null
+            ? "Match: click the object whose look you want to copy."
+            : "Match: click the objects that should get this look. Ctrl+click picks another source, Esc ends.");
+    }
+
+    /// <summary>Paints the look of <see cref="MatchSource"/> onto <paramref name="target"/> as one undo step.</summary>
+    public void MatchTo(Shape target)
+    {
+        if (_matchSource is null || !Document.Layers.Any(l => l.Shapes.Contains(_matchSource)))
+        {
+            MatchSource = null;
+            StatusMessage?.Invoke("Match: the source object is gone - click a new one.");
+            return;
+        }
+
+        if (ReferenceEquals(target, _matchSource))
+        {
+            return;
+        }
+
+        if (target.Locked || Document.Layers.Any(l => l.Locked && l.Shapes.Contains(target)))
+        {
+            StatusMessage?.Invoke("Match: that object is locked.");
+            return;
+        }
+
+        var before = ShapeSnapshot.Capture(target);
+        if (!MatchProperties.Copy(_matchSource, target, MatchAspects))
+        {
+            StatusMessage?.Invoke("Match: nothing to change - the look is already the same, or the two objects have nothing in common.");
+            return;
+        }
+
+        UndoManager.Push(UndoableAction.ForPropertyEdit([target], [before], [ShapeSnapshot.Capture(target)]));
+        StatusMessage?.Invoke("Look matched.");
         RequestRedraw();
     }
 

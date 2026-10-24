@@ -148,6 +148,42 @@ public static class DimensionBuilder
         }
     }
 
+    /// <summary>The shortest distance between the outlines of two objects, as an aligned dimension from one nearest point to the other
+    /// (its line lies <paramref name="offset"/> to the side, 0 = on the gap itself).</summary>
+    public static Result? ComputeGap(Shape a, Shape b, double offset)
+    {
+        if (ReferenceEquals(a, b) || OutlineGeometry.ClosestPoints(a, b) is not { } closest)
+        {
+            return null;
+        }
+
+        var p1 = (X: (double)closest.A.X, Y: (double)closest.A.Y);
+        var p2 = (X: (double)closest.B.X, Y: (double)closest.B.Y);
+        var u = Unit(p1, p2);
+        var third = (p1.X + -u.Y * offset, p1.Y + u.X * offset);
+        return new Result(DimensionKind.Aligned, [p1, p2, third], closest.Distance);
+    }
+
+    /// <summary>A dimension for the gap between two objects (not yet in any layer); it stays attached to both.</summary>
+    public static Shape? CreateGap(Shape a, Shape b, LengthUnit unit = LengthUnit.Centimeter)
+    {
+        var computed = ComputeGap(a, b, 0);
+        if (computed is null)
+        {
+            return null;
+        }
+
+        var dim = new Shape { Kind = ShapeKind.Dimension };
+        ApplyStyle(dim);
+        dim.DimRole = DimensionRole.Gap;
+        dim.DimTarget = a.Id;
+        dim.DimTarget2 = b.Id;
+        dim.DimOffset = 0;
+        dim.DimUnit = unit;
+        Place(dim, computed);
+        return dim;
+    }
+
     /// <summary>A closed outline (a converted polygon) as opposed to an open line.</summary>
     public static bool IsClosed(Shape shape) =>
         shape.Points is { Count: >= 3 } && !ShapeGeometryFactory.IsStrokeOnly(shape.Kind) && shape.Kind != ShapeKind.Wall;

@@ -166,6 +166,9 @@ public partial class ToolPanelView : UserControl
             ActiveTool.DeletePoint => "DeletePoint",
             ActiveTool.RegionColor => "RegionColor",
             ActiveTool.WallCut => "WallCut",
+            ActiveTool.Measure => "Measure",
+            ActiveTool.MeasureGap => "MeasureGap",
+            ActiveTool.Match => "Match",
             ActiveTool.Shape or ActiveTool.PathDraw => dimensionTag ?? Context.SelectedShapeKind.ToString(),
             _ => null,
         };
@@ -232,6 +235,68 @@ public partial class ToolPanelView : UserControl
         }
     }
 
+    private void WallSnapCheckBox_OnClick(object sender, System.Windows.RoutedEventArgs e)
+    {
+        if (Context is null || sender is not CheckBox { Tag: string tag } box)
+        {
+            return;
+        }
+
+        var on = box.IsChecked == true;
+        var options = Context.WallSnap;
+        switch (tag)
+        {
+            case "Enabled": options.Enabled = on; break;
+            case "Axis": options.Axis = on; break;
+            case "Align": options.Align = on; break;
+            case "EqualLength": options.EqualLength = on; break;
+            case "Parallel": options.Parallel = on; break;
+            case "Endpoints": options.Endpoints = on; break;
+            case "Midpoints": options.Midpoints = on; break;
+            case "OnWall": options.OnWall = on; break;
+            case "AngleSteps": options.AngleSteps = on; break;
+            case "RoundLength": options.RoundLength = on; break;
+        }
+    }
+
+    private void WallRoundStepTextBox_OnLostFocus(object sender, System.Windows.RoutedEventArgs e)
+    {
+        if (Context is null)
+        {
+            return;
+        }
+
+        if (double.TryParse(WallRoundStepTextBox.Text.Trim().Replace(',', '.'), System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out var cm) && cm > 0.01)
+        {
+            Context.WallSnap.LengthStepPx = cm / 2.54 * 96;
+        }
+        else
+        {
+            WallRoundStepTextBox.Text = (Context.WallSnap.LengthStepPx / 96 * 2.54).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+        }
+    }
+
+    private void WallRoundStepTextBox_OnKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            WallRoundStepTextBox_OnLostFocus(sender, e);
+            Keyboard.ClearFocus();
+            e.Handled = true;
+        }
+    }
+
+    private void MatchAspectCheckBox_OnClick(object sender, System.Windows.RoutedEventArgs e)
+    {
+        if (Context is null || sender is not CheckBox { Tag: string tag } box || !Enum.TryParse<MatchAspects>(tag, out var aspect))
+        {
+            return;
+        }
+
+        Context.MatchAspects = box.IsChecked == true ? Context.MatchAspects | aspect : Context.MatchAspects & ~aspect;
+    }
+
     private void AddDimensions_OnClick(object sender, System.Windows.RoutedEventArgs e)
     {
         if (Context is not null && sender is FrameworkElement { Tag: string tag } && Enum.TryParse<DimensionSet>(tag, out var set))
@@ -266,6 +331,19 @@ public partial class ToolPanelView : UserControl
                 break;
             case "WallCut":
                 Context.ActiveTool = ActiveTool.WallCut;
+                break;
+            case "Measure":
+                Context.ActiveTool = ActiveTool.Measure;
+                break;
+            case "MeasureGap":
+                Context.ActiveTool = ActiveTool.MeasureGap;
+                break;
+            case "Match":
+                if (Context.ActiveTool != ActiveTool.Match)
+                {
+                    Context.BeginMatch();
+                }
+
                 break;
             case "DimHorizontal":
             case "DimVertical":

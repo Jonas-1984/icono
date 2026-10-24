@@ -69,6 +69,10 @@ public static class WallGeometry
 
         paint.GetFillPath(center, outline);
 
+        // The stroker leaves every corner as overlapping pieces (the inner side of a bend crosses itself), which showed up as lines
+        // running through the joint. Merging them into one outline makes the walls a single unit with clean mitred corners.
+        outline.Simplify();
+
         if (wall.Rotation != 0)
         {
             outline.Transform(SKMatrix.CreateRotationDegrees(
@@ -97,9 +101,9 @@ public static class WallGeometry
     }
 
     /// <summary>Writes a length (px at 96 DPI) in the given unit, e.g. "12.5 cm".</summary>
-    public static string FormatLength(double px, LengthUnit unit)
+    public static string FormatLength(double px, LengthUnit unit, double? scale = null)
     {
-        var inches = px / 96.0;
+        var inches = px * (scale ?? DrawingScale.Denominator) / 96.0;
         var culture = System.Globalization.CultureInfo.InvariantCulture;
         return unit switch
         {

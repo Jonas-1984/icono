@@ -7,21 +7,23 @@
              FocusVisualStyle="{x:Null}"
              ClipToBounds="True">
     <!-- The work area is a deep recessed well in the raised window surface -->
-    <Border Margin="8,4,8,8" CornerRadius="18" ClipToBounds="True"
+    <Border Margin="8,4,8,8" CornerRadius="0" ClipToBounds="True"
             Background="{DynamicResource CanvasSurroundBrush}"
             BorderBrush="{DynamicResource InsetEdgeBrush}" BorderThickness="1">
         <Grid>
-            <Border x:Name="CanvasFrame"
-                    Width="256" Height="256"
-                    BorderBrush="{DynamicResource GlossyBlueBrush}"
-                    BorderThickness="2"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center">
-                <Border.RenderTransform>
-                    <TranslateTransform x:Name="PanTransform" X="0" Y="0" />
-                </Border.RenderTransform>
-                <skia:SKElement x:Name="SkiaCanvas" PaintSurface="SkiaCanvas_OnPaintSurface" />
-            </Border>
+            <!-- A Canvas hands its child the full size it asks for: in a Grid cell a page larger than the work area (zoomed in)
+                 would get a layout clip fixed to the cell, and panning would drag that clip along and cut the page off. -->
+            <Canvas x:Name="CanvasFrameHost" SizeChanged="CanvasFrameHost_OnSizeChanged">
+                <Border x:Name="CanvasFrame"
+                        Width="256" Height="256"
+                        BorderBrush="{DynamicResource GlossyBlueBrush}"
+                        BorderThickness="2">
+                    <Border.RenderTransform>
+                        <TranslateTransform x:Name="PanTransform" X="0" Y="0" />
+                    </Border.RenderTransform>
+                    <skia:SKElement x:Name="SkiaCanvas" PaintSurface="SkiaCanvas_OnPaintSurface" />
+                </Border>
+            </Canvas>
             <Canvas x:Name="TextEditOverlay" IsHitTestVisible="True" />
             <Canvas x:Name="QuickPopupLayer" IsHitTestVisible="True">
                 <local:LineQuickPopup x:Name="LineQuickPopupControl" Visibility="Collapsed" />

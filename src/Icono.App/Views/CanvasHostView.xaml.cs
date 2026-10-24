@@ -96,6 +96,7 @@ public partial class CanvasHostView : UserControl
             if (_context is not null)
             {
                 _context.Invalidated -= OnContextInvalidated;
+                _context.PropertyChanged -= OnContextPropertyChanged;
                 _context.SelectedShapes.CollectionChanged -= OnSelectionChanged;
             }
 
@@ -104,6 +105,7 @@ public partial class CanvasHostView : UserControl
             if (_context is not null)
             {
                 _context.Invalidated += OnContextInvalidated;
+                _context.PropertyChanged += OnContextPropertyChanged;
                 _context.SelectedShapes.CollectionChanged += OnSelectionChanged;
             }
 
@@ -205,6 +207,7 @@ public partial class CanvasHostView : UserControl
         AddItem("Merge to One Shape", _context.MergeSelection, selected.Count >= 2 && allUnlocked);
         AddItem("Reflect", _context.ReflectSelection, selected.Count >= 1 && allUnlocked);
         AddItem("Offset...", ShowOffsetDialog, selected.Count >= 1 && allUnlocked);
+        AddItem("Match Properties (copy this look)", _context.BeginMatch, selected.Count == 1);
 
         if (selected.Count == 1 && !IsLocked(selected[0]) && selected[0].Points is null &&
             ShapeGeometryFactory.SupportsPointEditing(selected[0].Kind))
@@ -348,56 +351,374 @@ public partial class CanvasHostView : UserControl
         _ => 3,
     };
 
-    /// <summary>Spots a dimension can be pinned to: corners of lines and outlines, and the centre of a shape (for radius and
-    /// diameter). The shape connection points are handled by <see cref="TryAnchorSnap"/>.</summary>
+    // ----- Match: carry the look of one object over to others ----------------------------------------------------
+
+    /// <summary>The first click (or Ctrl+click) picks the source; every further click paints its look onto the object under the pointer.</summary>
+    private void HandleMatchClick(Point point)
+    {
+        if (_context is null || HitTestShape(point) is not { } hit)
+        {
+            return;
+        }
+
+        if (_context.MatchSource is null || Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+        {
+            _context.MatchSource = hit.Shape;
+            _context.Notify("Match: source picked - click the objects that should get its look. Esc ends.");
+            return;
+        }
+
+        _context.MatchTo(hit.Shape);
+    }
+
+    private void OnContextPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(EditorContext.ActiveTool))
+        {
+            Cursor = _context?.ActiveTool == ActiveTool.Match ? Cursors.Cross : null;
+        }
+    }
+
+    private void DrawMatchSource(SKCanvas canvas, float scaleX, float scaleY)
+    {
+        if (_context is { ActiveTool: ActiveTool.Match, MatchSource: { } source })
+        {
+            DrawSelectionOutline(canvas, source, scaleX, scaleY);
+        }
+    }
+
+    // ----- Measuring anywhere: snapping, the ruler and the gap between two objects ----------------------------
+
+    private static readonly SKColor MeasureOrange = new(0xF3, 0x9C, 0x12);
+
+    private MeasureSnap? _measureSnap;
+
+    private Point? _rulerStart;
+    private Point _rulerEnd;
+    private bool _rulerFrozen;
+
+    private Shape? _gapFirst;
+    private Shape? _gapSecond;
+    private Shape? _gapPreview;
+
+    /// <summary>Corner, middle, centre or edge of any shape or wall near the pointer (the point snaps there); remembered for the marker.</summary>
     private Point? SnapToMeasurable(Point point)
+    {
+        if (_context is null || WallSnappingSuspended)
+        {
+            _measureSnap = null;
+            return null;
+        }
+
+        _measureSnap = MeasureSnapper.Find(_context.Document, new SKPoint((float)point.X, (float)point.Y), AnchorSnapDip / Zoom);
+        return _measureSnap is null ? null : new Point(_measureSnap.Point.X, _measureSnap.Point.Y);
+    }
+
+    /// <summary>Cancels a ruler measurement or a half-made gap dimension. True when there was something to cancel.</summary>
+    public bool CancelMeasure()
+    {
+        var had = _rulerStart is not null || _gapFirst is not null;
+        _rulerStart = null;
+        _rulerFrozen = false;
+        ResetGap();
+        _measureSnap = null;
+        if (had)
+        {
+            SkiaCanvas.InvalidateVisual();
+        }
+
+        return had;
+    }
+
+    private void ResetGap()
+    {
+        _gapFirst = null;
+        _gapSecond = null;
+        _gapPreview = null;
+    }
+
+    private bool IsMeasureTool => _context?.ActiveTool is ActiveTool.Measure or ActiveTool.MeasureGap;
+
+    /// <summary>The ruler: first click sets the start, the second ends the measurement (it stays on screen until the next click or Esc).
+    /// Nothing is added to the drawing.</summary>
+    private void HandleRulerClick(Point point)
+    {
+        var snapped = SnapToMeasurable(point) ?? point;
+        if (_rulerStart is null || _rulerFrozen)
+        {
+            _rulerStart = snapped;
+            _rulerEnd = snapped;
+            _rulerFrozen = false;
+        }
+        else
+        {
+            _rulerEnd = RulerEnd(point);
+            _rulerFrozen = true;
+        }
+
+        SkiaCanvas.InvalidateVisual();
+    }
+
+    /// <summary>The measuring end: snapped to the drawing, or (Shift) locked horizontal / vertical from the start.</summary>
+    private Point RulerEnd(Point raw)
+    {
+        var snapped = SnapToMeasurable(raw) ?? raw;
+        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) && _rulerStart is { } start)
+        {
+            return Math.Abs(snapped.X - start.X) >= Math.Abs(snapped.Y - start.Y)
+                ? new Point(snapped.X, start.Y)
+                : new Point(start.X, snapped.Y);
+        }
+
+        return snapped;
+    }
+
+    private void UpdateRulerHover(Point raw)
+    {
+        if (_rulerStart is not null && !_rulerFrozen)
+        {
+            _rulerEnd = RulerEnd(raw);
+        }
+        else
+        {
+            SnapToMeasurable(raw);
+        }
+
+        SkiaCanvas.InvalidateVisual();
+    }
+
+    /// <summary>"Distance between objects": the first click picks an object, the second the object to measure to. The dimension joins
+    /// their nearest points and stays attached to both.</summary>
+    private void HandleGapClick(Point point)
+    {
+        if (_context is null)
+        {
+            return;
+        }
+
+        var hit = HitTestMeasurable(point, exclude: null);
+        if (hit is null)
+        {
+            return;
+        }
+
+        if (_gapFirst is null)
+        {
+            _gapFirst = hit;
+            _gapSecond = null;
+            SkiaCanvas.InvalidateVisual();
+            return;
+        }
+
+        if (ReferenceEquals(hit, _gapFirst))
+        {
+            return;
+        }
+
+        var dim = DimensionBuilder.CreateGap(_gapFirst, hit, _context.DimensionUnit);
+        _gapFirst = null;
+        _gapSecond = null;
+        if (dim is null)
+        {
+            return;
+        }
+
+        var layer = _context.SelectedLayer ?? _context.Document.Layers.FirstOrDefault();
+        if (layer is null)
+        {
+            return;
+        }
+
+        layer.Shapes.Insert(0, dim);
+        _context.UndoManager.Push(UndoableAction.ForInsert(layer.Shapes, dim, 0));
+        _context.RequestRedraw();
+        _context.Notify("Distance dimension added. It follows both objects.");
+    }
+
+    /// <summary>The object under the pointer that can be measured (walls are hit on their band, everything else on its frame or outline).</summary>
+    private Shape? HitTestMeasurable(Point point, Shape? exclude)
     {
         if (_context is null)
         {
             return null;
         }
 
-        var reach = AnchorSnapDip / Zoom;
-        Point? best = null;
-        var bestDistance = reach;
-
-        void Consider(double x, double y)
-        {
-            var distance = Math.Sqrt((point.X - x) * (point.X - x) + (point.Y - y) * (point.Y - y));
-            if (distance <= bestDistance)
-            {
-                bestDistance = distance;
-                best = new Point(x, y);
-            }
-        }
-
+        var tolerance = 6 / Zoom;
         foreach (var layer in _context.Document.Layers.Where(l => l.Visible))
         {
-            foreach (var shape in layer.Shapes.Where(s => s.Kind != ShapeKind.Dimension))
+            foreach (var shape in layer.Shapes)
             {
-                if (shape.Points is { Count: > 0 } points)
+                if (ReferenceEquals(shape, exclude) || !OutlineGeometry.IsMeasurable(shape))
                 {
-                    foreach (var p in points)
-                    {
-                        Consider(shape.X + p.X, shape.Y + p.Y);
-                    }
+                    continue;
                 }
-                else
+
+                if (shape.Kind == ShapeKind.Wall)
                 {
-                    var box = ShapeOutline.Box(shape);
-                    Consider(box.X + box.W / 2, box.Y + box.H / 2);
+                    var spot = WallEditor.Nearest(shape, point.X, point.Y, 0);
+                    if (spot is { } onWall && onWall.Distance <= shape.WallThickness / 2 + tolerance)
+                    {
+                        return shape;
+                    }
+
+                    continue;
+                }
+
+                if (OutlineGeometry.HitTest(shape, point.X, point.Y, tolerance))
+                {
+                    return shape;
                 }
             }
         }
 
-        return best;
+        return null;
+    }
+
+    private void UpdateGapHover(Point raw)
+    {
+        var hovered = HitTestMeasurable(raw, _gapFirst);
+        if (!ReferenceEquals(hovered, _gapSecond))
+        {
+            _gapSecond = hovered;
+            _gapPreview = hovered is null || _context is null || _gapFirst is null
+                ? null
+                : DimensionBuilder.CreateGap(_gapFirst, hovered, _context.DimensionUnit);
+        }
+
+        SkiaCanvas.InvalidateVisual();
+    }
+
+    private void DrawMeasure(SKCanvas canvas, float scaleX, float scaleY)
+    {
+        if (_context is null)
+        {
+            return;
+        }
+
+        var showSnap = _measureSnap is not null &&
+            (IsMeasureTool || (_isPathDrawing && _pendingPathShape is { Kind: ShapeKind.Dimension }) ||
+             (_context.ActiveTool == ActiveTool.PathDraw && _context.SelectedShapeKind == ShapeKind.Dimension));
+        if (showSnap)
+        {
+            var snap = _measureSnap!;
+            using var mark = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 2f, Color = MeasureOrange };
+            var x = snap.Point.X * scaleX;
+            var y = snap.Point.Y * scaleY;
+            switch (snap.Kind)
+            {
+                case MeasureSnapKind.Corner:
+                    canvas.DrawRect(x - 6, y - 6, 12, 12, mark);
+                    break;
+                case MeasureSnapKind.Midpoint:
+                {
+                    using var triangle = new SKPath();
+                    triangle.MoveTo(x, y - 7);
+                    triangle.LineTo(x + 7, y + 6);
+                    triangle.LineTo(x - 7, y + 6);
+                    triangle.Close();
+                    canvas.DrawPath(triangle, mark);
+                    break;
+                }
+
+                case MeasureSnapKind.Center:
+                    canvas.DrawCircle(x, y, 6, mark);
+                    canvas.DrawCircle(x, y, 1.5f, mark);
+                    break;
+                case MeasureSnapKind.Edge:
+                    canvas.DrawLine(x - 5, y - 5, x + 5, y + 5, mark);
+                    canvas.DrawLine(x - 5, y + 5, x + 5, y - 5, mark);
+                    break;
+                default:
+                    canvas.DrawCircle(x, y, 5, mark);
+                    break;
+            }
+
+            var name = snap.Kind switch
+            {
+                MeasureSnapKind.Corner => "corner",
+                MeasureSnapKind.Midpoint => "midpoint",
+                MeasureSnapKind.Center => "centre",
+                MeasureSnapKind.Edge => "on edge",
+                _ => "point",
+            };
+            DrawPill(canvas, name, x + 14, y - 30);
+        }
+
+        if (_context.ActiveTool == ActiveTool.Measure && _rulerStart is { } start)
+        {
+            var end = _rulerEnd;
+            var dx = end.X - start.X;
+            var dy = end.Y - start.Y;
+            var length = Math.Sqrt(dx * dx + dy * dy);
+            var angle = Geo.AngleDegrees(new SKPoint((float)start.X, (float)start.Y), new SKPoint((float)end.X, (float)end.Y));
+
+            using var line = new SKPaint
+            {
+                IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 1.8f, Color = MeasureOrange,
+                PathEffect = _rulerFrozen ? null : SKPathEffect.CreateDash([6, 4], 0),
+            };
+            var sx = (float)start.X * scaleX;
+            var sy = (float)start.Y * scaleY;
+            var ex = (float)end.X * scaleX;
+            var ey = (float)end.Y * scaleY;
+            canvas.DrawLine(sx, sy, ex, ey, line);
+
+            using var ends = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill, Color = MeasureOrange };
+            canvas.DrawCircle(sx, sy, 4, ends);
+            canvas.DrawCircle(ex, ey, 4, ends);
+
+            // the horizontal and vertical parts, so each distance can be read
+            using var parts = new SKPaint
+            {
+                IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 1f, Color = new SKColor(0xF3, 0x9C, 0x12, 140),
+                PathEffect = SKPathEffect.CreateDash([3, 4], 0),
+            };
+            canvas.DrawLine(sx, sy, ex, sy, parts);
+            canvas.DrawLine(ex, sy, ex, ey, parts);
+
+            var label = $"{DimensionRenderer.FormatAuto(length)}   ΔX {DimensionRenderer.FormatAuto(Math.Abs(dx))}   ΔY {DimensionRenderer.FormatAuto(Math.Abs(dy))}   {angle:0.#}°";
+            DrawPill(canvas, label, (sx + ex) / 2 + 12, (sy + ey) / 2 - 34);
+        }
+
+        if (_context.ActiveTool == ActiveTool.MeasureGap && _gapFirst is { } first)
+        {
+            // the first object is outlined; with the pointer over a second one the gap is previewed
+            using var outline = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 2.5f, Color = new SKColor(0xF3, 0x9C, 0x12, 200) };
+            DrawOutlineOf(canvas, first, scaleX, scaleY, outline);
+
+            if (_gapSecond is { } second && _gapPreview is { } preview)
+            {
+                canvas.Save();
+                canvas.Scale(scaleX, scaleY); // the preview is in document units
+                DimensionRenderer.Draw(canvas, preview, 255);
+                canvas.Restore();
+                DrawOutlineOf(canvas, second, scaleX, scaleY, outline);
+            }
+        }
+    }
+
+    private static void DrawOutlineOf(SKCanvas canvas, Shape shape, float scaleX, float scaleY, SKPaint paint)
+    {
+        using var path = ShapeGeometryFactory.Build(shape);
+        path.Transform(SKMatrix.CreateScale(scaleX, scaleY));
+        canvas.DrawPath(path, paint);
+    }
+
+    private static void DrawPill(SKCanvas canvas, string text, float x, float y)
+    {
+        using var textPaint = new SKPaint { IsAntialias = true, Color = SKColors.White };
+        using var font = new SKFont(FontCache.Get("Segoe UI"), 12);
+        var width = font.MeasureText(text);
+        var rect = new SKRect(x, y, x + width + 14, y + 22);
+        using var back = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill, Color = new SKColor(0x1B, 0x23, 0x32, 225) };
+        canvas.DrawRoundRect(rect, 7, 7, back);
+        canvas.DrawText(text, rect.Left + 7, rect.Bottom - 6, font, textPaint);
     }
 
     // ----- Walls (drawing, closing, cutting) ----------------------------------------------------------------
 
     private bool _wallClosePreview;
     private WallEditor.Spot? _cutHover;
-    private Shape? _cutHoverWall;
 
     private (double X, double Y) WallStart(Shape wall) => (wall.X + wall.Points![0].X, wall.Y + wall.Points[0].Y);
 
@@ -413,47 +734,51 @@ public partial class CanvasHostView : UserControl
         return Math.Sqrt((point.X - sx) * (point.X - sx) + (point.Y - sy) * (point.Y - sy)) <= AnchorSnapDip * 1.4 / Zoom;
     }
 
-    /// <summary>The end point of another wall close to <paramref name="point"/>, so walls meet exactly at their corners.</summary>
-    private Point? SnapToWallPoint(Point point, Shape? exclude)
+    private WallSnapResult? _wallSnap;
+
+    private bool WallSnappingSuspended => Keyboard.Modifiers.HasFlag(ModifierKeys.Alt);
+
+    /// <summary>Runs the wall snapping for the pointer; <paramref name="previous"/> is the last placed point (null for the first one).</summary>
+    private WallSnapResult RunWallSnap(Point raw, IReadOnlyList<SKPoint> placed)
     {
-        if (_context is null)
-        {
-            return null;
-        }
-
-        var reach = AnchorSnapDip / Zoom;
-        Point? best = null;
-        var bestDistance = reach;
-        foreach (var layer in _context.Document.Layers.Where(l => l.Visible))
-        {
-            foreach (var other in layer.Shapes.Where(s => s.Kind == ShapeKind.Wall && !ReferenceEquals(s, exclude) && s.Points is not null))
-            {
-                foreach (var p in WallGeometry.AbsolutePoints(other))
-                {
-                    var distance = Math.Sqrt((point.X - p.X) * (point.X - p.X) + (point.Y - p.Y) * (point.Y - p.Y));
-                    if (distance <= bestDistance)
-                    {
-                        bestDistance = distance;
-                        best = new Point(p.X, p.Y);
-                    }
-                }
-            }
-        }
-
-        return best;
+        var options = _context!.WallSnap;
+        SKPoint? previous = placed.Count > 0 ? placed[^1] : null;
+        var suspended = WallSnappingSuspended;
+        var forceAxis = !suspended && Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
+        var snapOptions = suspended ? new WallSnapOptions { Enabled = false } : options;
+        return WallSnapper.Snap(
+            new SKPoint((float)raw.X, (float)raw.Y), previous, placed, _context.Document, snapOptions, AnchorSnapDip / Zoom, forceAxis);
     }
 
-    /// <summary>While drawing a wall: jump to the start point when it is near (a click there closes the room), else to a corner of another wall.</summary>
-    private Point SnapWallDrawPoint(Point point, Shape wall)
+    /// <summary>While drawing a wall: jump to the start point when it is near (a click there closes the room), otherwise apply
+    /// the wall snapping (corners, axis, alignment, equal length ...). Falls back to <paramref name="fallback"/> (grid, connection points).</summary>
+    private Point SnapWallDrawPoint(Point raw, Point fallback, Shape wall)
     {
-        if (IsNearWallStart(point))
+        if (IsNearWallStart(raw))
         {
             _wallClosePreview = true;
+            _wallSnap = null;
             var (sx, sy) = WallStart(wall);
             return new Point(sx, sy);
         }
 
-        return SnapToWallPoint(point, wall) ?? point;
+        var placed = WallGeometry.AbsolutePoints(wall);
+        if (placed.Count > 0)
+        {
+            placed.RemoveAt(placed.Count - 1); // the moving ghost point
+        }
+
+        var result = RunWallSnap(raw, placed);
+        _wallSnap = result;
+        return result.Snapped ? new Point(result.Point.X, result.Point.Y) : fallback;
+    }
+
+    /// <summary>The first point of a wall: corners of other walls, midpoints, alignment.</summary>
+    private Point SnapWallFirstPoint(Point raw)
+    {
+        var result = RunWallSnap(raw, []);
+        _wallSnap = result;
+        return result.Snapped ? new Point(result.Point.X, result.Point.Y) : raw;
     }
 
     /// <summary>Finds the wall under the pointer (front-most first) and the place on its centre line that would be cut.</summary>
@@ -499,11 +824,117 @@ public partial class CanvasHostView : UserControl
 
         _context.ReplaceShape(hit.Wall, parts);
         _cutHover = null;
-        _cutHoverWall = null;
+    }
+
+    /// <summary>Marks the wall segment whose dimension is being edited in the DIMENSION card.</summary>
+    private void DrawDimensionHighlight(SKCanvas canvas, float scaleX, float scaleY)
+    {
+        if (_context is not { WallSegmentHighlight: { } index } || _context.SelectedShapes.Count != 1 || _context.SelectedShapes[0] is not { Kind: ShapeKind.Wall } wall)
+        {
+            return;
+        }
+
+        var segments = WallGeometry.Segments(wall);
+        if (index < 0 || index >= segments.Count)
+        {
+            return;
+        }
+
+        var (from, to) = segments[index];
+        using var paint = new SKPaint
+        {
+            IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeCap = SKStrokeCap.Butt,
+            StrokeWidth = (float)(wall.WallThickness + 8) * scaleX, Color = new SKColor(0xF3, 0x9C, 0x12, 110),
+        };
+        canvas.DrawLine(from.X * scaleX, from.Y * scaleY, to.X * scaleX, to.Y * scaleY, paint);
+    }
+
+    /// <summary>Guide lines, the snapped spot and a small label (length, angle, what it snapped to) while a wall is drawn.</summary>
+    private void DrawWallSnap(SKCanvas canvas, float scaleX, float scaleY)
+    {
+        if (_wallSnap is not { } snap || _context is null)
+        {
+            return;
+        }
+
+        var drawing = _isPathDrawing && _pendingPathShape is { Kind: ShapeKind.Wall };
+        var hovering = !_isPathDrawing && _context.ActiveTool == ActiveTool.PathDraw && _context.SelectedShapeKind == ShapeKind.Wall;
+        if (!drawing && !hovering)
+        {
+            return;
+        }
+
+        var blue = new SKColor(0x5A, 0xB0, 0xFF);
+        var green = new SKColor(0x2E, 0xCC, 0x71);
+        var orange = MeasureOrange;
+
+        foreach (var guide in snap.Guides)
+        {
+            var color = guide.Kind switch
+            {
+                SnapKind.Align => green,
+                SnapKind.EqualLength or SnapKind.RoundLength => orange,
+                _ => blue,
+            };
+            using var line = new SKPaint
+            {
+                IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 1.2f, Color = color.WithAlpha(210),
+                PathEffect = SKPathEffect.CreateDash([5, 4], 0),
+            };
+            canvas.DrawLine(guide.From.X * scaleX, guide.From.Y * scaleY, guide.To.X * scaleX, guide.To.Y * scaleY, line);
+
+            if (guide.Kind is SnapKind.EqualLength or SnapKind.RoundLength)
+            {
+                // small end ticks mark the length that was matched
+                using var tick = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 2f, Color = color };
+                var dx = guide.To.X - guide.From.X;
+                var dy = guide.To.Y - guide.From.Y;
+                var l = MathF.Sqrt(dx * dx + dy * dy);
+                if (l > 1e-3f)
+                {
+                    var nx = -dy / l * 6;
+                    var ny = dx / l * 6;
+                    canvas.DrawLine(guide.To.X * scaleX - nx, guide.To.Y * scaleY - ny, guide.To.X * scaleX + nx, guide.To.Y * scaleY + ny, tick);
+                }
+            }
+        }
+
+        var px = snap.Point.X * scaleX;
+        var py = snap.Point.Y * scaleY;
+        if (snap.PointKind is SnapKind.Corner or SnapKind.Midpoint or SnapKind.OnWall)
+        {
+            using var mark = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 2f, Color = snap.PointKind == SnapKind.Corner ? orange : green };
+            if (snap.PointKind == SnapKind.Corner)
+            {
+                canvas.DrawRect(px - 6, py - 6, 12, 12, mark);
+            }
+            else if (snap.PointKind == SnapKind.Midpoint)
+            {
+                using var triangle = new SKPath();
+                triangle.MoveTo(px, py - 7);
+                triangle.LineTo(px + 7, py + 6);
+                triangle.LineTo(px - 7, py + 6);
+                triangle.Close();
+                canvas.DrawPath(triangle, mark);
+            }
+            else
+            {
+                canvas.DrawCircle(px, py, 6, mark);
+                canvas.DrawLine(px - 4, py - 4, px + 4, py + 4, mark);
+                canvas.DrawLine(px - 4, py + 4, px + 4, py - 4, mark);
+            }
+        }
+
+        if (snap.Label.Length > 0)
+        {
+            DrawPill(canvas, snap.Label, px + 14, py - 34);
+        }
     }
 
     private void DrawWallHints(SKCanvas canvas, float scaleX, float scaleY)
     {
+        DrawDimensionHighlight(canvas, scaleX, scaleY);
+        DrawWallSnap(canvas, scaleX, scaleY);
         using var ring = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 1.8f, Color = AccentColor };
         using var hot = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill, Color = AccentColor };
 
@@ -561,10 +992,13 @@ public partial class CanvasHostView : UserControl
 
     private void ClearAnchorProbe()
     {
-        if (_anchorProbe is null && _snappedAnchor is null)
+        if (_anchorProbe is null && _snappedAnchor is null && _wallSnap is null && _measureSnap is null)
         {
             return;
         }
+
+        _wallSnap = null;
+        _measureSnap = null;
 
         _anchorProbe = null;
         _snappedAnchor = null;
@@ -672,6 +1106,16 @@ public partial class CanvasHostView : UserControl
 
         CanvasFrame.Width = _context.Document.Width * Zoom;
         CanvasFrame.Height = _context.Document.Height * Zoom;
+        CenterCanvasFrame();
+    }
+
+    private void CanvasFrameHost_OnSizeChanged(object sender, SizeChangedEventArgs e) => CenterCanvasFrame();
+
+    /// <summary>The page sits in the middle of the work area (off-centre, in negative space, when it is larger than the area).</summary>
+    private void CenterCanvasFrame()
+    {
+        Canvas.SetLeft(CanvasFrame, (CanvasFrameHost.ActualWidth - CanvasFrame.Width) / 2);
+        Canvas.SetTop(CanvasFrame, (CanvasFrameHost.ActualHeight - CanvasFrame.Height) / 2);
     }
 
     /// <summary>Converts a point in this control's own DIP space (e.g. from
@@ -717,6 +1161,8 @@ public partial class CanvasHostView : UserControl
         DrawSelectionChrome(canvas, scaleX, scaleY);
         DrawConnectionPoints(canvas, scaleX, scaleY);
         DrawWallHints(canvas, scaleX, scaleY);
+        DrawMeasure(canvas, scaleX, scaleY);
+        DrawMatchSource(canvas, scaleX, scaleY);
     }
 
     private void DrawGrid(SKCanvas canvas, int width, int height)
@@ -1242,6 +1688,18 @@ public partial class CanvasHostView : UserControl
             return;
         }
 
+        if (_context.ActiveTool == ActiveTool.Measure)
+        {
+            HandleRulerClick(point);
+            return;
+        }
+
+        if (_context.ActiveTool == ActiveTool.MeasureGap)
+        {
+            HandleGapClick(point);
+            return;
+        }
+
         // Dedicated Add Point / Delete Point tools — same hit-testing as the Select tool's
         // built-in midpoint-click-to-add / Ctrl+click-to-delete gestures (see below), just
         // exposed as their own explicit modes so neither needs a modifier key or the Select
@@ -1280,6 +1738,12 @@ public partial class CanvasHostView : UserControl
         if (_context.ActiveTool == ActiveTool.Eyedropper)
         {
             PickColorAt(point);
+            return;
+        }
+
+        if (_context.ActiveTool == ActiveTool.Match)
+        {
+            HandleMatchClick(point);
             return;
         }
 
@@ -1835,7 +2299,7 @@ public partial class CanvasHostView : UserControl
             point = TryAnchorSnap(point, null) ?? point;
             if (_context.SelectedShapeKind == ShapeKind.Wall)
             {
-                point = SnapToWallPoint(point, null) ?? point;
+                point = SnapWallFirstPoint(point);
             }
             else if (_context.SelectedShapeKind == ShapeKind.Dimension)
             {
@@ -1858,6 +2322,7 @@ public partial class CanvasHostView : UserControl
             {
                 DimensionBuilder.ApplyStyle(_pendingPathShape);
                 _pendingPathShape.DimKind = _context.CurrentDimensionKind;
+                _pendingPathShape.DimUnit = _context.DimensionUnit;
             }
 
             if (_pendingPathShape.Kind == ShapeKind.Wall)
@@ -1911,6 +2376,11 @@ public partial class CanvasHostView : UserControl
         var list = shape.Points!.ToList();
         list.Insert(afterIndex + 1, new CorePoint(docPoint.X - shape.X, docPoint.Y - shape.Y));
         shape.Points = list;
+        if (shape.Kind == ShapeKind.Wall)
+        {
+            WallEditor.RemapOverridesAfterInsert(shape, afterIndex);
+        }
+
         PathBoundsCalculator.Recompute(shape);
 
         var after = ShapeSnapshot.Capture(shape);
@@ -1927,6 +2397,11 @@ public partial class CanvasHostView : UserControl
 
         var before = ShapeSnapshot.Capture(shape);
         var list = shape.Points!.ToList();
+        if (shape.Kind == ShapeKind.Wall)
+        {
+            WallEditor.RemapOverridesBeforeRemove(shape, index);
+        }
+
         list.RemoveAt(index);
         shape.Points = list;
         PathBoundsCalculator.Recompute(shape);
@@ -2371,11 +2846,7 @@ public partial class CanvasHostView : UserControl
         var italic = existingShape?.TextItalic ?? false;
         var fontSize = existingShape?.TextFontSize ?? 24;
 
-        using var typeface = SKTypeface.FromFamilyName("Segoe UI",
-            bold ? SKFontStyleWeight.Bold : SKFontStyleWeight.Normal,
-            SKFontStyleWidth.Normal,
-            italic ? SKFontStyleSlant.Italic : SKFontStyleSlant.Upright);
-        using var font = new SKFont(typeface, (float)fontSize);
+        using var font = new SKFont(FontCache.Get("Segoe UI", bold, italic), (float)fontSize);
         using var measurePaint = new SKPaint();
         font.MeasureText(text, out var bounds, measurePaint);
         var width = Math.Max(20, bounds.Width + 8);
@@ -2440,18 +2911,25 @@ public partial class CanvasHostView : UserControl
 
     private void OnMouseMove(object sender, MouseEventArgs e)
     {
+        if (_context?.ActiveTool == ActiveTool.Measure && !IsInsideQuickPopup(e.OriginalSource))
+        {
+            UpdateRulerHover(ToDocumentSpace(e.GetPosition(SkiaCanvas)));
+        }
+        else if (_context?.ActiveTool == ActiveTool.MeasureGap && !IsInsideQuickPopup(e.OriginalSource))
+        {
+            UpdateGapHover(ToDocumentSpace(e.GetPosition(SkiaCanvas)));
+        }
+
         if (_context?.ActiveTool == ActiveTool.WallCut && !IsInsideQuickPopup(e.OriginalSource))
         {
             var hover = FindWallCutSpot(ToDocumentSpace(e.GetPosition(SkiaCanvas)));
             _cutHover = hover?.Spot;
-            _cutHoverWall = hover?.Wall;
             SkiaCanvas.InvalidateVisual();
         }
         else if (_cutHover is not null)
         {
             _cutHover = null;
-            _cutHoverWall = null;
-            SkiaCanvas.InvalidateVisual();
+                SkiaCanvas.InvalidateVisual();
         }
 
         if (IsLineToolActive && !_isPlacing && !_isPathDrawing && !IsInsideQuickPopup(e.OriginalSource))
@@ -2460,6 +2938,15 @@ public partial class CanvasHostView : UserControl
             var hoverPoint = ToDocumentSpace(e.GetPosition(SkiaCanvas));
             var before = _snappedAnchor;
             TryAnchorSnap(hoverPoint, null);
+            if (_context?.SelectedShapeKind == ShapeKind.Wall)
+            {
+                _wallSnap = RunWallSnap(hoverPoint, []);
+            }
+            else if (_context?.SelectedShapeKind == ShapeKind.Dimension)
+            {
+                SnapToMeasurable(hoverPoint);
+            }
+
             if (before != _snappedAnchor || _anchorProbe is not null)
             {
                 SkiaCanvas.InvalidateVisual();
@@ -2514,15 +3001,16 @@ public partial class CanvasHostView : UserControl
         if (_isPathDrawing && _pendingPathShape is not null)
         {
             var point = ToDocumentSpace(e.GetPosition(SkiaCanvas));
+            var rawPoint = point;
             point = TryAnchorSnap(point, null) ?? new Point(SnapIfEnabled(point.X), SnapIfEnabled(point.Y));
             _wallClosePreview = false;
             if (_pendingPathShape.Kind == ShapeKind.Wall)
             {
-                point = SnapWallDrawPoint(point, _pendingPathShape);
+                point = SnapWallDrawPoint(rawPoint, point, _pendingPathShape);
             }
-            else if (_pendingPathShape.Kind == ShapeKind.Dimension && _snappedAnchor is null)
+            else if (_pendingPathShape.Kind == ShapeKind.Dimension)
             {
-                point = SnapToMeasurable(point) ?? point;
+                point = SnapToMeasurable(rawPoint) ?? point;
             }
 
             var list = _pendingPathShape.Points!.ToList();

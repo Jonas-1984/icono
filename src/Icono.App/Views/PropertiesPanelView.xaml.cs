@@ -97,6 +97,7 @@ public partial class PropertiesPanelView : UserControl
             if (_context is not null)
             {
                 _context.PropertyChanged -= OnContextPropertyChanged;
+                _context.ScaleChanged -= OnScaleChanged;
                 _context.Document.Layers.CollectionChanged -= OnDocumentLayersChanged;
             }
 
@@ -105,6 +106,7 @@ public partial class PropertiesPanelView : UserControl
             if (_context is not null)
             {
                 _context.PropertyChanged += OnContextPropertyChanged;
+                _context.ScaleChanged += OnScaleChanged;
                 _context.Document.Layers.CollectionChanged += OnDocumentLayersChanged;
                 RefreshDocumentSettings();
             }
@@ -130,6 +132,7 @@ public partial class PropertiesPanelView : UserControl
         _syncingDocumentSettings = true;
         try
         {
+            SyncScaleControls();
             var document = _context.Document;
             BgTransparentRadio.IsChecked = document.BackgroundMode == BackgroundMode.Transparent;
             BgSolidRadio.IsChecked = document.BackgroundMode == BackgroundMode.SolidColor;
@@ -301,6 +304,7 @@ public partial class PropertiesPanelView : UserControl
         WallHatchComboBox.ItemsSource = HatchOptions;
         WallUnitComboBox.ItemsSource = WallUnitOptions;
         DimensionUnitComboBox.ItemsSource = WallUnitOptions;
+        DimensionArrowStyleComboBox.ItemsSource = ArrowStyleOptions;
         WallHatchColorPicker.ColorChanged += WallHatchColorPicker_OnColorChanged;
 
         // Every font Windows currently has installed — lets the user pick any of their own fonts
@@ -401,10 +405,29 @@ public partial class PropertiesPanelView : UserControl
         RefreshControlsFromShape();
     }
 
+    private bool _shapeRefreshQueued;
+
+    /// <summary>A drag changes several properties of the shape per mouse move (X, Y, points, size ...); the panel is brought up to date
+    /// once per frame instead of once per property.</summary>
     private void OnBoundShapePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        RefreshControlsFromShape();
-        RefreshForSelection();
+        if (_shapeRefreshQueued)
+        {
+            return;
+        }
+
+        _shapeRefreshQueued = true;
+        Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Render, () =>
+        {
+            _shapeRefreshQueued = false;
+            if (_boundShape is null)
+            {
+                return;
+            }
+
+            RefreshControlsFromShape();
+            RefreshForSelection();
+        });
     }
 
     private void RefreshControlsFromShape()
@@ -429,10 +452,11 @@ public partial class PropertiesPanelView : UserControl
     private void RefreshControlsFromShapeCore(Shape shape)
     {
         var drawn = ShapeOutline.Box(shape);
-        XTextBox.Text = FormatInUnit(drawn.X, _shapeSizeUnit);
-        YTextBox.Text = FormatInUnit(drawn.Y, _shapeSizeUnit);
-        WidthTextBox.Text = FormatInUnit(drawn.W, _shapeSizeUnit);
-        HeightTextBox.Text = FormatInUnit(drawn.H, _shapeSizeUnit);
+        XTextBox.Text = FormatReal(drawn.X);
+        YTextBox.Text = FormatReal(drawn.Y);
+        WidthTextBox.Text = FormatReal(drawn.W);
+        HeightTextBox.Text = FormatReal(drawn.H);
+        UpdateScaleNote();
         RotationTextBox.Text = shape.Rotation.ToString("0", CultureInfo.InvariantCulture);
 
         RefreshLineControls(shape);
@@ -670,7 +694,7 @@ public partial class PropertiesPanelView : UserControl
 
         // Untouched box (focus just left it): keep the exact stored value instead of the rounded text.
         var text = textBox.Text.Trim().Replace(',', '.');
-        if (text == FormatInUnit(shownPx, _shapeSizeUnit))
+        if (text == FormatReal(shownPx))
         {
             return;
         }
@@ -681,7 +705,7 @@ public partial class PropertiesPanelView : UserControl
             return;
         }
 
-        var value = Math.Max(0, UnitToPx(typed, _shapeSizeUnit));
+        var value = Math.Max(0, RealToPx(typed));
 
         var before = ShapeSnapshot.Capture(_boundShape);
 
@@ -1056,7 +1080,7 @@ public partial class PropertiesPanelView : UserControl
         }
 
         WallThicknessLabel.Text = $"THICKNESS ({UnitName(_shapeSizeUnit)})";
-        WallThicknessTextBox.Text = FormatInUnit(shape.WallThickness, _shapeSizeUnit);
+        WallThicknessTextBox.Text = FormatReal(shape.WallThickness);
         WallClosedCheckBox.IsChecked = shape.WallClosed;
         WallHatchComboBox.SelectedItem = HatchOptions.First(o => o.Value == shape.Hatch);
         WallHatchSpacingSlider.Value = Math.Clamp(shape.HatchSpacing, WallHatchSpacingSlider.Minimum, WallHatchSpacingSlider.Maximum);
@@ -1092,23 +1116,75 @@ public partial class PropertiesPanelView : UserControl
                 : "Free dimension (its points are its own).";
         DimensionDetachButton.Visibility = linked ? Visibility.Visible : Visibility.Collapsed;
         DimensionUnitSection.Visibility = isDimension ? Visibility.Visible : Visibility.Collapsed;
-        DimensionTextSection.Visibility = isDimension ? Visibility.Visible : Visibility.Collapsed;
         DimensionColorHint.Visibility = isDimension ? Visibility.Visible : Visibility.Collapsed;
+
+        // A wall has one dimension per segment: pick which one the fields below edit (or the wall's own settings for all of them).
+        if (!ReferenceEquals(_dimensionSegmentShape, shape))
+        {
+            _dimensionSegmentShape = shape;
+            _dimensionSegment = -1;
+        }
+
+        var segment = isWall ? _dimensionSegment : -1;
+        DimensionSegmentSection.Visibility = isWall ? Visibility.Visible : Visibility.Collapsed;
+        if (isWall)
+        {
+            var options = new List<SegmentOption> { new("All dimensions (wall settings)", -1) };
+            var lengths = WallGeometry.Segments(shape);
+            for (var i = 0; i < lengths.Count; i++)
+            {
+                var dx = lengths[i].To.X - lengths[i].From.X;
+                var dy = lengths[i].To.Y - lengths[i].From.Y;
+                var hidden = WallRenderer.FindOverride(shape, i) is { Hidden: true };
+                var measured = DimensionRenderer.Format(Math.Sqrt(dx * dx + dy * dy), shape.WallDimensionUnit, shape.DimPrecision);
+                options.Add(new SegmentOption($"{i + 1}:  {measured}{(hidden ? "  (hidden)" : string.Empty)}", i));
+            }
+
+            if (segment >= lengths.Count)
+            {
+                segment = _dimensionSegment = -1;
+            }
+
+            // the list is rebuilt only when its entries changed (every drag frame refreshes this card)
+            var listKey = string.Join("|", options.Select(o => o.Label));
+            if (listKey != _segmentListKey)
+            {
+                _segmentListKey = listKey;
+                DimensionSegmentComboBox.ItemsSource = options;
+            }
+
+            DimensionSegmentComboBox.SelectedItem = ((IEnumerable<SegmentOption>)DimensionSegmentComboBox.ItemsSource).First(o => o.Index == segment);
+        }
+
+        var custom = isWall && segment >= 0 ? WallRenderer.FindOverride(shape, segment) : null;
+        DimensionSegmentOptions.Visibility = isWall && segment >= 0 ? Visibility.Visible : Visibility.Collapsed;
+        DimensionShowCheckBox.IsChecked = custom is not { Hidden: true };
+        DimensionFlipCheckBox.IsChecked = custom is { Flip: true };
+        if (_context is not null)
+        {
+            _context.WallSegmentHighlight = isWall && segment >= 0 ? segment : null;
+        }
 
         // The distance is editable for a wall, and for a dimension that was created for its shape.
         DimensionOffsetSection.Visibility = isWall || linked ? Visibility.Visible : Visibility.Collapsed;
         DimensionOffsetLabel.Text = isWall
             ? $"DISTANCE FROM WALL ({UnitName(_shapeSizeUnit)})"
             : $"DISTANCE FROM SHAPE ({UnitName(_shapeSizeUnit)})";
-        DimensionOffsetTextBox.Text = FormatInUnit(shape.DimOffset, _shapeSizeUnit);
+        DimensionOffsetTextBox.Text = FormatInUnit(custom?.Offset ?? shape.DimOffset, _shapeSizeUnit);
+
+        DimensionTextSection.Visibility = isDimension || (isWall && segment >= 0) ? Visibility.Visible : Visibility.Collapsed;
+        DimensionTextBox.Text = isDimension ? shape.DimText ?? string.Empty : custom?.Text ?? string.Empty;
+        DimensionTextPositionTextBox.Text = ((custom?.TextPosition ?? shape.DimTextPosition ?? 0.5) * 100).ToString("0.##", CultureInfo.InvariantCulture);
+        DimensionTextShiftTextBox.Text = (custom?.TextShift ?? shape.DimTextShift).ToString("0.##", CultureInfo.InvariantCulture);
 
         if (isDimension)
         {
             DimensionUnitComboBox.SelectedItem = WallUnitOptions.First(o => o.Value == shape.DimUnit);
-            DimensionTextBox.Text = shape.DimText ?? string.Empty;
         }
 
         DimensionPrecisionTextBox.Text = shape.DimPrecision.ToString(CultureInfo.InvariantCulture);
+
+        DimensionArrowStyleComboBox.SelectedItem = ArrowStyleOptions.First(o => o.Value == shape.DimArrowStyle);
 
         var style = DimensionStyle.For(shape);
         DimensionFontSizeTextBox.Text = style.FontSize.ToString("0.##", CultureInfo.InvariantCulture);
@@ -1136,6 +1212,11 @@ public partial class PropertiesPanelView : UserControl
     {
         if (DimensionUnitComboBox.SelectedItem is LengthUnitOption option)
         {
+            if (_context is not null && !_isRefreshingControls)
+            {
+                _context.DimensionUnit = option.Value; // new dimensions use the unit last chosen
+            }
+
             ApplyToSelectionWithUndo(s =>
             {
                 if (s.Kind == ShapeKind.Dimension)
@@ -1176,13 +1257,24 @@ public partial class PropertiesPanelView : UserControl
 
     private void DimensionTextBox_OnLostFocus(object sender, RoutedEventArgs e)
     {
-        if (_boundShape is not { Kind: ShapeKind.Dimension } dim || _isRefreshingControls)
+        if (_boundShape is null || _isRefreshingControls)
         {
             return;
         }
 
         var text = string.IsNullOrWhiteSpace(DimensionTextBox.Text) ? null : DimensionTextBox.Text;
-        if (text != dim.DimText)
+        if (_boundShape.Kind == ShapeKind.Wall && _dimensionSegment >= 0)
+        {
+            var segment = _dimensionSegment;
+            if (text != WallRenderer.FindOverride(_boundShape, segment)?.Text)
+            {
+                EditWallDimension(segment, c => c with { Text = text });
+            }
+
+            return;
+        }
+
+        if (_boundShape.Kind == ShapeKind.Dimension && text != _boundShape.DimText)
         {
             ApplyToSelectionWithUndo(s =>
             {
@@ -1194,7 +1286,8 @@ public partial class PropertiesPanelView : UserControl
         }
     }
 
-    private void DimensionOffsetTextBox_OnLostFocus(object sender, RoutedEventArgs e)
+    private void DimensionOffsetTextBox_OnLostFocus
+(object sender, RoutedEventArgs e)
     {
         if (_boundShape is null || !HasDimensions(_boundShape) || _isRefreshingControls)
         {
@@ -1202,7 +1295,12 @@ public partial class PropertiesPanelView : UserControl
         }
 
         var text = DimensionOffsetTextBox.Text.Trim().Replace(',', '.');
-        if (text == FormatInUnit(_boundShape.DimOffset, _shapeSizeUnit))
+        var perSegment = _boundShape.Kind == ShapeKind.Wall && _dimensionSegment >= 0;
+        var currentOffset = perSegment
+            ? WallRenderer.FindOverride(_boundShape, _dimensionSegment)?.Offset ?? _boundShape.DimOffset
+            : _boundShape.DimOffset;
+        if (text == FormatInUnit(currentOffset, _shapeSizeUnit))
+
         {
             return;
         }
@@ -1214,14 +1312,173 @@ public partial class PropertiesPanelView : UserControl
         }
 
         var px = UnitToPx(typed, _shapeSizeUnit);
+        if (perSegment)
+        {
+            var segment = _dimensionSegment;
+            EditWallDimension(segment, c => c with { Offset = px });
+            RefreshControlsFromShape();
+            return;
+        }
+
         ApplyToSelectionWithUndo(s =>
         {
             if (HasDimensions(s))
             {
                 s.DimOffset = px;
+
             }
         });
         RefreshControlsFromShape();
+    }
+
+    private static readonly ArrowStyleOption[] ArrowStyleOptions =
+    [
+        new("Arrow (filled)", DimensionArrowStyle.Arrow),
+        new("Arrow (open)", DimensionArrowStyle.OpenArrow),
+        new("Slash  /", DimensionArrowStyle.Slash),
+        new("Backslash  \\", DimensionArrowStyle.Backslash),
+        new("Double slash  //", DimensionArrowStyle.DoubleSlash),
+        new("Dot", DimensionArrowStyle.Dot),
+        new("Ring", DimensionArrowStyle.OpenDot),
+        new("Square", DimensionArrowStyle.Box),
+        new("None", DimensionArrowStyle.None),
+    ];
+
+    private void DimensionArrowStyleComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isRefreshingControls || DimensionArrowStyleComboBox.SelectedItem is not ArrowStyleOption option)
+        {
+            return;
+        }
+
+        ApplyToSelectionWithUndo(s =>
+        {
+            if (HasDimensions(s))
+            {
+                s.DimArrowStyle = option.Value;
+            }
+        });
+    }
+
+    private string? _segmentListKey;
+    private int _dimensionSegment = -1;
+    private Shape? _dimensionSegmentShape;
+
+    private static bool TryParseNumber(string text, out double value) =>
+        double.TryParse(text.Trim().Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out value);
+
+    /// <summary>Applies a dimension setting to the picked wall segment, or to every selected dimension / wall otherwise, then refreshes.</summary>
+    private void ApplyDimensionSetting(Func<WallDimensionOverride, WallDimensionOverride> perSegment, Action<Shape> perShape)
+    {
+        if (_boundShape is { Kind: ShapeKind.Wall } && _dimensionSegment >= 0)
+        {
+            EditWallDimension(_dimensionSegment, perSegment);
+        }
+        else
+        {
+            ApplyToSelectionWithUndo(s =>
+            {
+                if (HasDimensions(s))
+                {
+                    perShape(s);
+                }
+            });
+        }
+
+        RefreshControlsFromShape();
+    }
+
+    /// <summary>Changes the settings of one dimension of every selected wall (one undo step); defaults are dropped again.</summary>
+    private void EditWallDimension(int segment, Func<WallDimensionOverride, WallDimensionOverride> change)
+    {
+        ApplyToSelectionWithUndo(s =>
+        {
+            if (s.Kind != ShapeKind.Wall)
+            {
+                return;
+            }
+
+            var list = (s.WallDimensionOverrides ?? []).ToList();
+            var current = list.FirstOrDefault(o => o.Segment == segment) ?? new WallDimensionOverride(segment);
+            var updated = change(current);
+            list.RemoveAll(o => o.Segment == segment);
+            if (!updated.IsDefault)
+            {
+                list.Add(updated);
+            }
+
+            s.WallDimensionOverrides = list.Count == 0 ? null : list.OrderBy(o => o.Segment).ToList();
+        });
+    }
+
+    private void DimensionSegmentComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isRefreshingControls || DimensionSegmentComboBox.SelectedItem is not SegmentOption option)
+        {
+            return;
+        }
+
+        _dimensionSegment = option.Index;
+        RefreshControlsFromShape();
+    }
+
+    private void DimensionShowCheckBox_OnCheckedChanged(object sender, RoutedEventArgs e)
+    {
+        if (_isRefreshingControls || _boundShape is not { Kind: ShapeKind.Wall } || _dimensionSegment < 0)
+        {
+            return;
+        }
+
+        var hidden = DimensionShowCheckBox.IsChecked != true;
+        EditWallDimension(_dimensionSegment, c => c with { Hidden = hidden });
+        RefreshControlsFromShape();
+    }
+
+    private void DimensionFlipCheckBox_OnCheckedChanged(object sender, RoutedEventArgs e)
+    {
+        if (_isRefreshingControls || _boundShape is not { Kind: ShapeKind.Wall } || _dimensionSegment < 0)
+        {
+            return;
+        }
+
+        var flip = DimensionFlipCheckBox.IsChecked == true;
+        EditWallDimension(_dimensionSegment, c => c with { Flip = flip });
+    }
+
+    /// <summary>Where the number sits along the dimension line, in percent (0 = start, 50 = middle, 100 = end).</summary>
+    private void DimensionTextPositionTextBox_OnLostFocus(object sender, RoutedEventArgs e)
+    {
+        if (_boundShape is null || !HasDimensions(_boundShape) || _isRefreshingControls)
+        {
+            return;
+        }
+
+        if (!TryParseNumber(DimensionTextPositionTextBox.Text, out var percent))
+        {
+            RefreshControlsFromShape();
+            return;
+        }
+
+        var along = Math.Clamp(percent, 0, 100) / 100.0;
+        ApplyDimensionSetting(c => c with { TextPosition = along }, s => s.DimTextPosition = along);
+    }
+
+    /// <summary>How far the number is moved off the dimension line (px).</summary>
+    private void DimensionTextShiftTextBox_OnLostFocus(object sender, RoutedEventArgs e)
+    {
+        if (_boundShape is null || !HasDimensions(_boundShape) || _isRefreshingControls)
+        {
+            return;
+        }
+
+        if (!TryParseNumber(DimensionTextShiftTextBox.Text, out var shift))
+        {
+            RefreshControlsFromShape();
+            return;
+        }
+
+        shift = Math.Clamp(shift, -300, 300);
+        ApplyDimensionSetting(c => c with { TextShift = shift }, s => s.DimTextShift = shift);
     }
 
     /// <summary>Number size, line width, arrowhead size and extension-line gap / overshoot (px).</summary>
@@ -1295,7 +1552,7 @@ public partial class PropertiesPanelView : UserControl
         }
 
         var text = WallThicknessTextBox.Text.Trim().Replace(',', '.');
-        if (text == FormatInUnit(wall.WallThickness, _shapeSizeUnit))
+        if (text == FormatReal(wall.WallThickness))
         {
             return;
         }
@@ -1306,7 +1563,7 @@ public partial class PropertiesPanelView : UserControl
             return;
         }
 
-        var px = Math.Max(0.5, UnitToPx(typed, _shapeSizeUnit));
+        var px = Math.Max(0.5, RealToPx(typed));
         ApplyToSelectionWithUndo(s =>
         {
             if (s.Kind == ShapeKind.Wall)
@@ -1335,6 +1592,7 @@ public partial class PropertiesPanelView : UserControl
             if (s.Kind == ShapeKind.Wall)
             {
                 s.WallClosed = closed && s.Points is { Count: >= 3 };
+                WallEditor.PruneOverrides(s); // an opened ring has one segment less
             }
         });
     }
@@ -1997,6 +2255,74 @@ public partial class PropertiesPanelView : UserControl
 
         _context.Document.BackgroundOpacity = e.NewValue;
         _context.RequestRedraw();
+    }
+
+    // ----- Drawing scale (1:N) -----------------------------------------------------------------------
+
+    private static readonly ScaleOption[] ScaleOptions =
+        Document.ScalePresets.Select(d => new ScaleOption(DrawingScale.PresetLabel(d), d)).ToArray();
+
+    private double PageScale => _context?.Document.ScaleDenominator ?? 1;
+
+    /// <summary>A length on the page as the real-world length it stands for at the drawing scale, in the chosen unit.</summary>
+    private string FormatReal(double pagePx) => FormatInUnit(pagePx * PageScale, _shapeSizeUnit);
+
+    /// <summary>The page length for a typed real-world length.</summary>
+    private double RealToPx(double typed) => UnitToPx(typed, _shapeSizeUnit) / PageScale;
+
+    private void UpdateScaleNote()
+    {
+        var scale = PageScale;
+        ShapeScaleNote.Visibility = Math.Abs(scale - 1) < 1e-9 ? Visibility.Collapsed : Visibility.Visible;
+        ShapeScaleNote.Text = $"Real-world sizes at {DrawingScale.Label(scale)}";
+    }
+
+    private void OnScaleChanged(double _)
+    {
+        RefreshDocumentSettings();
+        UpdateScaleNote();
+        RefreshControlsFromShape();
+    }
+
+    private void SyncScaleControls()
+    {
+        if (_context is null)
+        {
+            return;
+        }
+
+        var scale = _context.Document.ScaleDenominator;
+        DocumentScaleComboBox.ItemsSource ??= ScaleOptions;
+        DocumentScaleComboBox.SelectedItem = ScaleOptions.FirstOrDefault(o => Math.Abs(o.Value - scale) < 1e-9);
+        DocumentScaleTextBox.Text = scale.ToString("0.##", CultureInfo.InvariantCulture);
+        DocumentScaleNote.Text = Math.Abs(scale - 1) < 1e-9
+            ? "Full size: what you draw is what it measures."
+            : $"On the page 1 cm stands for {scale:0.##} cm in reality. Measurements and wall sizes are written in real-world units; print at 100% for an exact {DrawingScale.Label(scale)} plot.";
+    }
+
+    private void DocumentScaleComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_context is null || _syncingDocumentSettings || DocumentScaleComboBox.SelectedItem is not ScaleOption option)
+        {
+            return;
+        }
+
+        _context.SetScale(option.Value);
+    }
+
+    private void DocumentScaleTextBox_OnLostFocus(object sender, RoutedEventArgs e)
+    {
+        if (_context is null || _syncingDocumentSettings)
+        {
+            return;
+        }
+
+        if (double.TryParse(DocumentScaleTextBox.Text.Trim().Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out var value) && value > 0)
+        {
+            _context.SetScale(value);
+        }
+
+        SyncScaleControls();
     }
 
     private enum CanvasSizeUnit { Px, Cm, Mm, In }

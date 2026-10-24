@@ -9,6 +9,23 @@ public static class DocumentRenderer
         SKCanvas canvas, Document document, int width, int height, Shape? pending = null, bool forExport = false,
         bool includeBackground = false)
     {
+        // Texts written while rendering (dimensions, wall lengths) use the scale of THIS document; the previous one is put back afterwards
+        // so rendering another document (export, thumbnails) never changes what the live canvas shows.
+        var previousScale = DrawingScale.Denominator;
+        DrawingScale.Denominator = document.ScaleDenominator;
+        try
+        {
+            RenderCore(canvas, document, width, height, pending, forExport, includeBackground);
+        }
+        finally
+        {
+            DrawingScale.Denominator = previousScale;
+        }
+    }
+
+    private static void RenderCore(
+        SKCanvas canvas, Document document, int width, int height, Shape? pending, bool forExport, bool includeBackground)
+    {
         if (forExport)
         {
             // The checkerboard of the "Transparent" mode is only a preview aid. An export is transparent unless the
@@ -54,6 +71,7 @@ public static class DocumentRenderer
             }
         }
 
+        using var wallJoins = WallJoiner.Begin(document);
         for (var i = document.Layers.Count - 1; i >= 0; i--)
         {
             var layer = document.Layers[i];

@@ -32,6 +32,9 @@ public sealed class DocumentFile
 
     public int Height { get; set; } = Document.PreviewSize;
 
+    /// <summary>Drawing scale 1:N (see <see cref="Document.ScaleDenominator"/>).</summary>
+    public double ScaleDenominator { get; set; } = 1;
+
     public BackgroundMode BackgroundMode { get; set; }
 
     public ArgbColor BackgroundColor { get; set; } = ArgbColor.FromRgb(0xFF, 0xFF, 0xFF);
@@ -66,6 +69,7 @@ public sealed class DocumentFile
     {
         Width = document.Width,
         Height = document.Height,
+        ScaleDenominator = document.ScaleDenominator,
         BackgroundMode = document.BackgroundMode,
         BackgroundColor = document.BackgroundColor,
         BackgroundImageBytes = document.BackgroundImageBytes,
@@ -106,6 +110,7 @@ public sealed class DocumentFile
         document.BackgroundBlurAmount = BackgroundBlurAmount;
         document.BackgroundFadeAmount = BackgroundFadeAmount;
         document.BackgroundOpacity = BackgroundOpacity;
+        document.ScaleDenominator = ScaleDenominator > 0 ? ScaleDenominator : 1;
 
         foreach (var file in Layers)
         {

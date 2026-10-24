@@ -19,6 +19,9 @@ public sealed class UndoableAction : IUndoableAction
         _redo = redo;
     }
 
+    /// <summary>An undo step made of two delegates (for document-level values such as the drawing scale).</summary>
+    public static UndoableAction ForValue(Action undo, Action redo) => new(undo, redo);
+
     public void Undo() => _undo();
 
     public void Redo() => _redo();
