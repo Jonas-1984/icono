@@ -13,5 +13,6 @@
         <ResourceDictionary Source="ImageIcons.xaml" />
         <ResourceDictionary Source="ToolIconStyles.xaml" />
         <ResourceDictionary Source="CardStyle.xaml" />
+        <ResourceDictionary Source="DialogStyles.xaml" />
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

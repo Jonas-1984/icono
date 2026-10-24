@@ -126,6 +126,12 @@ public partial class IconLibraryView : UserControl
     /// a reusable "MY ICONS" entry. A stroke-style source (fill="none" — the Lucide/Feather/Tabler
     /// convention almost every hand-pasted icon uses) imports as an outline instead of a solid
     /// fill, matching how the source actually looks instead of a garbled filled blob.</summary>
+    /// <summary>Opens the paste-SVG-code dialog (also reachable from Insert > SVG Code).</summary>
+    public void ImportSvgFromDialog() => ImportSvgButton_OnClick(this, new RoutedEventArgs());
+
+    /// <summary>Opens the picture/SVG file chooser (also reachable from Insert > Image).</summary>
+    public void ImportImageFromDialog() => ImportImageButton_OnClick(this, new RoutedEventArgs());
+
     private void ImportSvgButton_OnClick(object sender, RoutedEventArgs e)
     {
         if (_context is null)
@@ -166,8 +172,8 @@ public partial class IconLibraryView : UserControl
 
         if (layer is null || elements.Count == 0)
         {
-            MessageBox.Show(Window.GetWindow(this), "Kein gültiger SVG-Pfad im eingefügten Code gefunden.",
-                "SVG importieren", MessageBoxButton.OK, MessageBoxImage.Warning);
+            ThemedMessageBox.Show(Window.GetWindow(this), "No valid SVG path was found in the pasted code.",
+                "Import SVG", MessageBoxButton.OK, MessageBoxImage.Warning);
             return false;
         }
 
@@ -197,8 +203,8 @@ public partial class IconLibraryView : UserControl
 
         if (imported.Count == 0)
         {
-            MessageBox.Show(Window.GetWindow(this), "Der SVG-Code enthält keinen gültigen Pfad.",
-                "SVG importieren", MessageBoxButton.OK, MessageBoxImage.Warning);
+            ThemedMessageBox.Show(Window.GetWindow(this), "The SVG code does not contain a valid path.",
+                "Import SVG", MessageBoxButton.OK, MessageBoxImage.Warning);
             return false;
         }
 
@@ -265,8 +271,8 @@ public partial class IconLibraryView : UserControl
             }
             catch (Exception)
             {
-                MessageBox.Show(Window.GetWindow(this), "Die Datei konnte nicht gelesen werden.",
-                    "Bild importieren", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThemedMessageBox.Show(Window.GetWindow(this), "The file could not be read.",
+                    "Import image", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -299,8 +305,8 @@ public partial class IconLibraryView : UserControl
         }
         catch (Exception)
         {
-            MessageBox.Show(Window.GetWindow(this), "Die Datei konnte nicht als Bild gelesen werden.",
-                "Bild importieren", MessageBoxButton.OK, MessageBoxImage.Warning);
+            ThemedMessageBox.Show(Window.GetWindow(this), "The file could not be read as an image.",
+                "Import image", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 

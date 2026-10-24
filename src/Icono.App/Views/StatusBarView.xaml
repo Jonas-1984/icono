@@ -13,11 +13,13 @@
 
             <TextBlock Grid.Column="0" Text="Zoom:" Foreground="{DynamicResource ForegroundTextBrush}"
                        VerticalAlignment="Center" Margin="0,0,6,0" />
-            <Slider x:Name="ZoomSlider" Grid.Column="1" Minimum="0.25" Maximum="3.0" Value="1.0"
+            <Slider x:Name="ZoomSlider" Grid.Column="1" Minimum="0.1" Maximum="8.0" Value="1.0"
                     VerticalAlignment="Center" ValueChanged="ZoomSlider_OnValueChanged" />
             <TextBlock x:Name="ZoomLabel" Grid.Column="2" Text="100%"
                        Foreground="{DynamicResource ForegroundTextBrush}"
                        VerticalAlignment="Center" Margin="6,0,0,0" Width="40" />
+            <TextBlock x:Name="StatusMessageText" Grid.Column="4" HorizontalAlignment="Right" VerticalAlignment="Center"
+                       FontSize="11" Foreground="{DynamicResource AccentBlueLightBrush}" Opacity="0" />
         </Grid>
     </Border>
 </UserControl>

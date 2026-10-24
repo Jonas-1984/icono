@@ -14,6 +14,8 @@ public enum ActiveTool
     AddPoint,
     DeletePoint,
     RegionColor,
+    Eyedropper,
+    WallCut,
 }
 
 /// <summary>
@@ -25,6 +27,7 @@ public sealed class EditorContext : ObservableObject
 {
     private ActiveTool _activeTool = ActiveTool.Select;
     private ShapeKind _selectedShapeKind = ShapeKind.Rectangle;
+    private DimensionKind _currentDimensionKind = DimensionKind.Aligned;
     private Layer? _selectedLayer;
     private ArgbColor _currentFillColor = ArgbColor.FromRgb(0x9E, 0xD9, 0xD1);
     private bool _showGrid;
@@ -73,12 +76,38 @@ public sealed class EditorContext : ObservableObject
 
     public event EventHandler? Invalidated;
 
+    /// <summary>A short message for the status bar (what was created, why nothing happened, ...).</summary>
+    public event Action<string>? StatusMessage;
+
+    /// <summary>Which kind of dimension the dimension tool places next.</summary>
+    public DimensionKind CurrentDimensionKind { get => _currentDimensionKind; set => SetField(ref _currentDimensionKind, value); }
+
     public EditorContext()
     {
         SelectedShapes.CollectionChanged += (_, _) => RaisePropertyChanged(nameof(SelectedShape));
     }
 
-    public void RequestRedraw() => Invalidated?.Invoke(this, EventArgs.Empty);
+    private bool _refreshingConnections;
+
+    public void RequestRedraw()
+    {
+        // Lines glued to a shape's connection points follow it whenever anything changes.
+        if (!_refreshingConnections)
+        {
+            _refreshingConnections = true;
+            try
+            {
+                ConnectionRouter.Refresh(Document);
+                DimensionRouter.Refresh(Document);
+            }
+            finally
+            {
+                _refreshingConnections = false;
+            }
+        }
+
+        Invalidated?.Invoke(this, EventArgs.Empty);
+    }
 
     public void Undo()
     {
@@ -156,6 +185,52 @@ public sealed class EditorContext : ObservableObject
         }
 
         SelectedLayer = layer;
+        RequestRedraw();
+    }
+
+    /// <summary>Selects every shape of every visible, unlocked layer.</summary>
+    public void SelectAll()
+    {
+        var all = Document.Layers.Where(l => l.Visible && !l.Locked).SelectMany(l => l.Shapes).ToList();
+        SelectedShapes.Clear();
+        foreach (var shape in all)
+        {
+            SelectedShapes.Add(shape);
+        }
+
+        RequestRedraw();
+    }
+
+    /// <summary>Clears the selection.</summary>
+    public void ClearSelection()
+    {
+        SelectedShapes.Clear();
+        RequestRedraw();
+    }
+
+    /// <summary>Copies the selection and pastes it right away (offset a little), leaving the clipboard as it was.</summary>
+    public void DuplicateSelection()
+    {
+        if (SelectedShapes.Count == 0)
+        {
+            return;
+        }
+
+        var previous = Clipboard.ToList();
+        CopySelection();
+        PasteClipboard();
+        Clipboard.Clear();
+        Clipboard.AddRange(previous);
+    }
+
+    /// <summary>Back to a pristine editing state after a document was replaced (new / opened): no history, no selection, the
+    /// first layer active.</summary>
+    public void ResetAfterDocumentReplaced()
+    {
+        UndoManager.Clear();
+        SelectedShapes.Clear();
+        SelectedLayer = Document.Layers.FirstOrDefault();
+        ActiveTool = ActiveTool.Select;
         RequestRedraw();
     }
 
@@ -302,6 +377,87 @@ public sealed class EditorContext : ObservableObject
         {
             UndoManager.Push(UndoableAction.Combine(moveActions));
             RequestRedraw();
+        }
+    }
+
+    /// <summary>Replaces a shape by other shapes at the same place in its layer (a wall cut into pieces), as ONE undo step,
+    /// and selects the new shapes.</summary>
+    public void ReplaceShape(Shape original, IReadOnlyList<Shape> parts)
+    {
+        var layer = Document.Layers.FirstOrDefault(l => l.Shapes.Contains(original));
+        if (layer is null || parts.Count == 0)
+        {
+            return;
+        }
+
+        var index = layer.Shapes.IndexOf(original);
+        var actions = new List<UndoableAction>();
+        layer.Shapes.RemoveAt(index);
+        actions.Add(UndoableAction.ForRemove([(layer.Shapes, original, index)]));
+
+        for (var i = 0; i < parts.Count; i++)
+        {
+            layer.Shapes.Insert(index + i, parts[i]);
+            actions.Add(UndoableAction.ForInsert(layer.Shapes, parts[i], index + i));
+        }
+
+        UndoManager.Push(UndoableAction.Combine(actions));
+
+        SelectedShapes.Clear();
+        foreach (var part in parts)
+        {
+            SelectedShapes.Add(part);
+        }
+
+        RequestRedraw();
+    }
+
+    /// <summary>Creates the dimensions of every selected shape (width, height, diameter, angles, lengths ...) next to it, as ONE
+    /// undo step. They stay attached: they follow the shape when it changes.</summary>
+    public void AddDimensionsToSelection(DimensionSet set)
+    {
+        var created = 0;
+        var actions = new List<UndoableAction>();
+
+        foreach (var target in SelectedShapes.ToList())
+        {
+            var layer = Document.Layers.FirstOrDefault(l => l.Shapes.Contains(target));
+            if (layer is null)
+            {
+                continue;
+            }
+
+            foreach (var dim in DimensionBuilder.Create(target, set))
+            {
+                layer.Shapes.Insert(0, dim);
+                actions.Add(UndoableAction.ForInsert(layer.Shapes, dim, 0));
+                created++;
+            }
+        }
+
+        if (created == 0)
+        {
+            StatusMessage?.Invoke(SelectedShapes.Count == 0
+                ? "Select a shape first to add its dimensions."
+                : "This shape has no dimensions of that kind (walls show their own lengths).");
+            return;
+        }
+
+        UndoManager.Push(UndoableAction.Combine(actions));
+        StatusMessage?.Invoke(created == 1 ? "1 dimension added." : $"{created} dimensions added.");
+        RequestRedraw();
+    }
+
+    /// <summary>Breaks every selected wall into one wall per segment.</summary>
+    public void SplitSelectedWallsAtAllPoints()
+    {
+        foreach (var wall in SelectedShapes.Where(s => s.Kind == ShapeKind.Wall && !s.Locked && s.Points is { Count: > 1 }).ToList())
+        {
+            var parts = WallEditor.SplitAtAllPoints(wall);
+            if (parts.Count > 1)
+            {
+                ReplaceShape(wall, parts);
+            }
         }
     }
 

@@ -7,7 +7,7 @@ namespace Icono.App.Views;
 /// <summary>Modal dialog prompting for the signed offset distance used by
 /// <see cref="Icono.App.State.EditorContext.OffsetSelection"/> — see <see cref="Icono.Rendering.PathOffsetter"/>
 /// for the actual geometry.</summary>
-public partial class OffsetDialog : Window
+public partial class OffsetDialog : ThemedDialogWindow
 {
     public double Distance { get; private set; }
 

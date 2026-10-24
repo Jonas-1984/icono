@@ -18,6 +18,19 @@ public sealed class UndoManager : INotifyPropertyChanged
 
     public bool CanRedo => _redoStack.Count > 0;
 
+    /// <summary>Increments on every push, undo and redo — two equal values mean "same document state", which is how the
+    /// window knows whether there are unsaved changes.</summary>
+    public int Version { get; private set; }
+
+    /// <summary>Forgets all history (a new or freshly opened document starts without undo steps).</summary>
+    public void Clear()
+    {
+        _undoStack.Clear();
+        _redoStack.Clear();
+        Version++;
+        RaiseChanged();
+    }
+
     /// <summary>Records a completed gesture. Ignored if called while Undo/Redo is itself applying
     /// an action, so replaying a snapshot doesn't re-enter the undo stack.</summary>
     public void Push(IUndoableAction action)
@@ -91,6 +104,8 @@ public sealed class UndoManager : INotifyPropertyChanged
 
     private void RaiseChanged([CallerMemberName] string? _ = null)
     {
+        Version++;
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Version)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CanUndo)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CanRedo)));
     }

@@ -50,8 +50,38 @@ public sealed class Shape : ObservableObject
     private bool _textBold;
     private bool _textItalic;
     private bool _textUnderline;
+    private ArgbColor? _textColor;
+    private double _wallThickness = 16;
+    private bool _wallClosed;
+    private HatchKind _hatch = HatchKind.Diagonal;
+    private double _hatchSpacing = 8;
+    private ArgbColor _hatchColor = ArgbColor.FromRgb(0x5B, 0x63, 0x70);
+    private bool _wallShowDimensions = true;
+    private LengthUnit _wallDimensionUnit = LengthUnit.Centimeter;
+    private DimensionKind _dimKind = DimensionKind.Aligned;
+    private DimensionRole _dimRole;
+    private Guid? _dimTarget;
+    private int _dimIndex;
+    private double _dimOffset = 28;
+    private double _dimAngle = -45;
+    private LengthUnit _dimUnit = LengthUnit.Centimeter;
+    private int _dimPrecision = 2;
+    private string? _dimText;
+    private double _dimValue;
+    private IReadOnlyList<ShapeAnchor?>? _dimAnchors;
+    private double? _dimFontSize;
+    private double? _dimLineWidth;
+    private double? _dimArrowSize;
+    private double? _dimExtGap;
+    private double? _dimExtOvershoot;
+    private ShapeAnchor? _startAnchor;
+    private ShapeAnchor? _endAnchor;
 
     public required ShapeKind Kind { get; init; }
+
+    /// <summary>Stable identity, so a line can say which shape it is attached to (see <see cref="StartAnchor"/>). Not part of
+    /// the undo snapshot: a clone is a new shape and gets its own id.</summary>
+    public Guid Id { get; set; } = Guid.NewGuid();
 
     public double X { get => _x; set => SetField(ref _x, value); }
     public double Y { get => _y; set => SetField(ref _y, value); }
@@ -174,6 +204,13 @@ public sealed class Shape : ObservableObject
     /// <summary>Marker at the LAST anchor point — see <see cref="LineStartHead"/>.</summary>
     public ArrowHeadKind LineEndHead { get => _lineEndHead; set => SetField(ref _lineEndHead, value); }
 
+    /// <summary>Connection point of another shape the line's FIRST point is glued to (null = free end). The line follows the
+    /// shape when that moves; see <c>Icono.Rendering.ConnectionRouter</c>.</summary>
+    public ShapeAnchor? StartAnchor { get => _startAnchor; set => SetField(ref _startAnchor, value); }
+
+    /// <summary>Same as <see cref="StartAnchor"/>, for the LAST point.</summary>
+    public ShapeAnchor? EndAnchor { get => _endAnchor; set => SetField(ref _endAnchor, value); }
+
     /// <summary>3D extrusion depth in px, only meaningful for <see cref="ShapeKind.Box3D"/>.</summary>
     public double Depth3D { get => _depth3D; set => SetField(ref _depth3D, Math.Max(0, value)); }
 
@@ -226,4 +263,77 @@ public sealed class Shape : ObservableObject
     public bool TextItalic { get => _textItalic; set => SetField(ref _textItalic, value); }
 
     public bool TextUnderline { get => _textUnderline; set => SetField(ref _textUnderline, value); }
+
+    /// <summary>Colour of the text typed INTO a shape (double-click). Null = automatic: dark or white, whichever reads
+    /// better on the shape's fill. A <see cref="ShapeKind.Text"/> shape is coloured by its fill instead.</summary>
+    public ArgbColor? TextColor { get => _textColor; set => SetField(ref _textColor, value); }
+
+    /// <summary>Thickness of a <see cref="ShapeKind.Wall"/> in px (the band is centred on its points).</summary>
+    public double WallThickness { get => _wallThickness; set => SetField(ref _wallThickness, Math.Max(0.5, value)); }
+
+    /// <summary>True when the wall runs back to its first point and forms a closed ring.</summary>
+    public bool WallClosed { get => _wallClosed; set => SetField(ref _wallClosed, value); }
+
+    public HatchKind Hatch { get => _hatch; set => SetField(ref _hatch, value); }
+
+    /// <summary>Distance between hatch lines (or dots/bricks) in px.</summary>
+    public double HatchSpacing { get => _hatchSpacing; set => SetField(ref _hatchSpacing, Math.Max(2, value)); }
+
+    public ArgbColor HatchColor { get => _hatchColor; set => SetField(ref _hatchColor, value); }
+
+    /// <summary>Whether the length of every wall segment is written next to it.</summary>
+    public bool WallShowDimensions { get => _wallShowDimensions; set => SetField(ref _wallShowDimensions, value); }
+
+    public LengthUnit WallDimensionUnit { get => _wallDimensionUnit; set => SetField(ref _wallDimensionUnit, value); }
+
+    /// <summary>What a <see cref="ShapeKind.Dimension"/> measures.</summary>
+    public DimensionKind DimKind { get => _dimKind; set => SetField(ref _dimKind, value); }
+
+    /// <summary>The part of <see cref="DimTarget"/> an automatic dimension follows (None for a free dimension).</summary>
+    public DimensionRole DimRole { get => _dimRole; set => SetField(ref _dimRole, value); }
+
+    /// <summary>The shape this dimension is attached to; it then moves and changes with it. Null = free.</summary>
+    public Guid? DimTarget { get => _dimTarget; set => SetField(ref _dimTarget, value); }
+
+    /// <summary>Segment or corner number for <see cref="DimensionRole.Segment"/> / <see cref="DimensionRole.Corner"/>.</summary>
+    public int DimIndex { get => _dimIndex; set => SetField(ref _dimIndex, value); }
+
+    /// <summary>How far (px) the dimension line sits from what it measures, for an attached dimension.</summary>
+    public double DimOffset { get => _dimOffset; set => SetField(ref _dimOffset, value); }
+
+    /// <summary>Direction (degrees) of the leader of an attached radius/diameter dimension.</summary>
+    public double DimAngle { get => _dimAngle; set => SetField(ref _dimAngle, value); }
+
+    public LengthUnit DimUnit { get => _dimUnit; set => SetField(ref _dimUnit, value); }
+
+    /// <summary>Decimal places of the written value.</summary>
+    public int DimPrecision { get => _dimPrecision; set => SetField(ref _dimPrecision, Math.Clamp(value, 0, 6)); }
+
+    /// <summary>Replacement text; "&lt;&gt;" inside it stands for the measured value (like AutoCAD). Null/empty = measured value only.</summary>
+    public string? DimText { get => _dimText; set => SetField(ref _dimText, value); }
+
+    /// <summary>Measured value (px) for kinds that cannot be derived from the dimension's own points (curve length, 3D depth).</summary>
+    public double DimValue { get => _dimValue; set => SetField(ref _dimValue, value); }
+
+    /// <summary>For a dimension placed by hand: which connection point, corner or centre of another shape each of its points sits on
+    /// (parallel to <see cref="Shape.Points"/>, null = free point). Attached points follow their shape; see <c>DimensionRouter</c>.</summary>
+    public IReadOnlyList<ShapeAnchor?>? DimAnchors { get => _dimAnchors; set => SetField(ref _dimAnchors, value); }
+
+    // Look of the dimension lines of a <see cref="ShapeKind.Dimension"/> and of the segment dimensions of a <see cref="ShapeKind.Wall"/>.
+    // Null = automatic.
+
+    /// <summary>Size of the written value in px.</summary>
+    public double? DimFontSize { get => _dimFontSize; set => SetField(ref _dimFontSize, value); }
+
+    /// <summary>Width of the dimension, extension and leader lines in px.</summary>
+    public double? DimLineWidth { get => _dimLineWidth; set => SetField(ref _dimLineWidth, value); }
+
+    /// <summary>Length of the arrowheads in px.</summary>
+    public double? DimArrowSize { get => _dimArrowSize; set => SetField(ref _dimArrowSize, value); }
+
+    /// <summary>Gap in px between the measured point and the start of its extension line.</summary>
+    public double? DimExtGap { get => _dimExtGap; set => SetField(ref _dimExtGap, value); }
+
+    /// <summary>How far in px the extension lines run past the dimension line.</summary>
+    public double? DimExtOvershoot { get => _dimExtOvershoot; set => SetField(ref _dimExtOvershoot, value); }
 }

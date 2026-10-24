@@ -1,0 +1,52 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:views="clr-namespace:Icono.App.Views">
+
+    <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+
+    <!-- Glass card used by every dialog (see DialogCard / ThemedDialogWindow). The two backdrop borders carry the soft
+         neumorphic shadows; the card itself has no effect so its content stays cheap to render. -->
+    <Style TargetType="{x:Type views:DialogCard}">
+        <Setter Property="Padding" Value="22,4,22,20" />
+        <Setter Property="MinWidth" Value="320" />
+        <Setter Property="Foreground" Value="{DynamicResource ForegroundTextBrush}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type views:DialogCard}">
+                    <Grid Margin="24">
+                        <Border Style="{DynamicResource NeuShadowLightStyle}" CornerRadius="20" />
+                        <Border Style="{DynamicResource NeuShadowDarkStyle}" CornerRadius="20" />
+                        <Border CornerRadius="20" BorderThickness="1"
+                                Background="{DynamicResource WindowBackgroundBrush}"
+                                BorderBrush="{DynamicResource GlassEdgeBrush}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <Grid x:Name="PART_Header" Background="Transparent" Height="52">
+                                    <TextBlock Text="{TemplateBinding Title}" VerticalAlignment="Center" Margin="22,0,60,0"
+                                               FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
+                                               Foreground="{DynamicResource ForegroundTextBrush}" />
+                                    <Button x:Name="PART_Close" Width="28" Height="28" Margin="0,0,14,0" Padding="0"
+                                            HorizontalAlignment="Right" VerticalAlignment="Center" ToolTip="Close"
+                                            Visibility="{Binding ShowClose, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BoolToVisibility}}">
+                                        <Path Data="M0,0 L8,8 M8,0 L0,8" Stroke="{DynamicResource ForegroundTextBrush}"
+                                              StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                              Width="9" Height="9" Stretch="Uniform" />
+                                    </Button>
+                                </Grid>
+
+                                <ContentPresenter Grid.Row="1" Margin="{TemplateBinding Padding}" />
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

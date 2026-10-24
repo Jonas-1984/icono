@@ -17,5 +17,5 @@ public sealed class ShapeNameConverter : IMultiValueConverter
     }
 
     public object[] ConvertBack(object value, Type[] targetTypes, object? parameter, CultureInfo culture) =>
-        [value as string, Binding.DoNothing];
+        [value as string ?? string.Empty, Binding.DoNothing];
 }

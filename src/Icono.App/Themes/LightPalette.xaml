@@ -91,6 +91,13 @@
         <GradientStop Color="#E6E1E8F2" Offset="1.0" />
     </LinearGradientBrush>
 
+    <!-- Drop-downs, context menus and tooltips: the glass look, but opaque enough to stay readable over the page -->
+    <LinearGradientBrush x:Key="PopupSurfaceBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FFFFFFFF" Offset="0.0" />
+        <GradientStop Color="#FFF2F5FA" Offset="0.6" />
+        <GradientStop Color="#FFE8EDF5" Offset="1.0" />
+    </LinearGradientBrush>
+
     <LinearGradientBrush x:Key="GlassBarBrush" StartPoint="0,0" EndPoint="0,1">
         <GradientStop Color="#D9FFFFFF" Offset="0.0" />
         <GradientStop Color="#C8F1F5FB" Offset="0.5" />

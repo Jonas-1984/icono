@@ -51,7 +51,33 @@ public readonly record struct ShapeSnapshot(
     bool TextBold,
     bool TextItalic,
     bool TextUnderline,
-    string? Name)
+    string? Name,
+    ShapeAnchor? StartAnchor = null,
+    ShapeAnchor? EndAnchor = null,
+    ArgbColor? TextColor = null,
+    double WallThickness = 16,
+    bool WallClosed = false,
+    HatchKind Hatch = HatchKind.Diagonal,
+    double HatchSpacing = 8,
+    ArgbColor HatchColor = default,
+    bool WallShowDimensions = true,
+    LengthUnit WallDimensionUnit = LengthUnit.Centimeter,
+    DimensionKind DimKind = DimensionKind.Aligned,
+    DimensionRole DimRole = DimensionRole.None,
+    Guid? DimTarget = null,
+    int DimIndex = 0,
+    double DimOffset = 28,
+    double DimAngle = -45,
+    LengthUnit DimUnit = LengthUnit.Centimeter,
+    int DimPrecision = 2,
+    string? DimText = null,
+    double DimValue = 0,
+    IReadOnlyList<ShapeAnchor?>? DimAnchors = null,
+    double? DimFontSize = null,
+    double? DimLineWidth = null,
+    double? DimArrowSize = null,
+    double? DimExtGap = null,
+    double? DimExtOvershoot = null)
 {
     public static ShapeSnapshot Capture(Shape shape) => new(
         shape.X,
@@ -99,7 +125,33 @@ public readonly record struct ShapeSnapshot(
         shape.TextBold,
         shape.TextItalic,
         shape.TextUnderline,
-        shape.Name);
+        shape.Name,
+        shape.StartAnchor,
+        shape.EndAnchor,
+        shape.TextColor,
+        shape.WallThickness,
+        shape.WallClosed,
+        shape.Hatch,
+        shape.HatchSpacing,
+        shape.HatchColor,
+        shape.WallShowDimensions,
+        shape.WallDimensionUnit,
+        shape.DimKind,
+        shape.DimRole,
+        shape.DimTarget,
+        shape.DimIndex,
+        shape.DimOffset,
+        shape.DimAngle,
+        shape.DimUnit,
+        shape.DimPrecision,
+        shape.DimText,
+        shape.DimValue,
+        shape.DimAnchors,
+        shape.DimFontSize,
+        shape.DimLineWidth,
+        shape.DimArrowSize,
+        shape.DimExtGap,
+        shape.DimExtOvershoot);
 
     public void ApplyTo(Shape shape)
     {
@@ -149,5 +201,31 @@ public readonly record struct ShapeSnapshot(
         shape.TextItalic = TextItalic;
         shape.TextUnderline = TextUnderline;
         shape.Name = Name;
+        shape.StartAnchor = StartAnchor;
+        shape.EndAnchor = EndAnchor;
+        shape.TextColor = TextColor;
+        shape.WallThickness = WallThickness;
+        shape.WallClosed = WallClosed;
+        shape.Hatch = Hatch;
+        shape.HatchSpacing = HatchSpacing;
+        shape.HatchColor = HatchColor;
+        shape.WallShowDimensions = WallShowDimensions;
+        shape.WallDimensionUnit = WallDimensionUnit;
+        shape.DimKind = DimKind;
+        shape.DimRole = DimRole;
+        shape.DimTarget = DimTarget;
+        shape.DimIndex = DimIndex;
+        shape.DimOffset = DimOffset;
+        shape.DimAngle = DimAngle;
+        shape.DimUnit = DimUnit;
+        shape.DimPrecision = DimPrecision;
+        shape.DimText = DimText;
+        shape.DimValue = DimValue;
+        shape.DimAnchors = DimAnchors;
+        shape.DimFontSize = DimFontSize;
+        shape.DimLineWidth = DimLineWidth;
+        shape.DimArrowSize = DimArrowSize;
+        shape.DimExtGap = DimExtGap;
+        shape.DimExtOvershoot = DimExtOvershoot;
     }
 }

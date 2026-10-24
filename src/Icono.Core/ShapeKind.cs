@@ -103,4 +103,11 @@ public enum ShapeKind
     /// <summary>A checkered "design grid" (default 2 mm squares) whose individual squares can be coloured with the
     /// bucket tool — see <see cref="Shape.GridCellSize"/> and <see cref="Shape.GridCells"/>.</summary>
     DesignGrid,
+
+    /// <summary>An architectural wall: a thick band along a polyline (<see cref="Shape.Points"/>), optionally closed into a ring,
+    /// filled with a hatch pattern and carrying its own dimensions.</summary>
+    Wall,
+
+    /// <summary>A measurement drawn next to other shapes (extension lines, dimension line, arrows and the value) - see <see cref="Shape.DimKind"/>.</summary>
+    Dimension,
 }

@@ -1,0 +1,35 @@
+<local:ThemedDialogWindow x:Class="Icono.App.Views.ExportDialog"
+                          xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                          xmlns:local="clr-namespace:Icono.App.Views"
+                          Title="Export">
+    <local:DialogCard Title="Export" Width="420">
+        <StackPanel>
+            <TextBlock Text="FORMAT" Style="{StaticResource PanelLabelTextStyle}" Margin="0,0,0,6" />
+            <StackPanel>
+                <RadioButton x:Name="PngRadio" GroupName="ExportFormat" Content="PNG image" IsChecked="True" Margin="0,0,0,8"
+                             Foreground="{DynamicResource ForegroundTextBrush}" Checked="FormatRadio_OnChecked" />
+                <RadioButton x:Name="IcoRadio" GroupName="ExportFormat" Content="Windows icon (.ico, 16 - 256 px)" Margin="0,0,0,8"
+                             Foreground="{DynamicResource ForegroundTextBrush}" Checked="FormatRadio_OnChecked" />
+                <RadioButton x:Name="SetRadio" GroupName="ExportFormat" Content="PNG set (16, 32, 64, 128, 256, 512 px)"
+                             Foreground="{DynamicResource ForegroundTextBrush}" Checked="FormatRadio_OnChecked" />
+            </StackPanel>
+
+            <StackPanel x:Name="SizePanel">
+                <TextBlock Text="SIZE (LONGER SIDE)" Style="{StaticResource PanelLabelTextStyle}" Margin="0,16,0,4" />
+                <ComboBox x:Name="SizeComboBox" Height="32" DisplayMemberPath="Label" />
+            </StackPanel>
+
+            <CheckBox x:Name="BackgroundCheckBox" Content="Include the page background" Margin="0,16,0,0"
+                      Foreground="{DynamicResource ForegroundTextBrush}"
+                      ToolTip="Off = transparent image; on = colour, blur or picture of the page is part of the image" />
+            <TextBlock x:Name="InfoText" FontSize="10" TextWrapping="Wrap" Margin="0,8,0,0"
+                       Foreground="{DynamicResource MutedTextBrush}" />
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,22,0,0">
+                <Button Content="Cancel" MinWidth="92" Height="32" Margin="0,0,8,0" IsCancel="True" Click="CancelButton_OnClick" />
+                <Button Content="Export..." MinWidth="100" Height="32" IsDefault="True" Click="ExportButton_OnClick" />
+            </StackPanel>
+        </StackPanel>
+    </local:DialogCard>
+</local:ThemedDialogWindow>

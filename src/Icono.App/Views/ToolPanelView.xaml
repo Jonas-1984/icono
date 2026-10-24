@@ -34,6 +34,83 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="WALLS" Style="{StaticResource CardHeaderTextStyle}" />
+                            <Path Grid.Column="1" Style="{StaticResource CardChevronPathStyle}" />
+                        </Grid>
+                        <StackPanel>
+                            <WrapPanel Margin="6,0">
+                                <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                             Tag="{StaticResource WallToolGeometry}" CommandParameter="Wall"
+                                             ToolTip="Draw a wall (W): click the corners, click the start point again to close the room, double-click or Enter to finish" />
+                                <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                             Tag="{StaticResource CutWallToolGeometry}" CommandParameter="WallCut"
+                                             ToolTip="Cut a wall (X): click the place where it should be split" />
+                            </WrapPanel>
+                            <TextBlock Text="Pick a wall, then set thickness, hatch and dimensions in the WALL card on the right."
+                                       Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="12,2,12,8" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource CardBorderStyle}">
+                    <StackPanel>
+                        <Grid Style="{StaticResource CollapsibleCardHeaderStyle}" MouseLeftButtonDown="CardHeader_OnToggle">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="DIMENSIONS &amp; SIZE" Style="{StaticResource CardHeaderTextStyle}" />
+                            <Path Grid.Column="1" Style="{StaticResource CardChevronPathStyle}" />
+                        </Grid>
+                        <StackPanel>
+                            <TextBlock Text="MEASURE (D)" Style="{StaticResource PanelLabelTextStyle}" />
+                            <WrapPanel Margin="6,0">
+                                <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                             Tag="{StaticResource DimAlignedToolGeometry}" CommandParameter="DimAligned"
+                                             ToolTip="Aligned dimension: click both points, then where the dimension line should run" />
+                                <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                             Tag="{StaticResource DimHorizontalToolGeometry}" CommandParameter="DimHorizontal"
+                                             ToolTip="Horizontal dimension: click both points, then the height of the line" />
+                                <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                             Tag="{StaticResource DimVerticalToolGeometry}" CommandParameter="DimVertical"
+                                             ToolTip="Vertical dimension: click both points, then the position of the line" />
+                                <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                             Tag="{StaticResource DimAngularToolGeometry}" CommandParameter="DimAngular"
+                                             ToolTip="Angle: click the corner, a point on each side, then where the arc should run" />
+                                <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                             Tag="{StaticResource DimRadiusToolGeometry}" CommandParameter="DimRadius"
+                                             ToolTip="Radius: click the centre, then a point on the circle" />
+                                <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                             Tag="{StaticResource DimDiameterToolGeometry}" CommandParameter="DimDiameter"
+                                             ToolTip="Diameter: click the centre, then a point on the circle" />
+                            </WrapPanel>
+
+                            <TextBlock Text="ADD TO SELECTED SHAPE" Style="{StaticResource PanelLabelTextStyle}" />
+                            <UniformGrid Columns="2" Margin="6,0,6,4">
+                                <Button Content="Automatic" Tag="Auto" Click="AddDimensions_OnClick" Style="{StaticResource PanelKeyButtonStyle}"
+                                        ToolTip="The dimensions that suit the shape: size, diameter, segments and angles, curve length" />
+                                <Button Content="Size" Tag="Size" Click="AddDimensions_OnClick" Style="{StaticResource PanelKeyButtonStyle}"
+                                        ToolTip="Width, height (and depth of a 3D box)" />
+                                <Button Content="Circle" Tag="Round" Click="AddDimensions_OnClick" Style="{StaticResource PanelKeyButtonStyle}"
+                                        ToolTip="Diameter and radius" />
+                                <Button Content="Angles" Tag="Corners" Click="AddDimensions_OnClick" Style="{StaticResource PanelKeyButtonStyle}"
+                                        ToolTip="The angle at every corner" />
+                                <Button Content="Lengths" Tag="Segments" Click="AddDimensions_OnClick" Style="{StaticResource PanelKeyButtonStyle}"
+                                        ToolTip="Length of every side, or of a curve" />
+                            </UniformGrid>
+                            <TextBlock Text="Dimensions stay attached and follow the shape. Edit unit, precision and text in the DIMENSION card."
+                                       Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="12,2,12,8" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource CardBorderStyle}">
+                    <StackPanel>
+                        <Grid Style="{StaticResource CollapsibleCardHeaderStyle}" MouseLeftButtonDown="CardHeader_OnToggle">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="SHAPES" Style="{StaticResource CardHeaderTextStyle}" />
                             <Path Grid.Column="1" Style="{StaticResource CardChevronPathStyle}" />
                         </Grid>
@@ -162,11 +239,14 @@
                                         ToolTip="Mix any colour (with transparency)" />
                                 <Popup x:Name="GridColorPopup" PlacementTarget="{Binding ElementName=GridPaintColorChip}" Placement="Bottom"
                                        StaysOpen="False" AllowsTransparency="True">
-                                    <Border Background="{DynamicResource PanelSurfaceBrush}" BorderBrush="{DynamicResource RaisedEdgeBrush}"
-                                            BorderThickness="1" CornerRadius="12" Padding="10" Margin="0,4,8,8"
-                                            Effect="{DynamicResource RaisedDarkShadow}">
-                                        <views:ColorPickerView x:Name="GridPaintColorPicker" />
-                                    </Border>
+                                    <Grid Margin="0,4,8,8">
+                                        <Border Background="{DynamicResource PopupSurfaceBrush}" CornerRadius="12"
+                                                Effect="{DynamicResource RaisedDarkShadow}" />
+                                        <Border Background="{DynamicResource PopupSurfaceBrush}" BorderBrush="{DynamicResource RaisedEdgeBrush}"
+                                                BorderThickness="1" CornerRadius="12" Padding="10" SnapsToDevicePixels="True">
+                                            <views:ColorPickerView x:Name="GridPaintColorPicker" />
+                                        </Border>
+                                    </Grid>
                                 </Popup>
                             </Grid>
 

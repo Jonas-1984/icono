@@ -13,6 +13,9 @@ public partial class TitleBarView : UserControl
         Loaded += TitleBarView_OnLoaded;
     }
 
+    /// <summary>Shows the document name (with a * for unsaved changes) in the title row.</summary>
+    public void SetDocumentTitle(string text) => TitleText.Text = text;
+
     /// <summary>Hooks the owning Window's StateChanged so the Maximize button swaps to the
     /// "Restore" glyph (and back) exactly like the OS-drawn caption buttons would.</summary>
     private void TitleBarView_OnLoaded(object sender, RoutedEventArgs e)

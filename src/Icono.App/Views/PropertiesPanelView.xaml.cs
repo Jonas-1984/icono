@@ -50,7 +50,7 @@ public partial class PropertiesPanelView : UserControl
 
     // Order matches the reference "line ends" picker: plain line first, then wing-shaped heads
     // (open/filled/thin/half), then the dot-style markers (circle/diamond/square/bar).
-    private static readonly ArrowHeadOption[] ArrowHeadOptions =
+    internal static readonly ArrowHeadOption[] ArrowHeadOptions =
     [
         new("None", ArrowHeadKind.None),
         new("Open Arrow", ArrowHeadKind.Open),
@@ -106,25 +106,173 @@ public partial class PropertiesPanelView : UserControl
             {
                 _context.PropertyChanged += OnContextPropertyChanged;
                 _context.Document.Layers.CollectionChanged += OnDocumentLayersChanged;
-                BgTransparentRadio.IsChecked = _context.Document.BackgroundMode == BackgroundMode.Transparent;
-                BgSolidRadio.IsChecked = _context.Document.BackgroundMode == BackgroundMode.SolidColor;
-                BgBlurRadio.IsChecked = _context.Document.BackgroundMode == BackgroundMode.Blur;
-                BgImageRadio.IsChecked = _context.Document.BackgroundMode == BackgroundMode.Image;
-                UpdateBackgroundPanels();
-                BackgroundBlurColorPicker.SelectedColor = _context.Document.BackgroundBlurColor.ToMediaColor();
-                BackgroundBlurGradientCheckBox.IsChecked = _context.Document.BackgroundBlurGradientEnabled;
-                BackgroundBlurGradientColorPicker.Visibility =
-                    _context.Document.BackgroundBlurGradientEnabled ? Visibility.Visible : Visibility.Collapsed;
-                BackgroundBlurGradientColorPicker.SelectedColor = _context.Document.BackgroundBlurGradientColor.ToMediaColor();
-                BackgroundBlurAmountSlider.Value = _context.Document.BackgroundBlurAmount;
-                BackgroundFadeAmountSlider.Value = _context.Document.BackgroundFadeAmount;
-                BackgroundOpacitySlider.Value = _context.Document.BackgroundOpacity;
-                RefreshCanvasSizeTextBoxes();
+                RefreshDocumentSettings();
             }
 
             RebuildLayerList();
             RefreshForSelection();
         }
+    }
+
+    // ----- API used by the main window's menus ----------------------------------------------------
+
+    private bool _syncingDocumentSettings;
+
+    /// <summary>Re-reads the page settings (background mode and values, canvas size) from the document into the controls —
+    /// used when a document was created or opened.</summary>
+    public void RefreshDocumentSettings()
+    {
+        if (_context is null)
+        {
+            return;
+        }
+
+        _syncingDocumentSettings = true;
+        try
+        {
+            var document = _context.Document;
+            BgTransparentRadio.IsChecked = document.BackgroundMode == BackgroundMode.Transparent;
+            BgSolidRadio.IsChecked = document.BackgroundMode == BackgroundMode.SolidColor;
+            BgBlurRadio.IsChecked = document.BackgroundMode == BackgroundMode.Blur;
+            BgImageRadio.IsChecked = document.BackgroundMode == BackgroundMode.Image;
+            BackgroundColorPicker.SelectedColor = document.BackgroundColor.ToMediaColor();
+            UpdateBackgroundPanels();
+            BackgroundBlurColorPicker.SelectedColor = document.BackgroundBlurColor.ToMediaColor();
+            BackgroundBlurGradientCheckBox.IsChecked = document.BackgroundBlurGradientEnabled;
+            BackgroundBlurGradientColorPicker.Visibility =
+                document.BackgroundBlurGradientEnabled ? Visibility.Visible : Visibility.Collapsed;
+            BackgroundBlurGradientColorPicker.SelectedColor = document.BackgroundBlurGradientColor.ToMediaColor();
+            BackgroundBlurAmountSlider.Value = document.BackgroundBlurAmount;
+            BackgroundFadeAmountSlider.Value = document.BackgroundFadeAmount;
+            BackgroundOpacitySlider.Value = document.BackgroundOpacity;
+            RefreshCanvasSizeTextBoxes();
+        }
+        finally
+        {
+            _syncingDocumentSettings = false;
+        }
+    }
+
+    /// <summary>Adds a new layer on top and selects it (also reachable from the Insert menu).</summary>
+    public void AddLayer() => AddLayerButton_OnClick(this, new RoutedEventArgs());
+
+    /// <summary>Applies a design style (with its border / shadow preset) to the selected shapes. False when nothing styleable is selected.</summary>
+    public bool ApplyDesignStyle(DesignStyleKind kind)
+    {
+        if (_context is null || !_context.SelectedShapes.Any(s => !s.Locked && DesignStyleRenderer.Supports(s)))
+        {
+            return false;
+        }
+
+        ApplyToSelectionWithUndo(s =>
+        {
+            if (DesignStyleRenderer.Supports(s))
+            {
+                DesignStylePresets.Apply(s, kind);
+            }
+        });
+        return true;
+    }
+
+    /// <summary>Scrolls to the card whose header reads <paramref name="headerText"/>, expands it and makes it glow briefly. False
+    /// when that card is not available right now (e.g. the LINE card needs a selected line).</summary>
+    public bool FocusCard(string headerText)
+    {
+        var header = FindCardHeader(this, headerText);
+        if (header is null)
+        {
+            return false;
+        }
+
+        // Cards that are hidden for the current selection cannot be focused.
+        for (DependencyObject? d = header; d is not null && !ReferenceEquals(d, this); d = VisualTreeHelper.GetParent(d))
+        {
+            if (d is UIElement { Visibility: not Visibility.Visible })
+            {
+                return false;
+            }
+        }
+
+        if (header.Parent is Panel parent)
+        {
+            var index = parent.Children.IndexOf(header);
+            if (index >= 0 && index + 1 < parent.Children.Count && parent.Children[index + 1] is UIElement content && content.Visibility != Visibility.Visible)
+            {
+                content.Visibility = Visibility.Visible;
+                if (header is Grid { Children.Count: > 1 } grid && grid.Children[1] is System.Windows.Shapes.Path chevron)
+                {
+                    chevron.RenderTransform = new RotateTransform(0);
+                }
+            }
+        }
+
+        // Scroll so the card's header sits at the top of the panel (the card then shows as much of itself as fits).
+        ScrollViewer? scroller = null;
+        for (DependencyObject? d = header; d is not null; d = VisualTreeHelper.GetParent(d))
+        {
+            if (d is ScrollViewer sv)
+            {
+                scroller = sv;
+                break;
+            }
+        }
+
+        if (scroller is not null)
+        {
+            var top = header.TransformToAncestor(scroller).Transform(new Point(0, 0)).Y;
+            scroller.ScrollToVerticalOffset(scroller.VerticalOffset + top - 8);
+        }
+        else
+        {
+            header.BringIntoView();
+        }
+
+        Border? card = null;
+        for (DependencyObject? d = header; d is not null; d = VisualTreeHelper.GetParent(d))
+        {
+            if (d is Border b && b.Style is not null && ReferenceEquals(b.Style, TryFindResource("CardBorderStyle")))
+            {
+                card = b;
+                break;
+            }
+        }
+
+        if (card is not null)
+        {
+            // A glow Effect on the card would run all its text through a blurred offscreen bitmap; light the rim instead.
+            card.SetResourceReference(Border.BorderBrushProperty, "AccentBlueMidBrush");
+            var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1100) };
+            timer.Tick += (_, _) =>
+            {
+                timer.Stop();
+                card.ClearValue(Border.BorderBrushProperty);
+            };
+            timer.Start();
+        }
+
+        return true;
+    }
+
+    /// <summary>The collapsible header row (a Grid inside a card) containing a TextBlock with exactly this text.</summary>
+    private static Grid? FindCardHeader(DependencyObject root, string headerText)
+    {
+        var count = VisualTreeHelper.GetChildrenCount(root);
+        for (var i = 0; i < count; i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            if (child is TextBlock text && string.Equals(text.Text, headerText, StringComparison.OrdinalIgnoreCase) &&
+                text.Parent is Grid { Parent: StackPanel } header)
+            {
+                return header;
+            }
+
+            if (FindCardHeader(child, headerText) is { } found)
+            {
+                return found;
+            }
+        }
+
+        return null;
     }
 
     public PropertiesPanelView()
@@ -150,6 +298,10 @@ public partial class PropertiesPanelView : UserControl
         LineStartHeadComboBox.ItemsSource = ArrowHeadOptions;
         LineEndHeadComboBox.ItemsSource = ArrowHeadOptions;
         FadeDirectionComboBox.ItemsSource = FadeDirectionOptions;
+        WallHatchComboBox.ItemsSource = HatchOptions;
+        WallUnitComboBox.ItemsSource = WallUnitOptions;
+        DimensionUnitComboBox.ItemsSource = WallUnitOptions;
+        WallHatchColorPicker.ColorChanged += WallHatchColorPicker_OnColorChanged;
 
         // Every font Windows currently has installed — lets the user pick any of their own fonts
         // instead of the app hard-coding a fixed "Segoe UI".
@@ -167,6 +319,7 @@ public partial class PropertiesPanelView : UserControl
         BorderColorPicker.ColorChanged += BorderColorPicker_OnColorChanged;
         BorderGradientColorPicker.ColorChanged += BorderGradientColorPicker_OnColorChanged;
         ShadowColorPicker.ColorChanged += ShadowColorPicker_OnColorChanged;
+        TextColorPicker.ColorChanged += TextColorPicker_OnColorChanged;
     }
 
     private void OnContextPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -238,6 +391,8 @@ public partial class PropertiesPanelView : UserControl
         NoSelectionHint.Visibility = shape is null ? Visibility.Visible : Visibility.Collapsed;
         if (shape is null)
         {
+            DimensionCard.Visibility = Visibility.Collapsed;
+            WallCard.Visibility = Visibility.Collapsed;
             LineCard.Visibility = Visibility.Collapsed;
             DesignStyleCard.Visibility = Visibility.Collapsed;
             DesignGridCard.Visibility = Visibility.Collapsed;
@@ -273,13 +428,16 @@ public partial class PropertiesPanelView : UserControl
 
     private void RefreshControlsFromShapeCore(Shape shape)
     {
-        XTextBox.Text = shape.X.ToString("0", CultureInfo.InvariantCulture);
-        YTextBox.Text = shape.Y.ToString("0", CultureInfo.InvariantCulture);
-        WidthTextBox.Text = shape.Width.ToString("0", CultureInfo.InvariantCulture);
-        HeightTextBox.Text = shape.Height.ToString("0", CultureInfo.InvariantCulture);
+        var drawn = ShapeOutline.Box(shape);
+        XTextBox.Text = FormatInUnit(drawn.X, _shapeSizeUnit);
+        YTextBox.Text = FormatInUnit(drawn.Y, _shapeSizeUnit);
+        WidthTextBox.Text = FormatInUnit(drawn.W, _shapeSizeUnit);
+        HeightTextBox.Text = FormatInUnit(drawn.H, _shapeSizeUnit);
         RotationTextBox.Text = shape.Rotation.ToString("0", CultureInfo.InvariantCulture);
 
         RefreshLineControls(shape);
+        RefreshWallControls(shape);
+        RefreshDimensionControls(shape);
         RefreshDesignStyleControls(shape);
         RefreshDesignGridControls(shape);
         Depth3DSlider.Value = shape.Depth3D;
@@ -345,6 +503,11 @@ public partial class PropertiesPanelView : UserControl
         TextItalicToggle.IsChecked = shape.TextItalic;
         TextUnderlineToggle.IsChecked = shape.TextUnderline;
         FontSizeTextBox.Text = shape.TextFontSize.ToString("0", CultureInfo.InvariantCulture);
+
+        // A Text shape is coloured by its fill; every other shape gets a separate colour for the text typed into it.
+        TextColorSection.Visibility = shape.Kind == ShapeKind.Text ? Visibility.Collapsed : Visibility.Visible;
+        TextColorPicker.SelectedColor = ShapeLabel.EffectiveColor(shape).ToMediaColor();
+        TextColorAutoButton.IsEnabled = shape.TextColor is not null;
     }
 
     /// <summary>Applies an edit to every currently selected, UNLOCKED shape (or a no-op if none) —
@@ -495,22 +658,39 @@ public partial class PropertiesPanelView : UserControl
             return;
         }
 
-        if (!double.TryParse(textBox.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out var value))
+        // The boxes show the size of what is DRAWN (its outline), not of the template frame around it.
+        var outline = ShapeOutline.Box(_boundShape);
+        var shownPx = field switch
+        {
+            "X" => outline.X,
+            "Y" => outline.Y,
+            "Width" => outline.W,
+            _ => outline.H,
+        };
+
+        // Untouched box (focus just left it): keep the exact stored value instead of the rounded text.
+        var text = textBox.Text.Trim().Replace(',', '.');
+        if (text == FormatInUnit(shownPx, _shapeSizeUnit))
+        {
+            return;
+        }
+
+        if (!double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var typed))
         {
             RefreshControlsFromShape();
             return;
         }
 
-        value = Math.Max(0, value);
+        var value = Math.Max(0, UnitToPx(typed, _shapeSizeUnit));
 
         var before = ShapeSnapshot.Capture(_boundShape);
 
         switch (field)
         {
-            case "X": _boundShape.X = value; break;
-            case "Y": _boundShape.Y = value; break;
-            case "Width": _boundShape.Width = Math.Max(1, value); break;
-            case "Height": _boundShape.Height = Math.Max(1, value); break;
+            case "X": ShapeOutline.SetBox(_boundShape, value, outline.Y, outline.W, outline.H); break;
+            case "Y": ShapeOutline.SetBox(_boundShape, outline.X, value, outline.W, outline.H); break;
+            case "Width": ShapeOutline.SetBox(_boundShape, outline.X, outline.Y, Math.Max(1, value), outline.H); break;
+            case "Height": ShapeOutline.SetBox(_boundShape, outline.X, outline.Y, outline.W, Math.Max(1, value)); break;
         }
 
         var after = ShapeSnapshot.Capture(_boundShape);
@@ -834,6 +1014,399 @@ public partial class PropertiesPanelView : UserControl
             }
         });
 
+    // ----- Wall (thickness, hatch, ring, dimensions, splitting) ----------------------------------------------
+
+    private static readonly HatchOption[] HatchOptions =
+    [
+        new("Solid (no hatch)", HatchKind.Solid),
+        new("Diagonal", HatchKind.Diagonal),
+        new("Reverse diagonal", HatchKind.ReverseDiagonal),
+        new("Cross hatch", HatchKind.CrossHatch),
+        new("Horizontal lines", HatchKind.Horizontal),
+        new("Vertical lines", HatchKind.Vertical),
+        new("Grid", HatchKind.Grid),
+        new("Dots", HatchKind.Dots),
+        new("Brick", HatchKind.Brick),
+        new("Zigzag", HatchKind.Zigzag),
+    ];
+
+    private static readonly LengthUnitOption[] WallUnitOptions =
+    [
+        new("Millimetres (mm)", LengthUnit.Millimeter),
+        new("Centimetres (cm)", LengthUnit.Centimeter),
+        new("Metres (m)", LengthUnit.Meter),
+        new("Inches (in)", LengthUnit.Inch),
+    ];
+
+    private static string UnitName(CanvasSizeUnit unit) => unit switch
+    {
+        CanvasSizeUnit.Mm => "mm",
+        CanvasSizeUnit.Cm => "cm",
+        CanvasSizeUnit.In => "inch",
+        _ => "px",
+    };
+
+    private void RefreshWallControls(Shape shape)
+    {
+        var isWall = shape.Kind == ShapeKind.Wall;
+        WallCard.Visibility = isWall ? Visibility.Visible : Visibility.Collapsed;
+        if (!isWall)
+        {
+            return;
+        }
+
+        WallThicknessLabel.Text = $"THICKNESS ({UnitName(_shapeSizeUnit)})";
+        WallThicknessTextBox.Text = FormatInUnit(shape.WallThickness, _shapeSizeUnit);
+        WallClosedCheckBox.IsChecked = shape.WallClosed;
+        WallHatchComboBox.SelectedItem = HatchOptions.First(o => o.Value == shape.Hatch);
+        WallHatchSpacingSlider.Value = Math.Clamp(shape.HatchSpacing, WallHatchSpacingSlider.Minimum, WallHatchSpacingSlider.Maximum);
+        WallHatchSpacingValueText.Text = $"{shape.HatchSpacing:0}px";
+        WallHatchColorPicker.SelectedColor = shape.HatchColor.ToMediaColor();
+        WallDimensionsCheckBox.IsChecked = shape.WallShowDimensions;
+        WallUnitComboBox.SelectedItem = WallUnitOptions.First(o => o.Value == shape.WallDimensionUnit);
+    }
+
+    // ----- Dimension card (a dimension shape, and the dimensions written next to a wall) ------------------------
+
+    private static bool HasDimensions(Shape shape) =>
+        shape.Kind == ShapeKind.Dimension || (shape.Kind == ShapeKind.Wall && shape.WallShowDimensions);
+
+    private void RefreshDimensionControls(Shape shape)
+    {
+        var isDimension = shape.Kind == ShapeKind.Dimension;
+        var isWall = shape.Kind == ShapeKind.Wall;
+        var visible = HasDimensions(shape);
+        DimensionCard.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+        if (!visible)
+        {
+            return;
+        }
+
+
+        var linked = isDimension && shape.DimTarget is not null && shape.DimRole != DimensionRole.None;
+        DimensionLinkSection.Visibility = isDimension ? Visibility.Visible : Visibility.Collapsed;
+        DimensionLinkText.Text = linked
+            ? "Attached to its shape: it moves and changes with it."
+            : shape.DimAnchors is { Count: > 0 } && shape.DimTarget is null && shape.DimAnchors.Any(a => a is not null)
+                ? "Stuck to its shape by its points: it follows when the shape moves or is resized."
+                : "Free dimension (its points are its own).";
+        DimensionDetachButton.Visibility = linked ? Visibility.Visible : Visibility.Collapsed;
+        DimensionUnitSection.Visibility = isDimension ? Visibility.Visible : Visibility.Collapsed;
+        DimensionTextSection.Visibility = isDimension ? Visibility.Visible : Visibility.Collapsed;
+        DimensionColorHint.Visibility = isDimension ? Visibility.Visible : Visibility.Collapsed;
+
+        // The distance is editable for a wall, and for a dimension that was created for its shape.
+        DimensionOffsetSection.Visibility = isWall || linked ? Visibility.Visible : Visibility.Collapsed;
+        DimensionOffsetLabel.Text = isWall
+            ? $"DISTANCE FROM WALL ({UnitName(_shapeSizeUnit)})"
+            : $"DISTANCE FROM SHAPE ({UnitName(_shapeSizeUnit)})";
+        DimensionOffsetTextBox.Text = FormatInUnit(shape.DimOffset, _shapeSizeUnit);
+
+        if (isDimension)
+        {
+            DimensionUnitComboBox.SelectedItem = WallUnitOptions.First(o => o.Value == shape.DimUnit);
+            DimensionTextBox.Text = shape.DimText ?? string.Empty;
+        }
+
+        DimensionPrecisionTextBox.Text = shape.DimPrecision.ToString(CultureInfo.InvariantCulture);
+
+        var style = DimensionStyle.For(shape);
+        DimensionFontSizeTextBox.Text = style.FontSize.ToString("0.##", CultureInfo.InvariantCulture);
+        DimensionLineWidthTextBox.Text = style.LineWidth.ToString("0.##", CultureInfo.InvariantCulture);
+        DimensionArrowSizeTextBox.Text = style.ArrowSize.ToString("0.##", CultureInfo.InvariantCulture);
+        DimensionExtGapTextBox.Text = style.ExtGap.ToString("0.##", CultureInfo.InvariantCulture);
+        DimensionExtOvershootTextBox.Text = style.ExtOvershoot.ToString("0.##", CultureInfo.InvariantCulture);
+    }
+
+    private void DimensionDetachButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        ApplyToSelectionWithUndo(s =>
+        {
+            if (s.Kind == ShapeKind.Dimension)
+            {
+                s.DimTarget = null;
+                s.DimRole = DimensionRole.None;
+                s.DimAnchors = null;
+            }
+        });
+        RefreshControlsFromShape();
+    }
+
+    private void DimensionUnitComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (DimensionUnitComboBox.SelectedItem is LengthUnitOption option)
+        {
+            ApplyToSelectionWithUndo(s =>
+            {
+                if (s.Kind == ShapeKind.Dimension)
+                {
+                    s.DimUnit = option.Value;
+                }
+            });
+        }
+    }
+
+    private void DimensionPrecisionTextBox_OnLostFocus(object sender, RoutedEventArgs e)
+    {
+        if (_boundShape is null || !HasDimensions(_boundShape) || _isRefreshingControls)
+        {
+            return;
+        }
+
+        if (!int.TryParse(DimensionPrecisionTextBox.Text.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var places))
+        {
+            RefreshControlsFromShape();
+            return;
+        }
+
+        places = Math.Clamp(places, 0, 6);
+        if (places != _boundShape.DimPrecision)
+        {
+            ApplyToSelectionWithUndo(s =>
+            {
+                if (HasDimensions(s))
+                {
+                    s.DimPrecision = places;
+                }
+            });
+        }
+
+        RefreshControlsFromShape();
+    }
+
+    private void DimensionTextBox_OnLostFocus(object sender, RoutedEventArgs e)
+    {
+        if (_boundShape is not { Kind: ShapeKind.Dimension } dim || _isRefreshingControls)
+        {
+            return;
+        }
+
+        var text = string.IsNullOrWhiteSpace(DimensionTextBox.Text) ? null : DimensionTextBox.Text;
+        if (text != dim.DimText)
+        {
+            ApplyToSelectionWithUndo(s =>
+            {
+                if (s.Kind == ShapeKind.Dimension)
+                {
+                    s.DimText = text;
+                }
+            });
+        }
+    }
+
+    private void DimensionOffsetTextBox_OnLostFocus(object sender, RoutedEventArgs e)
+    {
+        if (_boundShape is null || !HasDimensions(_boundShape) || _isRefreshingControls)
+        {
+            return;
+        }
+
+        var text = DimensionOffsetTextBox.Text.Trim().Replace(',', '.');
+        if (text == FormatInUnit(_boundShape.DimOffset, _shapeSizeUnit))
+        {
+            return;
+        }
+
+        if (!double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var typed))
+        {
+            RefreshControlsFromShape();
+            return;
+        }
+
+        var px = UnitToPx(typed, _shapeSizeUnit);
+        ApplyToSelectionWithUndo(s =>
+        {
+            if (HasDimensions(s))
+            {
+                s.DimOffset = px;
+            }
+        });
+        RefreshControlsFromShape();
+    }
+
+    /// <summary>Number size, line width, arrowhead size and extension-line gap / overshoot (px).</summary>
+    private void DimensionStyleTextBox_OnLostFocus(object sender, RoutedEventArgs e)
+    {
+        if (_boundShape is null || !HasDimensions(_boundShape) || _isRefreshingControls || sender is not TextBox { Tag: string which } box)
+        {
+            return;
+        }
+
+        if (!double.TryParse(box.Text.Trim().Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out var typed))
+        {
+            RefreshControlsFromShape();
+            return;
+        }
+
+        var current = DimensionStyle.For(_boundShape);
+        var already = which switch
+        {
+            "Font" => current.FontSize,
+            "Line" => current.LineWidth,
+            "Arrow" => current.ArrowSize,
+            "Gap" => current.ExtGap,
+            _ => current.ExtOvershoot,
+        };
+        if (Math.Abs(typed - already) < 0.0001)
+        {
+            return;
+        }
+
+        ApplyToSelectionWithUndo(s =>
+        {
+            if (!HasDimensions(s))
+            {
+                return;
+            }
+
+            switch (which)
+            {
+                case "Font": s.DimFontSize = Math.Clamp(typed, 4, 200); break;
+                case "Line": s.DimLineWidth = Math.Clamp(typed, 0.1, 30); break;
+                case "Arrow": s.DimArrowSize = Math.Clamp(typed, 1, 200); break;
+                case "Gap": s.DimExtGap = Math.Clamp(typed, 0, 200); break;
+                default: s.DimExtOvershoot = Math.Clamp(typed, 0, 200); break;
+            }
+        });
+        RefreshControlsFromShape();
+    }
+
+    private void DimensionResetStyleButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        ApplyToSelectionWithUndo(s =>
+        {
+            if (HasDimensions(s))
+            {
+                s.DimFontSize = null;
+                s.DimLineWidth = null;
+                s.DimArrowSize = null;
+                s.DimExtGap = null;
+                s.DimExtOvershoot = null;
+            }
+        });
+        RefreshControlsFromShape();
+    }
+
+    private void WallThicknessTextBox_OnLostFocus(object sender, RoutedEventArgs e)
+    {
+        if (_boundShape is not { Kind: ShapeKind.Wall } wall || _isRefreshingControls)
+        {
+            return;
+        }
+
+        var text = WallThicknessTextBox.Text.Trim().Replace(',', '.');
+        if (text == FormatInUnit(wall.WallThickness, _shapeSizeUnit))
+        {
+            return;
+        }
+
+        if (!double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var typed) || typed <= 0)
+        {
+            RefreshControlsFromShape();
+            return;
+        }
+
+        var px = Math.Max(0.5, UnitToPx(typed, _shapeSizeUnit));
+        ApplyToSelectionWithUndo(s =>
+        {
+            if (s.Kind == ShapeKind.Wall)
+            {
+                s.WallThickness = px;
+            }
+        });
+        RefreshControlsFromShape();
+    }
+
+    private void WallTextBox_OnKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            Keyboard.ClearFocus();
+            FocusManager.SetFocusedElement(Window.GetWindow(this), Window.GetWindow(this));
+            e.Handled = true;
+        }
+    }
+
+    private void WallClosedCheckBox_OnCheckedChanged(object sender, RoutedEventArgs e)
+    {
+        var closed = WallClosedCheckBox.IsChecked == true;
+        ApplyToSelectionWithUndo(s =>
+        {
+            if (s.Kind == ShapeKind.Wall)
+            {
+                s.WallClosed = closed && s.Points is { Count: >= 3 };
+            }
+        });
+    }
+
+    private void WallHatchComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (WallHatchComboBox.SelectedItem is HatchOption option)
+        {
+            ApplyToSelectionWithUndo(s =>
+            {
+                if (s.Kind == ShapeKind.Wall)
+                {
+                    s.Hatch = option.Value;
+                }
+            });
+        }
+    }
+
+    private void WallHatchSpacingSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (WallHatchSpacingValueText is null)
+        {
+            return;
+        }
+
+        WallHatchSpacingValueText.Text = $"{e.NewValue:0}px";
+        ApplyToSelection(s =>
+        {
+            if (s.Kind == ShapeKind.Wall)
+            {
+                s.HatchSpacing = e.NewValue;
+            }
+        });
+    }
+
+    private void WallHatchColorPicker_OnColorChanged(object? sender, Color color) =>
+        ApplyToSelectionWithUndo(s =>
+        {
+            if (s.Kind == ShapeKind.Wall)
+            {
+                s.HatchColor = color.FromMediaColor();
+            }
+        });
+
+    private void WallDimensionsCheckBox_OnCheckedChanged(object sender, RoutedEventArgs e)
+    {
+        var show = WallDimensionsCheckBox.IsChecked == true;
+        ApplyToSelectionWithUndo(s =>
+        {
+            if (s.Kind == ShapeKind.Wall)
+            {
+                s.WallShowDimensions = show;
+            }
+        });
+    }
+
+    private void WallUnitComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (WallUnitComboBox.SelectedItem is LengthUnitOption option)
+        {
+            ApplyToSelectionWithUndo(s =>
+            {
+                if (s.Kind == ShapeKind.Wall)
+                {
+                    s.WallDimensionUnit = option.Value;
+                }
+            });
+        }
+    }
+
+    private void WallSplitAllButton_OnClick(object sender, RoutedEventArgs e) => _context?.SplitSelectedWallsAtAllPoints();
+
     // ----- Line options (thickness / corners, in cm) -------------------------------------------
 
     private const double LinePxPerCm = PxPerInch / 2.54;
@@ -1111,6 +1684,15 @@ public partial class PropertiesPanelView : UserControl
     private void ShadowColorPicker_OnColorChanged(object? sender, Color color) =>
         ApplyToSelectionWithUndo(s => s.ShadowColor = color.FromMediaColor());
 
+    private void TextColorPicker_OnColorChanged(object? sender, Color color) =>
+        ApplyToSelectionWithUndo(s => s.TextColor = color.FromMediaColor());
+
+    private void TextColorAutoButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        ApplyToSelectionWithUndo(s => s.TextColor = null);
+        RefreshControlsFromShape();
+    }
+
     private void TextBoldToggle_OnCheckedChanged(object sender, RoutedEventArgs e)
     {
         var bold = TextBoldToggle.IsChecked == true;
@@ -1191,7 +1773,7 @@ public partial class PropertiesPanelView : UserControl
 
     private void BackgroundModeRadio_OnChecked(object sender, RoutedEventArgs e)
     {
-        if (_context is null || sender is not RadioButton { Tag: string tag })
+        if (_context is null || _syncingDocumentSettings || sender is not RadioButton { Tag: string tag })
         {
             return;
         }
@@ -1314,8 +1896,8 @@ public partial class PropertiesPanelView : UserControl
         }
         catch (Exception)
         {
-            MessageBox.Show(Window.GetWindow(this), "Die Datei konnte nicht als Bild gelesen werden.",
-                "Hintergrundbild", MessageBoxButton.OK, MessageBoxImage.Warning);
+            ThemedMessageBox.Show(Window.GetWindow(this), "The file could not be read as an image.",
+                "Background image", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -1417,17 +1999,21 @@ public partial class PropertiesPanelView : UserControl
         _context.RequestRedraw();
     }
 
-    private enum CanvasSizeUnit { Px, Cm, Mm }
+    private enum CanvasSizeUnit { Px, Cm, Mm, In }
 
     private const double PxPerInch = 96.0;
     private const double MmPerInch = 25.4;
 
     private CanvasSizeUnit _canvasSizeUnit = CanvasSizeUnit.Px;
 
+    /// <summary>Unit of the selected shape's size/position boxes (SIZE &amp; POSITION card); values stay stored in px.</summary>
+    private CanvasSizeUnit _shapeSizeUnit = CanvasSizeUnit.Px;
+
     private static double PxToUnit(double px, CanvasSizeUnit unit) => unit switch
     {
         CanvasSizeUnit.Cm => px / PxPerInch * (MmPerInch / 10),
         CanvasSizeUnit.Mm => px / PxPerInch * MmPerInch,
+        CanvasSizeUnit.In => px / PxPerInch,
         _ => px,
     };
 
@@ -1435,8 +2021,19 @@ public partial class PropertiesPanelView : UserControl
     {
         CanvasSizeUnit.Cm => value / (MmPerInch / 10) * PxPerInch,
         CanvasSizeUnit.Mm => value / MmPerInch * PxPerInch,
+        CanvasSizeUnit.In => value * PxPerInch,
         _ => value,
     };
+
+    private static string UnitFormat(CanvasSizeUnit unit) => unit switch
+    {
+        CanvasSizeUnit.Px => "0",
+        CanvasSizeUnit.In => "0.###",
+        _ => "0.##",
+    };
+
+    private static string FormatInUnit(double px, CanvasSizeUnit unit) =>
+        PxToUnit(px, unit).ToString(UnitFormat(unit), CultureInfo.InvariantCulture);
 
     private void RefreshCanvasSizeTextBoxes()
     {
@@ -1445,9 +2042,22 @@ public partial class PropertiesPanelView : UserControl
             return;
         }
 
-        var format = _canvasSizeUnit == CanvasSizeUnit.Px ? "0" : "0.##";
-        CanvasWidthTextBox.Text = PxToUnit(_context.Document.Width, _canvasSizeUnit).ToString(format, CultureInfo.InvariantCulture);
-        CanvasHeightTextBox.Text = PxToUnit(_context.Document.Height, _canvasSizeUnit).ToString(format, CultureInfo.InvariantCulture);
+        CanvasWidthTextBox.Text = FormatInUnit(_context.Document.Width, _canvasSizeUnit);
+        CanvasHeightTextBox.Text = FormatInUnit(_context.Document.Height, _canvasSizeUnit);
+    }
+
+    private void ShapeSizeUnitRadio_OnChecked(object sender, RoutedEventArgs e)
+    {
+        if (sender is not RadioButton { Tag: string tag })
+        {
+            return;
+        }
+
+        _shapeSizeUnit = Enum.Parse<CanvasSizeUnit>(tag);
+        if (_boundShape is not null)
+        {
+            RefreshControlsFromShape();
+        }
     }
 
     private void CanvasSizeUnitRadio_OnChecked(object sender, RoutedEventArgs e)
@@ -1508,8 +2118,8 @@ public partial class PropertiesPanelView : UserControl
             return;
         }
 
-        if (!double.TryParse(CanvasWidthTextBox.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out var widthValue) ||
-            !double.TryParse(CanvasHeightTextBox.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out var heightValue) ||
+        if (!double.TryParse(CanvasWidthTextBox.Text.Trim().Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out var widthValue) ||
+            !double.TryParse(CanvasHeightTextBox.Text.Trim().Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out var heightValue) ||
             widthValue <= 0 || heightValue <= 0)
         {
             RefreshCanvasSizeTextBoxes();

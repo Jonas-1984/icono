@@ -11,6 +11,10 @@
         Icon="Assets/icono.ico"
         WindowStyle="None"
         AllowsTransparency="False"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        TextOptions.TextFormattingMode="Display"
+        TextOptions.TextRenderingMode="ClearType"
         ResizeMode="CanResize"
         Background="{DynamicResource WindowBackgroundBrush}">
     <shell:WindowChrome.WindowChrome>
@@ -38,70 +42,155 @@
 
         <Menu Grid.Row="1">
             <MenuItem Header="File">
-                <MenuItem Header="New Icon" IsEnabled="False" />
-                <MenuItem Header="Open..." IsEnabled="False" />
-                <MenuItem Header="Save" IsEnabled="False" />
-                <MenuItem Header="Save As..." IsEnabled="False" />
-                <Separator />
-                <MenuItem Header="Export" IsEnabled="False">
-                    <MenuItem Header="64 x 64" IsEnabled="False" />
-                    <MenuItem Header="128 x 128" IsEnabled="False" />
-                    <MenuItem Header="256 x 256" IsEnabled="False" />
-                    <MenuItem Header="512 x 512" IsEnabled="False" />
-                    <Separator />
-                    <MenuItem Header="Export All Sizes..." IsEnabled="False" />
+                <MenuItem Header="New..." InputGestureText="Ctrl+N" Click="NewMenuItem_OnClick" />
+                <MenuItem Header="Open..." InputGestureText="Ctrl+O" Click="OpenMenuItem_OnClick" />
+                <MenuItem x:Name="RecentMenuItem" Header="Open Recent" SubmenuOpened="RecentMenuItem_OnSubmenuOpened">
+                    <MenuItem Header="(none)" IsEnabled="False" />
                 </MenuItem>
-                <MenuItem Header="Recent Files" IsEnabled="False" />
                 <Separator />
-                <MenuItem Header="Exit" Click="ExitMenuItem_OnClick" />
+                <MenuItem Header="Save" InputGestureText="Ctrl+S" Click="SaveMenuItem_OnClick" />
+                <MenuItem Header="Save As..." InputGestureText="Ctrl+Shift+S" Click="SaveAsMenuItem_OnClick" />
+                <Separator />
+                <MenuItem Header="Export..." InputGestureText="Ctrl+E" Click="ExportMenuItem_OnClick" />
+                <MenuItem Header="Export PNG (page size)" Click="ExportPngQuickMenuItem_OnClick" />
+                <Separator />
+                <MenuItem Header="Exit" InputGestureText="Alt+F4" Click="ExitMenuItem_OnClick" />
             </MenuItem>
             <MenuItem Header="Home">
-                <MenuItem Header="Undo" Click="UndoMenuItem_OnClick" InputGestureText="Ctrl+Z" />
-                <MenuItem Header="Redo" Click="RedoMenuItem_OnClick" InputGestureText="Ctrl+Y" />
+                <MenuItem Header="Undo" InputGestureText="Ctrl+Z" Click="UndoMenuItem_OnClick" />
+                <MenuItem Header="Redo" InputGestureText="Ctrl+Y" Click="RedoMenuItem_OnClick" />
                 <Separator />
-                <MenuItem Header="Cut" Click="CutMenuItem_OnClick" InputGestureText="Ctrl+X" />
-                <MenuItem Header="Copy" Click="CopyMenuItem_OnClick" InputGestureText="Ctrl+C" />
-                <MenuItem Header="Paste" Click="PasteMenuItem_OnClick" InputGestureText="Ctrl+V" />
+                <MenuItem Header="Cut" InputGestureText="Ctrl+X" Click="CutMenuItem_OnClick" />
+                <MenuItem Header="Copy" InputGestureText="Ctrl+C" Click="CopyMenuItem_OnClick" />
+                <MenuItem Header="Paste" InputGestureText="Ctrl+V" Click="PasteMenuItem_OnClick" />
+                <MenuItem Header="Duplicate" InputGestureText="Ctrl+D" Click="DuplicateMenuItem_OnClick" />
+                <MenuItem Header="Delete" InputGestureText="Del" Click="DeleteMenuItem_OnClick" />
                 <Separator />
-                <MenuItem Header="Zoom In" IsEnabled="False" />
-                <MenuItem Header="Zoom Out" IsEnabled="False" />
-                <MenuItem Header="Reset Zoom" IsEnabled="False" />
+                <MenuItem Header="Select All" InputGestureText="Ctrl+A" Click="SelectAllMenuItem_OnClick" />
+                <MenuItem Header="Deselect" InputGestureText="Esc" Click="DeselectMenuItem_OnClick" />
+                <Separator />
+                <MenuItem Header="Group" InputGestureText="Ctrl+G" Click="GroupButton_OnClick" />
+                <MenuItem Header="Ungroup" InputGestureText="Ctrl+Shift+G" Click="UngroupButton_OnClick" />
+                <MenuItem Header="Lock" Click="LockButton_OnClick" />
+                <MenuItem Header="Unlock" Click="UnlockButton_OnClick" />
+            </MenuItem>
+            <MenuItem Header="View">
+                <MenuItem Header="Zoom In" InputGestureText="Ctrl++" Click="ZoomInMenuItem_OnClick" />
+                <MenuItem Header="Zoom Out" InputGestureText="Ctrl+-" Click="ZoomOutMenuItem_OnClick" />
+                <MenuItem Header="Actual Size (100%)" InputGestureText="Ctrl+0" Click="ActualSizeMenuItem_OnClick" />
+                <MenuItem Header="Fit Page to Window" InputGestureText="Ctrl+1" Click="FitPageMenuItem_OnClick" />
+                <Separator />
+                <MenuItem x:Name="GridMenuItem" Header="Show Grid" IsCheckable="True" Click="GridMenuItem_OnClick" />
+                <MenuItem x:Name="SnapMenuItem" Header="Snap to Grid" IsCheckable="True" Click="SnapMenuItem_OnClick" />
+                <Separator />
+                <MenuItem x:Name="ViewDarkModeMenuItem" Header="Dark Mode" Click="DarkModeMenuItem_OnClick" />
+                <MenuItem x:Name="ViewLightModeMenuItem" Header="Light Mode" Click="LightModeMenuItem_OnClick" />
             </MenuItem>
             <MenuItem Header="Tools">
-                <MenuItem Header="Selection Tool" IsEnabled="False" />
-                <MenuItem Header="Pan / Zoom Tool" IsEnabled="False" />
-                <MenuItem Header="Eyedropper" IsEnabled="False" />
+                <MenuItem Header="Selection Tool" InputGestureText="V" Tag="Select" Click="ToolMenuItem_OnClick" />
+                <MenuItem Header="Pan / Zoom Tool" InputGestureText="H" Tag="PanZoom" Click="ToolMenuItem_OnClick" />
+                <MenuItem Header="Eyedropper" InputGestureText="I" Tag="Eyedropper" Click="ToolMenuItem_OnClick" />
+                <MenuItem Header="Region Color (Bucket)" InputGestureText="G" Tag="RegionColor" Click="ToolMenuItem_OnClick" />
+                <Separator />
+                <MenuItem Header="Add Point" Tag="AddPoint" Click="ToolMenuItem_OnClick" />
+                <MenuItem Header="Delete Point" Tag="DeletePoint" Click="ToolMenuItem_OnClick" />
+                <MenuItem Header="Cut Wall" InputGestureText="X" Tag="WallCut" Click="ToolMenuItem_OnClick" />
             </MenuItem>
             <MenuItem Header="Insert">
-                <MenuItem Header="Shape" IsEnabled="False">
-                    <MenuItem Header="Square" IsEnabled="False" />
-                    <MenuItem Header="Rectangle" IsEnabled="False" />
-                    <MenuItem Header="Circle" IsEnabled="False" />
-                    <MenuItem Header="Triangle" IsEnabled="False" />
-                    <MenuItem Header="Polygon" IsEnabled="False" />
+                <MenuItem Header="Shape">
+                    <MenuItem Header="Rectangle" Tag="Rectangle" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Rounded Rectangle" Tag="RoundedRectangle" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Ellipse" Tag="Ellipse" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Triangle" Tag="Triangle" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Diamond" Tag="Diamond" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Pentagon" Tag="Pentagon" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Hexagon" Tag="Hexagon" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Octagon" Tag="Octagon" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Star" Tag="Star" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Heart" Tag="Heart" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Cross" Tag="Cross" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Cloud" Tag="Cloud" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Shield" Tag="Shield" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Speech Bubble" Tag="SpeechBubble" Click="ToolMenuItem_OnClick" />
                 </MenuItem>
-                <MenuItem Header="Text" IsEnabled="False" />
-                <MenuItem Header="Image..." IsEnabled="False" />
+                <MenuItem Header="Text" InputGestureText="T" Tag="Text" Click="ToolMenuItem_OnClick" />
+                <MenuItem Header="Design Grid" Tag="DesignGrid" Click="ToolMenuItem_OnClick" />
+                <MenuItem Header="Wall" InputGestureText="W" Tag="Wall" Click="ToolMenuItem_OnClick" />
+                <MenuItem Header="Dimension">
+                    <MenuItem Header="Aligned (along the line)" InputGestureText="D" Tag="DimAligned" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Horizontal" Tag="DimHorizontal" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Vertical" Tag="DimVertical" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Angle" Tag="DimAngular" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Radius" Tag="DimRadius" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Diameter" Tag="DimDiameter" Click="ToolMenuItem_OnClick" />
+                </MenuItem>
+                <MenuItem Header="Add Dimensions to Selection">
+                    <MenuItem Header="Automatic (suits the shape)" Tag="Auto" Click="AddDimensionsMenuItem_OnClick" />
+                    <MenuItem Header="Width, Height &amp; Depth" Tag="Size" Click="AddDimensionsMenuItem_OnClick" />
+                    <MenuItem Header="Diameter &amp; Radius" Tag="Round" Click="AddDimensionsMenuItem_OnClick" />
+                    <MenuItem Header="Corner Angles" Tag="Corners" Click="AddDimensionsMenuItem_OnClick" />
+                    <MenuItem Header="Segment / Curve Lengths" Tag="Segments" Click="AddDimensionsMenuItem_OnClick" />
+                </MenuItem>
+                <Separator />
+                <MenuItem Header="Image..." Click="InsertImageMenuItem_OnClick" />
+                <MenuItem Header="SVG Code..." Click="InsertSvgMenuItem_OnClick" />
+                <Separator />
+                <MenuItem Header="New Layer" Click="NewLayerMenuItem_OnClick" />
             </MenuItem>
             <MenuItem Header="Draw">
-                <MenuItem Header="Line Tool" IsEnabled="False" />
-                <MenuItem Header="Arrow Tool" IsEnabled="False" />
-                <MenuItem Header="Border Tool" IsEnabled="False" />
+                <MenuItem Header="Line" Tag="Line" Click="ToolMenuItem_OnClick" />
+                <MenuItem Header="Arrow" Tag="Arrow" Click="ToolMenuItem_OnClick" />
+                <MenuItem Header="Double Arrow" Tag="DoubleArrow" Click="ToolMenuItem_OnClick" />
+                <MenuItem Header="Polyline" Tag="Polyline" Click="ToolMenuItem_OnClick" />
+                <MenuItem Header="Curve" Tag="Curve" Click="ToolMenuItem_OnClick" />
+                <Separator />
+                <MenuItem Header="Line Options..." Tag="LINE" Click="FocusCardMenuItem_OnClick" />
             </MenuItem>
             <MenuItem Header="Design">
-                <MenuItem Header="Border Style..." IsEnabled="False" />
-                <MenuItem Header="Text Formats..." IsEnabled="False" />
-                <MenuItem Header="Colors..." IsEnabled="False" />
-                <MenuItem Header="Gradient / Gloss Presets..." IsEnabled="False" />
-                <MenuItem Header="Canvas Size..." IsEnabled="False" />
+                <MenuItem Header="Design Style">
+                    <MenuItem Header="None (standard)" Tag="None" Click="DesignStyleMenuItem_OnClick" />
+                    <Separator />
+                    <MenuItem Header="Glassmorphism" Tag="Glassmorphism" Click="DesignStyleMenuItem_OnClick" />
+                    <MenuItem Header="Neumorphism" Tag="Neumorphism" Click="DesignStyleMenuItem_OnClick" />
+                    <MenuItem Header="Fluent Design" Tag="FluentDesign" Click="DesignStyleMenuItem_OnClick" />
+                    <MenuItem Header="Aurora Gradients" Tag="AuroraGradients" Click="DesignStyleMenuItem_OnClick" />
+                    <MenuItem Header="Bento UI" Tag="BentoUI" Click="DesignStyleMenuItem_OnClick" />
+                    <MenuItem Header="Cyberpunk / Futuristic UI" Tag="Cyberpunk" Click="DesignStyleMenuItem_OnClick" />
+                    <MenuItem Header="3D Claymorphism" Tag="Claymorphism3D" Click="DesignStyleMenuItem_OnClick" />
+                    <MenuItem Header="Dark UI + Neon Accents" Tag="DarkNeon" Click="DesignStyleMenuItem_OnClick" />
+                </MenuItem>
+                <MenuItem Header="Arrange">
+                    <MenuItem Header="Bring to Front" Click="BringToFrontButton_OnClick" />
+                    <MenuItem Header="Send to Back" Click="SendToBackButton_OnClick" />
+                    <Separator />
+                    <MenuItem Header="Merge to One Shape" Click="MergeButton_OnClick" />
+                    <MenuItem Header="Union" Click="UnionButton_OnClick" />
+                    <MenuItem Header="Trim" Click="TrimButton_OnClick" />
+                    <MenuItem Header="Reflect" Click="ReflectButton_OnClick" />
+                    <MenuItem Header="Offset..." Click="OffsetButton_OnClick" />
+                </MenuItem>
+                <Separator />
+                <MenuItem Header="Colors..." Tag="FILL &amp; COLOR" Click="FocusCardMenuItem_OnClick" />
+                <MenuItem Header="Size &amp; Position..." Tag="SIZE &amp; POSITION" Click="FocusCardMenuItem_OnClick" />
+                <MenuItem Header="Wall (Hatch, Thickness)..." Tag="WALL" Click="FocusCardMenuItem_OnClick" />
+                <MenuItem Header="Dimension Style..." Tag="DIMENSION" Click="FocusCardMenuItem_OnClick" />
+                <MenuItem Header="Border..." Tag="BORDER" Click="FocusCardMenuItem_OnClick" />
+                <MenuItem Header="Effects..." Tag="OPACITY, BLUR &amp; SHADOW" Click="FocusCardMenuItem_OnClick" />
+                <MenuItem Header="Text Formats..." Tag="TEXT FORMATTING" Click="FocusCardMenuItem_OnClick" />
+                <MenuItem Header="Gradient / Gloss Presets..." Tag="BORDER" Click="FocusCardMenuItem_OnClick" />
+                <Separator />
+                <MenuItem Header="Background..." Tag="BACKGROUND" Click="FocusCardMenuItem_OnClick" />
+                <MenuItem Header="Canvas Size..." Tag="CANVAS SIZE" Click="FocusCardMenuItem_OnClick" />
             </MenuItem>
             <MenuItem Header="Help">
-                <MenuItem Header="About icono" Click="AboutMenuItem_OnClick" />
-                <MenuItem Header="Documentation" IsEnabled="False" />
-                <MenuItem Header="Check for Updates" IsEnabled="False" />
+                <MenuItem Header="Keyboard Shortcuts" Click="ShortcutsMenuItem_OnClick" />
+                <MenuItem Header="Documentation" Click="DocumentationMenuItem_OnClick" />
+                <MenuItem Header="Check for Updates" Click="UpdatesMenuItem_OnClick" />
                 <Separator />
                 <MenuItem x:Name="DarkModeMenuItem" Header="Dark Mode" Click="DarkModeMenuItem_OnClick" />
                 <MenuItem x:Name="LightModeMenuItem" Header="Light Mode" Click="LightModeMenuItem_OnClick" />
+                <Separator />
+                <MenuItem Header="About icono" Click="AboutMenuItem_OnClick" />
             </MenuItem>
         </Menu>
 
@@ -110,10 +199,10 @@
         <Border Grid.Row="2" Margin="10,4,10,8" CornerRadius="16" Style="{StaticResource NeuShadowDarkStyle}" />
         <Border Grid.Row="2" Style="{StaticResource ToolBarBorderStyle}">
             <WrapPanel>
-                <Button Content="New" Margin="3,0" IsEnabled="False" />
-                <Button Content="Open" Margin="3,0" IsEnabled="False" />
-                <Button Content="Save" Margin="3,0" IsEnabled="False" />
-                <Button Content="Export" Margin="3,0" IsEnabled="False" />
+                <Button Content="New" Margin="3,0" Click="NewMenuItem_OnClick" ToolTip="New document (Ctrl+N)" />
+                <Button Content="Open" Margin="3,0" Click="OpenMenuItem_OnClick" ToolTip="Open document (Ctrl+O)" />
+                <Button Content="Save" Margin="3,0" Click="SaveMenuItem_OnClick" ToolTip="Save document (Ctrl+S)" />
+                <Button Content="Export" Margin="3,0" Click="ExportMenuItem_OnClick" ToolTip="Export as PNG or icon (Ctrl+E)" />
                 <Separator Width="1" Margin="6,0" />
                 <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="UndoMenuItem_OnClick" ToolTip="Undo (Ctrl+Z)">
                     <Path Data="{StaticResource UndoToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
@@ -190,9 +279,9 @@
                           StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
                           Width="15" Height="15" Stretch="Uniform" />
                 </Button>
-                <RadioButton GroupName="ToolSelection" Style="{StaticResource ToolbarSquareImageRadioButtonStyle}"
-                             Checked="BorderToolRadioButton_OnChecked" Tag="{StaticResource BorderIconImage}" ToolTip="Border" />
-                <RadioButton GroupName="ToolSelection" Style="{StaticResource ToolbarSquareIconRadioButtonStyle}"
+                <RadioButton x:Name="BorderToolbarRadio" GroupName="ToolSelection" Style="{StaticResource ToolbarSquareImageRadioButtonStyle}"
+                             Checked="BorderToolRadioButton_OnChecked" Tag="{StaticResource BorderIconImage}" ToolTip="Border options: opens the BORDER card (thickness, colour, style, corners)" />
+                <RadioButton x:Name="RegionColorToolbarRadio" GroupName="ToolSelection" Style="{StaticResource ToolbarSquareIconRadioButtonStyle}"
                              Checked="RegionColorToolRadioButton_OnChecked" Tag="{StaticResource RegionColorToolGeometry}"
                              ToolTip="Region Color: click a closed area to color just that piece (multi-band shapes like Traffic Cone split into their bands on first click)" />
                 <Separator Width="1" Margin="6,0" />

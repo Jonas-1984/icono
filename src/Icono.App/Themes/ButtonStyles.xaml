@@ -7,7 +7,7 @@
     <!-- Neumorphic push button: raised graphite key lit from the top-left. Hover adds a cyan rim,
          pressed sinks into an inset well (no shadow, content nudged 1px). -->
     <Style TargetType="Button">
-        <Setter Property="FontFamily" Value="Segoe UI Semilight" />
+        <Setter Property="FontFamily" Value="Segoe UI" />
         <Setter Property="FontWeight" Value="Normal" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="Background" Value="{DynamicResource RaisedBrush}" />
@@ -20,29 +20,35 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border x:Name="Bg"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="10"
-                            Effect="{DynamicResource SmallRaisedShadow}">
-                        <ContentPresenter x:Name="Content" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                          Margin="{TemplateBinding Padding}" />
-                    </Border>
+                    <!-- The shadow/glow lives on its own backdrop border: an Effect on the border that holds the label
+                         would rasterise the text into a blurred offscreen bitmap (soft, glowing letters). -->
+                    <Grid x:Name="Root">
+                        <Border x:Name="Shadow" CornerRadius="10" Background="{TemplateBinding Background}"
+                                Effect="{DynamicResource SmallRaisedShadow}" />
+                        <Border x:Name="Bg"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="10">
+                            <ContentPresenter x:Name="Content" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}" />
+                        </Border>
+                    </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Bg" Property="Background" Value="{DynamicResource RaisedHoverBrush}" />
                             <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource AccentBlueMidBrush}" />
-                            <Setter TargetName="Bg" Property="Effect" Value="{DynamicResource HoverGlowEffect}" />
+                            <Setter TargetName="Shadow" Property="Effect" Value="{DynamicResource HoverGlowEffect}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
                             <Setter TargetName="Bg" Property="Background" Value="{DynamicResource InsetBrush}" />
                             <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource InsetEdgeBrush}" />
-                            <Setter TargetName="Bg" Property="Effect" Value="{x:Null}" />
+                            <Setter TargetName="Shadow" Property="Effect" Value="{x:Null}" />
                             <Setter TargetName="Content" Property="RenderTransform"><Setter.Value><TranslateTransform X="1" Y="1" /></Setter.Value></Setter>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+                            <Setter TargetName="Shadow" Property="Opacity" Value="0.6" />
                             <Setter TargetName="Bg" Property="Opacity" Value="0.6" />
                         </Trigger>
                     </ControlTemplate.Triggers>
@@ -71,17 +77,19 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ToggleButton">
-                    <Border x:Name="Bg"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="10"
-                            
-                            Effect="{DynamicResource SmallRaisedShadow}">
-                        <ContentPresenter Margin="{TemplateBinding Padding}"
-                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                          VerticalAlignment="Center" />
-                    </Border>
+                    <Grid>
+                        <Border x:Name="Shadow" CornerRadius="10" Background="{TemplateBinding Background}"
+                                Effect="{DynamicResource SmallRaisedShadow}" />
+                        <Border x:Name="Bg"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="10">
+                            <ContentPresenter Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                    </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Bg" Property="Background" Value="{DynamicResource RaisedHoverBrush}" />
@@ -90,9 +98,10 @@
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="Bg" Property="Background" Value="{DynamicResource InsetBrush}" />
                             <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource AccentBlueMidBrush}" />
-                            <Setter TargetName="Bg" Property="Effect" Value="{x:Null}" />
+                            <Setter TargetName="Shadow" Property="Effect" Value="{x:Null}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Shadow" Property="Opacity" Value="0.6" />
                             <Setter TargetName="Bg" Property="Opacity" Value="0.6" />
                         </Trigger>
                     </ControlTemplate.Triggers>

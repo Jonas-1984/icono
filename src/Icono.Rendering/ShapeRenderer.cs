@@ -18,7 +18,30 @@ public static class ShapeRenderer
 
     public static void Draw(SKCanvas canvas, Shape shape)
     {
+        DrawBody(canvas, shape);
+
+        // Text typed into the shape sits on top of it.
+        if (ShapeLabel.HasLabel(shape))
+        {
+            ShapeLabel.Draw(canvas, shape, (byte)Math.Clamp(shape.Opacity / 100.0 * 255, 0, 255));
+        }
+    }
+
+    private static void DrawBody(SKCanvas canvas, Shape shape)
+    {
         var alpha = (byte)Math.Clamp(shape.Opacity / 100.0 * 255, 0, 255);
+
+        if (shape.Kind == ShapeKind.Wall)
+        {
+            WallRenderer.Draw(canvas, shape, alpha);
+            return;
+        }
+
+        if (shape.Kind == ShapeKind.Dimension)
+        {
+            DimensionRenderer.Draw(canvas, shape, alpha);
+            return;
+        }
 
         if (shape.Kind == ShapeKind.Box3D)
         {

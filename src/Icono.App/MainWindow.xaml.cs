@@ -29,6 +29,7 @@ public partial class MainWindow : Window
         _context.Document.Layers.Add(new Layer { Name = "Layer 1" });
         _context.SelectedLayer = _context.Document.Layers[0];
 
+        _context.StatusMessage += message => StatusBar.ShowMessage(message);
         ToolPanel.Context = _context;
         CanvasHost.Context = _context;
         PropertiesPanel.Context = _context;
@@ -38,9 +39,13 @@ public partial class MainWindow : Window
         StateChanged += MainWindow_OnStateChanged;
         Closing += MainWindow_OnClosing;
         PreviewKeyDown += MainWindow_OnPreviewKeyDown;
+        // A click anywhere outside the text editor (panels, menus, toolbar) keeps what was typed.
+        PreviewMouseDown += (_, e) => CanvasHost.CommitTextEditUnlessInside(e.OriginalSource);
+        PreviewMouseWheel += MainWindow_OnPreviewMouseWheel;
         Loaded += (_, _) => FitPageToWindow();
 
         UpdateThemeMenuMarkers();
+        InitializeDocumentTracking();
     }
 
     protected override void OnSourceInitialized(EventArgs e)
@@ -78,15 +83,8 @@ public partial class MainWindow : Window
 
     private void MainWindow_OnClosing(object? sender, CancelEventArgs e)
     {
-        var result = MessageBox.Show(
-            this,
-            "Are you sure you want to close the app?",
-            "icono",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question,
-            MessageBoxResult.No);
-
-        if (result != MessageBoxResult.Yes)
+        // Only ask when there is something to lose: offer to save unsaved changes.
+        if (!ConfirmDiscardChanges())
         {
             e.Cancel = true;
         }
@@ -94,6 +92,18 @@ public partial class MainWindow : Window
 
     private void MainWindow_OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
+        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && e.Key is Key.S or Key.E or Key.N or Key.O)
+        {
+            CanvasHost.CommitActiveTextEdit();
+        }
+
+        // File shortcuts (Ctrl+N/O/S/E) work everywhere, even while a text field has the focus.
+        if (HandleFileShortcuts(e))
+        {
+            e.Handled = true;
+            return;
+        }
+
         if (Keyboard.FocusedElement is TextBox)
         {
             // A layer name, size, or hex field is being edited — let these keys edit text, not shapes.
@@ -130,6 +140,12 @@ public partial class MainWindow : Window
             };
 
             _context.NudgeSelection(dx, dy);
+            e.Handled = true;
+            return;
+        }
+
+        if (HandleEditorShortcuts(e))
+        {
             e.Handled = true;
             return;
         }
@@ -184,6 +200,18 @@ public partial class MainWindow : Window
             PasteClipboard();
             e.Handled = true;
         }
+    }
+
+    /// <summary>Ctrl + mouse wheel over the work area zooms the page in / out.</summary>
+    private void MainWindow_OnPreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control) || !CanvasHost.IsMouseOver || e.Delta == 0)
+        {
+            return;
+        }
+
+        StatusBar.ZoomBy(e.Delta > 0 ? 1.1 : 1 / 1.1);
+        e.Handled = true;
     }
 
     private void DeleteSelectedShapes() => _context.DeleteSelection();
@@ -246,9 +274,13 @@ public partial class MainWindow : Window
 
     private void BorderToolRadioButton_OnChecked(object sender, RoutedEventArgs e)
     {
-        // The Border tool's exact meaning (frame-around-canvas vs. a shape kind) is ambiguous —
-        // treated as a Select alias for now, pending clarification.
+        // The toolbar's Border key is a shortcut to the BORDER card (thickness, colour, style, corners) of the selected shape.
         _context.ActiveTool = ActiveTool.Select;
+        BorderToolbarRadio.IsChecked = false;
+        if (!PropertiesPanel.FocusCard("BORDER"))
+        {
+            ThemedMessageBox.Show(this, "Select a shape first to edit its border.", "Border", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
     }
 
     private void TextButton_OnClick(object sender, RoutedEventArgs e)
@@ -260,12 +292,14 @@ public partial class MainWindow : Window
     private void GridToggleButton_OnToggled(object sender, RoutedEventArgs e)
     {
         _context.ShowGrid = GridToggleButton.IsChecked == true;
+        GridMenuItem.IsChecked = _context.ShowGrid;
         _context.RequestRedraw();
     }
 
     private void SnapToggleButton_OnToggled(object sender, RoutedEventArgs e)
     {
         _context.SnapToGrid = SnapToggleButton.IsChecked == true;
+        SnapMenuItem.IsChecked = _context.SnapToGrid;
     }
 
     private void GridSizeTextBox_OnLostFocus(object sender, RoutedEventArgs e) => ApplyGridSizeTextBox();
@@ -306,28 +340,14 @@ public partial class MainWindow : Window
         UpdateThemeMenuMarkers();
     }
 
-    /// <summary>Marks the active theme in the Help menu with a cyan dot; the inactive entry gets an
-    /// invisible dot of the same size so both labels stay aligned.</summary>
+    /// <summary>Marks the active theme with the menu's check dot (Help and View menus).</summary>
     private void UpdateThemeMenuMarkers()
     {
-        DarkModeMenuItem.Icon = CreateThemeMarker(ThemeManager.Current == ThemeMode.Dark);
-        LightModeMenuItem.Icon = CreateThemeMarker(ThemeManager.Current == ThemeMode.Light);
-    }
-
-    private static System.Windows.Shapes.Ellipse CreateThemeMarker(bool active)
-    {
-        var dot = new System.Windows.Shapes.Ellipse { Width = 7, Height = 7 };
-        if (active)
-        {
-            dot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, "AccentBlueMidBrush");
-            dot.SetResourceReference(UIElement.EffectProperty, "AccentGlowEffect");
-        }
-        else
-        {
-            dot.Fill = Brushes.Transparent;
-        }
-
-        return dot;
+        var dark = ThemeManager.Current == ThemeMode.Dark;
+        DarkModeMenuItem.IsChecked = dark;
+        ViewDarkModeMenuItem.IsChecked = dark;
+        LightModeMenuItem.IsChecked = !dark;
+        ViewLightModeMenuItem.IsChecked = !dark;
     }
 
     private void AboutMenuItem_OnClick(object sender, RoutedEventArgs e)

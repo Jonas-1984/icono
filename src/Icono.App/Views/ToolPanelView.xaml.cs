@@ -4,6 +4,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using Icono.App.State;
 using Icono.Core;
+using Icono.Rendering;
 
 namespace Icono.App.Views;
 
@@ -41,9 +42,9 @@ public partial class ToolPanelView : UserControl
     /// clicked, so it's already checked by the time ActiveTool changes.</summary>
     private void Context_OnPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(EditorContext.ActiveTool) && Context?.ActiveTool == ActiveTool.Select)
+        if (e.PropertyName is nameof(EditorContext.ActiveTool) or nameof(EditorContext.SelectedShapeKind))
         {
-            SelectToolRadioButton.IsChecked = true;
+            SyncToolRadios();
         }
 
         if (e.PropertyName == nameof(EditorContext.CurrentFillColor))
@@ -141,6 +142,62 @@ public partial class ToolPanelView : UserControl
         GridColorPopup.IsOpen = true;
     }
 
+    /// <summary>The design-grid / image-import card, so the Insert menu can reuse its import dialogs.</summary>
+    public IconLibraryView ImportLibrary => IconLibrary;
+
+    /// <summary>Checks the radio button that belongs to the active tool (and the selected shape kind), so the palette always shows
+    /// what is really active — also when the tool was changed from a menu, a shortcut or by the canvas after placing a shape.</summary>
+    private void SyncToolRadios()
+    {
+        if (Context is null)
+        {
+            return;
+        }
+
+        var dimensionTag = Context.ActiveTool == ActiveTool.PathDraw && Context.SelectedShapeKind == ShapeKind.Dimension
+            ? "Dim" + Context.CurrentDimensionKind
+            : null;
+
+        string? tag = Context.ActiveTool switch
+        {
+            ActiveTool.Select => "Select",
+            ActiveTool.PanZoom => "PanZoom",
+            ActiveTool.AddPoint => "AddPoint",
+            ActiveTool.DeletePoint => "DeletePoint",
+            ActiveTool.RegionColor => "RegionColor",
+            ActiveTool.WallCut => "WallCut",
+            ActiveTool.Shape or ActiveTool.PathDraw => dimensionTag ?? Context.SelectedShapeKind.ToString(),
+            _ => null,
+        };
+
+        foreach (var radio in FindRadios(this))
+        {
+            var isMatch = tag is not null && radio.CommandParameter is string parameter && parameter == tag;
+            if (radio.IsChecked != isMatch && (isMatch || radio.IsChecked == true))
+            {
+                radio.IsChecked = isMatch;
+            }
+        }
+    }
+
+    private static IEnumerable<RadioButton> FindRadios(DependencyObject root)
+    {
+        var count = VisualTreeHelper.GetChildrenCount(root);
+        for (var i = 0; i < count; i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            if (child is RadioButton { GroupName: "ToolSelection" } radio)
+            {
+                yield return radio;
+            }
+
+            foreach (var nested in FindRadios(child))
+            {
+                yield return nested;
+            }
+        }
+    }
+
     public ToolPanelView()
     {
         InitializeComponent();
@@ -175,6 +232,14 @@ public partial class ToolPanelView : UserControl
         }
     }
 
+    private void AddDimensions_OnClick(object sender, System.Windows.RoutedEventArgs e)
+    {
+        if (Context is not null && sender is FrameworkElement { Tag: string tag } && Enum.TryParse<DimensionSet>(tag, out var set))
+        {
+            Context.AddDimensionsToSelection(set);
+        }
+    }
+
     private void ToolRadioButton_OnChecked(object sender, System.Windows.RoutedEventArgs e)
     {
         if (Context is null || sender is not RadioButton { CommandParameter: string tag })
@@ -199,6 +264,20 @@ public partial class ToolPanelView : UserControl
             case "RegionColor":
                 Context.ActiveTool = ActiveTool.RegionColor;
                 break;
+            case "WallCut":
+                Context.ActiveTool = ActiveTool.WallCut;
+                break;
+            case "DimHorizontal":
+            case "DimVertical":
+            case "DimAligned":
+            case "DimAngular":
+            case "DimRadius":
+            case "DimDiameter":
+                Context.CurrentDimensionKind = Enum.Parse<DimensionKind>(tag[3..]);
+                Context.SelectedShapeKind = ShapeKind.Dimension;
+                Context.ActiveTool = ActiveTool.PathDraw;
+                break;
+            case "Wall":
             case "Polyline":
             case "Curve":
                 Context.ActiveTool = ActiveTool.PathDraw;

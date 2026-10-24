@@ -41,6 +41,7 @@ public partial class CanvasHostView : UserControl
     private ResizeHandle _resizeHandle;
     private Shape? _resizeShape;
     private (double X, double Y, double W, double H) _resizeStartRect;
+    private (double X, double Y, double W, double H) _resizeFrameStart;
     private Point _resizeStartPoint;
     private Point _resizeCenter;
     private double _resizeRotation;
@@ -95,6 +96,7 @@ public partial class CanvasHostView : UserControl
             if (_context is not null)
             {
                 _context.Invalidated -= OnContextInvalidated;
+                _context.SelectedShapes.CollectionChanged -= OnSelectionChanged;
             }
 
             _context = value;
@@ -102,6 +104,7 @@ public partial class CanvasHostView : UserControl
             if (_context is not null)
             {
                 _context.Invalidated += OnContextInvalidated;
+                _context.SelectedShapes.CollectionChanged += OnSelectionChanged;
             }
 
             UpdateCanvasFrameSize();
@@ -116,9 +119,12 @@ public partial class CanvasHostView : UserControl
         // Clicking the canvas takes keyboard focus away from whatever panel field had it, so keys such as
         // Delete ("Entf") act on the selected drawing and a half-edited value field commits first.
         Focusable = true;
-        PreviewMouseDown += (_, _) =>
+        PreviewMouseDown += (_, e) =>
         {
-            if (TextEditOverlay.Children.Count == 0)
+            // A click outside the text editor finishes the typing first (so it is kept), then the click does its job.
+            CommitTextEditUnlessInside(e.OriginalSource);
+
+            if (TextEditOverlay.Children.Count == 0 && !IsInsideQuickPopup(e.OriginalSource))
             {
                 Focus();
             }
@@ -127,6 +133,13 @@ public partial class CanvasHostView : UserControl
         MouseDown += OnMouseDown;
         MouseMove += OnMouseMove;
         MouseUp += OnMouseUp;
+        MouseUp += (_, e) =>
+        {
+            if (e.ChangedButton == MouseButton.Left && !IsInsideQuickPopup(e.OriginalSource))
+            {
+                ShowLineQuickPopup();
+            }
+        };
         MouseLeave += OnMouseLeave;
         MouseRightButtonDown += OnMouseRightButtonDown;
     }
@@ -256,7 +269,7 @@ public partial class CanvasHostView : UserControl
     }
 
     /// <summary>Called from MainWindow's window-level PreviewKeyDown (Enter).</summary>
-    public void FinishPathDraw()
+    public void FinishPathDraw(bool closeWall = false)
     {
         if (!_isPathDrawing || _pendingPathShape is null || _context is null)
         {
@@ -275,13 +288,20 @@ public partial class CanvasHostView : UserControl
         _isPathDrawing = false;
         _pendingPathShape = null;
 
-        if (points.Count < 2)
+        if (points.Count < 2 || (shape.Kind == ShapeKind.Dimension && points.Count < DimensionPointsNeeded(shape.DimKind)))
         {
             _context.RequestRedraw();
             return;
         }
 
         shape.Points = points;
+        // A wall that comes back to its start point is a closed room.
+        if (closeWall && shape.Kind == ShapeKind.Wall && points.Count >= 3)
+        {
+            shape.WallClosed = true;
+        }
+
+        _wallClosePreview = false;
         PathBoundsCalculator.Recompute(shape);
 
         var layer = _context.SelectedLayer ?? _context.Document.Layers.FirstOrDefault();
@@ -293,11 +313,355 @@ public partial class CanvasHostView : UserControl
             _context.SelectedShape = shape;
         }
 
+        ConnectionRouter.AttachEnds(_context.Document, shape);
+        if (shape.Kind == ShapeKind.Dimension)
+        {
+            // A dimension whose points sit on a shape sticks to it: it follows when the shape moves or is resized.
+            DimensionRouter.AttachPoints(_context.Document, shape);
+        }
+
+        ClearAnchorProbe();
         _context.RequestRedraw();
     }
 
-    private static void OnZoomChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) =>
-        ((CanvasHostView)d).UpdateCanvasFrameSize();
+    private static void OnZoomChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var host = (CanvasHostView)d;
+        host.HideLineQuickPopup();
+        host.UpdateCanvasFrameSize();
+    }
+
+    // ----- Quick line popup (form + both line ends, shown next to a clicked line/arrow) ---------------
+
+    private void OnSelectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e) =>
+        HideLineQuickPopup();
+
+    private void HideLineQuickPopup() => LineQuickPopupControl.Visibility = Visibility.Collapsed;
+
+    // ----- Dimensions ---------------------------------------------------------------------------------------
+
+    /// <summary>How many clicks a dimension of this kind needs: its points, the last one fixing where the dimension line runs.</summary>
+    private static int DimensionPointsNeeded(DimensionKind kind) => kind switch
+    {
+        DimensionKind.Angular => 4,
+        DimensionKind.Radius or DimensionKind.Diameter or DimensionKind.Length => 2,
+        _ => 3,
+    };
+
+    /// <summary>Spots a dimension can be pinned to: corners of lines and outlines, and the centre of a shape (for radius and
+    /// diameter). The shape connection points are handled by <see cref="TryAnchorSnap"/>.</summary>
+    private Point? SnapToMeasurable(Point point)
+    {
+        if (_context is null)
+        {
+            return null;
+        }
+
+        var reach = AnchorSnapDip / Zoom;
+        Point? best = null;
+        var bestDistance = reach;
+
+        void Consider(double x, double y)
+        {
+            var distance = Math.Sqrt((point.X - x) * (point.X - x) + (point.Y - y) * (point.Y - y));
+            if (distance <= bestDistance)
+            {
+                bestDistance = distance;
+                best = new Point(x, y);
+            }
+        }
+
+        foreach (var layer in _context.Document.Layers.Where(l => l.Visible))
+        {
+            foreach (var shape in layer.Shapes.Where(s => s.Kind != ShapeKind.Dimension))
+            {
+                if (shape.Points is { Count: > 0 } points)
+                {
+                    foreach (var p in points)
+                    {
+                        Consider(shape.X + p.X, shape.Y + p.Y);
+                    }
+                }
+                else
+                {
+                    var box = ShapeOutline.Box(shape);
+                    Consider(box.X + box.W / 2, box.Y + box.H / 2);
+                }
+            }
+        }
+
+        return best;
+    }
+
+    // ----- Walls (drawing, closing, cutting) ----------------------------------------------------------------
+
+    private bool _wallClosePreview;
+    private WallEditor.Spot? _cutHover;
+    private Shape? _cutHoverWall;
+
+    private (double X, double Y) WallStart(Shape wall) => (wall.X + wall.Points![0].X, wall.Y + wall.Points[0].Y);
+
+    /// <summary>True when the pointer is close enough to the first point of the wall being drawn to close it (three corners at least).</summary>
+    private bool IsNearWallStart(Point point)
+    {
+        if (_pendingPathShape is not { Kind: ShapeKind.Wall } wall || wall.Points is null || wall.Points.Count - 1 < 3)
+        {
+            return false;
+        }
+
+        var (sx, sy) = WallStart(wall);
+        return Math.Sqrt((point.X - sx) * (point.X - sx) + (point.Y - sy) * (point.Y - sy)) <= AnchorSnapDip * 1.4 / Zoom;
+    }
+
+    /// <summary>The end point of another wall close to <paramref name="point"/>, so walls meet exactly at their corners.</summary>
+    private Point? SnapToWallPoint(Point point, Shape? exclude)
+    {
+        if (_context is null)
+        {
+            return null;
+        }
+
+        var reach = AnchorSnapDip / Zoom;
+        Point? best = null;
+        var bestDistance = reach;
+        foreach (var layer in _context.Document.Layers.Where(l => l.Visible))
+        {
+            foreach (var other in layer.Shapes.Where(s => s.Kind == ShapeKind.Wall && !ReferenceEquals(s, exclude) && s.Points is not null))
+            {
+                foreach (var p in WallGeometry.AbsolutePoints(other))
+                {
+                    var distance = Math.Sqrt((point.X - p.X) * (point.X - p.X) + (point.Y - p.Y) * (point.Y - p.Y));
+                    if (distance <= bestDistance)
+                    {
+                        bestDistance = distance;
+                        best = new Point(p.X, p.Y);
+                    }
+                }
+            }
+        }
+
+        return best;
+    }
+
+    /// <summary>While drawing a wall: jump to the start point when it is near (a click there closes the room), else to a corner of another wall.</summary>
+    private Point SnapWallDrawPoint(Point point, Shape wall)
+    {
+        if (IsNearWallStart(point))
+        {
+            _wallClosePreview = true;
+            var (sx, sy) = WallStart(wall);
+            return new Point(sx, sy);
+        }
+
+        return SnapToWallPoint(point, wall) ?? point;
+    }
+
+    /// <summary>Finds the wall under the pointer (front-most first) and the place on its centre line that would be cut.</summary>
+    private (Shape Wall, Layer Layer, WallEditor.Spot Spot)? FindWallCutSpot(Point point)
+    {
+        if (_context is null)
+        {
+            return null;
+        }
+
+        foreach (var layer in _context.Document.Layers.Where(l => l.Visible))
+        {
+            foreach (var wall in layer.Shapes.Where(s => s.Kind == ShapeKind.Wall && s.Points is not null))
+            {
+                var spot = WallEditor.Nearest(wall, point.X, point.Y, 10 / Zoom);
+                if (spot is { } found && found.Distance <= wall.WallThickness / 2 + 4 / Zoom)
+                {
+                    return (wall, layer, found);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private void HandleWallCutClick(Point point)
+    {
+        if (_context is null || FindWallCutSpot(point) is not { } hit)
+        {
+            return;
+        }
+
+        if (IsLocked(hit.Wall))
+        {
+            return;
+        }
+
+        var parts = WallEditor.SplitAt(hit.Wall, hit.Spot);
+        if (parts.Count == 0)
+        {
+            return;
+        }
+
+        _context.ReplaceShape(hit.Wall, parts);
+        _cutHover = null;
+        _cutHoverWall = null;
+    }
+
+    private void DrawWallHints(SKCanvas canvas, float scaleX, float scaleY)
+    {
+        using var ring = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 1.8f, Color = AccentColor };
+        using var hot = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill, Color = AccentColor };
+
+        // Start point of the wall being drawn: lights up when a click would close the room.
+        if (_isPathDrawing && _pendingPathShape is { Kind: ShapeKind.Wall } wall && wall.Points is { Count: > 1 })
+        {
+            var (sx, sy) = WallStart(wall);
+            canvas.DrawCircle((float)sx * scaleX, (float)sy * scaleY, _wallClosePreview ? 9f : 5f, _wallClosePreview ? hot : ring);
+        }
+
+        // Cut tool: the place that would be cut.
+        if (_context?.ActiveTool == ActiveTool.WallCut && _cutHover is { } spot)
+        {
+            using var cut = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 2f, Color = new SKColor(0xE5, 0x4B, 0x4B) };
+            var cx = (float)spot.X * scaleX;
+            var cy = (float)spot.Y * scaleY;
+            canvas.DrawCircle(cx, cy, spot.IsVertex ? 8f : 6f, cut);
+            canvas.DrawLine(cx - 11, cy - 11, cx + 11, cy + 11, cut);
+            canvas.DrawLine(cx - 11, cy + 11, cx + 11, cy - 11, cut);
+        }
+    }
+
+    // ----- Connection points (lines and arrows cling to a shape's 16 anchor spots) ----------------------
+
+    private const double AnchorSnapDip = 10;
+
+    /// <summary>Where the pointer is while a line is being placed or an end dragged; the anchors of shapes near it are drawn.</summary>
+    private Point? _anchorProbe;
+
+    private (Shape Shape, int Index)? _snappedAnchor;
+
+    private bool IsLineToolActive => _context is { } c &&
+        ((c.ActiveTool == ActiveTool.Shape && TwoPointLineKinds.Contains(c.SelectedShapeKind)) || c.ActiveTool == ActiveTool.PathDraw);
+
+    /// <summary>The connection point close to <paramref name="point"/> (within a few screen pixels), or null. Also remembers
+    /// the pointer and the hit so <see cref="DrawConnectionPoints"/> can show them.</summary>
+    private Point? TryAnchorSnap(Point point, Shape? exclude)
+    {
+        if (_context is null)
+        {
+            return null;
+        }
+
+        _anchorProbe = point;
+        var hit = ConnectionRouter.FindNearest(_context.Document, point.X, point.Y, AnchorSnapDip / Zoom, exclude);
+        if (hit is null)
+        {
+            _snappedAnchor = null;
+            return null;
+        }
+
+        _snappedAnchor = (hit.Value.Shape, hit.Value.Index);
+        return new Point(hit.Value.X, hit.Value.Y);
+    }
+
+    private void ClearAnchorProbe()
+    {
+        if (_anchorProbe is null && _snappedAnchor is null)
+        {
+            return;
+        }
+
+        _anchorProbe = null;
+        _snappedAnchor = null;
+        SkiaCanvas.InvalidateVisual();
+    }
+
+    private void DrawConnectionPoints(SKCanvas canvas, float scaleX, float scaleY)
+    {
+        if (_context is null || _anchorProbe is not { } probe)
+        {
+            return;
+        }
+
+        var reach = 48 / Zoom;
+        using var ring = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 1.6f, Color = AccentColor };
+        using var fill = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill, Color = SKColors.White };
+        using var hot = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill, Color = AccentColor };
+
+        foreach (var shape in ConnectionRouter.Targets(_context.Document))
+        {
+            if (probe.X < shape.X - reach || probe.X > shape.X + shape.Width + reach ||
+                probe.Y < shape.Y - reach || probe.Y > shape.Y + shape.Height + reach)
+            {
+                continue;
+            }
+
+            for (var i = 0; i < ConnectionRouter.PointCount; i++)
+            {
+                var (px, py) = ConnectionRouter.GetPoint(shape, i);
+                var cx = (float)px * scaleX;
+                var cy = (float)py * scaleY;
+
+                if (_snappedAnchor is { } snapped && ReferenceEquals(snapped.Shape, shape) && snapped.Index == i)
+                {
+                    canvas.DrawCircle(cx, cy, 7.5f, hot);
+                    canvas.DrawCircle(cx, cy, 7.5f, ring);
+                }
+                else
+                {
+                    canvas.DrawCircle(cx, cy, 3.8f, fill);
+                    canvas.DrawCircle(cx, cy, 3.8f, ring);
+                }
+            }
+        }
+    }
+
+    /// <summary>True when the event came from the popup card itself (or from a drop-down opened by one of its combo boxes).</summary>
+    private bool IsInsideQuickPopup(object? source)
+    {
+        for (var d = source as DependencyObject; d is not null;)
+        {
+            if (ReferenceEquals(d, LineQuickPopupControl))
+            {
+                return true;
+            }
+
+            // Drop-down lists live in their own popup window: follow the logical parent there, the visual parent elsewhere.
+            d = (d as FrameworkElement)?.Parent ?? (d is Visual or System.Windows.Media.Media3D.Visual3D ? VisualTreeHelper.GetParent(d) : LogicalTreeHelper.GetParent(d));
+        }
+
+        return false;
+    }
+
+    /// <summary>Opens the popup below the single selected line/arrow (above it when there is no room underneath).</summary>
+    private void ShowLineQuickPopup()
+    {
+        if (_context is null || _context.ActiveTool != ActiveTool.Select || _context.SelectedShapes.Count != 1)
+        {
+            HideLineQuickPopup();
+            return;
+        }
+
+        var shape = _context.SelectedShapes[0];
+        if (!ShapeGeometryFactory.IsLineFamily(shape.Kind) || IsLocked(shape))
+        {
+            HideLineQuickPopup();
+            return;
+        }
+
+        var popup = LineQuickPopupControl;
+        popup.Bind(_context, shape);
+        popup.Visibility = Visibility.Visible;
+        popup.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+        var size = popup.DesiredSize;
+
+        const double gap = 18;
+        var below = SkiaCanvas.TranslatePoint(new Point((shape.X + shape.Width / 2) * Zoom, (shape.Y + shape.Height) * Zoom + gap), QuickPopupLayer);
+        var above = SkiaCanvas.TranslatePoint(new Point(0, shape.Y * Zoom - gap), QuickPopupLayer);
+
+        var layerWidth = QuickPopupLayer.ActualWidth;
+        var layerHeight = QuickPopupLayer.ActualHeight;
+        var top = below.Y + size.Height <= layerHeight - 4 ? below.Y : Math.Max(4, above.Y - size.Height);
+        var left = Math.Clamp(below.X - size.Width / 2, 4, Math.Max(4, layerWidth - size.Width - 4));
+
+        Canvas.SetLeft(popup, left);
+        Canvas.SetTop(popup, Math.Clamp(top, 4, Math.Max(4, layerHeight - size.Height - 4)));
+    }
 
     private void UpdateCanvasFrameSize()
     {
@@ -351,6 +715,8 @@ public partial class CanvasHostView : UserControl
         // Chrome below is drawn in raw raster space (post-Restore) so it stays a constant
         // screen size regardless of zoom.
         DrawSelectionChrome(canvas, scaleX, scaleY);
+        DrawConnectionPoints(canvas, scaleX, scaleY);
+        DrawWallHints(canvas, scaleX, scaleY);
     }
 
     private void DrawGrid(SKCanvas canvas, int width, int height)
@@ -435,10 +801,30 @@ public partial class CanvasHostView : UserControl
             PathEffect = SKPathEffect.CreateDash([4, 3], 0),
         };
 
-        var rect = SKRect.Create(
-            (float)shape.X * scaleX - 3, (float)shape.Y * scaleY - 3,
-            (float)shape.Width * scaleX + 6, (float)shape.Height * scaleY + 6);
-        canvas.DrawRect(rect, paint);
+        // Hug the drawn shape: the frame runs along its outer edge (half a border width outside the outline), no gap.
+        var box = ChromeBox(shape);
+        var pad = Math.Max(0, shape.BorderThickness / 2);
+        var left = box.X - pad;
+        var top = box.Y - pad;
+        var right = box.X + box.W + pad;
+        var bottom = box.Y + box.H + pad;
+
+        var corners = new[] { new Point(left, top), new Point(right, top), new Point(right, bottom), new Point(left, bottom) };
+        if (shape.Rotation != 0)
+        {
+            var pivot = new Point(shape.X + shape.Width / 2, shape.Y + shape.Height / 2);
+            corners = corners.Select(c => RotateAroundCenter(c, pivot, shape.Rotation)).ToArray();
+        }
+
+        using var frame = new SKPath();
+        frame.MoveTo((float)corners[0].X * scaleX, (float)corners[0].Y * scaleY);
+        for (var i = 1; i < corners.Length; i++)
+        {
+            frame.LineTo((float)corners[i].X * scaleX, (float)corners[i].Y * scaleY);
+        }
+
+        frame.Close();
+        canvas.DrawPath(frame, paint);
     }
 
     private void DrawResizeHandles(SKCanvas canvas, Shape shape, float scaleX, float scaleY)
@@ -486,6 +872,13 @@ public partial class CanvasHostView : UserControl
         }
     }
 
+    /// <summary>The box the selection frame and its handles follow: the shape's DRAWN outline, so the frame sits right on the shape.
+    /// (The icon templates keep a margin inside their X/Y/Width/Height frame; lines, text, images and grids already fill it.)</summary>
+    private static (double X, double Y, double W, double H) ChromeBox(Shape shape)
+    {
+        return ShapeOutline.Box(shape);
+    }
+
     /// <summary>Union bounding box (unrotated — a per-shape Rotation is ignored for this purpose,
     /// same simplification <see cref="DrawSelectionOutline"/> already makes) across every shape in
     /// a multi-selection, e.g. the several CombinedPath pieces a multi-element SVG import splits
@@ -493,10 +886,11 @@ public partial class CanvasHostView : UserControl
     /// at all (the old behavior — <see cref="DrawResizeHandles"/> only ever ran for a lone shape).</summary>
     private static (double X, double Y, double W, double H) ComputeGroupBounds(IReadOnlyList<Shape> shapes)
     {
-        var minX = shapes.Min(s => s.X);
-        var minY = shapes.Min(s => s.Y);
-        var maxX = shapes.Max(s => s.X + s.Width);
-        var maxY = shapes.Max(s => s.Y + s.Height);
+        var boxes = shapes.Select(ChromeBox).ToList();
+        var minX = boxes.Min(b => b.X);
+        var minY = boxes.Min(b => b.Y);
+        var maxX = boxes.Max(b => b.X + b.W);
+        var maxY = boxes.Max(b => b.Y + b.H);
         return (minX, minY, maxX - minX, maxY - minY);
     }
 
@@ -668,12 +1062,16 @@ public partial class CanvasHostView : UserControl
 
     private static IEnumerable<(ResizeHandle Handle, double X, double Y)> EnumerateHandlePositions(Shape shape)
     {
-        var left = shape.X;
-        var top = shape.Y;
-        var right = shape.X + shape.Width;
-        var bottom = shape.Y + shape.Height;
-        var midX = shape.X + shape.Width / 2;
-        var midY = shape.Y + shape.Height / 2;
+        var box = ChromeBox(shape);
+        var left = box.X;
+        var top = box.Y;
+        var right = box.X + box.W;
+        var bottom = box.Y + box.H;
+        var midX = box.X + box.W / 2;
+        var midY = box.Y + box.H / 2;
+        // a rotation turns the shape around the centre of its frame (not of the outline)
+        var pivotX = shape.X + shape.Width / 2;
+        var pivotY = shape.Y + shape.Height / 2;
 
         (ResizeHandle Handle, double X, double Y)[] points =
         [
@@ -697,7 +1095,7 @@ public partial class CanvasHostView : UserControl
             yield break;
         }
 
-        var center = new Point(midX, midY);
+        var center = new Point(pivotX, pivotY);
         foreach (var (handle, x, y) in points)
         {
             var rotated = RotateAroundCenter(new Point(x, y), center, shape.Rotation);
@@ -723,16 +1121,15 @@ public partial class CanvasHostView : UserControl
     private static (double X, double Y) ComputeRotateHandlePosition(Shape shape)
     {
         const double offset = 20;
-        var centerX = shape.X + shape.Width / 2;
-        var centerY = shape.Y + shape.Height / 2;
-        var basePoint = new Point(centerX, shape.Y - offset);
+        var box = ChromeBox(shape);
+        var basePoint = new Point(box.X + box.W / 2, box.Y - offset);
 
         if (shape.Rotation == 0)
         {
             return (basePoint.X, basePoint.Y);
         }
 
-        var rotated = RotateAroundCenter(basePoint, new Point(centerX, centerY), shape.Rotation);
+        var rotated = RotateAroundCenter(basePoint, new Point(shape.X + shape.Width / 2, shape.Y + shape.Height / 2), shape.Rotation);
         return (rotated.X, rotated.Y);
     }
 
@@ -795,6 +1192,13 @@ public partial class CanvasHostView : UserControl
 
     private void OnMouseDown(object sender, MouseButtonEventArgs e)
     {
+        if (IsInsideQuickPopup(e.OriginalSource))
+        {
+            return;
+        }
+
+        HideLineQuickPopup();
+
         if (e.ChangedButton == MouseButton.Middle)
         {
             BeginPan(e);
@@ -829,6 +1233,12 @@ public partial class CanvasHostView : UserControl
         if (_context.ActiveTool == ActiveTool.PathDraw)
         {
             HandlePathDrawClick(point, e.ClickCount);
+            return;
+        }
+
+        if (_context.ActiveTool == ActiveTool.WallCut)
+        {
+            HandleWallCutClick(point);
             return;
         }
 
@@ -867,6 +1277,12 @@ public partial class CanvasHostView : UserControl
             return;
         }
 
+        if (_context.ActiveTool == ActiveTool.Eyedropper)
+        {
+            PickColorAt(point);
+            return;
+        }
+
         if (_context.ActiveTool == ActiveTool.RegionColor)
         {
             HandleRegionColorClick(point);
@@ -880,6 +1296,13 @@ public partial class CanvasHostView : UserControl
             if (dblHit is { } hitValue && hitValue.Shape.Kind == ShapeKind.Text && !IsLocked(hitValue.Shape))
             {
                 BeginTextEdit(new Point(hitValue.Shape.X, hitValue.Shape.Y), hitValue.Shape);
+                return;
+            }
+
+            // Double-click on any other shape: type text right into it.
+            if (dblHit is { } labelHit && ShapeLabel.CanHaveLabel(labelHit.Shape) && !IsLocked(labelHit.Shape))
+            {
+                BeginLabelEdit(labelHit.Shape);
                 return;
             }
         }
@@ -1030,6 +1453,29 @@ public partial class CanvasHostView : UserControl
                     continue;
                 }
 
+                if (shape.Kind == ShapeKind.Dimension)
+                {
+                    // Only its lines, arrowheads and the written value count - not the empty area between them.
+                    if (DimensionRenderer.HitTest(shape, point.X, point.Y, 4 / Zoom))
+                    {
+                        return (shape, layer);
+                    }
+
+                    continue;
+                }
+
+                if (shape.Kind == ShapeKind.Wall)
+                {
+                    // A wall is hit on its band (not on the empty inside of a room or the corner of its bounding box).
+                    var spot = WallEditor.Nearest(shape, point.X, point.Y, 0);
+                    if (spot is { } onWall && onWall.Distance <= shape.WallThickness / 2 + 3 / Zoom)
+                    {
+                        return (shape, layer);
+                    }
+
+                    continue;
+                }
+
                 if (point.X < shape.X || point.X > shape.X + shape.Width ||
                     point.Y < shape.Y || point.Y > shape.Y + shape.Height)
                 {
@@ -1146,11 +1592,52 @@ public partial class CanvasHostView : UserControl
         _context?.RequestRedraw();
     }
 
+    /// <summary>Moves the page back to the centre of the work area (after a pan).</summary>
+    public void ResetView()
+    {
+        PanTransform.X = 0;
+        PanTransform.Y = 0;
+    }
+
+    /// <summary>Eyedropper: takes the colour of the rendered page at <paramref name="point"/> (shapes, background and all) as the
+    /// current paint colour, then returns to the Select tool. Transparent pixels pick nothing.</summary>
+    private void PickColorAt(Point point)
+    {
+        if (_context is null)
+        {
+            return;
+        }
+
+        var document = _context.Document;
+        var x = (int)Math.Floor(point.X);
+        var y = (int)Math.Floor(point.Y);
+        if (x < 0 || y < 0 || x >= document.Width || y >= document.Height)
+        {
+            return;
+        }
+
+        using var bitmap = DocumentExporter.RenderBitmap(document, document.Width, document.Height, includeBackground: true);
+        var pixel = bitmap.GetPixel(x, y);
+        if (pixel.Alpha == 0)
+        {
+            return;
+        }
+
+        _context.CurrentFillColor = new ArgbColor(pixel.Alpha, pixel.Red, pixel.Green, pixel.Blue);
+        _context.ActiveTool = ActiveTool.Select;
+    }
+
     private void BeginPlacing(Point point)
     {
         if (_context is null)
         {
             return;
+        }
+
+        if (TwoPointLineKinds.Contains(_context.SelectedShapeKind))
+        {
+            // A line or arrow starting near a shape's connection point clings to it.
+            point = TryAnchorSnap(point, null) ?? point;
         }
 
         _isPlacing = true;
@@ -1204,7 +1691,8 @@ public partial class CanvasHostView : UserControl
         _isResizing = true;
         _resizeHandle = handle;
         _resizeShape = shape;
-        _resizeStartRect = (shape.X, shape.Y, shape.Width, shape.Height);
+        _resizeStartRect = ChromeBox(shape);
+        _resizeFrameStart = (shape.X, shape.Y, shape.Width, shape.Height);
         _resizeStartPoint = point;
         _resizeCenter = new Point(shape.X + shape.Width / 2, shape.Y + shape.Height / 2);
         _resizeRotation = shape.Rotation;
@@ -1344,6 +1832,16 @@ public partial class CanvasHostView : UserControl
 
         if (!_isPathDrawing || _pendingPathShape is null)
         {
+            point = TryAnchorSnap(point, null) ?? point;
+            if (_context.SelectedShapeKind == ShapeKind.Wall)
+            {
+                point = SnapToWallPoint(point, null) ?? point;
+            }
+            else if (_context.SelectedShapeKind == ShapeKind.Dimension)
+            {
+                point = SnapToMeasurable(point) ?? point;
+            }
+
             _isPathDrawing = true;
             _pendingPathShape = new Shape
             {
@@ -1355,11 +1853,34 @@ public partial class CanvasHostView : UserControl
                 FillColor = _context.CurrentFillColor,
                 Points = [new CorePoint(0, 0), new CorePoint(0, 0)],
             };
+
+            if (_pendingPathShape.Kind == ShapeKind.Dimension)
+            {
+                DimensionBuilder.ApplyStyle(_pendingPathShape);
+                _pendingPathShape.DimKind = _context.CurrentDimensionKind;
+            }
+
+            if (_pendingPathShape.Kind == ShapeKind.Wall)
+            {
+                // A wall starts as a light band with a diagonal hatch and a dark outline; everything can be changed in the WALL card.
+                _pendingPathShape.FillColor = ArgbColor.FromRgb(0xFA, 0xFA, 0xFA);
+                _pendingPathShape.BorderColor = ArgbColor.FromRgb(0x23, 0x29, 0x33);
+                _pendingPathShape.BorderThickness = 1.5;
+                _pendingPathShape.DimOffset = 14; // the dimension line of a wall sits this far from its outer face
+            }
+
             _context.RequestRedraw();
             return;
         }
 
-        if (clickCount >= 2)
+        // Clicking the start point again closes the wall into a ring.
+        if (_pendingPathShape.Kind == ShapeKind.Wall && IsNearWallStart(point))
+        {
+            FinishPathDraw(closeWall: true);
+            return;
+        }
+
+        if (clickCount >= 2 && _pendingPathShape.Kind != ShapeKind.Dimension)
         {
             FinishPathDraw();
             return;
@@ -1368,6 +1889,14 @@ public partial class CanvasHostView : UserControl
         var list = _pendingPathShape.Points!.ToList();
         list.Add(list[^1]);
         _pendingPathShape.Points = list;
+
+        // A dimension is complete as soon as it has all the points it needs (the last one is the moving ghost).
+        if (_pendingPathShape.Kind == ShapeKind.Dimension && list.Count - 1 >= DimensionPointsNeeded(_pendingPathShape.DimKind))
+        {
+            FinishPathDraw();
+            return;
+        }
+
         _context.RequestRedraw();
     }
 
@@ -1662,9 +2191,97 @@ public partial class CanvasHostView : UserControl
         textBox.SelectAll();
     }
 
+    /// <summary>Double-click on a shape: opens an in-place editor over the shape. Enter starts a new line,
+    /// Ctrl+Enter or a click elsewhere keeps the text, Esc discards the edit.</summary>
+    private void BeginLabelEdit(Shape shape)
+    {
+        if (_context is null)
+        {
+            return;
+        }
+
+        CancelTextEdit();
+
+        _textEditShape = shape;
+        _textEditLayer = _context.Document.Layers.FirstOrDefault(l => l.Shapes.Contains(shape));
+        _context.SelectedShape = shape;
+
+        var box = ConnectionRouter.GetBox(shape);
+        var fontSize = string.IsNullOrEmpty(shape.TextContent) ? ShapeLabel.SuggestedFontSize(shape) : shape.TextFontSize;
+        var textColor = ShapeLabel.EffectiveColor(shape);
+        var surface = shape.FillEnabled ? shape.FillColor : ArgbColor.FromRgb(0xFF, 0xFF, 0xFF);
+
+        var textBox = new TextBox
+        {
+            Text = shape.TextContent ?? string.Empty,
+            FontSize = fontSize * Zoom,
+            FontFamily = new FontFamily(string.IsNullOrWhiteSpace(shape.TextFontFamily) ? "Segoe UI" : shape.TextFontFamily),
+            FontWeight = shape.TextBold ? FontWeights.Bold : FontWeights.Normal,
+            FontStyle = shape.TextItalic ? FontStyles.Italic : FontStyles.Normal,
+            TextWrapping = TextWrapping.Wrap,
+            AcceptsReturn = true,
+            TextAlignment = TextAlignment.Center,
+            VerticalContentAlignment = VerticalAlignment.Center,
+            Padding = new Thickness(4),
+            Width = Math.Max(72, box.Width * Zoom),
+            MinHeight = Math.Max(box.Height * Zoom, fontSize * Zoom * 1.9),
+            Background = new SolidColorBrush(Color.FromRgb(surface.R, surface.G, surface.B)),
+            Foreground = new SolidColorBrush(Color.FromRgb(textColor.R, textColor.G, textColor.B)),
+            CaretBrush = new SolidColorBrush(Color.FromRgb(textColor.R, textColor.G, textColor.B)),
+            BorderBrush = (Brush)FindResource("AccentBlueMidBrush"),
+            BorderThickness = new Thickness(1),
+        };
+
+        var width = textBox.Width;
+        var center = SkiaCanvas.TranslatePoint(new Point((box.Left + box.Width / 2) * Zoom, (box.Top + box.Height / 2) * Zoom), TextEditOverlay);
+        Canvas.SetLeft(textBox, center.X - width / 2);
+        Canvas.SetTop(textBox, center.Y - textBox.MinHeight / 2);
+
+        TextEditOverlay.Children.Add(textBox);
+        _textEditBox = textBox;
+
+        textBox.KeyDown += TextEditBox_OnKeyDown;
+        textBox.LostFocus += TextEditBox_OnLostFocus;
+
+        textBox.Focus();
+        Keyboard.Focus(textBox);
+        textBox.SelectAll();
+    }
+
+    /// <summary>Stores the typed text on the shape (empty text removes the label) as one undo step.</summary>
+    private void CommitLabelEdit()
+    {
+        if (_textEditBox is null || _textEditShape is not { } shape || _context is null)
+        {
+            return;
+        }
+
+        var text = _textEditBox.Text.TrimEnd();
+        RemoveTextEditBox();
+
+        var before = ShapeSnapshot.Capture(shape);
+        var hadText = !string.IsNullOrEmpty(shape.TextContent);
+        shape.TextContent = string.IsNullOrWhiteSpace(text) ? null : text;
+        if (!hadText && shape.TextContent is not null)
+        {
+            shape.TextFontSize = ShapeLabel.SuggestedFontSize(shape);
+        }
+
+        var after = ShapeSnapshot.Capture(shape);
+        if (!after.Equals(before))
+        {
+            _context.UndoManager.Push(UndoableAction.ForPropertyEdit([shape], [before], [after]));
+        }
+
+        _context.RequestRedraw();
+    }
+
     private void TextEditBox_OnKeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Enter)
+        var isLabel = _textEditShape is { Kind: not ShapeKind.Text };
+
+        // In a shape's label Enter is a line break; Ctrl+Enter finishes (a Text shape is a single line: Enter finishes).
+        if (e.Key == Key.Enter && (!isLabel || Keyboard.Modifiers.HasFlag(ModifierKeys.Control)))
         {
             CommitTextEdit();
             e.Handled = true;
@@ -1679,6 +2296,31 @@ public partial class CanvasHostView : UserControl
 
     private void TextEditBox_OnLostFocus(object sender, RoutedEventArgs e) => CommitTextEdit();
 
+    /// <summary>Keeps the text being typed (in a shape or a text shape) - called before anything else the user does, such as a
+    /// click outside the editor, a menu command or Ctrl+S.</summary>
+    public void CommitActiveTextEdit() => CommitTextEdit();
+
+    /// <summary>Like <see cref="CommitActiveTextEdit"/>, but a click inside the editor itself changes nothing.</summary>
+    public void CommitTextEditUnlessInside(object? source)
+    {
+        if (_textEditBox is null)
+        {
+            return;
+        }
+
+        for (var d = source as DependencyObject; d is not null;)
+        {
+            if (ReferenceEquals(d, _textEditBox))
+            {
+                return;
+            }
+
+            d = d is Visual or System.Windows.Media.Media3D.Visual3D ? VisualTreeHelper.GetParent(d) : LogicalTreeHelper.GetParent(d);
+        }
+
+        CommitTextEdit();
+    }
+
     /// <summary>Reads the typed text back out of the overlay TextBox and either creates a new
     /// Text shape, updates the one being re-edited, or (if left blank) removes it — then closes
     /// the overlay. No-op if no edit is in progress (also reached harmlessly via LostFocus after
@@ -1687,6 +2329,12 @@ public partial class CanvasHostView : UserControl
     {
         if (_textEditBox is null || _context is null)
         {
+            return;
+        }
+
+        if (_textEditShape is { Kind: not ShapeKind.Text })
+        {
+            CommitLabelEdit();
             return;
         }
 
@@ -1792,6 +2440,36 @@ public partial class CanvasHostView : UserControl
 
     private void OnMouseMove(object sender, MouseEventArgs e)
     {
+        if (_context?.ActiveTool == ActiveTool.WallCut && !IsInsideQuickPopup(e.OriginalSource))
+        {
+            var hover = FindWallCutSpot(ToDocumentSpace(e.GetPosition(SkiaCanvas)));
+            _cutHover = hover?.Spot;
+            _cutHoverWall = hover?.Wall;
+            SkiaCanvas.InvalidateVisual();
+        }
+        else if (_cutHover is not null)
+        {
+            _cutHover = null;
+            _cutHoverWall = null;
+            SkiaCanvas.InvalidateVisual();
+        }
+
+        if (IsLineToolActive && !_isPlacing && !_isPathDrawing && !IsInsideQuickPopup(e.OriginalSource))
+        {
+            // Hovering with a line tool: show the connection points of nearby shapes so the user sees where it will cling.
+            var hoverPoint = ToDocumentSpace(e.GetPosition(SkiaCanvas));
+            var before = _snappedAnchor;
+            TryAnchorSnap(hoverPoint, null);
+            if (before != _snappedAnchor || _anchorProbe is not null)
+            {
+                SkiaCanvas.InvalidateVisual();
+            }
+        }
+        else if (!IsLineToolActive && !_isPlacing && !_isPathDrawing && !_isDraggingPoint)
+        {
+            ClearAnchorProbe();
+        }
+
         if (_isGridPainting)
         {
             ContinueGridPaint(ToDocumentSpace(e.GetPosition(SkiaCanvas)));
@@ -1813,6 +2491,7 @@ public partial class CanvasHostView : UserControl
 
             if (_pendingShape.Points is not null)
             {
+                point = TryAnchorSnap(point, _pendingShape) ?? point;
                 // Re-anchor to the fixed drag-start point every frame (not the previous frame's
                 // possibly-recomputed X/Y) so Recompute's absolute-position math never drifts.
                 _pendingShape.X = _placeStart.X;
@@ -1835,7 +2514,17 @@ public partial class CanvasHostView : UserControl
         if (_isPathDrawing && _pendingPathShape is not null)
         {
             var point = ToDocumentSpace(e.GetPosition(SkiaCanvas));
-            point = new Point(SnapIfEnabled(point.X), SnapIfEnabled(point.Y));
+            point = TryAnchorSnap(point, null) ?? new Point(SnapIfEnabled(point.X), SnapIfEnabled(point.Y));
+            _wallClosePreview = false;
+            if (_pendingPathShape.Kind == ShapeKind.Wall)
+            {
+                point = SnapWallDrawPoint(point, _pendingPathShape);
+            }
+            else if (_pendingPathShape.Kind == ShapeKind.Dimension && _snappedAnchor is null)
+            {
+                point = SnapToMeasurable(point) ?? point;
+            }
+
             var list = _pendingPathShape.Points!.ToList();
             list[^1] = new CorePoint(point.X - _pendingPathShape.X, point.Y - _pendingPathShape.Y);
             _pendingPathShape.Points = list;
@@ -1847,7 +2536,8 @@ public partial class CanvasHostView : UserControl
         if (_isDraggingPoint && _pointEditShape is not null && _draggedPointIndex is { } draggedIndex)
         {
             var point = ToDocumentSpace(e.GetPosition(SkiaCanvas));
-            point = new Point(SnapIfEnabled(point.X), SnapIfEnabled(point.Y));
+            var isEnd = draggedIndex == 0 || draggedIndex == _pointEditShape.Points!.Count - 1;
+            point = (isEnd ? TryAnchorSnap(point, _pointEditShape) : null) ?? new Point(SnapIfEnabled(point.X), SnapIfEnabled(point.Y));
             var list = _pointEditShape.Points!.ToList();
             list[draggedIndex] = new CorePoint(point.X - _pointEditShape.X, point.Y - _pointEditShape.Y);
             _pointEditShape.Points = list;
@@ -2010,10 +2700,24 @@ public partial class CanvasHostView : UserControl
         }
 
         // Proportional corner drags were already snapped as a whole above (snapping X/Y/H separately would break the ratio).
-        _resizeShape.X = keepProportions ? newX : SnapIfEnabled(newX);
-        _resizeShape.Y = keepProportions ? newY : SnapIfEnabled(newY);
-        _resizeShape.Width = keepProportions ? newW : SnapIfEnabled(newW);
-        _resizeShape.Height = keepProportions ? newH : SnapIfEnabled(newH);
+        var outlineX = keepProportions ? newX : SnapIfEnabled(newX);
+        var outlineY = keepProportions ? newY : SnapIfEnabled(newY);
+        var outlineW = keepProportions ? newW : SnapIfEnabled(newW);
+        var outlineH = keepProportions ? newH : SnapIfEnabled(newH);
+
+        // The handles sit on the drawn outline, which is inset in the shape's X/Y/Width/Height frame by a fixed fraction;
+        // turn the dragged outline back into that frame.
+        var (frameX, frameY, frameW, frameH) = _resizeFrameStart;
+        var ratioW = frameW > 0.0001 ? Math.Max(0.0001, startW / frameW) : 1;
+        var ratioH = frameH > 0.0001 ? Math.Max(0.0001, startH / frameH) : 1;
+        var insetX = frameW > 0.0001 ? (startX - frameX) / frameW : 0;
+        var insetY = frameH > 0.0001 ? (startY - frameY) / frameH : 0;
+        var newFrameW = outlineW / ratioW;
+        var newFrameH = outlineH / ratioH;
+        _resizeShape.X = outlineX - insetX * newFrameW;
+        _resizeShape.Y = outlineY - insetY * newFrameH;
+        _resizeShape.Width = newFrameW;
+        _resizeShape.Height = newFrameH;
     }
 
     private SKRect BuildMarqueeDocRect()
@@ -2027,6 +2731,11 @@ public partial class CanvasHostView : UserControl
 
     private void OnMouseUp(object sender, MouseButtonEventArgs e)
     {
+        if (IsInsideQuickPopup(e.OriginalSource))
+        {
+            return;
+        }
+
         if (e.ChangedButton == MouseButton.Middle)
         {
             EndPan();
@@ -2141,6 +2850,17 @@ public partial class CanvasHostView : UserControl
 
             if (_pointEditShape is not null && _context is not null)
             {
+                if (ShapeGeometryFactory.IsLineFamily(_pointEditShape.Kind))
+                {
+                    // An end dropped exactly on a connection point is glued to it; any other end is free.
+                    ConnectionRouter.AttachEnds(_context.Document, _pointEditShape);
+                }
+
+                if (_pointEditShape.Kind == ShapeKind.Dimension)
+                {
+                    DimensionRouter.AttachPoints(_context.Document, _pointEditShape);
+                }
+
                 var after = ShapeSnapshot.Capture(_pointEditShape);
                 if (!after.Equals(_pointDragUndoBefore))
                 {
@@ -2151,6 +2871,7 @@ public partial class CanvasHostView : UserControl
 
             _pointEditShape = null;
             _draggedPointIndex = null;
+            ClearAnchorProbe();
             return;
         }
 
@@ -2214,6 +2935,11 @@ public partial class CanvasHostView : UserControl
 
     private void OnMouseLeave(object sender, MouseEventArgs e)
     {
+        if (!_isPlacing && !_isPathDrawing && !_isDraggingPoint)
+        {
+            ClearAnchorProbe();
+        }
+
         if (_isPanning)
         {
             EndPan();
@@ -2265,6 +2991,11 @@ public partial class CanvasHostView : UserControl
                 _context.UndoManager.Push(UndoableAction.ForInsert(layer.Shapes, shape, 0));
                 _context.SelectedLayer = layer;
                 _context.SelectedShape = shape;
+                if (shape.Points is not null)
+                {
+                    ConnectionRouter.AttachEnds(_context.Document, shape);
+                }
+
                 // After placing a shape, drop back to Select so the user reviews/moves it rather
                 // than immediately stamping out another one — placing a second shape requires
                 // choosing the Shape tool again.
@@ -2273,6 +3004,7 @@ public partial class CanvasHostView : UserControl
         }
 
         _pendingShape = null;
+        ClearAnchorProbe();
         _context?.RequestRedraw();
     }
 }

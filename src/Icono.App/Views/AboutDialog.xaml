@@ -6,11 +6,12 @@
         WindowStartupLocation="CenterOwner"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         ResizeMode="NoResize" ShowInTaskbar="False"
+        UseLayoutRounding="True" SnapsToDevicePixels="True" TextOptions.TextFormattingMode="Display"
         KeyDown="Window_OnKeyDown">
     <!-- Transparent outer window leaves room for the neumorphic drop shadows around the card. -->
     <Grid Margin="22">
-        <Border Style="{StaticResource NeuShadowLightStyle}" CornerRadius="20" />
-        <Border Style="{StaticResource NeuShadowDarkStyle}" CornerRadius="20" />
+        <Border Style="{DynamicResource NeuShadowLightStyle}" CornerRadius="20" />
+        <Border Style="{DynamicResource NeuShadowDarkStyle}" CornerRadius="20" />
         <Border CornerRadius="20" BorderThickness="1"
                 Background="{DynamicResource WindowBackgroundBrush}"
                 BorderBrush="{DynamicResource WindowEdgeBrush}"

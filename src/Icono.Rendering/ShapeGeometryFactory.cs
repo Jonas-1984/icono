@@ -253,6 +253,16 @@ public static class ShapeGeometryFactory
 
     public static SKPath Build(Shape shape)
     {
+        if (shape.Kind == ShapeKind.Dimension)
+        {
+            return DimensionRenderer.BuildPath(shape);
+        }
+
+        if (shape.Kind == ShapeKind.Wall)
+        {
+            return WallGeometry.BuildOutline(shape);
+        }
+
         if (shape.Kind == ShapeKind.Box3D)
         {
             var boxPath = BuildBox3DOutline(shape);

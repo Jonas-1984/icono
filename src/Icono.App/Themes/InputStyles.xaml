@@ -145,7 +145,7 @@
 
     <Style TargetType="ToolTip">
         <Setter Property="Foreground" Value="{DynamicResource ForegroundTextBrush}" />
-        <Setter Property="Background" Value="{DynamicResource PanelSurfaceBrush}" />
+        <Setter Property="Background" Value="{DynamicResource PopupSurfaceBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource AccentBlueMidBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="8,5" />

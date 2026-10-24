@@ -25,7 +25,7 @@
                VerticalAlignment="Center"
                Source="{Binding Icon, RelativeSource={RelativeSource AncestorType=Window}}" />
 
-        <TextBlock Grid.Column="1" Text="icono" VerticalAlignment="Center"
+        <TextBlock x:Name="TitleText" Grid.Column="1" Text="icono" VerticalAlignment="Center"
                    Foreground="{DynamicResource ForegroundTextBrush}"
                    FontSize="12" FontWeight="SemiBold" />
 

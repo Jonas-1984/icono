@@ -161,7 +161,10 @@
                                              Checked="CanvasSizeUnitRadio_OnChecked" Tag="Cm" Margin="0,0,10,0"
                                              Foreground="{DynamicResource MutedTextBrush}" FontSize="11" />
                                 <RadioButton x:Name="CanvasUnitMmRadio" GroupName="CanvasSizeUnit" Content="mm"
-                                             Checked="CanvasSizeUnitRadio_OnChecked" Tag="Mm"
+                                             Checked="CanvasSizeUnitRadio_OnChecked" Tag="Mm" Margin="0,0,10,0"
+                                             Foreground="{DynamicResource MutedTextBrush}" FontSize="11" />
+                                <RadioButton GroupName="CanvasSizeUnit" Content="inch"
+                                             Checked="CanvasSizeUnitRadio_OnChecked" Tag="In"
                                              Foreground="{DynamicResource MutedTextBrush}" FontSize="11" />
                             </StackPanel>
 
@@ -338,10 +341,25 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="TRANSFORM (POSITION &amp; SIZE, PX)" Style="{StaticResource CardHeaderTextStyle}" />
+                            <TextBlock Grid.Column="0" Text="SIZE &amp; POSITION" Style="{StaticResource CardHeaderTextStyle}" />
                             <Path Grid.Column="1" Style="{StaticResource CardChevronPathStyle}" />
                         </Grid>
                         <StackPanel>
+                            <TextBlock Text="UNIT" Style="{StaticResource PanelLabelTextStyle}" />
+                            <StackPanel Orientation="Horizontal" Margin="6,0,6,6">
+                                <RadioButton x:Name="ShapeUnitPxRadio" GroupName="ShapeSizeUnit" Content="px" IsChecked="True"
+                                             Checked="ShapeSizeUnitRadio_OnChecked" Tag="Px" Margin="0,0,10,0"
+                                             Foreground="{DynamicResource MutedTextBrush}" FontSize="11" />
+                                <RadioButton GroupName="ShapeSizeUnit" Content="mm"
+                                             Checked="ShapeSizeUnitRadio_OnChecked" Tag="Mm" Margin="0,0,10,0"
+                                             Foreground="{DynamicResource MutedTextBrush}" FontSize="11" />
+                                <RadioButton GroupName="ShapeSizeUnit" Content="cm"
+                                             Checked="ShapeSizeUnitRadio_OnChecked" Tag="Cm" Margin="0,0,10,0"
+                                             Foreground="{DynamicResource MutedTextBrush}" FontSize="11" />
+                                <RadioButton GroupName="ShapeSizeUnit" Content="inch"
+                                             Checked="ShapeSizeUnitRadio_OnChecked" Tag="In"
+                                             Foreground="{DynamicResource MutedTextBrush}" FontSize="11" />
+                            </StackPanel>
                             <Grid Margin="6,0,6,6">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -350,27 +368,26 @@
                                 </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="4" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="6" />
+                                    <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
-                                <TextBox x:Name="XTextBox" Grid.Row="0" Grid.Column="0" Tag="X"
+                                <TextBox x:Name="WidthTextBox" Grid.Row="0" Grid.Column="0" Tag="Width"
                                          LostFocus="SizeTextBox_OnLostFocus" KeyDown="SizeTextBox_OnKeyDown" />
-                                <TextBox x:Name="YTextBox" Grid.Row="0" Grid.Column="2" Tag="Y"
+                                <TextBox x:Name="HeightTextBox" Grid.Row="0" Grid.Column="2" Tag="Height"
                                          LostFocus="SizeTextBox_OnLostFocus" KeyDown="SizeTextBox_OnKeyDown" />
-                                <TextBox x:Name="WidthTextBox" Grid.Row="2" Grid.Column="0" Tag="Width"
-                                         LostFocus="SizeTextBox_OnLostFocus" KeyDown="SizeTextBox_OnKeyDown" />
-                                <TextBox x:Name="HeightTextBox" Grid.Row="2" Grid.Column="2" Tag="Height"
-                                         LostFocus="SizeTextBox_OnLostFocus" KeyDown="SizeTextBox_OnKeyDown" />
-                            </Grid>
-                            <Grid Margin="6,0,6,6">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="6" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="X / Y" FontSize="9" HorizontalAlignment="Center"
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Width" FontSize="9" HorizontalAlignment="Center"
                                            Foreground="{DynamicResource MutedTextBrush}" />
-                                <TextBlock Grid.Column="2" Text="Width / Height" FontSize="9" HorizontalAlignment="Center"
+                                <TextBlock Grid.Row="1" Grid.Column="2" Text="Height" FontSize="9" HorizontalAlignment="Center"
+                                           Foreground="{DynamicResource MutedTextBrush}" />
+                                <TextBox x:Name="XTextBox" Grid.Row="3" Grid.Column="0" Tag="X"
+                                         LostFocus="SizeTextBox_OnLostFocus" KeyDown="SizeTextBox_OnKeyDown" />
+                                <TextBox x:Name="YTextBox" Grid.Row="3" Grid.Column="2" Tag="Y"
+                                         LostFocus="SizeTextBox_OnLostFocus" KeyDown="SizeTextBox_OnKeyDown" />
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="X" FontSize="9" HorizontalAlignment="Center"
+                                           Foreground="{DynamicResource MutedTextBrush}" />
+                                <TextBlock Grid.Row="4" Grid.Column="2" Text="Y" FontSize="9" HorizontalAlignment="Center"
                                            Foreground="{DynamicResource MutedTextBrush}" />
                             </Grid>
                         </StackPanel>
@@ -434,6 +451,134 @@
                                 <TextBlock Text="Degrees / ±1° / Flip H / Flip V / Reset" FontSize="9" HorizontalAlignment="Left"
                                            Foreground="{DynamicResource MutedTextBrush}" />
                             </Grid>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border x:Name="DimensionCard" Style="{StaticResource CardBorderStyle}" Visibility="Collapsed">
+                    <StackPanel>
+                        <Grid Style="{StaticResource CollapsibleCardHeaderStyle}" MouseLeftButtonDown="CardHeader_OnToggle">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="DimensionCardTitle" Grid.Column="0" Text="DIMENSION" Style="{StaticResource CardHeaderTextStyle}" />
+                            <Path Grid.Column="1" Style="{StaticResource CardChevronPathStyle}" />
+                        </Grid>
+                        <StackPanel>
+                            <StackPanel x:Name="DimensionLinkSection">
+                                <TextBlock x:Name="DimensionLinkText" Text="" Foreground="{DynamicResource MutedTextBrush}" FontSize="11"
+                                           TextWrapping="Wrap" Margin="14,0,14,6" />
+                                <Button x:Name="DimensionDetachButton" Content="Detach from shape" Style="{StaticResource PanelKeyButtonStyle}"
+                                        Margin="6,0,6,6" ToolTip="Make this a free dimension that no longer follows its shape"
+                                        Click="DimensionDetachButton_OnClick" />
+                            </StackPanel>
+
+                            <StackPanel x:Name="DimensionUnitSection">
+                                <TextBlock Text="UNIT" Style="{StaticResource PanelLabelTextStyle}" />
+                                <ComboBox x:Name="DimensionUnitComboBox" Margin="6,0,6,6" DisplayMemberPath="Label"
+                                          SelectionChanged="DimensionUnitComboBox_OnSelectionChanged" />
+                            </StackPanel>
+
+                            <TextBlock Text="DECIMAL PLACES" Style="{StaticResource PanelLabelTextStyle}" />
+                            <TextBox x:Name="DimensionPrecisionTextBox" Margin="6,0,6,6" ToolTip="0 to 6"
+                                     LostFocus="DimensionPrecisionTextBox_OnLostFocus" KeyDown="WallTextBox_OnKeyDown" />
+
+                            <StackPanel x:Name="DimensionTextSection">
+                                <TextBlock Text="TEXT" Style="{StaticResource PanelLabelTextStyle}" />
+                                <TextBox x:Name="DimensionTextBox" Margin="6,0,6,6" ToolTip="Your own text. Write &lt;&gt; where the measured value should appear."
+                                         LostFocus="DimensionTextBox_OnLostFocus" KeyDown="WallTextBox_OnKeyDown" />
+                            </StackPanel>
+
+                            <StackPanel x:Name="DimensionOffsetSection">
+                                <TextBlock x:Name="DimensionOffsetLabel" Text="DISTANCE FROM SHAPE" Style="{StaticResource PanelLabelTextStyle}" />
+                                <TextBox x:Name="DimensionOffsetTextBox" Margin="6,0,6,6" ToolTip="How far the dimension line sits from the shape"
+                                         LostFocus="DimensionOffsetTextBox_OnLostFocus" KeyDown="WallTextBox_OnKeyDown" />
+                            </StackPanel>
+
+                            <TextBlock Text="NUMBER SIZE (px)" Style="{StaticResource PanelLabelTextStyle}" />
+                            <TextBox x:Name="DimensionFontSizeTextBox" Tag="Font" Margin="6,0,6,6" ToolTip="Size of the written number"
+                                     LostFocus="DimensionStyleTextBox_OnLostFocus" KeyDown="WallTextBox_OnKeyDown" />
+
+                            <TextBlock Text="LINE WIDTH (px)" Style="{StaticResource PanelLabelTextStyle}" />
+                            <TextBox x:Name="DimensionLineWidthTextBox" Tag="Line" Margin="6,0,6,6" ToolTip="Width of the dimension and extension lines"
+                                     LostFocus="DimensionStyleTextBox_OnLostFocus" KeyDown="WallTextBox_OnKeyDown" />
+
+                            <TextBlock Text="ARROWHEAD SIZE (px)" Style="{StaticResource PanelLabelTextStyle}" />
+                            <TextBox x:Name="DimensionArrowSizeTextBox" Tag="Arrow" Margin="6,0,6,6" ToolTip="Length of the arrowheads"
+                                     LostFocus="DimensionStyleTextBox_OnLostFocus" KeyDown="WallTextBox_OnKeyDown" />
+
+                            <TextBlock Text="EXTENSION LINE GAP (px)" Style="{StaticResource PanelLabelTextStyle}" />
+                            <TextBox x:Name="DimensionExtGapTextBox" Tag="Gap" Margin="6,0,6,6" ToolTip="Space between the measured point and the start of the extension line"
+                                     LostFocus="DimensionStyleTextBox_OnLostFocus" KeyDown="WallTextBox_OnKeyDown" />
+
+                            <TextBlock Text="EXTENSION LINE OVERSHOOT (px)" Style="{StaticResource PanelLabelTextStyle}" />
+                            <TextBox x:Name="DimensionExtOvershootTextBox" Tag="Over" Margin="6,0,6,6" ToolTip="How far the extension lines run past the dimension line"
+                                     LostFocus="DimensionStyleTextBox_OnLostFocus" KeyDown="WallTextBox_OnKeyDown" />
+
+                            <Button Content="Reset sizes" Style="{StaticResource PanelKeyButtonStyle}" Margin="6,2,6,4"
+                                    ToolTip="Back to the automatic text size, line width, arrowheads and extension lines"
+                                    Click="DimensionResetStyleButton_OnClick" />
+                            <TextBlock x:Name="DimensionColorHint" Text="Colour of the lines and the number: BORDER."
+                                       Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="12,0,12,8" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border x:Name="WallCard" Style="{StaticResource CardBorderStyle}" Visibility="Collapsed">
+                    <StackPanel>
+                        <Grid Style="{StaticResource CollapsibleCardHeaderStyle}" MouseLeftButtonDown="CardHeader_OnToggle">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="WALL" Style="{StaticResource CardHeaderTextStyle}" />
+                            <Path Grid.Column="1" Style="{StaticResource CardChevronPathStyle}" />
+                        </Grid>
+                        <StackPanel>
+                            <TextBlock x:Name="WallThicknessLabel" Text="THICKNESS" Style="{StaticResource PanelLabelTextStyle}" />
+                            <TextBox x:Name="WallThicknessTextBox" Margin="6,0,6,6" ToolTip="Wall thickness, in the unit chosen in SIZE &amp; POSITION"
+                                     LostFocus="WallThicknessTextBox_OnLostFocus" KeyDown="WallTextBox_OnKeyDown" />
+
+                            <CheckBox x:Name="WallClosedCheckBox" Content="CLOSED (RING)" Margin="6,2,6,6"
+                                      Foreground="{DynamicResource MutedTextBrush}" FontSize="11"
+                                      ToolTip="Connect the last point back to the first one"
+                                      Checked="WallClosedCheckBox_OnCheckedChanged" Unchecked="WallClosedCheckBox_OnCheckedChanged" />
+
+                            <TextBlock Text="HATCH" Style="{StaticResource PanelLabelTextStyle}" />
+                            <ComboBox x:Name="WallHatchComboBox" Margin="6,0,6,6" DisplayMemberPath="Label"
+                                      ToolTip="Pattern drawn inside the wall"
+                                      SelectionChanged="WallHatchComboBox_OnSelectionChanged" />
+
+                            <TextBlock Text="HATCH SPACING" Style="{StaticResource PanelLabelTextStyle}" />
+                            <Grid Margin="6,0,6,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="36" />
+                                </Grid.ColumnDefinitions>
+                                <Slider x:Name="WallHatchSpacingSlider" Grid.Column="0" Minimum="3" Maximum="40"
+                                        ValueChanged="WallHatchSpacingSlider_OnValueChanged"
+                                        PreviewMouseLeftButtonDown="EffectSlider_OnDragStart" PreviewMouseLeftButtonUp="EffectSlider_OnDragEnd" />
+                                <TextBlock x:Name="WallHatchSpacingValueText" Grid.Column="1" Text="8px"
+                                           Foreground="{DynamicResource MutedTextBrush}" FontSize="11"
+                                           VerticalAlignment="Center" HorizontalAlignment="Right" />
+                            </Grid>
+
+                            <TextBlock Text="HATCH COLOR" Style="{StaticResource PanelLabelTextStyle}" />
+                            <views:ColorPickerView x:Name="WallHatchColorPicker" Margin="6,0,6,6" />
+
+                            <CheckBox x:Name="WallDimensionsCheckBox" Content="SHOW DIMENSIONS" Margin="6,2,6,6"
+                                      Foreground="{DynamicResource MutedTextBrush}" FontSize="11"
+                                      Checked="WallDimensionsCheckBox_OnCheckedChanged" Unchecked="WallDimensionsCheckBox_OnCheckedChanged" />
+                            <TextBlock Text="DIMENSION UNIT" Style="{StaticResource PanelLabelTextStyle}" />
+                            <ComboBox x:Name="WallUnitComboBox" Margin="6,0,6,6" DisplayMemberPath="Label"
+                                      SelectionChanged="WallUnitComboBox_OnSelectionChanged" />
+
+                            <Button Content="Split at every point" Style="{StaticResource PanelKeyButtonStyle}" Margin="6,2,6,4"
+                                    ToolTip="Break this wall into one wall per segment"
+                                    Click="WallSplitAllButton_OnClick" />
+                            <TextBlock Text="To cut at a chosen place use the Cut tool (X) and click the wall."
+                                       Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="12,0,12,8" />
                         </StackPanel>
                     </StackPanel>
                 </Border>
@@ -771,30 +916,48 @@
                         <TextBlock Text="SHADOW COLOR" Style="{StaticResource PanelLabelTextStyle}" />
                         <views:ColorPickerView x:Name="ShadowColorPicker" Margin="6,0,6,6" />
 
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="Text" Style="{StaticResource PanelHeaderTextStyle}" />
+                <Border Style="{StaticResource CardBorderStyle}">
+                    <StackPanel>
+                        <Grid Style="{StaticResource CollapsibleCardHeaderStyle}" MouseLeftButtonDown="CardHeader_OnToggle">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="TEXT FORMATTING" Style="{StaticResource PanelLabelTextStyle}" />
+                            <Path Grid.Column="1" Style="{StaticResource CardChevronPathStyle}" Margin="0,4,10,0" />
+                        </Grid>
+                        <StackPanel>
+                        <TextBlock x:Name="TextHintText" Text="Double-click a shape to type text into it." Foreground="{DynamicResource MutedTextBrush}"
+                                   FontSize="11" TextWrapping="Wrap" Margin="14,0,14,6" />
                         <TextBlock Text="TEXT FONT" Style="{StaticResource PanelLabelTextStyle}" />
                         <ComboBox x:Name="TextFontFamilyComboBox" Margin="6,0,6,6"
-                                  DisplayMemberPath="Label" ToolTip="Font (applies to Text shapes)"
+                                  DisplayMemberPath="Label" ToolTip="Font of the text"
                                   SelectionChanged="TextFontFamilyComboBox_OnSelectionChanged" />
 
                         <TextBlock Text="TEXT FORMAT" Style="{StaticResource PanelLabelTextStyle}" />
                         <StackPanel Orientation="Horizontal" Margin="6,0,6,6">
                             <ToggleButton x:Name="TextBoldToggle" Style="{StaticResource IconToggleButtonStyle}" Margin="0,0,4,0"
                                           Checked="TextBoldToggle_OnCheckedChanged" Unchecked="TextBoldToggle_OnCheckedChanged"
-                                          ToolTip="Bold (applies to Text shapes)">
+                                          ToolTip="Bold">
                                 <Path Data="{StaticResource BoldToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
                                       StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
                                       Width="14" Height="14" Stretch="Uniform" />
                             </ToggleButton>
                             <ToggleButton x:Name="TextItalicToggle" Style="{StaticResource IconToggleButtonStyle}" Margin="0,0,4,0"
                                           Checked="TextItalicToggle_OnCheckedChanged" Unchecked="TextItalicToggle_OnCheckedChanged"
-                                          ToolTip="Italic (applies to Text shapes)">
+                                          ToolTip="Italic">
                                 <Path Data="{StaticResource ItalicToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
                                       StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
                                       Width="14" Height="14" Stretch="Uniform" />
                             </ToggleButton>
                             <ToggleButton x:Name="TextUnderlineToggle" Style="{StaticResource IconToggleButtonStyle}" Margin="0,0,10,0"
                                           Checked="TextUnderlineToggle_OnCheckedChanged" Unchecked="TextUnderlineToggle_OnCheckedChanged"
-                                          ToolTip="Underline (applies to Text shapes)">
+                                          ToolTip="Underline">
                                 <Path Data="{StaticResource UnderlineToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
                                       StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
                                       Width="14" Height="14" Stretch="Uniform" />
@@ -803,8 +966,16 @@
                                   StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
                                   Width="14" Height="14" Stretch="Uniform" Margin="0,0,4,0" ToolTip="Font Size" />
                             <TextBox x:Name="FontSizeTextBox" Width="36" VerticalContentAlignment="Center"
-                                     TextAlignment="Center" ToolTip="Font Size (applies to Text shapes)"
+                                     TextAlignment="Center" ToolTip="Font size in px"
                                      LostFocus="FontSizeTextBox_OnLostFocus" KeyDown="FontSizeTextBox_OnKeyDown" />
+                        </StackPanel>
+
+                        <StackPanel x:Name="TextColorSection">
+                            <TextBlock Text="TEXT COLOR" Style="{StaticResource PanelLabelTextStyle}" />
+                            <views:ColorPickerView x:Name="TextColorPicker" Margin="6,0,6,6" />
+                            <Button x:Name="TextColorAutoButton" Content="Automatic" Style="{StaticResource PanelKeyButtonStyle}"
+                                    Margin="6,0,6,6" HorizontalAlignment="Left" Padding="12,0" Click="TextColorAutoButton_OnClick"
+                                    ToolTip="Dark or white, whichever reads better on the shape" />
                         </StackPanel>
                         </StackPanel>
                     </StackPanel>

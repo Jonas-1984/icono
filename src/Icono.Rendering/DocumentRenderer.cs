@@ -6,12 +6,34 @@ namespace Icono.Rendering;
 public static class DocumentRenderer
 {
     public static void Render(
-        SKCanvas canvas, Document document, int width, int height, Shape? pending = null, bool forExport = false)
+        SKCanvas canvas, Document document, int width, int height, Shape? pending = null, bool forExport = false,
+        bool includeBackground = false)
     {
         if (forExport)
         {
-            // Background modes are a preview aid only — exported output is always transparent.
+            // The checkerboard of the "Transparent" mode is only a preview aid. An export is transparent unless the
+            // caller asks for the page background (colour / blur / picture) to be part of the image.
             canvas.Clear(SKColors.Transparent);
+
+            if (includeBackground && document.BackgroundMode != BackgroundMode.Transparent)
+            {
+                canvas.Save();
+                canvas.ClipRect(SKRect.Create(0, 0, width, height));
+                switch (document.BackgroundMode)
+                {
+                    case BackgroundMode.SolidColor:
+                        canvas.Clear(document.BackgroundColor.ToSkColor());
+                        break;
+                    case BackgroundMode.Blur:
+                        BlurBackgroundRenderer.Render(canvas, width, height, document);
+                        break;
+                    case BackgroundMode.Image:
+                        BackgroundImageRenderer.Render(canvas, width, height, document);
+                        break;
+                }
+
+                canvas.Restore();
+            }
         }
         else
         {
