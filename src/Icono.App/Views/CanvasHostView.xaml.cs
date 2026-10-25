@@ -2247,6 +2247,11 @@ public partial class CanvasHostView : UserControl
                 ArchitecturalSymbols.ApplyDefaults(_pendingShape);
             }
 
+            if (PlanSymbols.IsPlanSymbol(_pendingShape.Kind))
+            {
+                PlanSymbols.ApplyDefaults(_pendingShape);
+            }
+
             if (_pendingShape.Kind == ShapeKind.DesignGrid)
             {
                 // Fine, light hairlines so the coloured squares stay the star of the grid.
@@ -3660,6 +3665,17 @@ public partial class CanvasHostView : UserControl
         {
             // a click, not a drag (a door's height follows from its width, so only the width tells): the real-world size of that door or window at the drawing scale
             var size = ArchitecturalSymbols.DefaultSize(shape.Kind, shape.WallThickness, _context.Document.ScaleDenominator, _context.Document.Width);
+            var outline = ShapeOutline.FrameForBox(shape, shape.X, shape.Y, size.Width, size.Height);
+            shape.X = outline.X;
+            shape.Y = outline.Y;
+            shape.Width = outline.W;
+            shape.Height = outline.H;
+        }
+
+        if (shape is not null && PlanSymbols.IsPlanSymbol(shape.Kind) && _context is not null && shape.Width < 6 && shape.Height < 6)
+        {
+            // a click, not a drag: the real-world size of the symbol at the drawing scale
+            var size = PlanSymbols.DefaultSize(shape.Kind, _context.Document.ScaleDenominator, _context.Document.Width);
             var outline = ShapeOutline.FrameForBox(shape, shape.X, shape.Y, size.Width, size.Height);
             shape.X = outline.X;
             shape.Y = outline.Y;

@@ -127,4 +127,30 @@ public enum ShapeKind
 
     /// <summary>An opening in a wall without a door or window.</summary>
     WallOpening,
+
+    // Symbols of an electrical and kitchen plan (see PlanSymbols): placed at a point, drawn at their real size.
+
+    /// <summary>A socket: a half circle on a line with a bar to its top.</summary>
+    Socket,
+
+    /// <summary>A double socket: the socket with a 2.</summary>
+    DoubleSocket,
+
+    /// <summary>An electrical appliance: a square with an E.</summary>
+    ElectricAppliance,
+
+    /// <summary>An electric cooker: a square with its three hotplates.</summary>
+    Cooker,
+
+    /// <summary>An oven: a square with the door line and a handle dot.</summary>
+    Oven,
+
+    /// <summary>A microwave: a rounded square with three waves.</summary>
+    Microwave,
+
+    /// <summary>The connections for water and waste water: a big circle between two small ones.</summary>
+    WaterAndWastewater,
+
+    /// <summary>A cooker hood: a circle with a cross.</summary>
+    Hood,
 }

@@ -30,6 +30,10 @@ public static class ShapeGeometryFactory
         ShapeKind.FilingCabinet, ShapeKind.Printer, ShapeKind.TrashBin, ShapeKind.Whiteboard,
         ShapeKind.Window, ShapeKind.Stairs, ShapeKind.PottedTree, ShapeKind.Rug, ShapeKind.Bed,
         ShapeKind.Lamp,
+
+        // Electrical and kitchen plan symbols (see PlanSymbols).
+        ShapeKind.Socket, ShapeKind.DoubleSocket, ShapeKind.ElectricAppliance, ShapeKind.Cooker, ShapeKind.Oven,
+        ShapeKind.Microwave, ShapeKind.WaterAndWastewater, ShapeKind.Hood,
     ];
 
     /// <summary>Kinds whose local geometry is closed straight-edge polygons — the only shapes
@@ -340,6 +344,43 @@ public static class ShapeGeometryFactory
         }
 
         return path;
+    }
+
+    /// <summary>The parts of a plan symbol that are drawn solid in the border colour (the dots of a cooker, the E of an appliance), placed like the
+    /// outline of the shape; null for every other kind.</summary>
+    public static SKPath? BuildSolidParts(Shape shape)
+    {
+        if (PlanSymbols.SolidData(shape.Kind) is not { } data || SKPath.ParseSvgPathData(data) is not { } path)
+        {
+            return null;
+        }
+
+        if (shape.FlipHorizontal)
+        {
+            path.Transform(SKMatrix.CreateScale(-1, 1, 12, 12));
+        }
+
+        if (shape.FlipVertical)
+        {
+            path.Transform(SKMatrix.CreateScale(1, -1, 12, 12));
+        }
+
+        path.Transform(SKMatrix.CreateScale((float)(shape.Width / 24.0), (float)(shape.Height / 24.0)));
+        path.Offset((float)shape.X, (float)shape.Y);
+        if (shape.Rotation != 0)
+        {
+            path.Transform(SKMatrix.CreateRotationDegrees(
+                (float)shape.Rotation, (float)(shape.X + shape.Width / 2), (float)(shape.Y + shape.Height / 2)));
+        }
+
+        return path;
+    }
+
+    /// <summary>The bounds of the outline of a kind in its 24 x 24 template.</summary>
+    public static SKRect LocalBounds(ShapeKind kind)
+    {
+        using var local = BuildLocal(kind);
+        return local.Bounds;
     }
 
     private static SKPath BuildLocal(ShapeKind kind)
@@ -1034,6 +1075,24 @@ public static class ShapeGeometryFactory
                 if (lampPath is not null)
                 {
                     path.AddPath(lampPath);
+                }
+
+                break;
+            }
+
+            case ShapeKind.Socket:
+            case ShapeKind.DoubleSocket:
+            case ShapeKind.ElectricAppliance:
+            case ShapeKind.Cooker:
+            case ShapeKind.Oven:
+            case ShapeKind.Microwave:
+            case ShapeKind.WaterAndWastewater:
+            case ShapeKind.Hood:
+            {
+                using var symbolPath = SKPath.ParseSvgPathData(PlanSymbols.OutlineData(kind));
+                if (symbolPath is not null)
+                {
+                    path.AddPath(symbolPath);
                 }
 
                 break;

@@ -27,7 +27,23 @@ public partial class App : Application
 
         // Must run before base.OnStartup creates the StartupUri window so it is born with the saved palette.
         ThemeManager.LoadSaved();
+
+        // Icon-only buttons (most of the tools) would have no name for a screen reader: they get their tool tip as name.
+        EventManager.RegisterClassHandler(typeof(System.Windows.Controls.Primitives.ButtonBase), FrameworkElement.LoadedEvent,
+            new RoutedEventHandler(NameFromToolTip));
+        EventManager.RegisterClassHandler(typeof(System.Windows.Controls.MenuItem), FrameworkElement.LoadedEvent,
+            new RoutedEventHandler(NameFromToolTip));
         base.OnStartup(e);
+    }
+
+    private static void NameFromToolTip(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement element
+            && string.IsNullOrEmpty(System.Windows.Automation.AutomationProperties.GetName(element))
+            && element.ToolTip is string tip && tip.Length > 0)
+        {
+            System.Windows.Automation.AutomationProperties.SetName(element, tip);
+        }
     }
 
     private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)

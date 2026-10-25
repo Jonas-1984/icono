@@ -89,6 +89,22 @@ public sealed class EditorContext : ObservableObject
         var tag => System.Text.RegularExpressions.Regex.Replace(tag, "(?<=[a-z0-9])(?=[A-Z])", " "),
     };
 
+    /// <summary>One line of how to use the active tool, for the status bar (null for tools that need none).</summary>
+    public string? ActiveToolHint => ActiveToolTag switch
+    {
+        "Wall" => "Wall: click the corners; type a length and press Enter to place a corner; Enter ends, Esc cancels.",
+        "WallCut" => "Cut Wall: click the wall where it should be cut.",
+        "Measure" => "Ruler: click two points - nothing is added to the drawing. Shift locks the direction.",
+        "MeasureGap" => "Distance: click the first object, then the second.",
+        "Match" => "Match: click the source, then every object that should get its look. Esc ends.",
+        "Eyedropper" => "Eyedropper: click anywhere to pick up a colour.",
+        "RegionColor" => "Bucket: click a region to colour it.",
+        "Polyline" or "Curve" => "Click each point; double-click or Enter finishes, Esc cancels.",
+        var tag when tag is not null && tag.StartsWith("Dim", StringComparison.Ordinal) => "Dimension: click the points, then where the dimension line should run.",
+        "Line" or "Arrow" or "DoubleArrow" => "Drag from point to point - it snaps to corners, middles and crossings (F3 = snap on/off, Alt = off).",
+        _ => null,
+    };
+
     /// <summary>Source of truth for selection. Index order has no meaning; multi-select is a set.</summary>
     public ObservableCollection<Shape> SelectedShapes { get; } = new();
 

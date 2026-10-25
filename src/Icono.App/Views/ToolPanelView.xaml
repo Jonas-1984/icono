@@ -466,9 +466,25 @@
                                          Tag="{StaticResource WindowDoubleToolGeometry}" CommandParameter="WindowDouble" ToolTip="Double window: two sashes with a post in the middle" />
                             <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
                                          Tag="{StaticResource WallOpeningToolGeometry}" CommandParameter="WallOpening" ToolTip="Wall opening: cuts the wall open without a door or window" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource SocketToolGeometry}" CommandParameter="Socket" ToolTip="Socket: click for a 20 cm symbol at the drawing scale, or drag its size" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource DoubleSocketToolGeometry}" CommandParameter="DoubleSocket" ToolTip="Double socket" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource ElectricApplianceToolGeometry}" CommandParameter="ElectricAppliance" ToolTip="Electrical appliance (E)" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource CookerToolGeometry}" CommandParameter="Cooker" ToolTip="Electric cooker: click for a 60 cm symbol at the drawing scale" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource OvenToolGeometry}" CommandParameter="Oven" ToolTip="Oven" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource MicrowaveToolGeometry}" CommandParameter="Microwave" ToolTip="Microwave" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource WaterAndWastewaterToolGeometry}" CommandParameter="WaterAndWastewater" ToolTip="Water and waste water connections" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource HoodToolGeometry}" CommandParameter="Hood" ToolTip="Cooker hood" />
                         </WrapPanel>
                         <StackPanel x:Name="FurniturePagerDots" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,2,0,6" />
-                        <TextBlock Text="Doors and windows lie over a wall and cut it open. Drag to size them or click for a real-world size, turn them with Rotation, mirror them with Flip. Door: thickness and opening angle in the OPENING card on the right."
+                        <TextBlock Text="Doors and windows lie over a wall and cut it open. The electrical and kitchen symbols (sockets, appliances, cooker, oven, microwave, water connections, hood) are placed at a point. Drag to size them or click for a real-world size at the drawing scale, turn them with Rotation, mirror them with Flip. Door: thickness and opening angle in the OPENING card on the right."
                                    Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="12,2,12,8" />
                         </StackPanel>
                     </StackPanel>

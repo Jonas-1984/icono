@@ -120,6 +120,10 @@ public partial class MainWindow
         }
 
         StatusBar.SetTool(_context.ActiveToolName);
+        if (_context.ActiveToolHint is { } hint)
+        {
+            _context.Notify(hint);
+        }
     }
 
     /// <summary>Shows the page size and orientation in the Page menu and the status bar.</summary>

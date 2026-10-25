@@ -192,7 +192,7 @@ public sealed class SnapGeometry
 
     /// <summary>Doors, windows, openings and the furniture of the plan symbols: shapes that are placed at a point rather than drawn.</summary>
     public static bool IsSymbolOrFurniture(ShapeKind kind) =>
-        ArchitecturalSymbols.IsSymbol(kind) || kind is >= ShapeKind.Worktable and <= ShapeKind.Lamp;
+        ArchitecturalSymbols.IsSymbol(kind) || PlanSymbols.IsPlanSymbol(kind) || kind is >= ShapeKind.Worktable and <= ShapeKind.Lamp;
 
     internal static List<SnapContour> Flatten(SKPath path)
     {

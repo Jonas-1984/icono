@@ -18,6 +18,20 @@ public partial class AboutDialog : Window
         PlatformText.Text = $"{RuntimeInformation.FrameworkDescription} · WPF + SkiaSharp";
     }
 
+    private void Hyperlink_OnRequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true });
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            Clipboard.SetText(e.Uri.AbsoluteUri.Replace("mailto:", string.Empty));
+        }
+
+        e.Handled = true;
+    }
+
     private void OkButton_OnClick(object sender, RoutedEventArgs e) => Close();
 
     private void Card_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)

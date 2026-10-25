@@ -544,6 +544,10 @@ public partial class MainWindow
 
     private void UpdatesMenuItem_OnClick(object sender, RoutedEventArgs e) => OpenUrl($"{RepositoryUrl}/releases");
 
+    private void WebsiteMenuItem_OnClick(object sender, RoutedEventArgs e) => OpenUrl("https://www.bitbins.de");
+
+    private void ContactMenuItem_OnClick(object sender, RoutedEventArgs e) => OpenUrl("mailto:info@bitbins.de");
+
     private void OpenUrl(string url)
     {
         try

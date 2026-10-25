@@ -171,6 +171,16 @@ public static class ShapeRenderer
 
             canvas.DrawPath(path, strokePaint);
         }
+
+        // the dots of a cooker, the E of an appliance: solid in the border colour
+        if (ShapeGeometryFactory.BuildSolidParts(shape) is { } solid)
+        {
+            using (solid)
+            using (var solidPaint = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill, Color = shape.BorderColor.WithCombinedAlpha(alpha) })
+            {
+                canvas.DrawPath(solid, solidPaint);
+            }
+        }
     }
 
     /// <summary>Draws a Box3D's three faces with a fixed lighten/darken shading ramp (top

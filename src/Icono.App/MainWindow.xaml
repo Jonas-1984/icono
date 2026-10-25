@@ -41,7 +41,7 @@
         <views:TitleBarView Grid.Row="0" x:Name="TitleBar" />
 
         <Menu x:Name="MainMenu" Grid.Row="1">
-            <MenuItem Header="File">
+            <MenuItem Header="_File">
                 <MenuItem Header="New..." InputGestureText="Ctrl+N" Click="NewMenuItem_OnClick" />
                 <MenuItem Header="Open..." InputGestureText="Ctrl+O" Click="OpenMenuItem_OnClick" />
                 <MenuItem x:Name="RecentMenuItem" Header="Open Recent" SubmenuOpened="RecentMenuItem_OnSubmenuOpened">
@@ -57,7 +57,7 @@
                 <Separator />
                 <MenuItem Header="Exit" InputGestureText="Alt+F4" Click="ExitMenuItem_OnClick" />
             </MenuItem>
-            <MenuItem Header="Edit">
+            <MenuItem Header="_Edit">
                 <MenuItem Header="Undo" InputGestureText="Ctrl+Z" Click="UndoMenuItem_OnClick" />
                 <MenuItem Header="Redo" InputGestureText="Ctrl+Y" Click="RedoMenuItem_OnClick" />
                 <Separator />
@@ -70,7 +70,7 @@
                 <MenuItem Header="Select All" InputGestureText="Ctrl+A" Click="SelectAllMenuItem_OnClick" />
                 <MenuItem Header="Deselect" InputGestureText="Esc" Click="DeselectMenuItem_OnClick" />
             </MenuItem>
-            <MenuItem Header="View">
+            <MenuItem Header="_View">
                 <MenuItem Header="Zoom In" InputGestureText="Ctrl++" Click="ZoomInMenuItem_OnClick" />
                 <MenuItem Header="Zoom Out" InputGestureText="Ctrl+-" Click="ZoomOutMenuItem_OnClick" />
                 <MenuItem Header="Actual Size (100%)" InputGestureText="Ctrl+0" Click="ActualSizeMenuItem_OnClick" />
@@ -89,7 +89,7 @@
                     <MenuItem x:Name="ViewLightModeMenuItem" Header="Light Mode" Click="LightModeMenuItem_OnClick" />
                 </MenuItem>
             </MenuItem>
-            <MenuItem Header="Page">
+            <MenuItem Header="_Page">
                 <MenuItem Header="Size">
                     <MenuItem Header="A5 (148 x 210 mm)" Tag="A5" Click="PageSizeMenuItem_OnClick" />
                     <MenuItem Header="A4 (210 x 297 mm)" Tag="A4" Click="PageSizeMenuItem_OnClick" />
@@ -116,7 +116,7 @@
                 <MenuItem Header="Background..." Tag="BACKGROUND" Click="FocusCardMenuItem_OnClick" />
                 <MenuItem Header="New Layer" Click="NewLayerMenuItem_OnClick" />
             </MenuItem>
-            <MenuItem Header="Insert">
+            <MenuItem Header="_Insert">
                 <MenuItem Header="Shape">
                     <MenuItem Header="Rectangle" Tag="Rectangle" Click="ToolMenuItem_OnClick" />
                     <MenuItem Header="Rounded Rectangle" Tag="RoundedRectangle" Click="ToolMenuItem_OnClick" />
@@ -150,11 +150,21 @@
                     <MenuItem Header="Double Window" Tag="WindowDouble" Click="ToolMenuItem_OnClick" />
                     <MenuItem Header="Wall Opening" Tag="WallOpening" Click="ToolMenuItem_OnClick" />
                 </MenuItem>
+                <MenuItem Header="Electrical and Kitchen">
+                    <MenuItem Header="Socket" Tag="Socket" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Double Socket" Tag="DoubleSocket" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Electrical Appliance" Tag="ElectricAppliance" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Cooker" Tag="Cooker" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Oven" Tag="Oven" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Microwave" Tag="Microwave" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Water and Waste Water" Tag="WaterAndWastewater" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Cooker Hood" Tag="Hood" Click="ToolMenuItem_OnClick" />
+                </MenuItem>
                 <Separator />
                 <MenuItem Header="Image..." Click="InsertImageMenuItem_OnClick" />
                 <MenuItem Header="SVG Code..." Click="InsertSvgMenuItem_OnClick" />
             </MenuItem>
-            <MenuItem Header="Draw">
+            <MenuItem Header="_Draw">
                 <MenuItem Header="Line" Tag="Line" Click="ToolMenuItem_OnClick" />
                 <MenuItem Header="Arrow" Tag="Arrow" Click="ToolMenuItem_OnClick" />
                 <MenuItem Header="Double Arrow" Tag="DoubleArrow" Click="ToolMenuItem_OnClick" />
@@ -212,7 +222,7 @@
                 <MenuItem Header="Distance between Objects" InputGestureText="B" Tag="MeasureGap" Click="ToolMenuItem_OnClick" />
                 <MenuItem Header="Ruler (nothing is added)" InputGestureText="M" Tag="Measure" Click="ToolMenuItem_OnClick" />
             </MenuItem>
-            <MenuItem Header="Arrange">
+            <MenuItem Header="_Arrange">
                 <MenuItem Header="Bring to Front" Click="BringToFrontButton_OnClick" />
                 <MenuItem Header="Send to Back" Click="SendToBackButton_OnClick" />
                 <Separator />
@@ -252,7 +262,7 @@
                 <MenuItem Header="Reflect" Click="ReflectButton_OnClick" />
                 <MenuItem Header="Offset..." Click="OffsetButton_OnClick" />
             </MenuItem>
-            <MenuItem Header="Design">
+            <MenuItem Header="De_sign">
                 <MenuItem Header="Design Style">
                     <MenuItem Header="None (standard)" Tag="None" Click="DesignStyleMenuItem_OnClick" />
                     <Separator />
@@ -272,7 +282,7 @@
                 <MenuItem Header="Text Formats..." Tag="TEXT FORMATTING" Click="FocusCardMenuItem_OnClick" />
                 <MenuItem Header="Size &amp; Position..." Tag="SIZE &amp; POSITION" Click="FocusCardMenuItem_OnClick" />
             </MenuItem>
-            <MenuItem Header="Tools">
+            <MenuItem Header="_Tools">
                 <MenuItem Header="Selection" InputGestureText="V" Tag="Select" Click="ToolMenuItem_OnClick" />
                 <MenuItem Header="Pan / Zoom" InputGestureText="H" Tag="PanZoom" Click="ToolMenuItem_OnClick" />
                 <Separator />
@@ -284,10 +294,12 @@
                 <MenuItem Header="Add Point" Tag="AddPoint" Click="ToolMenuItem_OnClick" />
                 <MenuItem Header="Delete Point" Tag="DeletePoint" Click="ToolMenuItem_OnClick" />
             </MenuItem>
-            <MenuItem Header="Help">
+            <MenuItem Header="_Help">
                 <MenuItem Header="Keyboard Shortcuts" Click="ShortcutsMenuItem_OnClick" />
                 <MenuItem Header="Documentation" Click="DocumentationMenuItem_OnClick" />
                 <MenuItem Header="Check for Updates" Click="UpdatesMenuItem_OnClick" />
+                <MenuItem Header="Website (www.bitbins.de)" Click="WebsiteMenuItem_OnClick" />
+                <MenuItem Header="Contact (info@bitbins.de)" Click="ContactMenuItem_OnClick" />
                 <Separator />
                 <MenuItem Header="About icono" Click="AboutMenuItem_OnClick" />
             </MenuItem>

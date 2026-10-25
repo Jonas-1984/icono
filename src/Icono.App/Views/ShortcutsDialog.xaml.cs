@@ -35,6 +35,12 @@ public partial class ShortcutsDialog : ThemedDialogWindow
         new("Resize keeping proportions", "Drag a corner handle"),
         new("Resize freely", "Shift + drag a corner handle"),
         new("Clear a design-grid square", "Alt + click with the bucket"),
+        new("Object snap on / off (end points, middles, centres, crossings ...)", "F3"),
+        new("Snap off for one click or drag", "Hold Alt"),
+        new("Draw a wall: type its length, place the corner, start the next wall", "Digits, Enter, Backspace"),
+        new("Finish the drawing and go back to the Selection tool", "Enter"),
+        new("Select several objects, e.g. two walls to join", "Shift + click"),
+        new("Menus by keyboard", "Alt + the underlined letter"),
     ];
 
     public ShortcutsDialog()
