@@ -84,7 +84,7 @@
         <Setter Property="Width" Value="32" />
         <Setter Property="Height" Value="32" />
         <Setter Property="Padding" Value="0" />
-        <Setter Property="Margin" Value="3,0" />
+        <Setter Property="Margin" Value="3,2" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Template">
             <Setter.Value>
@@ -118,7 +118,7 @@
     <Style x:Key="ToolbarSquareIconRadioButtonStyle" TargetType="RadioButton">
         <Setter Property="Width" Value="32" />
         <Setter Property="Height" Value="32" />
-        <Setter Property="Margin" Value="3,0" />
+        <Setter Property="Margin" Value="3,2" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Foreground" Value="{DynamicResource ForegroundTextBrush}" />
         <Setter Property="Template">
@@ -160,7 +160,7 @@
         <Setter Property="Foreground" Value="{DynamicResource ForegroundTextBrush}" />
         <Setter Property="Width" Value="32" />
         <Setter Property="Height" Value="32" />
-        <Setter Property="Margin" Value="3,0" />
+        <Setter Property="Margin" Value="3,2" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Template">
             <Setter.Value>

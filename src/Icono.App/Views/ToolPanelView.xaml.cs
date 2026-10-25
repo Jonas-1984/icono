@@ -280,6 +280,14 @@ public partial class ToolPanelView : UserControl
         Context.MatchAspects = box.IsChecked == true ? Context.MatchAspects | aspect : Context.MatchAspects & ~aspect;
     }
 
+    private void Room_OnClick(object sender, System.Windows.RoutedEventArgs e)
+    {
+        if (Context is not null && sender is FrameworkElement { Tag: string tag } && Enum.TryParse<RoomPreset>(tag, out var preset))
+        {
+            Context.InsertRoom(preset);
+        }
+    }
+
     private void AddDimensions_OnClick(object sender, System.Windows.RoutedEventArgs e)
     {
         if (Context is not null && sender is FrameworkElement { Tag: string tag } && Enum.TryParse<DimensionSet>(tag, out var set))

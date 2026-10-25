@@ -543,6 +543,27 @@ public sealed class EditorContext : ObservableObject
         EditSelection(shapes => ShapeArranger.Distribute(shapes, horizontally));
     }
 
+    /// <summary>Puts the dimension lines of the selected walls inside the plan, outside it, or automatically.</summary>
+    public void SetWallDimensionPlacement(WallDimensionPlacement placement)
+    {
+        if (!SelectedShapes.Any(s => s.Kind == ShapeKind.Wall))
+        {
+            StatusMessage?.Invoke("Select a wall first.");
+            return;
+        }
+
+        EditSelection(shapes =>
+        {
+            var walls = shapes.Where(s => s.Kind == ShapeKind.Wall && s.WallDimensionPlacement != placement).ToList();
+            foreach (var wall in walls)
+            {
+                wall.WallDimensionPlacement = placement;
+            }
+
+            return walls;
+        });
+    }
+
     public void FlipSelection(bool horizontally) => EditSelection(shapes =>
     {
         foreach (var shape in shapes)
@@ -712,6 +733,69 @@ public sealed class EditorContext : ObservableObject
         UndoManager.Push(UndoableAction.ForPropertyEdit([target], [before], [ShapeSnapshot.Capture(target)]));
         StatusMessage?.Invoke("Look matched.");
         RequestRedraw();
+    }
+
+    /// <summary>Puts a ready-made room (see <see cref="RoomPreset"/>) in the middle of the page as one closed wall.</summary>
+    public void InsertRoom(RoomPreset preset)
+    {
+        var layer = SelectedLayer is { Locked: false } selected ? selected : Document.Layers.FirstOrDefault(l => !l.Locked);
+        if (layer is null)
+        {
+            StatusMessage?.Invoke("All layers are locked.");
+            return;
+        }
+
+        var width = Math.Min(Document.Width * 0.6, 480);
+        var height = Math.Min(Document.Height * 0.45, width * 0.75);
+        var wall = WallRooms.Build(preset, Document.Width / 2.0, Document.Height / 2.0, width, height);
+
+        layer.Shapes.Insert(0, wall);
+        UndoManager.Push(UndoableAction.ForInsert(layer.Shapes, wall, 0));
+        SelectedShape = wall;
+        SelectedLayer = layer;
+        ActiveTool = ActiveTool.Select;
+        StatusMessage?.Invoke("Room added. Click a number to type the length of a wall.");
+        RequestRedraw();
+    }
+
+    /// <summary>Gives one segment of a wall a new length (page px) as one undo step. The length is the one the dimension shows (the inside of a room, by
+    /// default), so typing 250 makes the room 250 wide inside. Walls at a right angle slide along with the end point, and other walls that
+    /// were joined to a moved corner follow it.</summary>
+    public bool SetWallSegmentLength(Shape wall, int segment, double lengthPx)
+    {
+        var segments = WallGeometry.Segments(wall);
+        if (segment < 0 || segment >= segments.Count)
+        {
+            return false;
+        }
+
+        // the dimension measures a face, the wall moves by its centre line: the difference between the two stays the same when a side grows
+        var centre = Geo.Distance(segments[segment].From, segments[segment].To);
+        lengthPx = centre + (lengthPx - WallGeometry.MeasuredLength(wall, segment));
+
+        var others = Document.Layers.Where(l => !l.Locked).SelectMany(l => l.Shapes)
+            .Where(s => s.Kind == ShapeKind.Wall && !s.Locked && !ReferenceEquals(s, wall)).ToList();
+        var affected = new List<Shape> { wall };
+        affected.AddRange(others);
+        var before = affected.Select(ShapeSnapshot.Capture).ToList();
+
+        var moves = WallEditor.ResizeSegment(wall, segment, lengthPx);
+        if (moves.Count == 0)
+        {
+            return false;
+        }
+
+        foreach (var other in others)
+        {
+            WallEditor.FollowMoves(other, moves);
+        }
+
+        var after = affected.Select(ShapeSnapshot.Capture).ToList();
+        var changed = Enumerable.Range(0, affected.Count).Where(i => !after[i].Equals(before[i])).ToList();
+        UndoManager.Push(UndoableAction.ForPropertyEdit(
+            changed.Select(i => affected[i]).ToList(), changed.Select(i => before[i]).ToList(), changed.Select(i => after[i]).ToList()));
+        RequestRedraw();
+        return true;
     }
 
     /// <summary>Breaks every selected wall into one wall per segment.</summary>

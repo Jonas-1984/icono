@@ -152,6 +152,14 @@
                 <Separator />
                 <MenuItem Header="Wall" InputGestureText="W" Tag="Wall" Click="ToolMenuItem_OnClick" />
                 <MenuItem Header="Cut Wall" InputGestureText="X" Tag="WallCut" Click="ToolMenuItem_OnClick" />
+                <MenuItem Header="Add Room">
+                    <MenuItem Header="Closed Room" Tag="Closed" Click="RoomMenuItem_OnClick" />
+                    <MenuItem Header="Room with One Corner (L-shape)" Tag="OneCorner" Click="RoomMenuItem_OnClick" />
+                    <MenuItem Header="Room with One Slanted Wall" Tag="OneSlantedWall" Click="RoomMenuItem_OnClick" />
+                    <MenuItem Header="Room with Two Slanted Walls" Tag="TwoSlantedWalls" Click="RoomMenuItem_OnClick" />
+                    <MenuItem Header="Room with a Column in the Corner" Tag="CornerColumn" Click="RoomMenuItem_OnClick" />
+                    <MenuItem Header="Room with a Column on a Wall" Tag="WallColumn" Click="RoomMenuItem_OnClick" />
+                </MenuItem>
                 <MenuItem Header="Wall Options..." Tag="WALL" Click="FocusCardMenuItem_OnClick" />
                 <Separator />
                 <MenuItem Header="Dimension">
@@ -170,6 +178,11 @@
                     <MenuItem Header="Segment / Curve Lengths" Tag="Segments" Click="AddDimensionsMenuItem_OnClick" />
                 </MenuItem>
                 <MenuItem Header="Dimension Style..." Tag="DIMENSION" Click="FocusCardMenuItem_OnClick" />
+                <MenuItem Header="Wall Dimensions">
+                    <MenuItem Header="Inside the Plan (in the room)" Tag="Inside" Click="WallDimensionPlacementMenuItem_OnClick" />
+                    <MenuItem Header="Outside the Plan" Tag="Outside" Click="WallDimensionPlacementMenuItem_OnClick" />
+                    <MenuItem Header="Automatic" Tag="Automatic" Click="WallDimensionPlacementMenuItem_OnClick" />
+                </MenuItem>
                 <Separator />
                 <MenuItem Header="Distance between Objects" InputGestureText="B" Tag="MeasureGap" Click="ToolMenuItem_OnClick" />
                 <MenuItem Header="Ruler (nothing is added)" InputGestureText="M" Tag="Measure" Click="ToolMenuItem_OnClick" />
@@ -259,217 +272,170 @@
         <Border Grid.Row="2" Margin="10,4,10,8" CornerRadius="0" Style="{StaticResource NeuShadowLightStyle}" />
         <Border Grid.Row="2" Margin="10,4,10,8" CornerRadius="0" Style="{StaticResource NeuShadowDarkStyle}" />
         <Border Grid.Row="2" Style="{StaticResource ToolBarBorderStyle}">
-            <StackPanel>
             <WrapPanel>
-                <Button Content="New" Margin="3,0" Click="NewMenuItem_OnClick" ToolTip="New document (Ctrl+N)" />
-                <Button Content="Open" Margin="3,0" Click="OpenMenuItem_OnClick" ToolTip="Open document (Ctrl+O)" />
-                <Button Content="Save" Margin="3,0" Click="SaveMenuItem_OnClick" ToolTip="Save document (Ctrl+S)" />
-                <Button Content="Export" Margin="3,0" Click="ExportMenuItem_OnClick" ToolTip="Export as PNG or icon (Ctrl+E)" />
-                <Separator Width="1" Margin="6,0" />
-                <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="UndoMenuItem_OnClick" ToolTip="Undo (Ctrl+Z)">
-                    <Path Data="{StaticResource UndoToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
-                          StrokeThickness="1.1" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
-                          Width="15" Height="15" Stretch="Uniform" />
-                </Button>
-                <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="RedoMenuItem_OnClick" ToolTip="Redo (Ctrl+Y)">
-                    <Path Data="{StaticResource RedoToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
-                          StrokeThickness="1.1" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
-                          Width="15" Height="15" Stretch="Uniform" />
-                </Button>
-                <Separator Width="1" Margin="6,0" />
-                <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="CutButton_OnClick" ToolTip="Cut (Ctrl+X)">
-                    <Path Data="{StaticResource CutToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
-                          StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
-                          Width="15" Height="15" Stretch="Uniform" />
-                </Button>
-                <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="CopyButton_OnClick" ToolTip="Copy (Ctrl+C)">
-                    <Path Data="{StaticResource CopyToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
-                          StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
-                          Width="15" Height="15" Stretch="Uniform" />
-                </Button>
-                <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="PasteButton_OnClick" ToolTip="Paste (Ctrl+V)">
-                    <Path Data="{StaticResource PasteToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
-                          StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
-                          Width="15" Height="15" Stretch="Uniform" />
-                </Button>
-                <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="DeleteButton_OnClick" ToolTip="Delete (Del)">
-                    <Path Data="{StaticResource DeleteToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
-                          StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
-                          Width="15" Height="15" Stretch="Uniform" />
-                </Button>
-                <Separator Width="1" Margin="6,0" />
-                <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="MergeButton_OnClick" ToolTip="Merge to One Shape">
-                    <Path Data="{StaticResource MergeToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
-                          StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
-                          Width="15" Height="15" Stretch="Uniform" />
-                </Button>
-                <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="GroupButton_OnClick" ToolTip="Group">
-                    <Path Data="{StaticResource GroupToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
-                          StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
-                          Width="15" Height="15" Stretch="Uniform" />
-                </Button>
-                <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="UngroupButton_OnClick" ToolTip="Ungroup">
-                    <Path Data="{StaticResource UngroupToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
-                          StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
-                          Width="15" Height="15" Stretch="Uniform" />
-                </Button>
-                <Separator Width="1" Margin="6,0" />
-                <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="LockButton_OnClick" ToolTip="Lock">
-                    <Path Data="{StaticResource LockToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
-                          StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
-                          Width="15" Height="15" Stretch="Uniform" />
-                </Button>
-                <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="UnlockButton_OnClick" ToolTip="Unlock">
-                    <Path Data="{StaticResource UnlockToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
-                          StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
-                          Width="15" Height="15" Stretch="Uniform" />
-                </Button>
-                <Separator Width="1" Margin="6,0" />
-                <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="BringToFrontButton_OnClick" ToolTip="Bring to Front">
-                    <Path Data="{StaticResource BringToFrontToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
-                          StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
-                          Width="15" Height="15" Stretch="Uniform" />
-                </Button>
-                <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="SendToBackButton_OnClick" ToolTip="Send to Back">
-                    <Path Data="{StaticResource SendToBackToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
-                          StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
-                          Width="15" Height="15" Stretch="Uniform" />
-                </Button>
-                <Button x:Name="AlignDropDownButton" Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="DropDownButton_OnClick"
-                        ToolTip="Align and distribute (one shape aligns to the page, several to each other)">
-                    <Path Data="{StaticResource AlignLeftToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
-                          StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
-                          Width="15" Height="15" Stretch="Uniform" />
-                    <Button.ContextMenu>
-                        <ContextMenu>
-                            <MenuItem Header="Align Left" Tag="Align:Left" Click="ArrangeMenuItem_OnClick" />
-                            <MenuItem Header="Align Centre Horizontally" Tag="Align:CenterHorizontally" Click="ArrangeMenuItem_OnClick" />
-                            <MenuItem Header="Align Right" Tag="Align:Right" Click="ArrangeMenuItem_OnClick" />
-                            <Separator />
-                            <MenuItem Header="Align Top" Tag="Align:Top" Click="ArrangeMenuItem_OnClick" />
-                            <MenuItem Header="Align Centre Vertically" Tag="Align:CenterVertically" Click="ArrangeMenuItem_OnClick" />
-                            <MenuItem Header="Align Bottom" Tag="Align:Bottom" Click="ArrangeMenuItem_OnClick" />
-                            <Separator />
-                            <MenuItem Header="Distribute Horizontally" Tag="Distribute:H" Click="ArrangeMenuItem_OnClick" />
-                            <MenuItem Header="Distribute Vertically" Tag="Distribute:V" Click="ArrangeMenuItem_OnClick" />
-                        </ContextMenu>
-                    </Button.ContextMenu>
-                </Button>
-                <Button x:Name="TransformDropDownButton" Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="DropDownButton_OnClick"
-                        ToolTip="Flip and rotate the selection">
-                    <Path Data="{StaticResource FlipHorizontalToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
-                          StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
-                          Width="15" Height="15" Stretch="Uniform" />
-                    <Button.ContextMenu>
-                        <ContextMenu>
-                            <MenuItem Header="Flip Horizontal" Tag="Flip:H" Click="ArrangeMenuItem_OnClick" />
-                            <MenuItem Header="Flip Vertical" Tag="Flip:V" Click="ArrangeMenuItem_OnClick" />
-                            <Separator />
-                            <MenuItem Header="Rotate 90° Clockwise" Tag="Rotate:90" Click="ArrangeMenuItem_OnClick" />
-                            <MenuItem Header="Rotate 90° Counter-clockwise" Tag="Rotate:-90" Click="ArrangeMenuItem_OnClick" />
-                            <MenuItem Header="Rotate 180°" Tag="Rotate:180" Click="ArrangeMenuItem_OnClick" />
-                        </ContextMenu>
-                    </Button.ContextMenu>
-                </Button>
-                <Separator Width="1" Margin="6,0" />
-                <RadioButton x:Name="BorderToolbarRadio" GroupName="ToolSelection" Style="{StaticResource ToolbarSquareImageRadioButtonStyle}"
-                             Checked="BorderToolRadioButton_OnChecked" Tag="{StaticResource BorderIconImage}" ToolTip="Border options: opens the BORDER card (thickness, colour, style, corners)" />
-                <Separator Width="1" Margin="6,0" />
-                <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="UnionButton_OnClick"
-                        ToolTip="Union: merge 2+ selected shapes into one (overlap included)">
-                    <Path Data="{StaticResource UnionToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
-                          StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
-                          Width="15" Height="15" Stretch="Uniform" />
-                </Button>
-                <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="TrimButton_OnClick"
-                        ToolTip="Trim: select exactly 2 shapes — click the CUTTER first, then Ctrl+click the TARGET; the cutter is removed, the target keeps only what wasn't covered">
-                    <Path Data="{StaticResource TrimToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
-                          StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
-                          Width="15" Height="15" Stretch="Uniform" />
-                </Button>
-                <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="ReflectButton_OnClick"
-                        ToolTip="Reflect: adds a fading mirrored copy below the shape, like a water reflection">
-                    <Path Data="{StaticResource ReflectToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
-                          StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
-                          Width="15" Height="15" Stretch="Uniform" />
-                </Button>
-                <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="OffsetButton_OnClick"
-                        ToolTip="Offset: adds a copy of the shape's border, grown or shrunk by a distance you choose">
-                    <Path Data="{StaticResource OffsetToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
-                          StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
-                          Width="15" Height="15" Stretch="Uniform" />
-                </Button>
-                <Separator Width="1" Margin="6,0" />
-                <ToggleButton x:Name="GridToggleButton" Margin="3,0" Padding="6,4" Checked="GridToggleButton_OnToggled" Unchecked="GridToggleButton_OnToggled" ToolTip="Show Grid">
-                    <Path Data="{StaticResource GridToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
-                          StrokeThickness="1.1" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
-                          Width="14" Height="14" Stretch="Uniform" />
-                </ToggleButton>
-                <ToggleButton x:Name="SnapToggleButton" Margin="3,0" Padding="6,4" Checked="SnapToggleButton_OnToggled" Unchecked="SnapToggleButton_OnToggled" ToolTip="Snap to Grid">
-                    <Path Data="{StaticResource SnapToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
-                          StrokeThickness="1.1" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
-                          Width="14" Height="14" Stretch="Uniform" />
-                </ToggleButton>
-                <TextBox x:Name="GridSizeTextBox" Width="34" Margin="3,0" VerticalContentAlignment="Center"
-                         TextAlignment="Center" ToolTip="Grid square size, px"
-                         LostFocus="GridSizeTextBox_OnLostFocus" KeyDown="GridSizeTextBox_OnKeyDown" />
+                <StackPanel Orientation="Horizontal" Margin="0,0,10,0">
+                    <Button Content="New" Margin="3,2" Click="NewMenuItem_OnClick" ToolTip="New document (Ctrl+N)" />
+                    <Button Content="Open" Margin="3,2" Click="OpenMenuItem_OnClick" ToolTip="Open document (Ctrl+O)" />
+                    <Button Content="Save" Margin="3,2" Click="SaveMenuItem_OnClick" ToolTip="Save document (Ctrl+S)" />
+                    <Button Content="Export" Margin="3,2" Click="ExportMenuItem_OnClick" ToolTip="Export as PNG or icon (Ctrl+E)" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,10,0">
+                    <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="UndoMenuItem_OnClick" ToolTip="Undo (Ctrl+Z)">
+                        <Path Data="{StaticResource UndoToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
+                              StrokeThickness="1.1" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Width="15" Height="15" Stretch="Uniform" />
+                    </Button>
+                    <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="RedoMenuItem_OnClick" ToolTip="Redo (Ctrl+Y)">
+                        <Path Data="{StaticResource RedoToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
+                              StrokeThickness="1.1" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Width="15" Height="15" Stretch="Uniform" />
+                    </Button>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,10,0">
+                    <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="CutButton_OnClick" ToolTip="Cut (Ctrl+X)">
+                        <Path Data="{StaticResource CutToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
+                              StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Width="15" Height="15" Stretch="Uniform" />
+                    </Button>
+                    <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="CopyButton_OnClick" ToolTip="Copy (Ctrl+C)">
+                        <Path Data="{StaticResource CopyToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
+                              StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Width="15" Height="15" Stretch="Uniform" />
+                    </Button>
+                    <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="PasteButton_OnClick" ToolTip="Paste (Ctrl+V)">
+                        <Path Data="{StaticResource PasteToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
+                              StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Width="15" Height="15" Stretch="Uniform" />
+                    </Button>
+                    <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="DeleteButton_OnClick" ToolTip="Delete (Del)">
+                        <Path Data="{StaticResource DeleteToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
+                              StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Width="15" Height="15" Stretch="Uniform" />
+                    </Button>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,10,0">
+                    <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="MergeButton_OnClick" ToolTip="Merge to One Shape">
+                        <Path Data="{StaticResource MergeToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
+                              StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Width="15" Height="15" Stretch="Uniform" />
+                    </Button>
+                    <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="GroupButton_OnClick" ToolTip="Group">
+                        <Path Data="{StaticResource GroupToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
+                              StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Width="15" Height="15" Stretch="Uniform" />
+                    </Button>
+                    <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="UngroupButton_OnClick" ToolTip="Ungroup">
+                        <Path Data="{StaticResource UngroupToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
+                              StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Width="15" Height="15" Stretch="Uniform" />
+                    </Button>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,10,0">
+                    <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="LockButton_OnClick" ToolTip="Lock">
+                        <Path Data="{StaticResource LockToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
+                              StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Width="15" Height="15" Stretch="Uniform" />
+                    </Button>
+                    <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="UnlockButton_OnClick" ToolTip="Unlock">
+                        <Path Data="{StaticResource UnlockToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
+                              StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Width="15" Height="15" Stretch="Uniform" />
+                    </Button>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,10,0">
+                    <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="BringToFrontButton_OnClick" ToolTip="Bring to Front">
+                        <Path Data="{StaticResource BringToFrontToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
+                              StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Width="15" Height="15" Stretch="Uniform" />
+                    </Button>
+                    <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="SendToBackButton_OnClick" ToolTip="Send to Back">
+                        <Path Data="{StaticResource SendToBackToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
+                              StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Width="15" Height="15" Stretch="Uniform" />
+                    </Button>
+                    <Button x:Name="AlignDropDownButton" Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="DropDownButton_OnClick"
+                            ToolTip="Align and distribute (one shape aligns to the page, several to each other)">
+                        <Path Data="{StaticResource AlignLeftToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
+                              StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Width="15" Height="15" Stretch="Uniform" />
+                        <Button.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Align Left" Tag="Align:Left" Click="ArrangeMenuItem_OnClick" />
+                                <MenuItem Header="Align Centre Horizontally" Tag="Align:CenterHorizontally" Click="ArrangeMenuItem_OnClick" />
+                                <MenuItem Header="Align Right" Tag="Align:Right" Click="ArrangeMenuItem_OnClick" />
+                                <Separator />
+                                <MenuItem Header="Align Top" Tag="Align:Top" Click="ArrangeMenuItem_OnClick" />
+                                <MenuItem Header="Align Centre Vertically" Tag="Align:CenterVertically" Click="ArrangeMenuItem_OnClick" />
+                                <MenuItem Header="Align Bottom" Tag="Align:Bottom" Click="ArrangeMenuItem_OnClick" />
+                                <Separator />
+                                <MenuItem Header="Distribute Horizontally" Tag="Distribute:H" Click="ArrangeMenuItem_OnClick" />
+                                <MenuItem Header="Distribute Vertically" Tag="Distribute:V" Click="ArrangeMenuItem_OnClick" />
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                    </Button>
+                    <Button x:Name="TransformDropDownButton" Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="DropDownButton_OnClick"
+                            ToolTip="Flip and rotate the selection">
+                        <Path Data="{StaticResource FlipHorizontalToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
+                              StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Width="15" Height="15" Stretch="Uniform" />
+                        <Button.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Flip Horizontal" Tag="Flip:H" Click="ArrangeMenuItem_OnClick" />
+                                <MenuItem Header="Flip Vertical" Tag="Flip:V" Click="ArrangeMenuItem_OnClick" />
+                                <Separator />
+                                <MenuItem Header="Rotate 90° Clockwise" Tag="Rotate:90" Click="ArrangeMenuItem_OnClick" />
+                                <MenuItem Header="Rotate 90° Counter-clockwise" Tag="Rotate:-90" Click="ArrangeMenuItem_OnClick" />
+                                <MenuItem Header="Rotate 180°" Tag="Rotate:180" Click="ArrangeMenuItem_OnClick" />
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                    </Button>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,10,0">
+                    <RadioButton x:Name="BorderToolbarRadio" GroupName="ToolSelection" Style="{StaticResource ToolbarSquareImageRadioButtonStyle}"
+                                 Checked="BorderToolRadioButton_OnChecked" Tag="{StaticResource BorderIconImage}" ToolTip="Border options: opens the BORDER card (thickness, colour, style, corners)" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,10,0">
+                    <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="UnionButton_OnClick"
+                            ToolTip="Union: merge 2+ selected shapes into one (overlap included)">
+                        <Path Data="{StaticResource UnionToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
+                              StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Width="15" Height="15" Stretch="Uniform" />
+                    </Button>
+                    <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="TrimButton_OnClick"
+                            ToolTip="Trim: select exactly 2 shapes — click the CUTTER first, then Ctrl+click the TARGET; the cutter is removed, the target keeps only what wasn't covered">
+                        <Path Data="{StaticResource TrimToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
+                              StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Width="15" Height="15" Stretch="Uniform" />
+                    </Button>
+                    <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="ReflectButton_OnClick"
+                            ToolTip="Reflect: adds a fading mirrored copy below the shape, like a water reflection">
+                        <Path Data="{StaticResource ReflectToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
+                              StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Width="15" Height="15" Stretch="Uniform" />
+                    </Button>
+                    <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="OffsetButton_OnClick"
+                            ToolTip="Offset: adds a copy of the shape's border, grown or shrunk by a distance you choose">
+                        <Path Data="{StaticResource OffsetToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
+                              StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Width="15" Height="15" Stretch="Uniform" />
+                    </Button>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,10,0">
+                    <ToggleButton x:Name="GridToggleButton" Margin="3,2" Padding="6,4" Checked="GridToggleButton_OnToggled" Unchecked="GridToggleButton_OnToggled" ToolTip="Show Grid">
+                        <Path Data="{StaticResource GridToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
+                              StrokeThickness="1.1" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Width="14" Height="14" Stretch="Uniform" />
+                    </ToggleButton>
+                    <ToggleButton x:Name="SnapToggleButton" Margin="3,2" Padding="6,4" Checked="SnapToggleButton_OnToggled" Unchecked="SnapToggleButton_OnToggled" ToolTip="Snap to Grid">
+                        <Path Data="{StaticResource SnapToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
+                              StrokeThickness="1.1" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Width="14" Height="14" Stretch="Uniform" />
+                    </ToggleButton>
+                    <TextBox x:Name="GridSizeTextBox" Width="34" Margin="3,2" VerticalContentAlignment="Center"
+                             TextAlignment="Center" ToolTip="Grid square size, px"
+                             LostFocus="GridSizeTextBox_OnLostFocus" KeyDown="GridSizeTextBox_OnKeyDown" />
+                </StackPanel>
             </WrapPanel>
-            <WrapPanel x:Name="ToolRow" Margin="0,6,0,0">
-                <RadioButton GroupName="ToolbarTools" Style="{StaticResource ToolbarSquareIconRadioButtonStyle}" Checked="ToolbarToolRadio_OnChecked"
-                             Tag="{StaticResource SelectToolGeometry}" CommandParameter="Select" ToolTip="Selection (V)" />
-                <RadioButton GroupName="ToolbarTools" Style="{StaticResource ToolbarSquareIconRadioButtonStyle}" Checked="ToolbarToolRadio_OnChecked"
-                             Tag="{StaticResource PanZoomToolGeometry}" CommandParameter="PanZoom" ToolTip="Pan / Zoom (H)" />
-                <RadioButton GroupName="ToolbarTools" Style="{StaticResource ToolbarSquareIconRadioButtonStyle}" Checked="ToolbarToolRadio_OnChecked"
-                             Tag="{StaticResource MatchToolGeometry}" CommandParameter="Match" ToolTip="Match Properties (Q): copy the look of one object onto others" />
-                <RadioButton GroupName="ToolbarTools" Style="{StaticResource ToolbarSquareIconRadioButtonStyle}" Checked="ToolbarToolRadio_OnChecked"
-                             Tag="{StaticResource EyedropperToolGeometry}" CommandParameter="Eyedropper" ToolTip="Eyedropper (I): take a colour from the page" />
-                <RadioButton GroupName="ToolbarTools" Style="{StaticResource ToolbarSquareIconRadioButtonStyle}" Checked="ToolbarToolRadio_OnChecked"
-                             Tag="{StaticResource RegionColorToolGeometry}" CommandParameter="RegionColor" ToolTip="Region Color (G): click a closed area to colour just that piece" />
-                <Separator Width="1" Margin="6,0" />
-                <RadioButton GroupName="ToolbarTools" Style="{StaticResource ToolbarSquareIconRadioButtonStyle}" Checked="ToolbarToolRadio_OnChecked"
-                             Tag="{StaticResource RectangleToolGeometry}" CommandParameter="Rectangle" ToolTip="Rectangle" />
-                <RadioButton GroupName="ToolbarTools" Style="{StaticResource ToolbarSquareIconRadioButtonStyle}" Checked="ToolbarToolRadio_OnChecked"
-                             Tag="{StaticResource RoundedRectangleToolGeometry}" CommandParameter="RoundedRectangle" ToolTip="Rounded Rectangle" />
-                <RadioButton GroupName="ToolbarTools" Style="{StaticResource ToolbarSquareIconRadioButtonStyle}" Checked="ToolbarToolRadio_OnChecked"
-                             Tag="{StaticResource EllipseToolGeometry}" CommandParameter="Ellipse" ToolTip="Ellipse" />
-                <RadioButton GroupName="ToolbarTools" Style="{StaticResource ToolbarSquareIconRadioButtonStyle}" Checked="ToolbarToolRadio_OnChecked"
-                             Tag="{StaticResource TriangleToolGeometry}" CommandParameter="Triangle" ToolTip="Triangle" />
-                <RadioButton GroupName="ToolbarTools" Style="{StaticResource ToolbarSquareIconRadioButtonStyle}" Checked="ToolbarToolRadio_OnChecked"
-                             Tag="{StaticResource TextToolGeometry}" CommandParameter="Text" ToolTip="Text (T)" />
-                <Separator Width="1" Margin="6,0" />
-                <RadioButton GroupName="ToolbarTools" Style="{StaticResource ToolbarSquareIconRadioButtonStyle}" Checked="ToolbarToolRadio_OnChecked"
-                             Tag="{StaticResource LineToolGeometry}" CommandParameter="Line" ToolTip="Line" />
-                <RadioButton GroupName="ToolbarTools" Style="{StaticResource ToolbarSquareIconRadioButtonStyle}" Checked="ToolbarToolRadio_OnChecked"
-                             Tag="{StaticResource ArrowToolGeometry}" CommandParameter="Arrow" ToolTip="Arrow" />
-                <RadioButton GroupName="ToolbarTools" Style="{StaticResource ToolbarSquareIconRadioButtonStyle}" Checked="ToolbarToolRadio_OnChecked"
-                             Tag="{StaticResource PolylineToolGeometry}" CommandParameter="Polyline" ToolTip="Polyline" />
-                <RadioButton GroupName="ToolbarTools" Style="{StaticResource ToolbarSquareIconRadioButtonStyle}" Checked="ToolbarToolRadio_OnChecked"
-                             Tag="{StaticResource CurveToolGeometry}" CommandParameter="Curve" ToolTip="Curve" />
-                <Separator Width="1" Margin="6,0" />
-                <RadioButton GroupName="ToolbarTools" Style="{StaticResource ToolbarSquareIconRadioButtonStyle}" Checked="ToolbarToolRadio_OnChecked"
-                             Tag="{StaticResource WallToolGeometry}" CommandParameter="Wall" ToolTip="Wall (W): click the corners, click the start again to close the room, double-click or Enter to finish" />
-                <RadioButton GroupName="ToolbarTools" Style="{StaticResource ToolbarSquareIconRadioButtonStyle}" Checked="ToolbarToolRadio_OnChecked"
-                             Tag="{StaticResource CutWallToolGeometry}" CommandParameter="WallCut" ToolTip="Cut Wall (X): click the place where it should be split" />
-                <Separator Width="1" Margin="6,0" />
-                <RadioButton GroupName="ToolbarTools" Style="{StaticResource ToolbarSquareIconRadioButtonStyle}" Checked="ToolbarToolRadio_OnChecked"
-                             Tag="{StaticResource DimAlignedToolGeometry}" CommandParameter="DimAligned" ToolTip="Aligned dimension (D)" />
-                <RadioButton GroupName="ToolbarTools" Style="{StaticResource ToolbarSquareIconRadioButtonStyle}" Checked="ToolbarToolRadio_OnChecked"
-                             Tag="{StaticResource DimHorizontalToolGeometry}" CommandParameter="DimHorizontal" ToolTip="Horizontal dimension" />
-                <RadioButton GroupName="ToolbarTools" Style="{StaticResource ToolbarSquareIconRadioButtonStyle}" Checked="ToolbarToolRadio_OnChecked"
-                             Tag="{StaticResource DimVerticalToolGeometry}" CommandParameter="DimVertical" ToolTip="Vertical dimension" />
-                <RadioButton GroupName="ToolbarTools" Style="{StaticResource ToolbarSquareIconRadioButtonStyle}" Checked="ToolbarToolRadio_OnChecked"
-                             Tag="{StaticResource DimAngularToolGeometry}" CommandParameter="DimAngular" ToolTip="Angle" />
-                <RadioButton GroupName="ToolbarTools" Style="{StaticResource ToolbarSquareIconRadioButtonStyle}" Checked="ToolbarToolRadio_OnChecked"
-                             Tag="{StaticResource DimRadiusToolGeometry}" CommandParameter="DimRadius" ToolTip="Radius" />
-                <RadioButton GroupName="ToolbarTools" Style="{StaticResource ToolbarSquareIconRadioButtonStyle}" Checked="ToolbarToolRadio_OnChecked"
-                             Tag="{StaticResource DimDiameterToolGeometry}" CommandParameter="DimDiameter" ToolTip="Diameter" />
-                <Separator Width="1" Margin="6,0" />
-                <RadioButton GroupName="ToolbarTools" Style="{StaticResource ToolbarSquareIconRadioButtonStyle}" Checked="ToolbarToolRadio_OnChecked"
-                             Tag="{StaticResource MeasureGapToolGeometry}" CommandParameter="MeasureGap" ToolTip="Distance between two objects (B)" />
-                <RadioButton GroupName="ToolbarTools" Style="{StaticResource ToolbarSquareIconRadioButtonStyle}" Checked="ToolbarToolRadio_OnChecked"
-                             Tag="{StaticResource MeasureToolGeometry}" CommandParameter="Measure" ToolTip="Ruler (M): measure anywhere, nothing is added" />
-            </WrapPanel>
-            </StackPanel>
         </Border>
 
         <Grid Grid.Row="3">

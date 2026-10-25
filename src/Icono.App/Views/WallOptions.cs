@@ -16,3 +16,9 @@ public sealed record SegmentOption(string Label, int Index);
 
 /// <summary>One entry of the dimension end-mark drop-down.</summary>
 public sealed record ArrowStyleOption(string Label, DimensionArrowStyle Value);
+
+/// <summary>One entry of the "what do the dimensions measure" drop-down of a wall.</summary>
+public sealed record WallMeasureOption(string Label, WallMeasure Value);
+
+/// <summary>One entry of the "where are the dimension lines" drop-down of a wall.</summary>
+public sealed record WallPlacementOption(string Label, WallDimensionPlacement Value);

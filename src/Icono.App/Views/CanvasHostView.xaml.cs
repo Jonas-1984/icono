@@ -1753,7 +1753,12 @@ public partial class CanvasHostView : UserControl
             return;
         }
 
-        // Select tool.
+        // Select tool: a click on the number of a wall dimension opens the length editor.
+        if (_context.ActiveTool == ActiveTool.Select && e.ClickCount == 1 && TryBeginWallLengthEdit(point))
+        {
+            return;
+        }
+
         if (e.ClickCount == 2)
         {
             var dblHit = HitTestShape(point);
@@ -2327,11 +2332,7 @@ public partial class CanvasHostView : UserControl
 
             if (_pendingPathShape.Kind == ShapeKind.Wall)
             {
-                // A wall starts as a light band with a diagonal hatch and a dark outline; everything can be changed in the WALL card.
-                _pendingPathShape.FillColor = ArgbColor.FromRgb(0xFA, 0xFA, 0xFA);
-                _pendingPathShape.BorderColor = ArgbColor.FromRgb(0x23, 0x29, 0x33);
-                _pendingPathShape.BorderThickness = 1.5;
-                _pendingPathShape.DimOffset = 14; // the dimension line of a wall sits this far from its outer face
+                WallEditor.ApplyDrawingDefaults(_pendingPathShape);
             }
 
             _context.RequestRedraw();
@@ -2773,11 +2774,17 @@ public partial class CanvasHostView : UserControl
 
     /// <summary>Keeps the text being typed (in a shape or a text shape) - called before anything else the user does, such as a
     /// click outside the editor, a menu command or Ctrl+S.</summary>
-    public void CommitActiveTextEdit() => CommitTextEdit();
+    public void CommitActiveTextEdit()
+    {
+        CommitWallLength();
+        CommitTextEdit();
+    }
 
     /// <summary>Like <see cref="CommitActiveTextEdit"/>, but a click inside the editor itself changes nothing.</summary>
     public void CommitTextEditUnlessInside(object? source)
     {
+        CommitWallLengthUnlessInside(source);
+
         if (_textEditBox is null)
         {
             return;

@@ -82,7 +82,9 @@ public readonly record struct ShapeSnapshot(
     double DimTextShift = 0,
     IReadOnlyList<WallDimensionOverride>? WallDimensionOverrides = null,
     Guid? DimTarget2 = null,
-    DimensionArrowStyle DimArrowStyle = DimensionArrowStyle.Arrow)
+    DimensionArrowStyle DimArrowStyle = DimensionArrowStyle.Arrow,
+    WallMeasure WallDimensionMeasure = WallMeasure.Inside,
+    WallDimensionPlacement WallDimensionPlacement = WallDimensionPlacement.Automatic)
 {
     public static ShapeSnapshot Capture(Shape shape) => new(
         shape.X,
@@ -161,7 +163,9 @@ public readonly record struct ShapeSnapshot(
         shape.DimTextShift,
         shape.WallDimensionOverrides,
         shape.DimTarget2,
-        shape.DimArrowStyle);
+        shape.DimArrowStyle,
+        shape.WallDimensionMeasure,
+        shape.WallDimensionPlacement);
 
     public void ApplyTo(Shape shape)
     {
@@ -242,5 +246,7 @@ public readonly record struct ShapeSnapshot(
         shape.WallDimensionOverrides = WallDimensionOverrides;
         shape.DimTarget2 = DimTarget2;
         shape.DimArrowStyle = DimArrowStyle;
+        shape.WallDimensionMeasure = WallDimensionMeasure;
+        shape.WallDimensionPlacement = WallDimensionPlacement;
     }
 }

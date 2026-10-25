@@ -7,8 +7,7 @@ using Icono.Rendering;
 
 namespace Icono.App;
 
-/// <summary>The menu bar and the toolbar: arrange commands, page commands, the tool row and keeping every place that shows the active
-/// tool (tool row, tool panel, menus, status bar) in step.</summary>
+/// <summary>The menu bar: arrange commands, page commands and keeping the places that show the active tool (menus, status bar) in step.</summary>
 public partial class MainWindow
 {
     private static readonly HashSet<string> ToolTags = new(Enum.GetNames<ShapeKind>())
@@ -16,8 +15,6 @@ public partial class MainWindow
         "Select", "PanZoom", "AddPoint", "DeletePoint", "RegionColor", "Eyedropper", "WallCut", "Measure", "MeasureGap", "Match",
         "DimAligned", "DimHorizontal", "DimVertical", "DimAngular", "DimRadius", "DimDiameter",
     };
-
-    private bool _syncingToolUi;
 
     /// <summary>Opens the drop-down menu that belongs to a toolbar button (align, flip / rotate).</summary>
     private void DropDownButton_OnClick(object sender, RoutedEventArgs e)
@@ -55,6 +52,22 @@ public partial class MainWindow
         }
     }
 
+    private void WallDimensionPlacementMenuItem_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is MenuItem { Tag: string tag } && Enum.TryParse<WallDimensionPlacement>(tag, out var placement))
+        {
+            _context.SetWallDimensionPlacement(placement);
+        }
+    }
+
+    private void RoomMenuItem_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is MenuItem { Tag: string tag } && Enum.TryParse<RoomPreset>(tag, out var preset))
+        {
+            _context.InsertRoom(preset);
+        }
+    }
+
     private void PageSizeMenuItem_OnClick(object sender, RoutedEventArgs e)
     {
         if (sender is MenuItem { Tag: string tag })
@@ -71,38 +84,10 @@ public partial class MainWindow
         }
     }
 
-    /// <summary>A key of the tool row was pressed: switch to that tool.</summary>
-    private void ToolbarToolRadio_OnChecked(object sender, RoutedEventArgs e)
-    {
-        if (_syncingToolUi || sender is not RadioButton { CommandParameter: string tag } || tag == _context.ActiveToolTag)
-        {
-            return;
-        }
-
-        ActivateTool(tag);
-    }
-
-    /// <summary>Shows the active tool everywhere: the keys of the tool row, the check marks in the menus and the status bar.</summary>
+    /// <summary>Shows the active tool in the menus (check mark) and the status bar. The tool panel follows by itself.</summary>
     private void SyncToolUi()
     {
         var tag = _context.ActiveToolTag;
-
-        _syncingToolUi = true;
-        try
-        {
-            foreach (var radio in ToolRow.Children.OfType<RadioButton>())
-            {
-                var isActive = tag is not null && radio.CommandParameter is string parameter && parameter == tag;
-                if (radio.IsChecked != isActive)
-                {
-                    radio.IsChecked = isActive;
-                }
-            }
-        }
-        finally
-        {
-            _syncingToolUi = false;
-        }
 
         foreach (var item in AllMenuItems(MainMenu.Items))
         {

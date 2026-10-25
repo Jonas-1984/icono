@@ -9,6 +9,119 @@ public static class WallEditor
     /// <summary>A place on the wall's centre line.</summary>
     public readonly record struct Spot(int Segment, double T, double X, double Y, double Distance, bool IsVertex, int VertexIndex);
 
+    /// <summary>The look a freshly made wall starts with: a light band with a diagonal hatch and a dark outline. Everything can be
+    /// changed in the WALL card.</summary>
+    public static void ApplyDrawingDefaults(Shape wall)
+    {
+        wall.FillColor = ArgbColor.FromRgb(0xFA, 0xFA, 0xFA);
+        wall.BorderColor = ArgbColor.FromRgb(0x23, 0x29, 0x33);
+        wall.BorderThickness = 1.5;
+        wall.DimOffset = 14; // the dimension line of a wall sits this far from its outer face
+    }
+
+    /// <summary>A corner point that was moved: where it was and by how much.</summary>
+    public readonly record struct Move(double FromX, double FromY, double DeltaX, double DeltaY);
+
+    /// <summary>Makes one segment of the wall <paramref name="newLength"/> long (page px) by moving its END point along the segment. Walls
+    /// that run at a right angle to it slide along (the end points of the chain of perpendicular segments move by the same amount),
+    /// so a rectangular room stays rectangular when one side is changed; any other wall just changes its angle. Returns the corner
+    /// points that moved (empty when nothing changed).</summary>
+    public static List<Move> ResizeSegment(Shape wall, int segment, double newLength)
+    {
+        var moves = new List<Move>();
+        if (wall.Points is not { Count: >= 2 } local || newLength < 0.5)
+        {
+            return moves;
+        }
+
+        var n = local.Count;
+        var closed = wall.WallClosed && n >= 3;
+        if (segment < 0 || segment >= (closed ? n : n - 1))
+        {
+            return moves;
+        }
+
+        var points = local.Select(p => (X: wall.X + p.X, Y: wall.Y + p.Y)).ToList();
+        var start = segment;
+        var end = (segment + 1) % n;
+        var length = Math.Sqrt(Math.Pow(points[end].X - points[start].X, 2) + Math.Pow(points[end].Y - points[start].Y, 2));
+        if (length < 1e-6)
+        {
+            return moves;
+        }
+
+        var ux = (points[end].X - points[start].X) / length;
+        var uy = (points[end].Y - points[start].Y) / length;
+        var dx = ux * (newLength - length);
+        var dy = uy * (newLength - length);
+        if (Math.Abs(dx) + Math.Abs(dy) < 1e-9)
+        {
+            return moves;
+        }
+
+        var original = points.ToList();
+        var k = end;
+        while (true)
+        {
+            points[k] = (original[k].X + dx, original[k].Y + dy);
+            moves.Add(new Move(original[k].X, original[k].Y, dx, dy));
+
+            var next = (k + 1) % n;
+            var hasNext = closed || k + 1 < n;
+            if (!hasNext || next == start)
+            {
+                break;
+            }
+
+            var sx = original[next].X - original[k].X;
+            var sy = original[next].Y - original[k].Y;
+            var segmentLength = Math.Sqrt(sx * sx + sy * sy);
+            if (segmentLength < 1e-6 || Math.Abs((sx * ux + sy * uy) / segmentLength) > 0.02)
+            {
+                break; // not at a right angle: this wall only changes its angle
+            }
+
+            k = next;
+        }
+
+        wall.Points = points.Select(p => new CorePoint(p.X - wall.X, p.Y - wall.Y)).ToList();
+        PathBoundsCalculator.Recompute(wall);
+        return moves;
+    }
+
+    /// <summary>Moves the corner points of <paramref name="other"/> that lay on a point moved by <see cref="ResizeSegment"/> by the
+    /// same amount, so walls that were joined stay joined. Returns true when the wall changed.</summary>
+    public static bool FollowMoves(Shape other, IReadOnlyList<Move> moves)
+    {
+        if (other.Points is not { Count: > 0 } local || moves.Count == 0)
+        {
+            return false;
+        }
+
+        var changed = false;
+        var points = local.Select(p => (X: other.X + p.X, Y: other.Y + p.Y)).ToList();
+        for (var i = 0; i < points.Count; i++)
+        {
+            foreach (var move in moves)
+            {
+                if (Math.Abs(points[i].X - move.FromX) < 0.75 && Math.Abs(points[i].Y - move.FromY) < 0.75)
+                {
+                    points[i] = (points[i].X + move.DeltaX, points[i].Y + move.DeltaY);
+                    changed = true;
+                    break;
+                }
+            }
+        }
+
+        if (changed)
+        {
+            other.Points = points.Select(p => new CorePoint(p.X - other.X, p.Y - other.Y)).ToList();
+            PathBoundsCalculator.Recompute(other);
+        }
+
+        return changed;
+    }
+
     /// <summary>Closest place on the centre line to <paramref name="x"/>,<paramref name="y"/>. Positions within
     /// <paramref name="vertexReach"/> of a corner point count as that point.</summary>
     public static Spot? Nearest(Shape wall, double x, double y, double vertexReach)

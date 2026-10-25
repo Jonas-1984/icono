@@ -26,6 +26,7 @@ public partial class ShortcutsDialog : ThemedDialogWindow
         new("Selection / Pan / Eyedropper / Bucket / Match", "V / H / I / G / Q"),
         new("Text tool", "T"),
         new("Wall tool / Cut wall", "W / X"),
+        new("Change a wall length: click its number, type the length", "Enter / Esc"),
         new("Dimension tool (click the points, then where the line goes)", "D"),
         new("Measure with the ruler / distance between two objects", "M / B"),
         new("Finish / cancel a polyline or curve", "Enter / Esc"),

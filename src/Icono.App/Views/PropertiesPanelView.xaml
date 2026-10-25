@@ -718,6 +718,14 @@
                             <TextBlock Text="DIMENSION UNIT" Style="{StaticResource PanelLabelTextStyle}" />
                             <ComboBox x:Name="WallUnitComboBox" Margin="6,0,6,6" DisplayMemberPath="Label"
                                       SelectionChanged="WallUnitComboBox_OnSelectionChanged" />
+                            <TextBlock Text="DIMENSIONS MEASURE" Style="{StaticResource PanelLabelTextStyle}" />
+                            <ComboBox x:Name="WallMeasureComboBox" Margin="6,0,6,6" DisplayMemberPath="Label"
+                                      ToolTip="What the numbers show: the clear size on the inside of the room (default), the centre line of the wall or the outside"
+                                      SelectionChanged="WallMeasureComboBox_OnSelectionChanged" />
+                            <TextBlock Text="DIMENSIONS PLACED" Style="{StaticResource PanelLabelTextStyle}" />
+                            <ComboBox x:Name="WallPlacementComboBox" Margin="6,0,6,6" DisplayMemberPath="Label"
+                                      ToolTip="Where the dimension lines run: inside the plan (in the room), outside the plan, or automatically. A single dimension can still be put on the other side in the DIMENSION card."
+                                      SelectionChanged="WallPlacementComboBox_OnSelectionChanged" />
 
                             <Button Content="Split at every point" Style="{StaticResource PanelKeyButtonStyle}" Margin="6,2,6,4"
                                     ToolTip="Break this wall into one wall per segment"

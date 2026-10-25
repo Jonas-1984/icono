@@ -119,6 +119,8 @@ public static class MatchProperties
             target.HatchSpacing = source.HatchSpacing;
             target.HatchColor = source.HatchColor;
             target.WallShowDimensions = source.WallShowDimensions;
+            target.WallDimensionMeasure = source.WallDimensionMeasure;
+            target.WallDimensionPlacement = source.WallDimensionPlacement;
             target.WallDimensionUnit = source.WallDimensionUnit;
         }
 

@@ -306,6 +306,8 @@ public partial class PropertiesPanelView : UserControl
         FadeDirectionComboBox.ItemsSource = FadeDirectionOptions;
         WallHatchComboBox.ItemsSource = HatchOptions;
         WallUnitComboBox.ItemsSource = WallUnitOptions;
+        WallMeasureComboBox.ItemsSource = WallMeasureOptions;
+        WallPlacementComboBox.ItemsSource = WallPlacementOptions;
         DimensionUnitComboBox.ItemsSource = WallUnitOptions;
         DimensionArrowStyleComboBox.ItemsSource = ArrowStyleOptions;
         WallHatchColorPicker.ColorChanged += WallHatchColorPicker_OnColorChanged;
@@ -1057,6 +1059,20 @@ public partial class PropertiesPanelView : UserControl
         new("Zigzag", HatchKind.Zigzag),
     ];
 
+    private static readonly WallPlacementOption[] WallPlacementOptions =
+    [
+        new("Automatic", WallDimensionPlacement.Automatic),
+        new("Inside the plan (in the room)", WallDimensionPlacement.Inside),
+        new("Outside the plan", WallDimensionPlacement.Outside),
+    ];
+
+    private static readonly WallMeasureOption[] WallMeasureOptions =
+    [
+        new("Inside (clear size of the room)", WallMeasure.Inside),
+        new("Centre line of the wall", WallMeasure.Centre),
+        new("Outside of the wall", WallMeasure.Outside),
+    ];
+
     private static readonly LengthUnitOption[] WallUnitOptions =
     [
         new("Millimetres (mm)", LengthUnit.Millimeter),
@@ -1091,6 +1107,8 @@ public partial class PropertiesPanelView : UserControl
         WallHatchColorPicker.SelectedColor = shape.HatchColor.ToMediaColor();
         WallDimensionsCheckBox.IsChecked = shape.WallShowDimensions;
         WallUnitComboBox.SelectedItem = WallUnitOptions.First(o => o.Value == shape.WallDimensionUnit);
+        WallMeasureComboBox.SelectedItem = WallMeasureOptions.First(o => o.Value == shape.WallDimensionMeasure);
+        WallPlacementComboBox.SelectedItem = WallPlacementOptions.First(o => o.Value == shape.WallDimensionPlacement);
     }
 
     // ----- Dimension card (a dimension shape, and the dimensions written next to a wall) ------------------------
@@ -1661,6 +1679,34 @@ public partial class PropertiesPanelView : UserControl
                 if (s.Kind == ShapeKind.Wall)
                 {
                     s.WallDimensionUnit = option.Value;
+                }
+            });
+        }
+    }
+
+    private void WallMeasureComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (WallMeasureComboBox.SelectedItem is WallMeasureOption option)
+        {
+            ApplyToSelectionWithUndo(s =>
+            {
+                if (s.Kind == ShapeKind.Wall)
+                {
+                    s.WallDimensionMeasure = option.Value;
+                }
+            });
+        }
+    }
+
+    private void WallPlacementComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (WallPlacementComboBox.SelectedItem is WallPlacementOption option)
+        {
+            ApplyToSelectionWithUndo(s =>
+            {
+                if (s.Kind == ShapeKind.Wall)
+                {
+                    s.WallDimensionPlacement = option.Value;
                 }
             });
         }

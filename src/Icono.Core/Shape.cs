@@ -79,6 +79,8 @@ public sealed class Shape : ObservableObject
     private double? _dimTextPosition;
     private double _dimTextShift;
     private IReadOnlyList<WallDimensionOverride>? _wallDimensionOverrides;
+    private WallMeasure _wallDimensionMeasure = WallMeasure.Inside;
+    private WallDimensionPlacement _wallDimensionPlacement;
     private ShapeAnchor? _startAnchor;
     private ShapeAnchor? _endAnchor;
 
@@ -356,4 +358,10 @@ public sealed class Shape : ObservableObject
 
     /// <summary>Settings of single dimensions of a <see cref="ShapeKind.Wall"/> (one per segment, only where they differ).</summary>
     public IReadOnlyList<WallDimensionOverride>? WallDimensionOverrides { get => _wallDimensionOverrides; set => SetField(ref _wallDimensionOverrides, value); }
+
+    /// <summary>What the wall's dimensions measure: the inside (clear size of a room), the centre line or the outside.</summary>
+    public WallMeasure WallDimensionMeasure { get => _wallDimensionMeasure; set => SetField(ref _wallDimensionMeasure, value); }
+
+    /// <summary>Whether the dimension lines of the wall run inside the plan, outside it, or are placed automatically.</summary>
+    public WallDimensionPlacement WallDimensionPlacement { get => _wallDimensionPlacement; set => SetField(ref _wallDimensionPlacement, value); }
 }
