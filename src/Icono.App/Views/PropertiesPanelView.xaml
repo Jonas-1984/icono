@@ -670,6 +670,59 @@
                     </StackPanel>
                 </Border>
 
+                <Border x:Name="SymbolCard" Style="{StaticResource CardBorderStyle}" Visibility="Collapsed">
+                    <StackPanel>
+                        <Grid Style="{StaticResource CollapsibleCardHeaderStyle}" MouseLeftButtonDown="CardHeader_OnToggle">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="SymbolCardTitle" Grid.Column="0" Text="OPENING" Style="{StaticResource CardHeaderTextStyle}" />
+                            <Path Grid.Column="1" Style="{StaticResource CardChevronPathStyle}" />
+                        </Grid>
+                        <StackPanel>
+                            <TextBlock x:Name="SymbolHint" Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="12,0,12,6" />
+                            <CheckBox x:Name="SymbolShowDimensionCheckBox" Content="SHOW DIMENSION (WIDTH OF THE OPENING)" Margin="6,2,6,6"
+                                      Foreground="{DynamicResource MutedTextBrush}" FontSize="11"
+                                      ToolTip="The width of the opening is written next to the symbol. Position, size and unit of the dimension are in the DIMENSION card."
+                                      Checked="SymbolShowDimensionCheckBox_OnCheckedChanged" Unchecked="SymbolShowDimensionCheckBox_OnCheckedChanged" />
+                            <CheckBox x:Name="SymbolShowGapsCheckBox" Content="SHOW DISTANCES TO THE WALL CORNERS" Margin="6,2,6,6"
+                                      Foreground="{DynamicResource MutedTextBrush}" FontSize="11"
+                                      ToolTip="The clear distance from each jamb to the corner of the wall. Click a number and type the distance you want: the symbol slides along the wall."
+                                      Checked="SymbolShowGapsCheckBox_OnCheckedChanged" Unchecked="SymbolShowGapsCheckBox_OnCheckedChanged" />
+                            <TextBlock Text="DIMENSION SIDE" Style="{StaticResource PanelLabelTextStyle}" />
+                            <ComboBox x:Name="SymbolSideComboBox" Margin="6,0,6,6" DisplayMemberPath="Label"
+                                      ToolTip="Which side of the wall the dimension is on: the outside of the wall (away from a door's swing) or the room side"
+                                      SelectionChanged="SymbolSideComboBox_OnSelectionChanged" />
+                            <StackPanel x:Name="SymbolDoorSection">
+                                <TextBlock x:Name="SymbolThicknessLabel" Text="WALL THICKNESS" Style="{StaticResource PanelLabelTextStyle}" />
+                                <TextBox x:Name="SymbolThicknessTextBox" Margin="6,0,6,6"
+                                         ToolTip="Thickness of the wall the door sits in: the height of the opening strip"
+                                         LostFocus="SymbolThicknessTextBox_OnLostFocus" KeyDown="WallTextBox_OnKeyDown" />
+                                <TextBlock Text="OPEN ANGLE (°)" Style="{StaticResource PanelLabelTextStyle}" />
+                                <Grid Margin="6,0,6,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="42" />
+                                    </Grid.ColumnDefinitions>
+                                    <Slider x:Name="SymbolAngleSlider" Grid.Column="0" Minimum="0" Maximum="120" TickFrequency="15"
+                                            ValueChanged="SymbolAngleSlider_OnValueChanged" />
+                                    <TextBlock x:Name="SymbolAngleValueText" Grid.Column="1" Text="90°" Foreground="{DynamicResource MutedTextBrush}"
+                                               FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                                </Grid>
+                                <UniformGrid Columns="4" Margin="3,0,3,6">
+                                    <Button Content="0°" Tag="0" Style="{StaticResource PanelKeyButtonStyle}" Click="SymbolAnglePreset_OnClick" ToolTip="Closed" />
+                                    <Button Content="45°" Tag="45" Style="{StaticResource PanelKeyButtonStyle}" Click="SymbolAnglePreset_OnClick" />
+                                    <Button Content="90°" Tag="90" Style="{StaticResource PanelKeyButtonStyle}" Click="SymbolAnglePreset_OnClick" />
+                                    <Button Content="120°" Tag="120" Style="{StaticResource PanelKeyButtonStyle}" Click="SymbolAnglePreset_OnClick" />
+                                </UniformGrid>
+                            </StackPanel>
+                            <TextBlock Text="Turn it onto another wall with ROTATION, swing it the other way or to the other jamb with Flip. The size is the width of the opening."
+                                       Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="12,0,12,8" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
                 <Border x:Name="WallCard" Style="{StaticResource CardBorderStyle}" Visibility="Collapsed">
                     <StackPanel>
                         <Grid Style="{StaticResource CollapsibleCardHeaderStyle}" MouseLeftButtonDown="CardHeader_OnToggle">
@@ -685,9 +738,9 @@
                             <TextBox x:Name="WallThicknessTextBox" Margin="6,0,6,6" ToolTip="Wall thickness, in the unit chosen in SIZE &amp; POSITION"
                                      LostFocus="WallThicknessTextBox_OnLostFocus" KeyDown="WallTextBox_OnKeyDown" />
 
-                            <CheckBox x:Name="WallClosedCheckBox" Content="CLOSED (RING)" Margin="6,2,6,6"
+                            <CheckBox x:Name="WallClosedCheckBox" Content="CLOSED ROOM (RING)" Margin="6,2,6,6"
                                       Foreground="{DynamicResource MutedTextBrush}" FontSize="11"
-                                      ToolTip="Connect the last point back to the first one"
+                                      ToolTip="Join the last corner back to the first one with a new wall: the wall becomes a closed room"
                                       Checked="WallClosedCheckBox_OnCheckedChanged" Unchecked="WallClosedCheckBox_OnCheckedChanged" />
 
                             <TextBlock Text="HATCH" Style="{StaticResource PanelLabelTextStyle}" />
@@ -727,6 +780,9 @@
                                       ToolTip="Where the dimension lines run: inside the plan (in the room), outside the plan, or automatically. A single dimension can still be put on the other side in the DIMENSION card."
                                       SelectionChanged="WallPlacementComboBox_OnSelectionChanged" />
 
+                            <Button Content="Merge straight parts" Style="{StaticResource PanelKeyButtonStyle}" Margin="6,2,6,4"
+                                    ToolTip="Walls that run on in one line become one wall. To make a bend straight, drag its corner onto the line between its neighbours (it snaps), or right-click the corner and choose Straighten Corner."
+                                    Click="WallMergeButton_OnClick" />
                             <Button Content="Split at every point" Style="{StaticResource PanelKeyButtonStyle}" Margin="6,2,6,4"
                                     ToolTip="Break this wall into one wall per segment"
                                     Click="WallSplitAllButton_OnClick" />

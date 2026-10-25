@@ -78,6 +78,8 @@
                 <Separator />
                 <MenuItem x:Name="GridMenuItem" Header="Show Grid" IsCheckable="True" Click="GridMenuItem_OnClick" />
                 <MenuItem x:Name="SnapMenuItem" Header="Snap to Grid" IsCheckable="True" Click="SnapMenuItem_OnClick" />
+                <MenuItem x:Name="ObjectSnapMenuItem" Header="Snap to Walls and Objects" IsCheckable="True" IsChecked="True" Click="ObjectSnapMenuItem_OnClick"
+                          ToolTip="Shapes snap to wall faces, corners and other shapes while moved, placed or resized (Alt = off)" />
                 <Separator />
                 <MenuItem Header="Theme">
                     <MenuItem x:Name="ViewDarkModeMenuItem" Header="Dark Mode" Click="DarkModeMenuItem_OnClick" />
@@ -138,6 +140,13 @@
                 </MenuItem>
                 <MenuItem Header="Text" InputGestureText="T" Tag="Text" Click="ToolMenuItem_OnClick" />
                 <MenuItem Header="Design Grid" Tag="DesignGrid" Click="ToolMenuItem_OnClick" />
+                <MenuItem Header="Door and Window">
+                    <MenuItem Header="Door (single)" Tag="DoorSingle" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Double Door" Tag="DoorDouble" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Window" Tag="WindowSingle" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Double Window" Tag="WindowDouble" Click="ToolMenuItem_OnClick" />
+                    <MenuItem Header="Wall Opening" Tag="WallOpening" Click="ToolMenuItem_OnClick" />
+                </MenuItem>
                 <Separator />
                 <MenuItem Header="Image..." Click="InsertImageMenuItem_OnClick" />
                 <MenuItem Header="SVG Code..." Click="InsertSvgMenuItem_OnClick" />
@@ -160,6 +169,10 @@
                     <MenuItem Header="Room with a Column in the Corner" Tag="CornerColumn" Click="RoomMenuItem_OnClick" />
                     <MenuItem Header="Room with a Column on a Wall" Tag="WallColumn" Click="RoomMenuItem_OnClick" />
                 </MenuItem>
+                <MenuItem Header="Close Wall (make a closed room)" Click="CloseWallMenuItem_OnClick"
+                          ToolTip="Join the last corner of the selected wall to its first corner" />
+                <MenuItem Header="Merge Straight Parts of Wall" Click="MergeWallMenuItem_OnClick"
+                          ToolTip="Walls that run on in one line become one wall (the corner between them is removed)" />
                 <MenuItem Header="Wall Options..." Tag="WALL" Click="FocusCardMenuItem_OnClick" />
                 <Separator />
                 <MenuItem Header="Dimension">
@@ -178,6 +191,13 @@
                     <MenuItem Header="Segment / Curve Lengths" Tag="Segments" Click="AddDimensionsMenuItem_OnClick" />
                 </MenuItem>
                 <MenuItem Header="Dimension Style..." Tag="DIMENSION" Click="FocusCardMenuItem_OnClick" />
+                <MenuItem Header="Door and Window Dimensions">
+                    <MenuItem Header="Show on Selected" Tag="ShowSelected" Click="SymbolDimensionMenuItem_OnClick" />
+                    <MenuItem Header="Hide on Selected" Tag="HideSelected" Click="SymbolDimensionMenuItem_OnClick" />
+                    <Separator />
+                    <MenuItem Header="Show All" Tag="ShowAll" Click="SymbolDimensionMenuItem_OnClick" />
+                    <MenuItem Header="Hide All" Tag="HideAll" Click="SymbolDimensionMenuItem_OnClick" />
+                </MenuItem>
                 <MenuItem Header="Wall Dimensions">
                     <MenuItem Header="Inside the Plan (in the room)" Tag="Inside" Click="WallDimensionPlacementMenuItem_OnClick" />
                     <MenuItem Header="Outside the Plan" Tag="Outside" Click="WallDimensionPlacementMenuItem_OnClick" />

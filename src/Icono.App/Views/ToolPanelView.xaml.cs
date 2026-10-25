@@ -22,6 +22,7 @@ public partial class ToolPanelView : UserControl
             if (_context is not null)
             {
                 _context.PropertyChanged -= Context_OnPropertyChanged;
+                _context.ObjectSnap.PropertyChanged -= ObjectSnap_OnPropertyChanged;
             }
 
             _context = value;
@@ -31,6 +32,8 @@ public partial class ToolPanelView : UserControl
             {
                 _context.PropertyChanged += Context_OnPropertyChanged;
                 SyncGridPaintColor();
+                _context.ObjectSnap.PropertyChanged += ObjectSnap_OnPropertyChanged;
+                SyncObjectSnapChecks();
             }
         }
     }
@@ -270,6 +273,39 @@ public partial class ToolPanelView : UserControl
         }
     }
 
+    private void ObjectSnapCheckBox_OnClick(object sender, System.Windows.RoutedEventArgs e)
+    {
+        if (Context is null || sender is not CheckBox { Tag: string tag } box)
+        {
+            return;
+        }
+
+        var on = box.IsChecked == true;
+        switch (tag)
+        {
+            case "Enabled": Context.ObjectSnap.Enabled = on; break;
+            case "Walls": Context.ObjectSnap.Walls = on; break;
+            case "Objects": Context.ObjectSnap.Objects = on; break;
+        }
+    }
+
+    private void ObjectSnap_OnPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) => SyncObjectSnapChecks();
+
+    /// <summary>Shows the snap settings (they can also be switched in the View menu).</summary>
+    private void SyncObjectSnapChecks()
+    {
+        if (Context is null)
+        {
+            return;
+        }
+
+        var options = Context.ObjectSnap;
+        ObjectSnapEnabledCheckBox.IsChecked = options.Enabled;
+        ObjectSnapWallsCheckBox.IsChecked = options.Walls;
+        ObjectSnapObjectsCheckBox.IsChecked = options.Objects;
+        ObjectSnapWallsCheckBox.IsEnabled = ObjectSnapObjectsCheckBox.IsEnabled = options.Enabled;
+    }
+
     private void MatchAspectCheckBox_OnClick(object sender, System.Windows.RoutedEventArgs e)
     {
         if (Context is null || sender is not CheckBox { Tag: string tag } box || !Enum.TryParse<MatchAspects>(tag, out var aspect))
@@ -279,6 +315,8 @@ public partial class ToolPanelView : UserControl
 
         Context.MatchAspects = box.IsChecked == true ? Context.MatchAspects | aspect : Context.MatchAspects & ~aspect;
     }
+
+    private void CloseRoom_OnClick(object sender, System.Windows.RoutedEventArgs e) => Context?.CloseSelectedWalls();
 
     private void Room_OnClick(object sender, System.Windows.RoutedEventArgs e)
     {

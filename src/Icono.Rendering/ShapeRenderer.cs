@@ -37,6 +37,12 @@ public static class ShapeRenderer
             return;
         }
 
+        if (ArchitecturalSymbols.IsSymbol(shape.Kind))
+        {
+            ArchitecturalSymbols.Draw(canvas, shape, alpha);
+            return;
+        }
+
         if (shape.Kind == ShapeKind.Dimension)
         {
             DimensionRenderer.Draw(canvas, shape, alpha);

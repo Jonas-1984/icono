@@ -42,6 +42,9 @@ public sealed class EditorContext : ObservableObject
     /// <summary>Which snapping helpers the wall tool uses (corners, horizontal / vertical, alignment, equal length ...).</summary>
     public WallSnapOptions WallSnap { get; } = new();
 
+    /// <summary>What shapes snap to while they are moved, placed or resized: the faces and corners of walls and the edges of other shapes.</summary>
+    public ObjectSnapOptions ObjectSnap { get; } = new();
+
     public UndoManager UndoManager { get; } = new();
 
     public ActiveTool ActiveTool { get => _activeTool; set => SetField(ref _activeTool, value); }
@@ -163,6 +166,7 @@ public sealed class EditorContext : ObservableObject
             try
             {
                 DrawingScale.Denominator = Document.ScaleDenominator;
+                FitDoors();
                 ConnectionRouter.Refresh(Document);
                 DimensionRouter.Refresh(Document);
             }
@@ -173,6 +177,15 @@ public sealed class EditorContext : ObservableObject
         }
 
         Invalidated?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>A door is exactly as long as it is wide: whatever changed its width (handles, the SIZE card, undo), its height follows.</summary>
+    private void FitDoors()
+    {
+        foreach (var shape in Document.VisibleShapes())
+        {
+            ArchitecturalSymbols.Normalize(shape);
+        }
     }
 
     public void Undo()
@@ -796,6 +809,136 @@ public sealed class EditorContext : ObservableObject
             changed.Select(i => affected[i]).ToList(), changed.Select(i => before[i]).ToList(), changed.Select(i => after[i]).ToList()));
         RequestRedraw();
         return true;
+    }
+
+    /// <summary>Moves one corner of a wall onto the straight line between its neighbours, as one undo step.</summary>
+    public void StraightenWallCorner(Shape wall, int index)
+    {
+        var before = ShapeSnapshot.Capture(wall);
+        if (!WallStraightener.StraightenCorner(wall, index))
+        {
+            StatusMessage?.Invoke("That corner cannot be straightened (an end of an open wall has only one neighbour).");
+            return;
+        }
+
+        UndoManager.Push(UndoableAction.ForPropertyEdit([wall], [before], [ShapeSnapshot.Capture(wall)]));
+        StatusMessage?.Invoke("Corner straightened: the two walls run on in one line. Use Merge Straight Parts to make them one wall.");
+        RequestRedraw();
+    }
+
+    /// <summary>Turns walls that run straight on into one wall (the corner between them is removed) for every selected wall, as one undo step.</summary>
+    public void MergeStraightWallParts()
+    {
+        var walls = SelectedShapes.Where(s => s.Kind == ShapeKind.Wall && !s.Locked).ToList();
+        if (walls.Count == 0)
+        {
+            StatusMessage?.Invoke("Select a wall first.");
+            return;
+        }
+
+        var before = walls.Select(ShapeSnapshot.Capture).ToList();
+        var merged = walls.Sum(w => WallStraightener.MergeStraightParts(w));
+        if (merged == 0)
+        {
+            StatusMessage?.Invoke("No parts to merge: every corner of the wall is a real bend. Drag a corner onto the line between its neighbours first to straighten it.");
+            return;
+        }
+
+        UndoManager.Push(UndoableAction.ForPropertyEdit(walls, before, walls.Select(ShapeSnapshot.Capture).ToList()));
+        StatusMessage?.Invoke(merged == 1 ? "Two walls merged into one." : $"{merged} corners removed: the straight parts are one wall now.");
+        RequestRedraw();
+    }
+
+    /// <summary>Makes the opening of a door, window or wall opening a given width (page px), as one undo step. The jamb at the start of the symbol
+    /// stays, the other one moves.</summary>
+    public bool SetSymbolWidth(Shape symbol, double widthPx)
+    {
+        var before = ShapeSnapshot.Capture(symbol);
+        if (!SymbolMeasurements.SetOpeningWidth(symbol, widthPx))
+        {
+            return false;
+        }
+
+        UndoManager.Push(UndoableAction.ForPropertyEdit([symbol], [before], [ShapeSnapshot.Capture(symbol)]));
+        RequestRedraw();
+        return true;
+    }
+
+    /// <summary>Slides a door or window along its wall until the clear distance from its jamb to the wall corner is <paramref name="gapPx"/>, as one undo step.</summary>
+    public bool SetSymbolGap(Shape symbol, SymbolDimensionPart part, double gapPx)
+    {
+        var before = ShapeSnapshot.Capture(symbol);
+        if (!SymbolMeasurements.SetGap(Document, symbol, part, gapPx))
+        {
+            return false;
+        }
+
+        UndoManager.Push(UndoableAction.ForPropertyEdit([symbol], [before], [ShapeSnapshot.Capture(symbol)]));
+        RequestRedraw();
+        return true;
+    }
+
+    /// <summary>Shows or hides the width dimension of doors, windows and wall openings: of the selected ones, or of every one on the page.</summary>
+    public void SetSymbolDimensions(bool show, bool all)
+    {
+        var symbols = (all ? Document.VisibleShapes().ToList() : SelectedShapes.ToList()).Where(s => ArchitecturalSymbols.IsSymbol(s.Kind) && !s.Locked && (s.SymbolShowDimension != show || s.SymbolShowGaps != show)).ToList();
+        if (symbols.Count == 0)
+        {
+            StatusMessage?.Invoke(all || SelectedShapes.Any(s => ArchitecturalSymbols.IsSymbol(s.Kind))
+                ? "Nothing to change: the dimensions are already " + (show ? "shown." : "hidden.")
+                : "Select a door, window or opening first.");
+            return;
+        }
+
+        var before = symbols.Select(ShapeSnapshot.Capture).ToList();
+        foreach (var symbol in symbols)
+        {
+            symbol.SymbolShowDimension = show;
+            symbol.SymbolShowGaps = show;
+        }
+
+        UndoManager.Push(UndoableAction.ForPropertyEdit(symbols, before, symbols.Select(ShapeSnapshot.Capture).ToList()));
+        StatusMessage?.Invoke($"Dimension {(show ? "shown" : "hidden")} on {symbols.Count} door/window/opening symbol(s).");
+        RequestRedraw();
+    }
+
+    /// <summary>Closes the selected open walls: the last point is joined to the first by a new wall segment, which makes a closed room.</summary>
+    public void CloseSelectedWalls()
+    {
+        var walls = SelectedShapes.Where(s => s.Kind == ShapeKind.Wall && !s.Locked).ToList();
+        if (walls.Count == 0)
+        {
+            StatusMessage?.Invoke("Select a wall first, then close it to make a closed room.");
+            return;
+        }
+
+        var open = walls.Where(w => !w.WallClosed).ToList();
+        if (open.Count == 0)
+        {
+            StatusMessage?.Invoke("That wall is already a closed room.");
+            return;
+        }
+
+        if (open.All(w => w.Points is not { Count: >= 3 }))
+        {
+            StatusMessage?.Invoke("A room needs at least three corners.");
+            return;
+        }
+
+        var closeable = open.Where(w => w.Points is { Count: >= 3 }).ToList();
+        var before = closeable.Select(ShapeSnapshot.Capture).ToList();
+        foreach (var wall in closeable)
+        {
+            wall.WallClosed = true;
+            WallEditor.PruneOverrides(wall);
+        }
+
+        UndoManager.Push(UndoableAction.ForPropertyEdit(closeable, before, closeable.Select(ShapeSnapshot.Capture).ToList()));
+        var closing = closeable.Count == 1 ? WallGeometry.Segments(closeable[0]).Count - 1 : -1;
+        StatusMessage?.Invoke(closing >= 0
+            ? $"Room closed: a new wall of {DimensionRenderer.Format(WallGeometry.MeasuredLength(closeable[0], closing), closeable[0].WallDimensionUnit, closeable[0].DimPrecision)} joins the last corner to the first."
+            : $"{closeable.Count} rooms closed.");
+        RequestRedraw();
     }
 
     /// <summary>Breaks every selected wall into one wall per segment.</summary>

@@ -81,6 +81,9 @@ public sealed class Shape : ObservableObject
     private IReadOnlyList<WallDimensionOverride>? _wallDimensionOverrides;
     private WallMeasure _wallDimensionMeasure = WallMeasure.Inside;
     private WallDimensionPlacement _wallDimensionPlacement;
+    private double _doorOpenAngle = 90;
+    private bool _symbolShowDimension = true;
+    private bool _symbolShowGaps = true;
     private ShapeAnchor? _startAnchor;
     private ShapeAnchor? _endAnchor;
 
@@ -364,4 +367,13 @@ public sealed class Shape : ObservableObject
 
     /// <summary>Whether the dimension lines of the wall run inside the plan, outside it, or are placed automatically.</summary>
     public WallDimensionPlacement WallDimensionPlacement { get => _wallDimensionPlacement; set => SetField(ref _wallDimensionPlacement, value); }
+
+    /// <summary>How far the leaf of a door symbol is open, in degrees (0 = closed, 90 = at a right angle to the wall).</summary>
+    public double DoorOpenAngle { get => _doorOpenAngle; set => SetField(ref _doorOpenAngle, Math.Clamp(value, 0, 120)); }
+
+    /// <summary>Whether a door, window or wall opening shows the width of its opening as a dimension next to it.</summary>
+    public bool SymbolShowDimension { get => _symbolShowDimension; set => SetField(ref _symbolShowDimension, value); }
+
+    /// <summary>Whether a door, window or wall opening in a wall shows the clear distances from its jambs to the corners of the wall.</summary>
+    public bool SymbolShowGaps { get => _symbolShowGaps; set => SetField(ref _symbolShowGaps, value); }
 }

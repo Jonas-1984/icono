@@ -606,9 +606,16 @@ public partial class MainWindow
 
         if (!ctrl && !alt)
         {
-            if (_context.ActiveTool == ActiveTool.PathDraw && e.Key is Key.Escape or Key.Enter)
+            if (_context.ActiveTool == ActiveTool.PathDraw && (e.Key is Key.Escape or Key.Enter))
             {
                 return false; // handled by the path-drawing logic
+            }
+
+            if (e.Key == Key.Enter && _context.ActiveTool != ActiveTool.Select)
+            {
+                CanvasHost.CancelMeasure();
+                _context.ActiveTool = ActiveTool.Select;
+                return true;
             }
 
             string? tool = e.Key switch

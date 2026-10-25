@@ -134,6 +134,7 @@ public static class ShapeGeometryFactory
     [
         ShapeKind.Line, ShapeKind.Arrow, ShapeKind.DoubleArrow, ShapeKind.Polyline, ShapeKind.Curve,
         ShapeKind.Text, ShapeKind.Box3D, ShapeKind.RasterImage, ShapeKind.CombinedPath,
+        ShapeKind.DoorSingle, ShapeKind.DoorDouble, ShapeKind.WindowSingle, ShapeKind.WindowDouble, ShapeKind.WallOpening,
     ];
 
     /// <summary>Which fixed-geometry kinds can be converted into a freeform points-based shape via
@@ -261,6 +262,11 @@ public static class ShapeGeometryFactory
         if (shape.Kind == ShapeKind.Wall)
         {
             return WallGeometry.BuildOutline(shape);
+        }
+
+        if (ArchitecturalSymbols.IsSymbol(shape.Kind))
+        {
+            return ArchitecturalSymbols.BuildOutline(shape);
         }
 
         if (shape.Kind == ShapeKind.Box3D)

@@ -46,6 +46,34 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="SNAP TO WALLS &amp; OBJECTS" Style="{StaticResource CardHeaderTextStyle}" />
+                            <Path Grid.Column="1" Style="{StaticResource CardChevronPathStyle}" />
+                        </Grid>
+                        <StackPanel>
+                            <TextBlock Text="Shapes snap to walls and to each other while you move, place or resize them: put a cabinet right against a wall or into a corner. Hold Alt to snap off."
+                                       Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="12,2,12,6" />
+                            <StackPanel Margin="10,0,6,6">
+                                <CheckBox x:Name="ObjectSnapEnabledCheckBox" Content="Snap shapes" Tag="Enabled" IsChecked="True" Click="ObjectSnapCheckBox_OnClick"
+                                          Foreground="{DynamicResource ForegroundTextBrush}" FontSize="11" Margin="0,2"
+                                          ToolTip="Master switch. Hold Alt to snap off for one move." />
+                                <CheckBox x:Name="ObjectSnapWallsCheckBox" Content="To wall faces and corners" Tag="Walls" IsChecked="True" Click="ObjectSnapCheckBox_OnClick"
+                                          Foreground="{DynamicResource MutedTextBrush}" FontSize="11" Margin="12,2,0,2"
+                                          ToolTip="Both sides of every straight wall: the edge of the shape stops exactly on the face of the wall." />
+                                <CheckBox x:Name="ObjectSnapObjectsCheckBox" Content="To other shapes (edges, centres)" Tag="Objects" IsChecked="True" Click="ObjectSnapCheckBox_OnClick"
+                                          Foreground="{DynamicResource MutedTextBrush}" FontSize="11" Margin="12,2,0,2"
+                                          ToolTip="Line up with, or sit flush against, the edges and centres of other shapes." />
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource CardBorderStyle}">
+                    <StackPanel>
+                        <Grid Style="{StaticResource CollapsibleCardHeaderStyle}" MouseLeftButtonDown="CardHeader_OnToggle">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="MATCH (Q)" Style="{StaticResource CardHeaderTextStyle}" />
                             <Path Grid.Column="1" Style="{StaticResource CardChevronPathStyle}" />
                         </Grid>
@@ -103,6 +131,8 @@
                                              Tag="{StaticResource CutWallToolGeometry}" CommandParameter="WallCut"
                                              ToolTip="Cut a wall (X): click the place where it should be split" />
                             </WrapPanel>
+                            <Button Content="Close room" Style="{StaticResource PanelKeyButtonStyle}" Margin="6,4,6,2" Click="CloseRoom_OnClick"
+                                    ToolTip="Select an open wall, then click here: its last corner is joined to its first one by a new wall and the wall becomes a closed room. While drawing you can also click the start point again." />
                             <TextBlock Text="ROOMS" Style="{StaticResource PanelLabelTextStyle}" />
                             <WrapPanel Margin="6,0,6,2">
                                 <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="Room_OnClick" Tag="Closed" ToolTip="Closed room">
@@ -425,8 +455,20 @@
                         </Grid>
                         <StackPanel>
                         <WrapPanel x:Name="FurnitureWrapPanel" Margin="6,0" MinHeight="114">
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource DoorSingleToolGeometry}" CommandParameter="DoorSingle" ToolTip="Door (single): drag the opening, or click for a 90 cm door at the drawing scale. Lay it over a wall: it cuts the wall open." />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource DoorDoubleToolGeometry}" CommandParameter="DoorDouble" ToolTip="Double door: two leaves that meet in the middle" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource WindowSingleToolGeometry}" CommandParameter="WindowSingle" ToolTip="Window: the height of the symbol is the wall thickness" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource WindowDoubleToolGeometry}" CommandParameter="WindowDouble" ToolTip="Double window: two sashes with a post in the middle" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource WallOpeningToolGeometry}" CommandParameter="WallOpening" ToolTip="Wall opening: cuts the wall open without a door or window" />
                         </WrapPanel>
                         <StackPanel x:Name="FurniturePagerDots" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,2,0,6" />
+                        <TextBlock Text="Doors and windows lie over a wall and cut it open. Drag to size them or click for a real-world size, turn them with Rotation, mirror them with Flip. Door: thickness and opening angle in the OPENING card on the right."
+                                   Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="12,2,12,8" />
                         </StackPanel>
                     </StackPanel>
                 </Border>

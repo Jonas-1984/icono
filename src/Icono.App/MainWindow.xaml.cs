@@ -36,6 +36,7 @@ public partial class MainWindow : Window
             UpdateScaleMenuMarkers();
         };
         _context.SheetChanged += () => SheetMenuItem.IsChecked = _context.Document.Sheet.Enabled;
+        _context.ObjectSnap.PropertyChanged += (_, _) => ObjectSnapMenuItem.IsChecked = _context.ObjectSnap.Enabled;
 
         // A new page size (preset, portrait / landscape, typed size) is shown whole.
         var shownPage = (_context.Document.Width, _context.Document.Height);
@@ -189,6 +190,7 @@ public partial class MainWindow : Window
             if (e.Key == Key.Enter)
             {
                 CanvasHost.FinishPathDraw();
+                _context.ActiveTool = ActiveTool.Select;
                 e.Handled = true;
                 return;
             }

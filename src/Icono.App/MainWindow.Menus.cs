@@ -60,6 +60,21 @@ public partial class MainWindow
         }
     }
 
+    private void ObjectSnapMenuItem_OnClick(object sender, RoutedEventArgs e) =>
+        _context.ObjectSnap.Enabled = ObjectSnapMenuItem.IsChecked;
+
+    private void CloseWallMenuItem_OnClick(object sender, RoutedEventArgs e) => _context.CloseSelectedWalls();
+
+    private void MergeWallMenuItem_OnClick(object sender, RoutedEventArgs e) => _context.MergeStraightWallParts();
+
+    private void SymbolDimensionMenuItem_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is MenuItem { Tag: string tag })
+        {
+            _context.SetSymbolDimensions(show: tag.StartsWith("Show", StringComparison.Ordinal), all: tag.EndsWith("All", StringComparison.Ordinal));
+        }
+    }
+
     private void RoomMenuItem_OnClick(object sender, RoutedEventArgs e)
     {
         if (sender is MenuItem { Tag: string tag } && Enum.TryParse<RoomPreset>(tag, out var preset))

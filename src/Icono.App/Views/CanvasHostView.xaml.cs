@@ -165,13 +165,13 @@ public partial class CanvasHostView : UserControl
             _context.RequestRedraw();
         }
 
-        ShowContextMenu();
+        ShowContextMenu(point);
     }
 
     /// <summary>Builds and opens a context menu reflecting the current selection — consolidates
     /// Cut/Copy/Paste/Union/Trim/Group/Lock/z-order onto the shape(s) directly, per the user's
     /// request for right-click shape editing.</summary>
-    private void ShowContextMenu()
+    private void ShowContextMenu(Point clicked)
     {
         if (_context is null)
         {
@@ -208,6 +208,31 @@ public partial class CanvasHostView : UserControl
         AddItem("Reflect", _context.ReflectSelection, selected.Count >= 1 && allUnlocked);
         AddItem("Offset...", ShowOffsetDialog, selected.Count >= 1 && allUnlocked);
         AddItem("Match Properties (copy this look)", _context.BeginMatch, selected.Count == 1);
+        if (selected.Count == 1 && ArchitecturalSymbols.IsSymbol(selected[0].Kind) && !IsLocked(selected[0]))
+        {
+            var symbol = selected[0];
+            AddItem(symbol.SymbolShowDimension ? "Hide Dimension" : "Show Dimension", () => _context.SetSymbolDimensions(!symbol.SymbolShowDimension, all: false));
+        }
+
+        if (selected.Count == 1 && selected[0] is { Kind: ShapeKind.Wall, Points: { Count: >= 3 } } wallShape && !IsLocked(wallShape))
+        {
+            if (HitTestPointHandle(clicked, wallShape) is { IsMidpoint: false } corner)
+            {
+                if (WallStraightener.Neighbours(wallShape, corner.Index) is not null)
+                {
+                    AddItem("Straighten Corner (onto the line between its neighbours)", () => _context.StraightenWallCorner(wallShape, corner.Index));
+                    AddItem("Remove Corner (two walls become one)", () => RemovePointAt(wallShape, corner.Index), wallShape.Points.Count > (wallShape.WallClosed ? 3 : 2));
+                }
+            }
+
+            AddItem("Merge Straight Parts (walls in one line become one wall)", _context.MergeStraightWallParts);
+        }
+
+        if (selected.Count == 1 && selected[0] is { Kind: ShapeKind.Wall, WallClosed: false, Points.Count: >= 3 } && !IsLocked(selected[0]))
+        {
+            AddItem("Close Room (join last corner to first)", _context.CloseSelectedWalls);
+        }
+
 
         if (selected.Count == 1 && !IsLocked(selected[0]) && selected[0].Points is null &&
             ShapeGeometryFactory.SupportsPointEditing(selected[0].Kind))
@@ -350,6 +375,108 @@ public partial class CanvasHostView : UserControl
         DimensionKind.Radius or DimensionKind.Diameter or DimensionKind.Length => 2,
         _ => 3,
     };
+
+    // ----- Snapping to walls and objects ------------------------------------------------------------------------
+
+    private IReadOnlyList<ObjectSnapGuide> _snapGuides = [];
+    private IReadOnlyList<VertexGuide> _vertexGuides = [];
+
+    /// <summary>Snaps a frame that is being moved to the faces of walls and the edges of other shapes (Alt holds the snap off) and
+    /// remembers the lines to show.</summary>
+    private ObjectSnapResult SnapFrame((double X, double Y, double W, double H) frame, IReadOnlyCollection<Shape> exclude)
+    {
+        if (_context is null || Keyboard.Modifiers.HasFlag(ModifierKeys.Alt))
+        {
+            _snapGuides = [];
+            return ObjectSnapResult.None;
+        }
+
+        var result = ObjectSnapper.Snap(_context.Document, frame, exclude, 8 / Zoom, _context.ObjectSnap);
+        _snapGuides = result.Guides;
+        return result;
+    }
+
+    /// <summary>The point snapped like a frame of no size: for placing a shape and for dragging a handle.</summary>
+    private Point SnapObjectPoint(Point point, IReadOnlyCollection<Shape> exclude)
+    {
+        var result = SnapFrame((point.X, point.Y, 0, 0), exclude);
+        return new Point(point.X + result.Dx, point.Y + result.Dy);
+    }
+
+    private void ClearSnapGuides()
+    {
+        if (_snapGuides.Count > 0 || _vertexGuides.Count > 0)
+        {
+            _snapGuides = [];
+            _vertexGuides = [];
+            SkiaCanvas.InvalidateVisual();
+        }
+    }
+
+    /// <summary>The guides of a wall corner that is dragged: the straight line through its neighbours, or the lines it lines up on.</summary>
+    private void DrawVertexGuides(SKCanvas canvas, float scaleX, float scaleY)
+    {
+        if (_vertexGuides.Count == 0)
+        {
+            return;
+        }
+
+        using var straight = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 1.6f, Color = new SKColor(0x2E, 0xCC, 0x71), PathEffect = SKPathEffect.CreateDash([6, 3], 0) };
+        using var aligned = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 1.2f, Color = new SKColor(0xE0, 0x4F, 0xD0), PathEffect = SKPathEffect.CreateDash([4, 3], 0) };
+        foreach (var guide in _vertexGuides)
+        {
+            var a = new SKPoint(guide.A.X * scaleX, guide.A.Y * scaleY);
+            var b = new SKPoint(guide.B.X * scaleX, guide.B.Y * scaleY);
+            if (guide.Straight)
+            {
+                // the whole line, so it is clear which straight line the corner snaps to
+                var dx = b.X - a.X;
+                var dy = b.Y - a.Y;
+                canvas.DrawLine(a.X - dx * 0.15f, a.Y - dy * 0.15f, b.X + dx * 0.15f, b.Y + dy * 0.15f, straight);
+            }
+            else
+            {
+                canvas.DrawLine(a, b, aligned);
+            }
+        }
+    }
+
+    private void DrawSnapGuides(SKCanvas canvas, float scaleX, float scaleY)
+    {
+        DrawVertexGuides(canvas, scaleX, scaleY);
+        if (_snapGuides.Count == 0)
+        {
+            return;
+        }
+
+        using var wallPaint = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 1.4f, Color = new SKColor(0x2E, 0xCC, 0x71), PathEffect = SKPathEffect.CreateDash([5, 3], 0) };
+        using var glowPaint = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 4f, Color = new SKColor(0x2E, 0xCC, 0x71, 90) };
+        using var objectPaint = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 1.2f, Color = new SKColor(0xE0, 0x4F, 0xD0), PathEffect = SKPathEffect.CreateDash([4, 3], 0) };
+        foreach (var guide in _snapGuides)
+        {
+            var paint = guide.Kind == ObjectSnapKind.Wall ? wallPaint : objectPaint;
+            if (guide.Vertical)
+            {
+                var x = (float)guide.Position * scaleX;
+                if (guide.Kind == ObjectSnapKind.Wall)
+                {
+                    canvas.DrawLine(x, (float)guide.From * scaleY, x, (float)guide.To * scaleY, glowPaint);
+                }
+
+                canvas.DrawLine(x, (float)guide.From * scaleY, x, (float)guide.To * scaleY, paint);
+            }
+            else
+            {
+                var y = (float)guide.Position * scaleY;
+                if (guide.Kind == ObjectSnapKind.Wall)
+                {
+                    canvas.DrawLine((float)guide.From * scaleX, y, (float)guide.To * scaleX, y, glowPaint);
+                }
+
+                canvas.DrawLine((float)guide.From * scaleX, y, (float)guide.To * scaleX, y, paint);
+            }
+        }
+    }
 
     // ----- Match: carry the look of one object over to others ----------------------------------------------------
 
@@ -1163,6 +1290,7 @@ public partial class CanvasHostView : UserControl
         DrawWallHints(canvas, scaleX, scaleY);
         DrawMeasure(canvas, scaleX, scaleY);
         DrawMatchSource(canvas, scaleX, scaleY);
+        DrawSnapGuides(canvas, scaleX, scaleY);
     }
 
     private void DrawGrid(SKCanvas canvas, int width, int height)
@@ -1759,6 +1887,11 @@ public partial class CanvasHostView : UserControl
             return;
         }
 
+        if (_context.ActiveTool == ActiveTool.Select && e.ClickCount == 1 && TryBeginSymbolDimensionEdit(point))
+        {
+            return;
+        }
+
         if (e.ClickCount == 2)
         {
             var dblHit = HitTestShape(point);
@@ -1945,8 +2078,21 @@ public partial class CanvasHostView : UserControl
                     continue;
                 }
 
-                if (point.X < shape.X || point.X > shape.X + shape.Width ||
-                    point.Y < shape.Y || point.Y > shape.Y + shape.Height)
+                if (ArchitecturalSymbols.IsSymbol(shape.Kind))
+                {
+                    // a door or window is thin and often turned: it is hit where it is drawn, a few pixels around it included
+                    if (ArchitecturalSymbols.HitTest(shape, point.X, point.Y, 5 / Zoom))
+                    {
+                        return (shape, layer);
+                    }
+
+                    continue;
+                }
+
+                // a turned shape is hit in its own (unturned) frame
+                var local = shape.Rotation == 0 ? point : RotateAroundCenter(point, new Point(shape.X + shape.Width / 2, shape.Y + shape.Height / 2), -shape.Rotation);
+                if (local.X < shape.X || local.X > shape.X + shape.Width ||
+                    local.Y < shape.Y || local.Y > shape.Y + shape.Height)
                 {
                     continue;
                 }
@@ -2109,6 +2255,11 @@ public partial class CanvasHostView : UserControl
             point = TryAnchorSnap(point, null) ?? point;
         }
 
+        if (!TwoPointLineKinds.Contains(_context.SelectedShapeKind))
+        {
+            point = SnapObjectPoint(point, []);
+        }
+
         _isPlacing = true;
         _placeStart = point;
 
@@ -2143,6 +2294,11 @@ public partial class CanvasHostView : UserControl
                 FillColor = _context.CurrentFillColor,
                 CornerRadius = _context.SelectedShapeKind == ShapeKind.RoundedRectangle ? 12 : 0,
             };
+
+            if (ArchitecturalSymbols.IsSymbol(_pendingShape.Kind))
+            {
+                ArchitecturalSymbols.ApplyDefaults(_pendingShape);
+            }
 
             if (_pendingShape.Kind == ShapeKind.DesignGrid)
             {
@@ -2985,7 +3141,7 @@ public partial class CanvasHostView : UserControl
 
             if (_pendingShape.Points is not null)
             {
-                point = TryAnchorSnap(point, _pendingShape) ?? point;
+                point = TryAnchorSnap(point, _pendingShape) ?? SnapObjectPoint(point, []);
                 // Re-anchor to the fixed drag-start point every frame (not the previous frame's
                 // possibly-recomputed X/Y) so Recompute's absolute-position math never drifts.
                 _pendingShape.X = _placeStart.X;
@@ -2995,10 +3151,19 @@ public partial class CanvasHostView : UserControl
             }
             else
             {
-                _pendingShape.X = SnapIfEnabled(Math.Min(_placeStart.X, point.X));
-                _pendingShape.Y = SnapIfEnabled(Math.Min(_placeStart.Y, point.Y));
-                _pendingShape.Width = SnapIfEnabled(Math.Abs(point.X - _placeStart.X));
-                _pendingShape.Height = SnapIfEnabled(Math.Abs(point.Y - _placeStart.Y));
+                point = SnapObjectPoint(point, []);
+
+                // the drawn outline follows the mouse (and so snaps to walls where you see it), the frame is derived from it
+                var outline = ShapeOutline.FrameForBox(
+                    _pendingShape,
+                    SnapIfEnabled(Math.Min(_placeStart.X, point.X)),
+                    SnapIfEnabled(Math.Min(_placeStart.Y, point.Y)),
+                    SnapIfEnabled(Math.Abs(point.X - _placeStart.X)),
+                    SnapIfEnabled(Math.Abs(point.Y - _placeStart.Y)));
+                _pendingShape.X = outline.X;
+                _pendingShape.Y = outline.Y;
+                _pendingShape.Width = outline.W;
+                _pendingShape.Height = outline.H;
             }
 
             _context?.RequestRedraw();
@@ -3031,8 +3196,22 @@ public partial class CanvasHostView : UserControl
         if (_isDraggingPoint && _pointEditShape is not null && _draggedPointIndex is { } draggedIndex)
         {
             var point = ToDocumentSpace(e.GetPosition(SkiaCanvas));
+            var rawPoint = point;
             var isEnd = draggedIndex == 0 || draggedIndex == _pointEditShape.Points!.Count - 1;
             point = (isEnd ? TryAnchorSnap(point, _pointEditShape) : null) ?? new Point(SnapIfEnabled(point.X), SnapIfEnabled(point.Y));
+
+            // a corner of a wall snaps onto the line between its neighbours (so two walls become straight) and lines up with other corners
+            _vertexGuides = [];
+            if (_pointEditShape.Kind == ShapeKind.Wall && _context is { WallSnap.Enabled: true } && !Keyboard.Modifiers.HasFlag(ModifierKeys.Alt))
+            {
+                var snap = WallStraightener.Snap(_context.Document, _pointEditShape, draggedIndex, new SKPoint((float)rawPoint.X, (float)rawPoint.Y), 8 / Zoom);
+                if (snap.Snapped)
+                {
+                    point = new Point(snap.Point.X, snap.Point.Y);
+                    _vertexGuides = snap.Guides;
+                }
+            }
+
             var list = _pointEditShape.Points!.ToList();
             list[draggedIndex] = new CorePoint(point.X - _pointEditShape.X, point.Y - _pointEditShape.Y);
             _pointEditShape.Points = list;
@@ -3044,6 +3223,11 @@ public partial class CanvasHostView : UserControl
         if (_isResizing && _resizeShape is not null)
         {
             var point = ToDocumentSpace(e.GetPosition(SkiaCanvas));
+            if (_resizeRotation == 0)
+            {
+                point = SnapObjectPoint(point, [_resizeShape]);
+            }
+
             ApplyResize(point);
             _context?.RequestRedraw();
             return;
@@ -3106,6 +3290,17 @@ public partial class CanvasHostView : UserControl
                 var shape = _context.SelectedShapes[0];
                 shape.X = SnapIfEnabled(shape.X);
                 shape.Y = SnapIfEnabled(shape.Y);
+            }
+
+            // the whole selection snaps as one frame, so a group keeps its shape
+            var snap = SnapFrame(ComputeGroupBounds(_context.SelectedShapes), _context.SelectedShapes);
+            if (snap.Dx != 0 || snap.Dy != 0)
+            {
+                foreach (var shape in _context.SelectedShapes)
+                {
+                    shape.X += snap.Dx;
+                    shape.Y += snap.Dy;
+                }
             }
 
             _context.RequestRedraw();
@@ -3230,6 +3425,8 @@ public partial class CanvasHostView : UserControl
         {
             return;
         }
+
+        ClearSnapGuides();
 
         if (e.ChangedButton == MouseButton.Middle)
         {
@@ -3430,6 +3627,7 @@ public partial class CanvasHostView : UserControl
 
     private void OnMouseLeave(object sender, MouseEventArgs e)
     {
+        ClearSnapGuides();
         if (!_isPlacing && !_isPathDrawing && !_isDraggingPoint)
         {
             ClearAnchorProbe();
@@ -3470,6 +3668,17 @@ public partial class CanvasHostView : UserControl
             var clickOnly = shape.Width < cell * 2 && shape.Height < cell * 2;
             shape.Width = (clickOnly ? 24 : Math.Max(1, Math.Round(shape.Width / cell))) * cell;
             shape.Height = (clickOnly ? 24 : Math.Max(1, Math.Round(shape.Height / cell))) * cell;
+        }
+
+        if (shape is not null && ArchitecturalSymbols.IsSymbol(shape.Kind) && _context is not null && (shape.Width < 6 && (shape.Height < 6 || ArchitecturalSymbols.IsDoor(shape.Kind))))
+        {
+            // a click, not a drag (a door's height follows from its width, so only the width tells): the real-world size of that door or window at the drawing scale
+            var size = ArchitecturalSymbols.DefaultSize(shape.Kind, shape.WallThickness, _context.Document.ScaleDenominator, _context.Document.Width);
+            var outline = ShapeOutline.FrameForBox(shape, shape.X, shape.Y, size.Width, size.Height);
+            shape.X = outline.X;
+            shape.Y = outline.Y;
+            shape.Width = outline.W;
+            shape.Height = outline.H;
         }
 
         var isValidBox = shape is { Width: >= 2, Height: >= 2 };

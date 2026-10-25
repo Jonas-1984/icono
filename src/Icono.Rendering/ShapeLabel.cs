@@ -14,7 +14,8 @@ public static class ShapeLabel
 
     /// <summary>Which shapes can carry a label: everything except text shapes (already text), lines and design grids.</summary>
     public static bool CanHaveLabel(Shape shape) =>
-        shape.Kind is not (ShapeKind.Text or ShapeKind.DesignGrid) && shape.Points is null && !ShapeGeometryFactory.IsLineFamily(shape.Kind);
+        shape.Kind is not (ShapeKind.Text or ShapeKind.DesignGrid) && shape.Points is null && !ShapeGeometryFactory.IsLineFamily(shape.Kind)
+        && !ArchitecturalSymbols.IsSymbol(shape.Kind);
 
     public static bool HasLabel(Shape shape) => CanHaveLabel(shape) && !string.IsNullOrEmpty(shape.TextContent);
 

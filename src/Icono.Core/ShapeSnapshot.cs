@@ -84,7 +84,10 @@ public readonly record struct ShapeSnapshot(
     Guid? DimTarget2 = null,
     DimensionArrowStyle DimArrowStyle = DimensionArrowStyle.Arrow,
     WallMeasure WallDimensionMeasure = WallMeasure.Inside,
-    WallDimensionPlacement WallDimensionPlacement = WallDimensionPlacement.Automatic)
+    WallDimensionPlacement WallDimensionPlacement = WallDimensionPlacement.Automatic,
+    double DoorOpenAngle = 90,
+    bool SymbolShowDimension = true,
+    bool SymbolShowGaps = true)
 {
     public static ShapeSnapshot Capture(Shape shape) => new(
         shape.X,
@@ -165,7 +168,10 @@ public readonly record struct ShapeSnapshot(
         shape.DimTarget2,
         shape.DimArrowStyle,
         shape.WallDimensionMeasure,
-        shape.WallDimensionPlacement);
+        shape.WallDimensionPlacement,
+        shape.DoorOpenAngle,
+        shape.SymbolShowDimension,
+        shape.SymbolShowGaps);
 
     public void ApplyTo(Shape shape)
     {
@@ -248,5 +254,8 @@ public readonly record struct ShapeSnapshot(
         shape.DimArrowStyle = DimArrowStyle;
         shape.WallDimensionMeasure = WallDimensionMeasure;
         shape.WallDimensionPlacement = WallDimensionPlacement;
+        shape.DoorOpenAngle = DoorOpenAngle;
+        shape.SymbolShowDimension = SymbolShowDimension;
+        shape.SymbolShowGaps = SymbolShowGaps;
     }
 }

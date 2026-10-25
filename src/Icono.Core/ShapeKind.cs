@@ -110,4 +110,21 @@ public enum ShapeKind
 
     /// <summary>A measurement drawn next to other shapes (extension lines, dimension line, arrows and the value) - see <see cref="Shape.DimKind"/>.</summary>
     Dimension,
+
+    // Architectural plan symbols (see ArchitecturalSymbols): they sit in a wall and cut it open.
+
+    /// <summary>A single door with its swing arc.</summary>
+    DoorSingle,
+
+    /// <summary>A double door: two leaves that meet in the middle.</summary>
+    DoorDouble,
+
+    /// <summary>A window: the opening with the glass lines.</summary>
+    WindowSingle,
+
+    /// <summary>A double window: two sashes with a post in the middle.</summary>
+    WindowDouble,
+
+    /// <summary>An opening in a wall without a door or window.</summary>
+    WallOpening,
 }

@@ -72,6 +72,24 @@ public static class DocumentRenderer
         }
 
         using var wallJoins = WallJoiner.Begin(document);
+
+        // symbols (doors, windows) find the wall they sit in through the document being drawn
+        var previousDocument = SymbolMeasurements.Current;
+        SymbolMeasurements.Current = document;
+        try
+        {
+            DrawLayers(canvas, document, pending);
+        }
+        finally
+        {
+            SymbolMeasurements.Current = previousDocument;
+        }
+
+        SheetRenderer.Draw(canvas, document);
+    }
+
+    private static void DrawLayers(SKCanvas canvas, Document document, Shape? pending)
+    {
         for (var i = document.Layers.Count - 1; i >= 0; i--)
         {
             var layer = document.Layers[i];
@@ -90,7 +108,5 @@ public static class DocumentRenderer
         {
             ShapeRenderer.Draw(canvas, pending);
         }
-
-        SheetRenderer.Draw(canvas, document);
     }
 }

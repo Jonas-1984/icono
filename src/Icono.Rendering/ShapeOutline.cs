@@ -20,6 +20,37 @@ public static class ShapeOutline
         return (box.Left, box.Top, box.Width, box.Height);
     }
 
+    /// <summary>The frame (X, Y, width, height) a shape of this kind needs for its DRAWN outline to be the given box. Many kinds are drawn a little
+    /// inside their frame; placing a shape by dragging should make the outline - what you see - follow the mouse.</summary>
+    public static (double X, double Y, double W, double H) FrameForBox(Shape shape, double x, double y, double width, double height)
+    {
+        if (shape.Points is not null)
+        {
+            return (x, y, width, height);
+        }
+
+        if (ArchitecturalSymbols.IsDoor(shape.Kind))
+        {
+            // the leaf is as long as the opening is wide: only the width is chosen, the height follows
+            var door = new Shape { Kind = shape.Kind, Width = width, WallThickness = shape.WallThickness };
+            return (x, y, width, ArchitecturalSymbols.DoorHeight(door));
+        }
+
+        var probe = new Shape { Kind = shape.Kind };
+        ShapeSnapshot.Capture(shape).ApplyTo(probe);
+        probe.Rotation = 0;
+        probe.X = 0;
+        probe.Y = 0;
+        probe.Width = 100;
+        probe.Height = 100;
+        var box = Box(probe);
+        var ratioW = box.W > 1 ? box.W / 100 : 1;
+        var ratioH = box.H > 1 ? box.H / 100 : 1;
+        var frameW = width / ratioW;
+        var frameH = height / ratioH;
+        return (x - box.X / 100 * frameW, y - box.Y / 100 * frameH, frameW, frameH);
+    }
+
     /// <summary>Moves/resizes the shape so its drawn outline becomes the given box (the frame is derived from it).</summary>
     public static void SetBox(Shape shape, double x, double y, double width, double height)
     {

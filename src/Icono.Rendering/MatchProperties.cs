@@ -171,6 +171,12 @@ public static class MatchProperties
                 return MatchAspects.Effects;
             case ShapeKind.Dimension:
                 return MatchAspects.Border | MatchAspects.Effects | MatchAspects.Dimension;
+            case ShapeKind.DoorSingle:
+            case ShapeKind.DoorDouble:
+            case ShapeKind.WindowSingle:
+            case ShapeKind.WindowDouble:
+            case ShapeKind.WallOpening:
+                return MatchAspects.Fill | MatchAspects.Border | MatchAspects.Effects;
             case ShapeKind.Wall:
                 return MatchAspects.Fill | MatchAspects.Border | MatchAspects.Effects | MatchAspects.Wall | MatchAspects.Dimension;
             case ShapeKind.Text:
