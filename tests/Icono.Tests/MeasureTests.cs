@@ -117,24 +117,26 @@ public class MeasureTests
     }
 
     [Fact]
-    public void TheSnapperFindsCornersMiddlesCentresAndEdges()
+    public void ThePointSnapFindsCornersMiddlesAndEdgesOfAWall()
     {
         var wall = HorizontalWall(100, 400, 200, thickness: 10);
         var document = DocumentWith(wall);
+        var options = new PointSnapOptions();
+        options.Set(PointSnapKind.Nearest, true);
 
-        var corner = MeasureSnapper.Find(document, new SKPoint(102, 193), 6)!;
-        var edge = MeasureSnapper.Find(document, new SKPoint(250, 206), 6)!;
-        var nothing = MeasureSnapper.Find(document, new SKPoint(250, 260), 6);
+        var corner = PointSnapper.Snap(document, new SKPoint(102, 193), 6, options, [])!;
+        var edge = PointSnapper.Snap(document, new SKPoint(250, 206), 6, options, [])!;
+        var nothing = PointSnapper.Snap(document, new SKPoint(250, 260), 6, options, []);
 
-        Assert.Equal(MeasureSnapKind.Corner, corner.Kind);
+        Assert.Equal(PointSnapKind.Endpoint, corner.Kind);
         Assert.Equal(100, corner.Point.X, 1);
         Assert.Equal(195, corner.Point.Y, 1);
-        Assert.Equal(MeasureSnapKind.Midpoint, edge.Kind); // x = 250 is the middle of the lower face
+        Assert.Equal(PointSnapKind.Midpoint, edge.Kind); // x = 250 is the middle of the lower face
         Assert.Equal(205, edge.Point.Y, 1);
         Assert.Null(nothing);
 
-        var onEdge = MeasureSnapper.Find(document, new SKPoint(170, 207), 6)!;
-        Assert.Equal(MeasureSnapKind.Edge, onEdge.Kind);
+        var onEdge = PointSnapper.Snap(document, new SKPoint(170, 207), 6, options, [])!;
+        Assert.Equal(PointSnapKind.Nearest, onEdge.Kind);
         Assert.Equal(170, onEdge.Point.X, 1);
         Assert.Equal(205, onEdge.Point.Y, 1);
     }

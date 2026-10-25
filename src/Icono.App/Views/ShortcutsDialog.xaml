@@ -15,7 +15,7 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Text="{Binding Action}" Foreground="{DynamicResource ForegroundTextBrush}" />
-                                <Border Grid.Column="1" CornerRadius="7" Padding="9,2" Background="{DynamicResource InsetBrush}"
+                                <Border Grid.Column="1" CornerRadius="3.5" Padding="9,2" Background="{DynamicResource InsetBrush}"
                                         BorderBrush="{DynamicResource InsetEdgeBrush}" BorderThickness="1">
                                     <TextBlock Text="{Binding Keys}" FontSize="11" Foreground="{DynamicResource AccentBlueLightBrush}" />
                                 </Border>

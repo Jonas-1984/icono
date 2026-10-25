@@ -47,7 +47,7 @@
                             <StackPanel x:Name="ItemRoot" Width="60" Margin="2" Cursor="Hand"
                                         MouseLeftButtonDown="LibraryItem_OnMouseLeftButtonDown" Tag="{Binding}">
                                 <Grid Width="56" Height="56">
-                                    <Border CornerRadius="4"
+                                    <Border CornerRadius="2"
                                             BorderBrush="{DynamicResource BorderLineBrush}" BorderThickness="1">
                                         <Image Source="{Binding Thumbnail}" Width="52" Height="52" />
                                     </Border>

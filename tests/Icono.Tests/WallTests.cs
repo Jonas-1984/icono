@@ -137,3 +137,36 @@ public class WallTests
         Assert.NotEqual(SKColors.White, bitmap.GetPixel(30, 0)); // the wall's top band is painted
     }
 }
+
+public class WallOutlineMergeTests
+{
+    private static Shape Wall(params (double X, double Y)[] points)
+    {
+        var wall = new Shape { Kind = ShapeKind.Wall, X = points[0].X, Y = points[0].Y, WallThickness = 16 };
+        wall.Points = points.Select(p => new CorePoint(p.X - points[0].X, p.Y - points[0].Y)).ToList();
+        PathBoundsCalculator.Recompute(wall);
+        return wall;
+    }
+
+    [Fact]
+    public void ABend_IsOneCleanOutline_WithoutASquareLeftAtTheInsideOfTheCorner()
+    {
+        using var outline = WallGeometry.BuildOutline(Wall((240, 40), (240, 180), (120, 180)));
+
+        // an L-shaped band has six corners; the stroker's overlap at the bend must not stay behind as extra edges
+        Assert.True(outline.PointCount <= 7, $"the outline has {outline.PointCount} points");
+        Assert.True(outline.Contains(236, 176));
+    }
+
+    [Fact]
+    public void AnEndThatRunsOntoItsOwnWall_IsMergedIntoOneOutline()
+    {
+        using var outline = WallGeometry.BuildOutline(
+            Wall((0, 0), (200, 0), (200, 140), (0, 140), (0, 0), (100, 0), (100, 90)));
+
+        // the band of the last segment ends inside the first one: one outline, the end cap inside the wall is not a line of its own
+        Assert.True(outline.Contains(100, 8));
+        Assert.True(outline.Contains(100, 80));
+        Assert.False(outline.Contains(50, 70)); // inside the room
+    }
+}

@@ -340,7 +340,7 @@
                                     </ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Width="26" Height="26" Margin="2" CornerRadius="4"
+                                            <Border Width="26" Height="26" Margin="2" CornerRadius="2"
                                                     BorderBrush="{DynamicResource BorderLineBrush}" BorderThickness="1"
                                                     Background="{Binding}" Cursor="Hand"
                                                     MouseLeftButtonDown="FillSwatch_OnMouseLeftButtonDown" />
@@ -375,7 +375,7 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border x:Name="Cell" Margin="3" Padding="4,6,4,4" CornerRadius="12" Cursor="Hand"
+                                        <Border x:Name="Cell" Margin="3" Padding="4,6,4,4" CornerRadius="6" Cursor="Hand"
                                                 Background="{DynamicResource RaisedBrush}"
                                                 BorderBrush="{DynamicResource RaisedEdgeBrush}" BorderThickness="1"
                                                 ToolTip="{Binding ToolTip}" Tag="{Binding}"
@@ -780,6 +780,9 @@
                                       ToolTip="Where the dimension lines run: inside the plan (in the room), outside the plan, or automatically. A single dimension can still be put on the other side in the DIMENSION card."
                                       SelectionChanged="WallPlacementComboBox_OnSelectionChanged" />
 
+                            <Button Content="Join selected walls into one" Style="{StaticResource PanelKeyButtonStyle}" Margin="6,2,6,4"
+                                    ToolTip="Select two walls (click one, Shift+click the other) and make them one wall. The nearest ends are joined; when they do not touch a new wall bridges the gap, and walls in one line become one straight wall."
+                                    Click="WallJoinButton_OnClick" />
                             <Button Content="Merge straight parts" Style="{StaticResource PanelKeyButtonStyle}" Margin="6,2,6,4"
                                     ToolTip="Walls that run on in one line become one wall. To make a bend straight, drag its corner onto the line between its neighbours (it snaps), or right-click the corner and choose Straighten Corner."
                                     Click="WallMergeButton_OnClick" />
@@ -995,7 +998,7 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Width="25" Height="25" Margin="2" CornerRadius="4"
+                                        <Border Width="25" Height="25" Margin="2" CornerRadius="2"
                                                 BorderBrush="{DynamicResource BorderLineBrush}" BorderThickness="1"
                                                 Background="{Binding Preview}" Cursor="Hand" ToolTip="{Binding Name}"
                                                 Tag="{Binding}" MouseLeftButtonDown="BorderPreset_OnMouseLeftButtonDown" />
@@ -1237,7 +1240,7 @@
                                                     <ColumnDefinition Width="Auto" />
                                                     <ColumnDefinition Width="Auto" />
                                                 </Grid.ColumnDefinitions>
-                                                <Border Grid.Column="0" Width="14" Height="14" CornerRadius="3"
+                                                <Border Grid.Column="0" Width="14" Height="14" CornerRadius="1.5"
                                                         BorderBrush="{DynamicResource BorderLineBrush}" BorderThickness="1"
                                                         Background="{Binding AccentBrush}" Cursor="Hand" Tag="{Binding Layer}"
                                                         ToolTip="Layer color" MouseLeftButtonDown="LayerAccentSwatch_OnMouseLeftButtonDown" />
@@ -1304,7 +1307,7 @@
                                                                     <ColumnDefinition Width="*" />
                                                                     <ColumnDefinition Width="Auto" />
                                                                 </Grid.ColumnDefinitions>
-                                                                <Border Grid.Column="0" Width="10" Height="10" CornerRadius="2"
+                                                                <Border Grid.Column="0" Width="10" Height="10" CornerRadius="1"
                                                                         Background="{Binding FillBrush}" />
                                                                 <TextBox Grid.Column="1" Margin="6,0,0,0" FontSize="10"
                                                                          Foreground="{DynamicResource MutedTextBrush}"
@@ -1340,7 +1343,7 @@
                             </ListBox>
                             <Popup x:Name="LayerAccentColorPopup" Placement="Bottom" StaysOpen="False" AllowsTransparency="True">
                                 <Border Background="{DynamicResource PanelBackgroundBrush}" BorderBrush="{DynamicResource BorderLineBrush}"
-                                        BorderThickness="1" CornerRadius="6" Padding="6">
+                                        BorderThickness="1" CornerRadius="3" Padding="6">
                                     <ItemsControl x:Name="LayerAccentColorSwatchList">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>
@@ -1349,7 +1352,7 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Border Width="22" Height="22" Margin="2" CornerRadius="4"
+                                                <Border Width="22" Height="22" Margin="2" CornerRadius="2"
                                                         BorderBrush="{DynamicResource BorderLineBrush}" BorderThickness="1"
                                                         Background="{Binding}" Cursor="Hand"
                                                         MouseLeftButtonDown="LayerAccentColorSwatch_OnMouseLeftButtonDown" />

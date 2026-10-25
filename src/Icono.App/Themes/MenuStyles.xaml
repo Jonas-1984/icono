@@ -24,7 +24,7 @@
                     <Border Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="12"
+                            CornerRadius="6"
                             SnapsToDevicePixels="True">
                         <!-- Flipping the ScrollViewer's flow direction moves its vertical scrollbar to the left edge
                              (the user's request); the inner panel is flipped back so item text still reads left-to-right. -->
@@ -54,7 +54,7 @@
             <Setter.Value>
                 <ControlTemplate TargetType="MenuItem">
                     <Grid SnapsToDevicePixels="True">
-                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="8"
+                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="4"
                                 Padding="{TemplateBinding Padding}" Margin="0,1">
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -82,10 +82,10 @@
                                AllowsTransparency="True" Focusable="False" PopupAnimation="Fade">
                             <Grid Margin="2,0,14,16" MinWidth="190">
                                 <!-- shadow on a separate backdrop so the menu text is never run through the effect -->
-                                <Border Background="{DynamicResource PopupSurfaceBrush}" CornerRadius="12"
+                                <Border Background="{DynamicResource PopupSurfaceBrush}" CornerRadius="6"
                                         Effect="{DynamicResource RaisedDarkShadow}" />
                                 <Border Background="{DynamicResource PopupSurfaceBrush}" BorderBrush="{DynamicResource GlassEdgeBrush}"
-                                        BorderThickness="1" CornerRadius="12" Padding="5" SnapsToDevicePixels="True">
+                                        BorderThickness="1" CornerRadius="6" Padding="5" SnapsToDevicePixels="True">
                                     <StackPanel IsItemsHost="True" Grid.IsSharedSizeScope="True"
                                                 KeyboardNavigation.DirectionalNavigation="Cycle" />
                                 </Border>

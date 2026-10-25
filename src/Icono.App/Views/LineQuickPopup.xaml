@@ -6,9 +6,9 @@
          and the shape of both line ends. Same glass surface as the menus. -->
     <Grid Margin="0,0,10,12" MouseDown="Card_OnMouseDown" MouseUp="Card_OnMouseDown">
     <!-- shadow on a separate backdrop so the card's text is never run through the effect -->
-    <Border Background="{DynamicResource PopupSurfaceBrush}" CornerRadius="14" Effect="{DynamicResource RaisedDarkShadow}" />
+    <Border Background="{DynamicResource PopupSurfaceBrush}" CornerRadius="7" Effect="{DynamicResource RaisedDarkShadow}" />
     <Border Background="{DynamicResource PopupSurfaceBrush}" BorderBrush="{DynamicResource GlassEdgeBrush}"
-            BorderThickness="1" CornerRadius="14" Padding="12,10,12,12" SnapsToDevicePixels="True">
+            BorderThickness="1" CornerRadius="7" Padding="12,10,12,12" SnapsToDevicePixels="True">
         <StackPanel Width="188">
             <UniformGrid Rows="1" Columns="4" HorizontalAlignment="Center">
                 <ToggleButton x:Name="StraightToggle" Tag="Straight" ToolTip="Straight line" Click="StyleToggle_OnClick"

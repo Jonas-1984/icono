@@ -30,6 +30,7 @@ public partial class CanvasHostView : UserControl
 
     private bool _isPlacing;
     private Point _placeStart;
+    private bool _placeStartSnapped;
     private Shape? _pendingShape;
 
     private bool _isMovingSelection;
@@ -228,6 +229,11 @@ public partial class CanvasHostView : UserControl
             AddItem("Merge Straight Parts (walls in one line become one wall)", _context.MergeStraightWallParts);
         }
 
+        if (selected.Count >= 2 && selected.All(s => s is { Kind: ShapeKind.Wall } && !IsLocked(s)))
+        {
+            AddItem("Join Walls into One", _context.JoinSelectedWalls);
+        }
+
         if (selected.Count == 1 && selected[0] is { Kind: ShapeKind.Wall, WallClosed: false, Points.Count: >= 3 } && !IsLocked(selected[0]))
         {
             AddItem("Close Room (join last corner to first)", _context.CloseSelectedWalls);
@@ -293,6 +299,7 @@ public partial class CanvasHostView : UserControl
 
         _isPathDrawing = false;
         _pendingPathShape = null;
+        ClearWallTyped();
         _context?.RequestRedraw();
     }
 
@@ -315,6 +322,7 @@ public partial class CanvasHostView : UserControl
 
         _isPathDrawing = false;
         _pendingPathShape = null;
+        ClearWallTyped();
 
         if (points.Count < 2 || (shape.Kind == ShapeKind.Dimension && points.Count < DimensionPointsNeeded(shape.DimKind)))
         {
@@ -380,6 +388,7 @@ public partial class CanvasHostView : UserControl
 
     private IReadOnlyList<ObjectSnapGuide> _snapGuides = [];
     private IReadOnlyList<VertexGuide> _vertexGuides = [];
+    private SKPoint? _vertexCorner;
 
     /// <summary>Snaps a frame that is being moved to the faces of walls and the edges of other shapes (Alt holds the snap off) and
     /// remembers the lines to show.</summary>
@@ -405,10 +414,12 @@ public partial class CanvasHostView : UserControl
 
     private void ClearSnapGuides()
     {
-        if (_snapGuides.Count > 0 || _vertexGuides.Count > 0)
+        if (_snapGuides.Count > 0 || _vertexGuides.Count > 0 || _vertexCorner is not null || _pointSnap is not null)
         {
             _snapGuides = [];
             _vertexGuides = [];
+            _vertexCorner = null;
+            _pointSnap = null;
             SkiaCanvas.InvalidateVisual();
         }
     }
@@ -416,6 +427,13 @@ public partial class CanvasHostView : UserControl
     /// <summary>The guides of a wall corner that is dragged: the straight line through its neighbours, or the lines it lines up on.</summary>
     private void DrawVertexGuides(SKCanvas canvas, float scaleX, float scaleY)
     {
+        if (_vertexCorner is { } corner)
+        {
+            // the corner lands exactly on another corner: a box like the one of the wall tool
+            using var mark = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 2f, Color = MeasureOrange };
+            canvas.DrawRect(corner.X * scaleX - 7, corner.Y * scaleY - 7, 14, 14, mark);
+        }
+
         if (_vertexGuides.Count == 0)
         {
             return;
@@ -503,6 +521,7 @@ public partial class CanvasHostView : UserControl
         if (e.PropertyName == nameof(EditorContext.ActiveTool))
         {
             Cursor = _context?.ActiveTool == ActiveTool.Match ? Cursors.Cross : null;
+            ClearSnapGuides();
         }
     }
 
@@ -518,8 +537,6 @@ public partial class CanvasHostView : UserControl
 
     private static readonly SKColor MeasureOrange = new(0xF3, 0x9C, 0x12);
 
-    private MeasureSnap? _measureSnap;
-
     private Point? _rulerStart;
     private Point _rulerEnd;
     private bool _rulerFrozen;
@@ -528,18 +545,8 @@ public partial class CanvasHostView : UserControl
     private Shape? _gapSecond;
     private Shape? _gapPreview;
 
-    /// <summary>Corner, middle, centre or edge of any shape or wall near the pointer (the point snaps there); remembered for the marker.</summary>
-    private Point? SnapToMeasurable(Point point)
-    {
-        if (_context is null || WallSnappingSuspended)
-        {
-            _measureSnap = null;
-            return null;
-        }
-
-        _measureSnap = MeasureSnapper.Find(_context.Document, new SKPoint((float)point.X, (float)point.Y), AnchorSnapDip / Zoom);
-        return _measureSnap is null ? null : new Point(_measureSnap.Point.X, _measureSnap.Point.Y);
-    }
+    /// <summary>The measure and dimension tools snap to the points of the objects like every other tool.</summary>
+    private Point? SnapToMeasurable(Point point) => SnapToPoints(point, PointSnapReference());
 
     /// <summary>Cancels a ruler measurement or a half-made gap dimension. True when there was something to cancel.</summary>
     public bool CancelMeasure()
@@ -548,7 +555,7 @@ public partial class CanvasHostView : UserControl
         _rulerStart = null;
         _rulerFrozen = false;
         ResetGap();
-        _measureSnap = null;
+        _pointSnap = null;
         if (had)
         {
             SkiaCanvas.InvalidateVisual();
@@ -722,55 +729,6 @@ public partial class CanvasHostView : UserControl
             return;
         }
 
-        var showSnap = _measureSnap is not null &&
-            (IsMeasureTool || (_isPathDrawing && _pendingPathShape is { Kind: ShapeKind.Dimension }) ||
-             (_context.ActiveTool == ActiveTool.PathDraw && _context.SelectedShapeKind == ShapeKind.Dimension));
-        if (showSnap)
-        {
-            var snap = _measureSnap!;
-            using var mark = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 2f, Color = MeasureOrange };
-            var x = snap.Point.X * scaleX;
-            var y = snap.Point.Y * scaleY;
-            switch (snap.Kind)
-            {
-                case MeasureSnapKind.Corner:
-                    canvas.DrawRect(x - 6, y - 6, 12, 12, mark);
-                    break;
-                case MeasureSnapKind.Midpoint:
-                {
-                    using var triangle = new SKPath();
-                    triangle.MoveTo(x, y - 7);
-                    triangle.LineTo(x + 7, y + 6);
-                    triangle.LineTo(x - 7, y + 6);
-                    triangle.Close();
-                    canvas.DrawPath(triangle, mark);
-                    break;
-                }
-
-                case MeasureSnapKind.Center:
-                    canvas.DrawCircle(x, y, 6, mark);
-                    canvas.DrawCircle(x, y, 1.5f, mark);
-                    break;
-                case MeasureSnapKind.Edge:
-                    canvas.DrawLine(x - 5, y - 5, x + 5, y + 5, mark);
-                    canvas.DrawLine(x - 5, y + 5, x + 5, y - 5, mark);
-                    break;
-                default:
-                    canvas.DrawCircle(x, y, 5, mark);
-                    break;
-            }
-
-            var name = snap.Kind switch
-            {
-                MeasureSnapKind.Corner => "corner",
-                MeasureSnapKind.Midpoint => "midpoint",
-                MeasureSnapKind.Center => "centre",
-                MeasureSnapKind.Edge => "on edge",
-                _ => "point",
-            };
-            DrawPill(canvas, name, x + 14, y - 30);
-        }
-
         if (_context.ActiveTool == ActiveTool.Measure && _rulerStart is { } start)
         {
             var end = _rulerEnd;
@@ -874,7 +832,8 @@ public partial class CanvasHostView : UserControl
         var forceAxis = !suspended && Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
         var snapOptions = suspended ? new WallSnapOptions { Enabled = false } : options;
         return WallSnapper.Snap(
-            new SKPoint((float)raw.X, (float)raw.Y), previous, placed, _context.Document, snapOptions, AnchorSnapDip / Zoom, forceAxis);
+            new SKPoint((float)raw.X, (float)raw.Y), previous, placed, _context.Document, snapOptions, AnchorSnapDip / Zoom, forceAxis,
+            _pendingPathShape is { Kind: ShapeKind.Wall } drawing ? drawing.WallThickness : new Shape { Kind = ShapeKind.Wall }.WallThickness);
     }
 
     /// <summary>While drawing a wall: jump to the start point when it is near (a click there closes the room), otherwise apply
@@ -895,14 +854,27 @@ public partial class CanvasHostView : UserControl
             placed.RemoveAt(placed.Count - 1); // the moving ghost point
         }
 
+        // a point of an object (end point, crossing, foot of a perpendicular ...) comes first, then the direction helpers of the wall tool
+        if (SnapToPoints(raw, placed.Count > 0 ? placed[^1] : null) is { } onPoint)
+        {
+            _wallSnap = null;
+            return onPoint;
+        }
+
         var result = RunWallSnap(raw, placed);
         _wallSnap = result;
         return result.Snapped ? new Point(result.Point.X, result.Point.Y) : fallback;
     }
 
-    /// <summary>The first point of a wall: corners of other walls, midpoints, alignment.</summary>
+    /// <summary>The first point of a wall: the points of the objects, else alignment with other corners.</summary>
     private Point SnapWallFirstPoint(Point raw)
     {
+        if (SnapToPoints(raw) is { } onPoint)
+        {
+            _wallSnap = null;
+            return onPoint;
+        }
+
         var result = RunWallSnap(raw, []);
         _wallSnap = result;
         return result.Snapped ? new Point(result.Point.X, result.Point.Y) : raw;
@@ -1000,7 +972,7 @@ public partial class CanvasHostView : UserControl
             var color = guide.Kind switch
             {
                 SnapKind.Align => green,
-                SnapKind.EqualLength or SnapKind.RoundLength => orange,
+                SnapKind.EqualLength => orange,
                 _ => blue,
             };
             using var line = new SKPaint
@@ -1010,7 +982,7 @@ public partial class CanvasHostView : UserControl
             };
             canvas.DrawLine(guide.From.X * scaleX, guide.From.Y * scaleY, guide.To.X * scaleX, guide.To.Y * scaleY, line);
 
-            if (guide.Kind is SnapKind.EqualLength or SnapKind.RoundLength)
+            if (guide.Kind == SnapKind.EqualLength)
             {
                 // small end ticks mark the length that was matched
                 using var tick = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 2f, Color = color };
@@ -1028,31 +1000,7 @@ public partial class CanvasHostView : UserControl
 
         var px = snap.Point.X * scaleX;
         var py = snap.Point.Y * scaleY;
-        if (snap.PointKind is SnapKind.Corner or SnapKind.Midpoint or SnapKind.OnWall)
-        {
-            using var mark = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 2f, Color = snap.PointKind == SnapKind.Corner ? orange : green };
-            if (snap.PointKind == SnapKind.Corner)
-            {
-                canvas.DrawRect(px - 6, py - 6, 12, 12, mark);
-            }
-            else if (snap.PointKind == SnapKind.Midpoint)
-            {
-                using var triangle = new SKPath();
-                triangle.MoveTo(px, py - 7);
-                triangle.LineTo(px + 7, py + 6);
-                triangle.LineTo(px - 7, py + 6);
-                triangle.Close();
-                canvas.DrawPath(triangle, mark);
-            }
-            else
-            {
-                canvas.DrawCircle(px, py, 6, mark);
-                canvas.DrawLine(px - 4, py - 4, px + 4, py + 4, mark);
-                canvas.DrawLine(px - 4, py + 4, px + 4, py - 4, mark);
-            }
-        }
-
-        if (snap.Label.Length > 0)
+        if (snap.Label.Length > 0 && _wallTyped.Length == 0)
         {
             DrawPill(canvas, snap.Label, px + 14, py - 34);
         }
@@ -1062,6 +1010,7 @@ public partial class CanvasHostView : UserControl
     {
         DrawDimensionHighlight(canvas, scaleX, scaleY);
         DrawWallSnap(canvas, scaleX, scaleY);
+        DrawWallLengthPrompt(canvas, scaleX, scaleY);
         using var ring = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 1.8f, Color = AccentColor };
         using var hot = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill, Color = AccentColor };
 
@@ -1119,13 +1068,13 @@ public partial class CanvasHostView : UserControl
 
     private void ClearAnchorProbe()
     {
-        if (_anchorProbe is null && _snappedAnchor is null && _wallSnap is null && _measureSnap is null)
+        if (_anchorProbe is null && _snappedAnchor is null && _wallSnap is null && _pointSnap is null)
         {
             return;
         }
 
         _wallSnap = null;
-        _measureSnap = null;
+        _pointSnap = null;
 
         _anchorProbe = null;
         _snappedAnchor = null;
@@ -1289,6 +1238,7 @@ public partial class CanvasHostView : UserControl
         DrawConnectionPoints(canvas, scaleX, scaleY);
         DrawWallHints(canvas, scaleX, scaleY);
         DrawMeasure(canvas, scaleX, scaleY);
+        DrawPointSnap(canvas, scaleX, scaleY);
         DrawMatchSource(canvas, scaleX, scaleY);
         DrawSnapGuides(canvas, scaleX, scaleY);
     }
@@ -2249,16 +2199,13 @@ public partial class CanvasHostView : UserControl
             return;
         }
 
-        if (TwoPointLineKinds.Contains(_context.SelectedShapeKind))
-        {
-            // A line or arrow starting near a shape's connection point clings to it.
-            point = TryAnchorSnap(point, null) ?? point;
-        }
-
-        if (!TwoPointLineKinds.Contains(_context.SelectedShapeKind))
-        {
-            point = SnapObjectPoint(point, []);
-        }
+        // A line or arrow starting near a shape's connection point clings to it; any start lands on the points of the objects around it
+        // (end points, middles, centres, crossings ...), else on the edges and faces for a shape.
+        var isLine = TwoPointLineKinds.Contains(_context.SelectedShapeKind);
+        var anchored = isLine ? TryAnchorSnap(point, null) : null;
+        var onPoint = anchored is null ? SnapToPoints(point) : null;
+        _placeStartSnapped = anchored is not null || onPoint is not null;
+        point = anchored ?? onPoint ?? (isLine ? point : SnapObjectPoint(point, []));
 
         _isPlacing = true;
         _placeStart = point;
@@ -2457,7 +2404,8 @@ public partial class CanvasHostView : UserControl
 
         if (!_isPathDrawing || _pendingPathShape is null)
         {
-            point = TryAnchorSnap(point, null) ?? point;
+            var anchored = TryAnchorSnap(point, null);
+            point = anchored ?? point;
             if (_context.SelectedShapeKind == ShapeKind.Wall)
             {
                 point = SnapWallFirstPoint(point);
@@ -2465,6 +2413,10 @@ public partial class CanvasHostView : UserControl
             else if (_context.SelectedShapeKind == ShapeKind.Dimension)
             {
                 point = SnapToMeasurable(point) ?? point;
+            }
+            else if (anchored is null)
+            {
+                point = SnapToPoints(point) ?? point;
             }
 
             _isPathDrawing = true;
@@ -2508,6 +2460,7 @@ public partial class CanvasHostView : UserControl
             return;
         }
 
+        ClearWallTyped();
         var list = _pendingPathShape.Points!.ToList();
         list.Add(list[^1]);
         _pendingPathShape.Points = list;
@@ -3095,6 +3048,11 @@ public partial class CanvasHostView : UserControl
                 SkiaCanvas.InvalidateVisual();
         }
 
+        if (!IsInsideQuickPopup(e.OriginalSource))
+        {
+            UpdatePointSnapHover(ToDocumentSpace(e.GetPosition(SkiaCanvas)));
+        }
+
         if (IsLineToolActive && !_isPlacing && !_isPathDrawing && !IsInsideQuickPopup(e.OriginalSource))
         {
             // Hovering with a line tool: show the connection points of nearby shapes so the user sees where it will cling.
@@ -3141,7 +3099,8 @@ public partial class CanvasHostView : UserControl
 
             if (_pendingShape.Points is not null)
             {
-                point = TryAnchorSnap(point, _pendingShape) ?? SnapObjectPoint(point, []);
+                var anchored = TryAnchorSnap(point, _pendingShape);
+                point = anchored ?? SnapToPoints(point, PointSnapReference()) ?? SnapObjectPoint(point, []);
                 // Re-anchor to the fixed drag-start point every frame (not the previous frame's
                 // possibly-recomputed X/Y) so Recompute's absolute-position math never drifts.
                 _pendingShape.X = _placeStart.X;
@@ -3151,15 +3110,19 @@ public partial class CanvasHostView : UserControl
             }
             else
             {
-                point = SnapObjectPoint(point, []);
+                var onPoint = SnapToPoints(point);
+                point = onPoint ?? SnapObjectPoint(point, []);
+
+                // a corner that landed on a point of another object is not moved to the grid
+                double Grid(double value) => onPoint is not null || _placeStartSnapped ? value : SnapIfEnabled(value);
 
                 // the drawn outline follows the mouse (and so snaps to walls where you see it), the frame is derived from it
                 var outline = ShapeOutline.FrameForBox(
                     _pendingShape,
-                    SnapIfEnabled(Math.Min(_placeStart.X, point.X)),
-                    SnapIfEnabled(Math.Min(_placeStart.Y, point.Y)),
-                    SnapIfEnabled(Math.Abs(point.X - _placeStart.X)),
-                    SnapIfEnabled(Math.Abs(point.Y - _placeStart.Y)));
+                    Grid(Math.Min(_placeStart.X, point.X)),
+                    Grid(Math.Min(_placeStart.Y, point.Y)),
+                    Grid(Math.Abs(point.X - _placeStart.X)),
+                    Grid(Math.Abs(point.Y - _placeStart.Y)));
                 _pendingShape.X = outline.X;
                 _pendingShape.Y = outline.Y;
                 _pendingShape.Width = outline.W;
@@ -3174,11 +3137,15 @@ public partial class CanvasHostView : UserControl
         {
             var point = ToDocumentSpace(e.GetPosition(SkiaCanvas));
             var rawPoint = point;
-            point = TryAnchorSnap(point, null) ?? new Point(SnapIfEnabled(point.X), SnapIfEnabled(point.Y));
+            var anchored = TryAnchorSnap(point, null);
+            var onPoint = anchored is null && _pendingPathShape.Kind is not (ShapeKind.Wall or ShapeKind.Dimension)
+                ? SnapToPoints(rawPoint, PointSnapReference())
+                : null;
+            point = anchored ?? onPoint ?? new Point(SnapIfEnabled(point.X), SnapIfEnabled(point.Y));
             _wallClosePreview = false;
             if (_pendingPathShape.Kind == ShapeKind.Wall)
             {
-                point = SnapWallDrawPoint(rawPoint, point, _pendingPathShape);
+                point = WithTypedLength(_pendingPathShape, SnapWallDrawPoint(rawPoint, point, _pendingPathShape));
             }
             else if (_pendingPathShape.Kind == ShapeKind.Dimension)
             {
@@ -3198,17 +3165,23 @@ public partial class CanvasHostView : UserControl
             var point = ToDocumentSpace(e.GetPosition(SkiaCanvas));
             var rawPoint = point;
             var isEnd = draggedIndex == 0 || draggedIndex == _pointEditShape.Points!.Count - 1;
-            point = (isEnd ? TryAnchorSnap(point, _pointEditShape) : null) ?? new Point(SnapIfEnabled(point.X), SnapIfEnabled(point.Y));
+            var anchored = isEnd ? TryAnchorSnap(point, _pointEditShape) : null;
+
+            // a point lands on the points of the other objects: the end of a line on the corner of a wall
+            var onPoint = anchored is null ? SnapToPoints(rawPoint, PointSnapReference(), [_pointEditShape]) : null;
+            point = anchored ?? onPoint ?? new Point(SnapIfEnabled(point.X), SnapIfEnabled(point.Y));
 
             // a corner of a wall snaps onto the line between its neighbours (so two walls become straight) and lines up with other corners
             _vertexGuides = [];
-            if (_pointEditShape.Kind == ShapeKind.Wall && _context is { WallSnap.Enabled: true } && !Keyboard.Modifiers.HasFlag(ModifierKeys.Alt))
+            _vertexCorner = null;
+            if (onPoint is null && _pointEditShape.Kind == ShapeKind.Wall && _context is { WallSnap.Enabled: true } && !Keyboard.Modifiers.HasFlag(ModifierKeys.Alt))
             {
                 var snap = WallStraightener.Snap(_context.Document, _pointEditShape, draggedIndex, new SKPoint((float)rawPoint.X, (float)rawPoint.Y), 8 / Zoom);
                 if (snap.Snapped)
                 {
                     point = new Point(snap.Point.X, snap.Point.Y);
                     _vertexGuides = snap.Guides;
+                    _vertexCorner = snap.OnCorner ? snap.Point : null;
                 }
             }
 
@@ -3225,7 +3198,7 @@ public partial class CanvasHostView : UserControl
             var point = ToDocumentSpace(e.GetPosition(SkiaCanvas));
             if (_resizeRotation == 0)
             {
-                point = SnapObjectPoint(point, [_resizeShape]);
+                point = SnapToPoints(point, null, [_resizeShape]) ?? SnapObjectPoint(point, [_resizeShape]);
             }
 
             ApplyResize(point);
@@ -3292,7 +3265,15 @@ public partial class CanvasHostView : UserControl
                 shape.Y = SnapIfEnabled(shape.Y);
             }
 
-            // the whole selection snaps as one frame, so a group keeps its shape
+            // the selection puts its own points (corners, middles, centres) on points of other objects; failing that it lines up with their
+            // edges and faces as one frame, so a group keeps its shape
+            if (SnapSelectionToPoints())
+            {
+                _snapGuides = [];
+                _context.RequestRedraw();
+                return;
+            }
+
             var snap = SnapFrame(ComputeGroupBounds(_context.SelectedShapes), _context.SelectedShapes);
             if (snap.Dx != 0 || snap.Dy != 0)
             {
@@ -3551,6 +3532,11 @@ public partial class CanvasHostView : UserControl
                 if (_pointEditShape.Kind == ShapeKind.Dimension)
                 {
                     DimensionRouter.AttachPoints(_context.Document, _pointEditShape);
+                }
+
+                if (_pointEditShape.Kind == ShapeKind.Wall && WallEditor.CloseWhenEndsMeet(_pointEditShape))
+                {
+                    _context.Notify("The two ends meet: the wall is a closed room now.");
                 }
 
                 var after = ShapeSnapshot.Capture(_pointEditShape);

@@ -10,7 +10,7 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ToggleButton">
                     <Border x:Name="Bg" Background="{DynamicResource InsetBrush}"
-                            BorderBrush="{DynamicResource InsetEdgeBrush}" BorderThickness="1" CornerRadius="9">
+                            BorderBrush="{DynamicResource InsetEdgeBrush}" BorderThickness="1" CornerRadius="4.5">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -38,7 +38,7 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ComboBoxItem">
                     <Border x:Name="Bg" Background="Transparent" Padding="{TemplateBinding Padding}"
-                            CornerRadius="7" Margin="2,1">
+                            CornerRadius="3.5" Margin="2,1">
                         <ContentPresenter />
                     </Border>
                     <ControlTemplate.Triggers>
@@ -79,11 +79,11 @@
                                AllowsTransparency="True" Focusable="False" PopupAnimation="Fade">
                             <Grid Margin="0,4,8,8" MinWidth="{Binding ActualWidth, ElementName=ToggleButton}" MaxHeight="220">
                                 <!-- shadow on a separate backdrop so the item text is never run through the effect -->
-                                <Border Background="{DynamicResource PopupSurfaceBrush}" CornerRadius="10"
+                                <Border Background="{DynamicResource PopupSurfaceBrush}" CornerRadius="5"
                                         Effect="{DynamicResource RaisedDarkShadow}" />
                                 <Border Background="{DynamicResource PopupSurfaceBrush}"
                                         BorderBrush="{DynamicResource GlassEdgeBrush}" BorderThickness="1"
-                                        CornerRadius="10" Padding="3" SnapsToDevicePixels="True">
+                                        CornerRadius="5" Padding="3" SnapsToDevicePixels="True">
                                     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                                         <ItemsPresenter />
                                     </ScrollViewer>

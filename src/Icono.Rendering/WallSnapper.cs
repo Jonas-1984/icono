@@ -12,11 +12,6 @@ public sealed class WallSnapOptions
     /// <summary>Snap to the horizontal and vertical direction from the previous point.</summary>
     public bool Axis { get; set; } = true;
 
-    /// <summary>Snap to steps of <see cref="AngleStepDegrees"/> (15 degrees: 0, 15, 30, 45, ...).</summary>
-    public bool AngleSteps { get; set; }
-
-    public double AngleStepDegrees { get; set; } = 15;
-
     /// <summary>Snap to walls running parallel or at a right angle to an existing wall.</summary>
     public bool Parallel { get; set; } = true;
 
@@ -25,35 +20,15 @@ public sealed class WallSnapOptions
 
     /// <summary>Snap the length of the new segment to the length of another segment.</summary>
     public bool EqualLength { get; set; } = true;
-
-    /// <summary>Round the length of the new segment to a multiple of <see cref="LengthStepPx"/>.</summary>
-    public bool RoundLength { get; set; }
-
-    /// <summary>Step for <see cref="RoundLength"/> in px (default 5 cm at 96 DPI).</summary>
-    public double LengthStepPx { get; set; } = 5 / 2.54 * 96;
-
-    /// <summary>Snap to the corners and ends of other walls.</summary>
-    public bool Endpoints { get; set; } = true;
-
-    /// <summary>Snap to the middle of other wall segments.</summary>
-    public bool Midpoints { get; set; } = true;
-
-    /// <summary>Snap to the nearest place on another wall's centre line.</summary>
-    public bool OnWall { get; set; }
 }
 
 public enum SnapKind
 {
     None,
-    Corner,
-    Midpoint,
-    OnWall,
     Axis,
-    Angle,
     Parallel,
     Align,
     EqualLength,
-    RoundLength,
 }
 
 /// <summary>A helper line or mark shown while snapping.</summary>
@@ -84,9 +59,11 @@ public static class WallSnapper
     /// <param name="ownPoints">The placed points of the wall being drawn (including <paramref name="previous"/>).</param>
     /// <param name="tolerance">How near (in document px) something has to be to snap.</param>
     /// <param name="forceAxis">Shift held: lock to the horizontal or vertical direction whatever the distance.</param>
+    /// <param name="wallThickness">Thickness of the wall being drawn: with it the faces of the new wall can line up with the faces of the
+    /// walls that run horizontally or vertically (side by side in one row, or stacked flush). 0 lines up the centre line only.</param>
     public static WallSnapResult Snap(
         SKPoint cursor, SKPoint? previous, IReadOnlyList<SKPoint> ownPoints, Document document,
-        WallSnapOptions options, double tolerance, bool forceAxis = false)
+        WallSnapOptions options, double tolerance, bool forceAxis = false, double wallThickness = 0)
     {
         var result = new WallSnapResult { Point = cursor };
         var tol = (float)tolerance;
@@ -124,60 +101,17 @@ public static class WallSnapper
             return Finish(result, previous);
         }
 
-        // ---- 1. points: corners, midpoints, on a wall ----------------------------------------------------
-        if (options.Enabled)
-        {
-            if (options.Endpoints && Nearest(vertices, cursor, tol) is { } corner)
-            {
-                result.Point = corner;
-                result.Snapped = true;
-                result.PointKind = SnapKind.Corner;
-                return Finish(result, previous);
-            }
-
-            if (options.Midpoints)
-            {
-                var middles = segments.Select(s => new SKPoint((s.A.X + s.B.X) / 2, (s.A.Y + s.B.Y) / 2)).ToList();
-                if (Nearest(middles, cursor, tol) is { } middle)
-                {
-                    result.Point = middle;
-                    result.Snapped = true;
-                    result.PointKind = SnapKind.Midpoint;
-                    return Finish(result, previous);
-                }
-            }
-
-            if (options.OnWall)
-            {
-                SKPoint? bestOn = null;
-                var bestDistance = tol;
-                foreach (var (a, b) in segments)
-                {
-                    var p = Project(a, b, cursor);
-                    var d = Distance(p, cursor);
-                    if (d <= bestDistance)
-                    {
-                        bestDistance = d;
-                        bestOn = p;
-                    }
-                }
-
-                if (bestOn is { } onWall)
-                {
-                    result.Point = onWall;
-                    result.Snapped = true;
-                    result.PointKind = SnapKind.OnWall;
-                    return Finish(result, previous);
-                }
-            }
-        }
-
         // points the new wall can line up with: corners of walls, its own points and the corners / centre of other shapes (only built when
         // alignment is on)
         var alignPoints = new List<SKPoint>();
         if (options.Enabled && options.Align)
         {
             alignPoints.AddRange(vertices);
+            if (wallThickness > 0)
+            {
+                alignPoints.AddRange(FaceLines(walls, wallThickness));
+            }
+
             foreach (var shape in visible)
             {
                 if (shape.Points is null && shape.Kind is not (ShapeKind.Dimension or ShapeKind.DesignGrid))
@@ -248,15 +182,6 @@ public static class WallSnapper
                 foreach (var axis in Axes)
                 {
                     Consider(axis, SnapKind.Axis);
-                }
-            }
-
-            if (options.AngleSteps && options.AngleStepDegrees >= 1)
-            {
-                for (var degrees = 0.0; degrees < 360; degrees += options.AngleStepDegrees)
-                {
-                    var rad = degrees * Math.PI / 180;
-                    Consider(new SKPoint((float)Math.Cos(rad), (float)Math.Sin(rad)), SnapKind.Angle);
                 }
             }
 
@@ -331,17 +256,6 @@ public static class WallSnapper
                     }
                 }
 
-                if (target is null && options.RoundLength && options.LengthStepPx > 0.5)
-                {
-                    var step = (float)options.LengthStepPx;
-                    var rounded = MathF.Round(finalLength / step) * step;
-                    if (rounded > 1)
-                    {
-                        target = rounded;
-                        kind = SnapKind.RoundLength;
-                    }
-                }
-
                 if (target is { } wanted)
                 {
                     finalLength = wanted;
@@ -372,6 +286,45 @@ public static class WallSnapper
     private static readonly SKPoint[] Axes = [new(1, 0), new(-1, 0), new(0, 1), new(0, -1)];
 
     private static float Distance(SKPoint a, SKPoint b) => Geo.Distance(a, b);
+
+    /// <summary>For every horizontal or vertical wall segment, the lines the centre line of a new wall of <paramref name="thickness"/> must be
+    /// on for one of its faces to be flush with a face of that wall (in one row with it, or stacked against it). Each line is returned as
+    /// points at both ends of the segment, so the guide runs along the wall.</summary>
+    private static IEnumerable<SKPoint> FaceLines(IEnumerable<Shape> walls, double thickness)
+    {
+        var half = (float)thickness / 2;
+        foreach (var wall in walls)
+        {
+            var otherHalf = (float)wall.WallThickness / 2;
+            foreach (var (a, b) in WallGeometry.Segments(wall))
+            {
+                var horizontal = MathF.Abs(a.Y - b.Y) < 0.5f && MathF.Abs(a.X - b.X) > 1;
+                var vertical = MathF.Abs(a.X - b.X) < 0.5f && MathF.Abs(a.Y - b.Y) > 1;
+                if (!horizontal && !vertical)
+                {
+                    continue;
+                }
+
+                foreach (var face in new[] { -otherHalf, otherHalf })
+                {
+                    foreach (var shift in new[] { -half, half })
+                    {
+                        var offset = face + shift;
+                        if (horizontal)
+                        {
+                            yield return new SKPoint(a.X, a.Y + offset);
+                            yield return new SKPoint(b.X, b.Y + offset);
+                        }
+                        else
+                        {
+                            yield return new SKPoint(a.X + offset, a.Y);
+                            yield return new SKPoint(b.X + offset, b.Y);
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     private static SKPoint? Nearest(List<SKPoint> points, SKPoint cursor, float tolerance)
     {
@@ -512,15 +465,10 @@ public static class WallSnapper
     /// <summary>What a snap is called in the readout.</summary>
     public static string Describe(SnapKind kind) => kind switch
     {
-        SnapKind.Corner => "corner",
-        SnapKind.Midpoint => "midpoint",
-        SnapKind.OnWall => "on wall",
         SnapKind.Axis => "horizontal / vertical",
-        SnapKind.Angle => "angle step",
         SnapKind.Parallel => "parallel / perpendicular",
         SnapKind.Align => "aligned",
         SnapKind.EqualLength => "equal length",
-        SnapKind.RoundLength => "rounded",
         _ => string.Empty,
     };
 
@@ -537,7 +485,7 @@ public static class WallSnapper
         else
         {
             // with no start point only point snaps are named
-            result.Label = result.PointKind is SnapKind.Corner or SnapKind.Midpoint or SnapKind.OnWall or SnapKind.Align
+            result.Label = result.PointKind == SnapKind.Align
                 ? Describe(result.PointKind)
                 : string.Empty;
         }

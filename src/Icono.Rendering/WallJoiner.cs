@@ -225,8 +225,7 @@ public static class WallJoiner
                 continue;
             }
 
-            union.Simplify();
-            joins[walls[component.Max()].Wall].GroupOutline = union;
+            joins[walls[component.Max()].Wall].GroupOutline = WallGeometry.Merge(union);
         }
 
         return joins;

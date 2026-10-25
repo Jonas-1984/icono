@@ -59,7 +59,7 @@ public sealed class IconPager
             {
                 Width = 8,
                 Height = 8,
-                CornerRadius = new CornerRadius(4),
+                CornerRadius = new CornerRadius(2),
                 Margin = new Thickness(4, 0, 4, 0),
                 Cursor = System.Windows.Input.Cursors.Hand,
                 Background = i == _page ? ActiveDotBrush : InactiveDotBrush,

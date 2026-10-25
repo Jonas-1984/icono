@@ -10,9 +10,9 @@
         KeyDown="Window_OnKeyDown">
     <!-- Transparent outer window leaves room for the neumorphic drop shadows around the card. -->
     <Grid Margin="22">
-        <Border Style="{DynamicResource NeuShadowLightStyle}" CornerRadius="20" />
-        <Border Style="{DynamicResource NeuShadowDarkStyle}" CornerRadius="20" />
-        <Border CornerRadius="20" BorderThickness="1"
+        <Border Style="{DynamicResource NeuShadowLightStyle}" CornerRadius="10" />
+        <Border Style="{DynamicResource NeuShadowDarkStyle}" CornerRadius="10" />
+        <Border CornerRadius="10" BorderThickness="1"
                 Background="{DynamicResource WindowBackgroundBrush}"
                 BorderBrush="{DynamicResource WindowEdgeBrush}"
                 MouseLeftButtonDown="Card_OnMouseLeftButtonDown">
@@ -26,7 +26,7 @@
                 <TextBlock Text="Windows Icon Editor" HorizontalAlignment="Center" Margin="0,2,0,0"
                            Foreground="{DynamicResource AccentBlueMidBrush}" FontSize="13" />
 
-                <Border Margin="0,18,0,0" CornerRadius="14" Padding="14,10"
+                <Border Margin="0,18,0,0" CornerRadius="7" Padding="14,10"
                         Background="{DynamicResource InsetBrush}"
                         BorderBrush="{DynamicResource InsetEdgeBrush}" BorderThickness="1">
                     <StackPanel>

@@ -39,6 +39,27 @@
                     </WrapPanel>
                 </Border>
 
+                <Border x:Name="PointSnapCard" Style="{StaticResource CardBorderStyle}">
+                    <StackPanel>
+                        <Grid Style="{StaticResource CollapsibleCardHeaderStyle}" MouseLeftButtonDown="CardHeader_OnToggle">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="OBJECT SNAP (F3)" Style="{StaticResource CardHeaderTextStyle}" />
+                            <Path Grid.Column="1" Style="{StaticResource CardChevronPathStyle}" />
+                        </Grid>
+                        <StackPanel>
+                            <TextBlock Text="Every tool - lines, shapes, walls, dimensions, handles and moved objects - snaps to these points of all objects. A mark shows what was found. Hold Alt to snap off."
+                                       Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="12,2,12,6" />
+                            <CheckBox x:Name="PointSnapEnabledCheckBox" Content="Object snap on" Tag="Enabled" IsChecked="True" Click="PointSnapCheckBox_OnClick"
+                                      Foreground="{DynamicResource ForegroundTextBrush}" FontSize="11" Margin="10,2,6,4"
+                                      ToolTip="Master switch (F3). Hold Alt to snap off for one click." />
+                            <StackPanel x:Name="PointSnapList" Margin="10,0,6,8" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
                 <Border Style="{StaticResource CardBorderStyle}">
                     <StackPanel>
                         <Grid Style="{StaticResource CollapsibleCardHeaderStyle}" MouseLeftButtonDown="CardHeader_OnToggle">
@@ -46,14 +67,14 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="SNAP TO WALLS &amp; OBJECTS" Style="{StaticResource CardHeaderTextStyle}" />
+                            <TextBlock Grid.Column="0" Text="ALIGN WHILE MOVING" Style="{StaticResource CardHeaderTextStyle}" />
                             <Path Grid.Column="1" Style="{StaticResource CardChevronPathStyle}" />
                         </Grid>
                         <StackPanel>
-                            <TextBlock Text="Shapes snap to walls and to each other while you move, place or resize them: put a cabinet right against a wall or into a corner. Hold Alt to snap off."
+                            <TextBlock Text="Shapes line up with the faces of walls and the edges of other shapes while you move, place or resize them: put a cabinet right against a wall. Hold Alt to snap off."
                                        Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="12,2,12,6" />
                             <StackPanel Margin="10,0,6,6">
-                                <CheckBox x:Name="ObjectSnapEnabledCheckBox" Content="Snap shapes" Tag="Enabled" IsChecked="True" Click="ObjectSnapCheckBox_OnClick"
+                                <CheckBox x:Name="ObjectSnapEnabledCheckBox" Content="Align shapes" Tag="Enabled" IsChecked="True" Click="ObjectSnapCheckBox_OnClick"
                                           Foreground="{DynamicResource ForegroundTextBrush}" FontSize="11" Margin="0,2"
                                           ToolTip="Master switch. Hold Alt to snap off for one move." />
                                 <CheckBox x:Name="ObjectSnapWallsCheckBox" Content="To wall faces and corners" Tag="Walls" IsChecked="True" Click="ObjectSnapCheckBox_OnClick"
@@ -186,26 +207,6 @@
                                 <CheckBox Content="Parallel / perpendicular" Tag="Parallel" IsChecked="True" Click="WallSnapCheckBox_OnClick"
                                           Foreground="{DynamicResource MutedTextBrush}" FontSize="11" Margin="12,2,0,2"
                                           ToolTip="Snap to walls that run parallel or at a right angle to an existing wall." />
-                                <CheckBox Content="Corners and ends" Tag="Endpoints" IsChecked="True" Click="WallSnapCheckBox_OnClick"
-                                          Foreground="{DynamicResource MutedTextBrush}" FontSize="11" Margin="12,2,0,2"
-                                          ToolTip="Snap to the corners and ends of other walls." />
-                                <CheckBox Content="Midpoints" Tag="Midpoints" IsChecked="True" Click="WallSnapCheckBox_OnClick"
-                                          Foreground="{DynamicResource MutedTextBrush}" FontSize="11" Margin="12,2,0,2"
-                                          ToolTip="Snap to the middle of other wall segments." />
-                                <CheckBox Content="On the wall line" Tag="OnWall" Click="WallSnapCheckBox_OnClick"
-                                          Foreground="{DynamicResource MutedTextBrush}" FontSize="11" Margin="12,2,0,2"
-                                          ToolTip="Snap to the nearest place on another wall's centre line (for T-joints)." />
-                                <CheckBox Content="Angle steps (15°)" Tag="AngleSteps" Click="WallSnapCheckBox_OnClick"
-                                          Foreground="{DynamicResource MutedTextBrush}" FontSize="11" Margin="12,2,0,2"
-                                          ToolTip="Snap to 0, 15, 30, 45 ... degrees from the last point." />
-                                <StackPanel Orientation="Horizontal" Margin="12,2,0,2">
-                                    <CheckBox Content="Round length to" Tag="RoundLength" Click="WallSnapCheckBox_OnClick"
-                                              Foreground="{DynamicResource MutedTextBrush}" FontSize="11" VerticalAlignment="Center"
-                                              ToolTip="Round the length of every new wall segment to a multiple of this step." />
-                                    <TextBox x:Name="WallRoundStepTextBox" Width="40" Height="22" Margin="6,0,4,0" Text="5" TextAlignment="Center"
-                                             ToolTip="Step in cm" LostFocus="WallRoundStepTextBox_OnLostFocus" KeyDown="WallRoundStepTextBox_OnKeyDown" />
-                                    <TextBlock Text="cm" Foreground="{DynamicResource MutedTextBrush}" FontSize="11" VerticalAlignment="Center" />
-                                </StackPanel>
                             </StackPanel>
                             <TextBlock Text="Shift forces horizontal / vertical. Alt switches snapping off while held."
                                        Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="12,2,12,8" />
@@ -401,7 +402,7 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <Border x:Name="GridPaintColorChip" Grid.Column="0" Width="28" Height="28" CornerRadius="9"
+                                <Border x:Name="GridPaintColorChip" Grid.Column="0" Width="28" Height="28" CornerRadius="4.5"
                                         BorderBrush="{DynamicResource InsetEdgeBrush}" BorderThickness="1" Background="#9ED9D1" />
                                 <TextBlock x:Name="GridPaintColorText" Grid.Column="1" Text="#9ED9D1" VerticalAlignment="Center" Margin="8,0"
                                            Foreground="{DynamicResource ForegroundTextBrush}" FontSize="11" />
@@ -411,10 +412,10 @@
                                 <Popup x:Name="GridColorPopup" PlacementTarget="{Binding ElementName=GridPaintColorChip}" Placement="Bottom"
                                        StaysOpen="False" AllowsTransparency="True">
                                     <Grid Margin="0,4,8,8">
-                                        <Border Background="{DynamicResource PopupSurfaceBrush}" CornerRadius="12"
+                                        <Border Background="{DynamicResource PopupSurfaceBrush}" CornerRadius="6"
                                                 Effect="{DynamicResource RaisedDarkShadow}" />
                                         <Border Background="{DynamicResource PopupSurfaceBrush}" BorderBrush="{DynamicResource RaisedEdgeBrush}"
-                                                BorderThickness="1" CornerRadius="12" Padding="10" SnapsToDevicePixels="True">
+                                                BorderThickness="1" CornerRadius="6" Padding="10" SnapsToDevicePixels="True">
                                             <views:ColorPickerView x:Name="GridPaintColorPicker" />
                                         </Border>
                                     </Grid>
@@ -429,7 +430,7 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Width="24" Height="24" Margin="3" CornerRadius="7" Cursor="Hand"
+                                        <Border Width="24" Height="24" Margin="3" CornerRadius="3.5" Cursor="Hand"
                                                 Background="{Binding}" BorderBrush="{DynamicResource RaisedEdgeBrush}" BorderThickness="1"
                                                 MouseLeftButtonDown="GridPaintSwatch_OnMouseLeftButtonDown" />
                                     </DataTemplate>

@@ -60,10 +60,17 @@ public partial class MainWindow
         }
     }
 
+    private void PointSnapSettingsMenuItem_OnClick(object sender, RoutedEventArgs e) => ToolPanel.ShowPointSnapCard();
+
+    private void PointSnapMenuItem_OnClick(object sender, RoutedEventArgs e) =>
+        _context.PointSnap.Enabled = PointSnapMenuItem.IsChecked;
+
     private void ObjectSnapMenuItem_OnClick(object sender, RoutedEventArgs e) =>
         _context.ObjectSnap.Enabled = ObjectSnapMenuItem.IsChecked;
 
     private void CloseWallMenuItem_OnClick(object sender, RoutedEventArgs e) => _context.CloseSelectedWalls();
+
+    private void JoinWallsMenuItem_OnClick(object sender, RoutedEventArgs e) => _context.JoinSelectedWalls();
 
     private void MergeWallMenuItem_OnClick(object sender, RoutedEventArgs e) => _context.MergeStraightWallParts();
 

@@ -36,6 +36,7 @@ public sealed class EditorContext : ObservableObject
     private bool _showGrid;
     private bool _snapToGrid;
     private double _gridSize = 8;
+    private PageUnit _pageUnit = PageUnit.Px;
 
     public Document Document { get; } = new();
 
@@ -44,6 +45,9 @@ public sealed class EditorContext : ObservableObject
 
     /// <summary>What shapes snap to while they are moved, placed or resized: the faces and corners of walls and the edges of other shapes.</summary>
     public ObjectSnapOptions ObjectSnap { get; } = new();
+
+    /// <summary>Snapping to points of objects (end points, middles, centres, crossings ...), for every tool.</summary>
+    public PointSnapOptions PointSnap { get; } = new();
 
     public UndoManager UndoManager { get; } = new();
 
@@ -116,6 +120,9 @@ public sealed class EditorContext : ObservableObject
     public bool SnapToGrid { get => _snapToGrid; set => SetField(ref _snapToGrid, value); }
 
     public double GridSize { get => _gridSize; set => SetField(ref _gridSize, value); }
+
+    /// <summary>The unit the page and the main grid are shown and typed in (the UNIT of the CANVAS SIZE card).</summary>
+    public PageUnit PageUnit { get => _pageUnit; set => SetField(ref _pageUnit, value); }
 
     public event EventHandler? Invalidated;
 
@@ -846,6 +853,73 @@ public sealed class EditorContext : ObservableObject
 
         UndoManager.Push(UndoableAction.ForPropertyEdit(walls, before, walls.Select(ShapeSnapshot.Capture).ToList()));
         StatusMessage?.Invoke(merged == 1 ? "Two walls merged into one." : $"{merged} corners removed: the straight parts are one wall now.");
+        RequestRedraw();
+    }
+
+    /// <summary>Unites the selected open walls into ONE wall (two walls: the nearest ends are joined; more: one after the other), as one undo
+    /// step. Where the ends do not touch a new wall segment bridges the gap; where they run straight on the corner disappears.</summary>
+    public void JoinSelectedWalls()
+    {
+        var walls = SelectedShapes.Where(s => s.Kind == ShapeKind.Wall && s.Points is { Count: >= 2 }).ToList();
+        if (walls.Count < 2)
+        {
+            StatusMessage?.Invoke("Select two walls first (click one, Shift+click the other), then join them.");
+            return;
+        }
+
+        if (walls.Any(w => w.Locked))
+        {
+            StatusMessage?.Invoke("A selected wall is locked: unlock it first.");
+            return;
+        }
+
+        var current = walls[0];
+        double gap = 0;
+        var straight = 0;
+        for (var i = 1; i < walls.Count; i++)
+        {
+            if (WallEditor.Join(current, walls[i]) is not { } joined)
+            {
+                return;
+            }
+
+            current = joined.Wall;
+            gap = Math.Max(gap, joined.Gap);
+            straight += joined.StraightCorners;
+        }
+
+        var removals = new List<(System.Collections.ObjectModel.ObservableCollection<Shape> Collection, Shape Shape, int Index)>();
+        foreach (var wall in walls)
+        {
+            var layer = Document.Layers.FirstOrDefault(l => l.Shapes.Contains(wall));
+            if (layer is not null)
+            {
+                removals.Add((layer.Shapes, wall, layer.Shapes.IndexOf(wall)));
+            }
+        }
+
+        var target = removals.OrderBy(r => r.Index).First();
+        var insertAt = target.Index;
+        foreach (var removal in removals)
+        {
+            removal.Collection.Remove(removal.Shape);
+        }
+
+        target.Collection.Insert(Math.Min(insertAt, target.Collection.Count), current);
+        UndoManager.Push(UndoableAction.Combine(
+        [
+            UndoableAction.ForRemove(removals.OrderBy(r => r.Index).ToList()),
+            UndoableAction.ForInsert(target.Collection, current, Math.Min(insertAt, target.Collection.Count - 1)),
+        ]));
+
+        SelectedShapes.Clear();
+        SelectedShapes.Add(current);
+        StatusMessage?.Invoke(
+            (gap > 0
+                ? $"Walls joined into one: a new wall of {DimensionRenderer.Format(gap, current.WallDimensionUnit, current.DimPrecision)} bridges the gap."
+                : "Walls joined into one.")
+            + (straight > 0 ? " Walls in one line are one straight wall now." : string.Empty)
+            + (walls.Any(w => w.WallClosed) ? " The closed room was opened at the corner nearest to the other wall." : string.Empty));
         RequestRedraw();
     }
 

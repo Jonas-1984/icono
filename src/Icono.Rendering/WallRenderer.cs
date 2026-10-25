@@ -222,11 +222,11 @@ public static class WallRenderer
         };
     }
 
-    /// <summary>The wall face an inside or outside dimension measures: for a ring the inner or outer face, for an open wall the face the dimension
-    /// line is on.</summary>
+    /// <summary>The wall face an inside or outside dimension measures: for a ring - and for an open wall of three or more points, which
+    /// goes round a room too - the inner or outer face, for a single straight wall the face the dimension line is on.</summary>
     public static float FaceSide(Shape wall, float lineSide)
     {
-        if (!wall.WallClosed)
+        if (!wall.WallClosed && (wall.Points?.Count ?? 0) < 3)
         {
             return lineSide;
         }

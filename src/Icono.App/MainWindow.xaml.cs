@@ -37,6 +37,7 @@ public partial class MainWindow : Window
         };
         _context.SheetChanged += () => SheetMenuItem.IsChecked = _context.Document.Sheet.Enabled;
         _context.ObjectSnap.PropertyChanged += (_, _) => ObjectSnapMenuItem.IsChecked = _context.ObjectSnap.Enabled;
+        _context.PointSnap.PropertyChanged += (_, _) => PointSnapMenuItem.IsChecked = _context.PointSnap.Enabled;
 
         // A new page size (preset, portrait / landscape, typed size) is shown whole.
         var shownPage = (_context.Document.Width, _context.Document.Height);
@@ -54,7 +55,14 @@ public partial class MainWindow : Window
         CanvasHost.Context = _context;
         PropertiesPanel.Context = _context;
 
-        GridSizeTextBox.Text = _context.GridSize.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        RefreshGridSizeBox();
+        _context.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName is nameof(EditorContext.PageUnit) or nameof(EditorContext.GridSize))
+            {
+                RefreshGridSizeBox();
+            }
+        };
 
         StateChanged += MainWindow_OnStateChanged;
         Closing += MainWindow_OnClosing;
@@ -168,6 +176,12 @@ public partial class MainWindow : Window
             };
 
             _context.NudgeSelection(dx, dy);
+            e.Handled = true;
+            return;
+        }
+
+        if (CanvasHost.HandleWallDrawKey(e))
+        {
             e.Handled = true;
             return;
         }
@@ -338,16 +352,28 @@ public partial class MainWindow : Window
         }
     }
 
+    /// <summary>The main grid is stored in px and shown in the unit of the page (px, cm, mm, inch).</summary>
+    private void RefreshGridSizeBox()
+    {
+        var unit = _context.PageUnit;
+        GridSizeTextBox.Text = PageUnits.Format(_context.GridSize, unit);
+        GridUnitText.Text = PageUnits.Name(unit);
+        GridSizeTextBox.ToolTip = $"Main grid square size, {PageUnits.Name(unit)} (the unit is set in the CANVAS SIZE card)";
+    }
+
     private void ApplyGridSizeTextBox()
     {
-        if (!double.TryParse(GridSizeTextBox.Text, System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture, out var value) || value < 1)
+        var text = GridSizeTextBox.Text.Trim().Replace(',', '.');
+        if (!double.TryParse(text, System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out var typed)
+            || PageUnits.ToPx(typed, _context.PageUnit) < 1)
         {
-            GridSizeTextBox.Text = _context.GridSize.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            RefreshGridSizeBox();
             return;
         }
 
-        _context.GridSize = value;
+        _context.GridSize = PageUnits.ToPx(typed, _context.PageUnit);
+        RefreshGridSizeBox();
         _context.RequestRedraw();
     }
 

@@ -287,6 +287,162 @@ public static class WallEditor
         wall.WallDimensionOverrides = moved.Count == 0 ? null : moved.OrderBy(o => o.Segment).ToList();
     }
 
+    /// <summary>The result of uniting two walls: the new wall, the distance that was bridged between the two ends (0 when they touched) and how
+    /// many corners were removed because the walls run straight on there.</summary>
+    public sealed record JoinResult(Shape Wall, double Gap, int StraightCorners);
+
+    /// <summary>Unites two walls into ONE wall: the nearest ends are joined (when they touch they become one corner, otherwise a new wall
+    /// segment bridges the gap), and corners where the walls run straight on are removed, so two walls in a row become one long wall. A closed
+    /// room has no free end: it is opened at its corner that is nearest to the other wall (the ring then starts and ends there). The new wall
+    /// has the look of <paramref name="a"/>. Null when a wall has fewer than two points.</summary>
+    public static JoinResult? Join(Shape a, Shape b)
+    {
+        if (a.Points is not { Count: >= 2 } || b.Points is not { Count: >= 2 })
+        {
+            return null;
+        }
+
+        var pa = WallGeometry.AbsolutePoints(a);
+        var pb = WallGeometry.AbsolutePoints(b);
+
+        // a ring is opened at the corner nearest to the other wall (both rings: the two nearest corners)
+        var aRing = a.WallClosed && pa.Count >= 3;
+        var bRing = b.WallClosed && pb.Count >= 3;
+        if (aRing || bRing)
+        {
+            IReadOnlyList<SKPoint> otherForA = bRing ? pb : new[] { pb[0], pb[^1] };
+            IReadOnlyList<SKPoint> otherForB = aRing ? pa : new[] { pa[0], pa[^1] };
+            var cornerA = aRing ? NearestIndex(pa, otherForA) : -1;
+            var cornerB = bRing ? NearestIndex(pb, otherForB) : -1;
+            if (aRing && bRing)
+            {
+                (cornerA, cornerB) = NearestPair(pa, pb);
+            }
+
+            if (aRing)
+            {
+                pa = OpenRing(pa, cornerA);
+            }
+
+            if (bRing)
+            {
+                pb = OpenRing(pb, cornerB);
+            }
+        }
+
+        // the pair of ends that are nearest to each other
+        var best = (Reverse: false, ReverseB: false, Distance: float.MaxValue);
+        foreach (var reverseA in new[] { false, true })
+        {
+            foreach (var reverseB in new[] { false, true })
+            {
+                var end = reverseA ? pa[0] : pa[^1];
+                var start = reverseB ? pb[^1] : pb[0];
+                var distance = Geo.Distance(end, start);
+                if (distance < best.Distance)
+                {
+                    best = (reverseA, reverseB, distance);
+                }
+            }
+        }
+
+        if (best.Reverse)
+        {
+            pa.Reverse();
+        }
+
+        if (best.ReverseB)
+        {
+            pb.Reverse();
+        }
+
+        var touching = best.Distance < 1f;
+        var joined = pa.Select(p => (X: (double)p.X, Y: (double)p.Y)).ToList();
+        joined.AddRange(pb.Skip(touching ? 1 : 0).Select(p => (X: (double)p.X, Y: (double)p.Y)));
+
+        var wall = MakeWall(a, joined, closed: false);
+        wall.WallDimensionOverrides = null;
+        var straight = WallStraightener.MergeStraightParts(wall);
+        return new JoinResult(wall, touching ? 0 : best.Distance, straight);
+    }
+
+    /// <summary>An open wall whose two ends lie on each other (one was dragged onto the other) is a ring: the doubled last point is dropped and the
+    /// wall is closed. Returns true when it was closed.</summary>
+    public static bool CloseWhenEndsMeet(Shape wall, double tolerance = 0.75)
+    {
+        if (wall.WallClosed || wall.Points is not { Count: >= 4 } points)
+        {
+            return false;
+        }
+
+        var absolute = WallGeometry.AbsolutePoints(wall);
+        if (Geo.Distance(absolute[0], absolute[^1]) > tolerance)
+        {
+            return false;
+        }
+
+        RemapOverridesBeforeRemove(wall, points.Count - 1);
+        wall.Points = points.Take(points.Count - 1).ToList();
+        wall.WallClosed = true;
+        PruneOverrides(wall);
+        PathBoundsCalculator.Recompute(wall);
+        return true;
+    }
+
+    /// <summary>The corners of a ring as an open run that starts at <paramref name="corner"/>, goes round and ends on the same corner again.</summary>
+    private static List<SKPoint> OpenRing(List<SKPoint> ring, int corner)
+    {
+        var run = new List<SKPoint>();
+        for (var i = 0; i < ring.Count; i++)
+        {
+            run.Add(ring[(corner + i) % ring.Count]);
+        }
+
+        run.Add(ring[corner]);
+        return run;
+    }
+
+    /// <summary>Index of the point of <paramref name="points"/> that is nearest to any of <paramref name="targets"/>.</summary>
+    private static int NearestIndex(List<SKPoint> points, IReadOnlyList<SKPoint> targets)
+    {
+        var best = 0;
+        var bestDistance = float.MaxValue;
+        for (var i = 0; i < points.Count; i++)
+        {
+            foreach (var target in targets)
+            {
+                var distance = Geo.Distance(points[i], target);
+                if (distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    best = i;
+                }
+            }
+        }
+
+        return best;
+    }
+
+    private static (int A, int B) NearestPair(List<SKPoint> a, List<SKPoint> b)
+    {
+        var best = (A: 0, B: 0);
+        var bestDistance = float.MaxValue;
+        for (var i = 0; i < a.Count; i++)
+        {
+            for (var j = 0; j < b.Count; j++)
+            {
+                var distance = Geo.Distance(a[i], b[j]);
+                if (distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    best = (i, j);
+                }
+            }
+        }
+
+        return best;
+    }
+
     /// <summary>Breaks the wall into one wall per segment (cut at every point).</summary>
     public static List<Shape> SplitAtAllPoints(Shape wall)
     {

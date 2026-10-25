@@ -23,6 +23,7 @@ public partial class ToolPanelView : UserControl
             {
                 _context.PropertyChanged -= Context_OnPropertyChanged;
                 _context.ObjectSnap.PropertyChanged -= ObjectSnap_OnPropertyChanged;
+                _context.PointSnap.PropertyChanged -= PointSnap_OnPropertyChanged;
             }
 
             _context = value;
@@ -34,6 +35,8 @@ public partial class ToolPanelView : UserControl
                 SyncGridPaintColor();
                 _context.ObjectSnap.PropertyChanged += ObjectSnap_OnPropertyChanged;
                 SyncObjectSnapChecks();
+                _context.PointSnap.PropertyChanged += PointSnap_OnPropertyChanged;
+                SyncPointSnapChecks();
             }
         }
     }
@@ -190,6 +193,7 @@ public partial class ToolPanelView : UserControl
     public ToolPanelView()
     {
         InitializeComponent();
+        BuildPointSnapList();
         InitializeGridPalette();
 
         _ = new IconPager(ShapesWrapPanel, ShapesPagerDots, IconsPerPage);
@@ -237,39 +241,98 @@ public partial class ToolPanelView : UserControl
             case "Align": options.Align = on; break;
             case "EqualLength": options.EqualLength = on; break;
             case "Parallel": options.Parallel = on; break;
-            case "Endpoints": options.Endpoints = on; break;
-            case "Midpoints": options.Midpoints = on; break;
-            case "OnWall": options.OnWall = on; break;
-            case "AngleSteps": options.AngleSteps = on; break;
-            case "RoundLength": options.RoundLength = on; break;
         }
     }
 
-    private void WallRoundStepTextBox_OnLostFocus(object sender, System.Windows.RoutedEventArgs e)
+    // ----- Object snap (end points, middles, centres, crossings ...) ------------------------------------------------
+
+    /// <summary>The kinds in the card: name, a small drawing of the mark that appears on the canvas, and what it does.</summary>
+    private static readonly (PointSnapKind Kind, string Label, string Icon, string Tip)[] PointSnapRows =
+    [
+        (PointSnapKind.Endpoint, "Endpoint", "M2,2 H12 V12 H2 Z", "The corner or end of a line, curve, outline or wall."),
+        (PointSnapKind.Midpoint, "Midpoint", "M7,2 L12.5,12 H1.5 Z", "The middle of a straight line or wall face."),
+        (PointSnapKind.Center, "Center", "M7,1.5 A5.5,5.5 0 1 1 6.99,1.5 Z", "The centre of a circle or an ellipse."),
+        (PointSnapKind.GeometricCenter, "Geometric center", "M7,1.5 A5.5,5.5 0 1 1 6.99,1.5 Z M1.5,7 H12.5 M7,1.5 V12.5", "The centre of area of a closed shape."),
+        (PointSnapKind.Node, "Node", "M7,1.5 A5.5,5.5 0 1 1 6.99,1.5 Z M4.5,4.5 L9.5,9.5 M4.5,9.5 L9.5,4.5", "A definition point: the points of a dimension, the corners of a wall's centre line."),
+        (PointSnapKind.Quadrant, "Quadrant", "M7,1 L13,7 L7,13 L1,7 Z", "The points of a circle or ellipse at 0, 90, 180 and 270 degrees."),
+        (PointSnapKind.Intersection, "Intersection", "M2,2 L12,12 M2,12 L12,2", "Where two lines, curves or walls cross."),
+        (PointSnapKind.Extension, "Extension", "M1,7 H3.5 M6,7 H8 M10.5,7 H13", "On the imagined continuation of an open line beyond its end (a dashed line shows it)."),
+        (PointSnapKind.Insertion, "Insertion", "M2,2 H12 V12 H2 Z M2,7 H12 M7,2 V12", "The insertion point of a text, an image, a door, a window or a piece of furniture."),
+        (PointSnapKind.Perpendicular, "Perpendicular", "M2,2 V12 H12 M2,8 H6 V12", "The foot of the line at a right angle from the last point to an object."),
+        (PointSnapKind.Tangent, "Tangent", "M7,1.5 A3.5,3.5 0 1 1 6.99,1.5 Z M1,9.5 H13", "The point of a circle or curve where a line from the last point just touches it."),
+        (PointSnapKind.Nearest, "Nearest", "M2,2 H12 L2,12 H12 Z", "The nearest point on an object (anywhere along its edge)."),
+        (PointSnapKind.ApparentIntersection, "Apparent intersection", "M4,4 L10,10 M4,10 L10,4 M1.5,1.5 H12.5 V12.5 H1.5 Z", "Where the continuations of two lines meet although the lines themselves do not touch."),
+        (PointSnapKind.Parallel, "Parallel", "M2,9 L8,3 M6,12 L12,6", "On the line from the last point that runs parallel to another line."),
+    ];
+
+    /// <summary>Opens the OBJECT SNAP card and brings it into view (View menu).</summary>
+    public void ShowPointSnapCard()
+    {
+        if (PointSnapList.Parent is FrameworkElement content)
+        {
+            content.Visibility = Visibility.Visible;
+        }
+
+        PointSnapCard.BringIntoView();
+    }
+
+    private void BuildPointSnapList()
+    {
+        var accent = new SolidColorBrush(Color.FromRgb(0xF3, 0x9C, 0x12));
+        foreach (var (kind, label, icon, tip) in PointSnapRows)
+        {
+            var name = new TextBlock { Text = label, FontSize = 11, VerticalAlignment = VerticalAlignment.Center };
+            name.SetResourceReference(TextBlock.ForegroundProperty, "MutedTextBrush");
+            var row = new StackPanel { Orientation = Orientation.Horizontal };
+            row.Children.Add(new System.Windows.Shapes.Path
+            {
+                Data = Geometry.Parse(icon), Stroke = accent, StrokeThickness = 1.3, Width = 14, Height = 14, Stretch = Stretch.None,
+                Margin = new Thickness(0, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center,
+            });
+            row.Children.Add(name);
+
+            var box = new CheckBox { Content = row, Tag = kind, ToolTip = tip, Margin = new Thickness(12, 2, 0, 2) };
+            box.Click += PointSnapCheckBox_OnClick;
+            PointSnapList.Children.Add(box);
+        }
+    }
+
+    private void PointSnapCheckBox_OnClick(object sender, System.Windows.RoutedEventArgs e)
+    {
+        if (Context is null || sender is not CheckBox box)
+        {
+            return;
+        }
+
+        var on = box.IsChecked == true;
+        if (box.Tag is PointSnapKind kind)
+        {
+            Context.PointSnap.Set(kind, on);
+        }
+        else
+        {
+            Context.PointSnap.Enabled = on;
+        }
+    }
+
+    private void PointSnap_OnPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) => SyncPointSnapChecks();
+
+    private void SyncPointSnapChecks()
     {
         if (Context is null)
         {
             return;
         }
 
-        if (double.TryParse(WallRoundStepTextBox.Text.Trim().Replace(',', '.'), System.Globalization.NumberStyles.Float,
-                System.Globalization.CultureInfo.InvariantCulture, out var cm) && cm > 0.01)
+        var options = Context.PointSnap;
+        PointSnapEnabledCheckBox.IsChecked = options.Enabled;
+        foreach (var box in PointSnapList.Children.OfType<CheckBox>())
         {
-            Context.WallSnap.LengthStepPx = cm / 2.54 * 96;
-        }
-        else
-        {
-            WallRoundStepTextBox.Text = (Context.WallSnap.LengthStepPx / 96 * 2.54).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
-        }
-    }
-
-    private void WallRoundStepTextBox_OnKeyDown(object sender, KeyEventArgs e)
-    {
-        if (e.Key == Key.Enter)
-        {
-            WallRoundStepTextBox_OnLostFocus(sender, e);
-            Keyboard.ClearFocus();
-            e.Handled = true;
+            if (box.Tag is PointSnapKind kind)
+            {
+                box.IsChecked = options.IsOn(kind);
+                box.IsEnabled = options.Enabled;
+            }
         }
     }
 

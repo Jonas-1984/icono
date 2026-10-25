@@ -648,6 +648,13 @@ public partial class MainWindow
                 return true;
             }
 
+            if (e.Key == Key.F3)
+            {
+                _context.PointSnap.Enabled = !_context.PointSnap.Enabled;
+                _context.Notify("Object snap " + (_context.PointSnap.Enabled ? "on" : "off") + ".");
+                return true;
+            }
+
             if (e.Key == Key.Escape)
             {
                 // first Esc drops a measurement in progress, the next one leaves the tool

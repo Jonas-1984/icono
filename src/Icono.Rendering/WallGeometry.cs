@@ -71,7 +71,7 @@ public static class WallGeometry
 
         // The stroker leaves every corner as overlapping pieces (the inner side of a bend crosses itself), which showed up as lines
         // running through the joint. Merging them into one outline makes the walls a single unit with clean mitred corners.
-        outline.Simplify();
+        outline = Merge(outline);
 
         if (wall.Rotation != 0)
         {
@@ -80,6 +80,22 @@ public static class WallGeometry
         }
 
         return outline;
+    }
+
+    /// <summary>Merges overlapping parts of a path into ONE outline: only the boundary of the covered area is left, so no line runs through a
+    /// joint or a small square is left at the inside of a bend (what <see cref="SKPath.Simplify"/> alone keeps). Disposes <paramref name="path"/>.</summary>
+    public static SKPath Merge(SKPath path)
+    {
+        using var empty = new SKPath();
+        var merged = path.Op(empty, SKPathOp.Union);
+        if (merged is null)
+        {
+            path.Simplify();
+            return path;
+        }
+
+        path.Dispose();
+        return merged;
     }
 
     /// <summary>The segments of the centre line as point pairs (including the closing one of a ring).</summary>

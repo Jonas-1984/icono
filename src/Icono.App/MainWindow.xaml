@@ -78,8 +78,11 @@
                 <Separator />
                 <MenuItem x:Name="GridMenuItem" Header="Show Grid" IsCheckable="True" Click="GridMenuItem_OnClick" />
                 <MenuItem x:Name="SnapMenuItem" Header="Snap to Grid" IsCheckable="True" Click="SnapMenuItem_OnClick" />
-                <MenuItem x:Name="ObjectSnapMenuItem" Header="Snap to Walls and Objects" IsCheckable="True" IsChecked="True" Click="ObjectSnapMenuItem_OnClick"
-                          ToolTip="Shapes snap to wall faces, corners and other shapes while moved, placed or resized (Alt = off)" />
+                <MenuItem x:Name="PointSnapMenuItem" Header="Object Snap (End Points, Middles, Centres ...)" InputGestureText="F3" IsCheckable="True" IsChecked="True" Click="PointSnapMenuItem_OnClick"
+                          ToolTip="Every tool snaps to the points of the objects: end points, middles, centres, crossings ... (Alt = off). Choose the kinds in the OBJECT SNAP card." />
+                <MenuItem Header="Object Snap Settings..." Click="PointSnapSettingsMenuItem_OnClick" />
+                <MenuItem x:Name="ObjectSnapMenuItem" Header="Align Edges While Moving" IsCheckable="True" IsChecked="True" Click="ObjectSnapMenuItem_OnClick"
+                          ToolTip="Shapes line up with the faces of walls and the edges of other shapes while moved, placed or resized (Alt = off)" />
                 <Separator />
                 <MenuItem Header="Theme">
                     <MenuItem x:Name="ViewDarkModeMenuItem" Header="Dark Mode" Click="DarkModeMenuItem_OnClick" />
@@ -171,6 +174,8 @@
                 </MenuItem>
                 <MenuItem Header="Close Wall (make a closed room)" Click="CloseWallMenuItem_OnClick"
                           ToolTip="Join the last corner of the selected wall to its first corner" />
+                <MenuItem Header="Join Selected Walls into One" Click="JoinWallsMenuItem_OnClick"
+                          ToolTip="Select two walls (Shift+click) and make them one wall: the nearest ends are joined, walls in one line become one straight wall" />
                 <MenuItem Header="Merge Straight Parts of Wall" Click="MergeWallMenuItem_OnClick"
                           ToolTip="Walls that run on in one line become one wall (the corner between them is removed)" />
                 <MenuItem Header="Wall Options..." Tag="WALL" Click="FocusCardMenuItem_OnClick" />
@@ -451,9 +456,11 @@
                               StrokeThickness="1.1" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
                               Width="14" Height="14" Stretch="Uniform" />
                     </ToggleButton>
-                    <TextBox x:Name="GridSizeTextBox" Width="34" Margin="3,2" VerticalContentAlignment="Center"
-                             TextAlignment="Center" ToolTip="Grid square size, px"
+                    <TextBox x:Name="GridSizeTextBox" Width="44" Margin="3,2,0,2" VerticalContentAlignment="Center"
+                             TextAlignment="Center" ToolTip="Main grid square size"
                              LostFocus="GridSizeTextBox_OnLostFocus" KeyDown="GridSizeTextBox_OnKeyDown" />
+                    <TextBlock x:Name="GridUnitText" Text="px" Margin="4,0,3,0" VerticalAlignment="Center" FontSize="11"
+                               Foreground="{DynamicResource MutedTextBrush}" />
                 </StackPanel>
             </WrapPanel>
         </Border>

@@ -7,9 +7,9 @@ namespace Icono.Rendering;
 public sealed record VertexGuide(SKPoint A, SKPoint B, bool Straight);
 
 /// <summary>Where a dragged corner lands, and what to show.</summary>
-public sealed record VertexSnap(SKPoint Point, IReadOnlyList<VertexGuide> Guides)
+public sealed record VertexSnap(SKPoint Point, IReadOnlyList<VertexGuide> Guides, bool OnCorner = false)
 {
-    public bool Snapped => Guides.Count > 0;
+    public bool Snapped => OnCorner || Guides.Count > 0;
 }
 
 /// <summary>Making walls straight: moving a corner onto the line between its neighbours, merging walls that run straight on into one wall,
@@ -132,6 +132,41 @@ public static class WallStraightener
         var points = WallGeometry.AbsolutePoints(wall);
         var guides = new List<VertexGuide>();
         var tol = (float)tolerance;
+
+        // 0. on another corner: every corner of every wall, and the corners of this wall that are not next to the dragged one (so the two
+        // ends of an open wall can be put on each other)
+        var next = Neighbours(wall, index);
+        var corners = new List<SKPoint>();
+        for (var i = 0; i < points.Count; i++)
+        {
+            var neighbour = next is { } n0 ? i == n0.Previous || i == n0.Next : Math.Abs(i - index) == 1;
+            if (i != index && !neighbour)
+            {
+                corners.Add(points[i]);
+            }
+        }
+
+        foreach (var other in document.VisibleShapes().Where(s => s.Kind == ShapeKind.Wall && !ReferenceEquals(s, wall) && s.Points is not null))
+        {
+            corners.AddRange(WallGeometry.AbsolutePoints(other));
+        }
+
+        SKPoint? nearestCorner = null;
+        var nearestDistance = tol;
+        foreach (var corner in corners)
+        {
+            var distance = Geo.Distance(corner, target);
+            if (distance <= nearestDistance)
+            {
+                nearestDistance = distance;
+                nearestCorner = corner;
+            }
+        }
+
+        if (nearestCorner is { } onCorner)
+        {
+            return new VertexSnap(onCorner, [], OnCorner: true);
+        }
 
         // 1. straight: on the line through the two neighbours
         if (Neighbours(wall, index) is { } n)

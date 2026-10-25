@@ -16,9 +16,9 @@
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type views:DialogCard}">
                     <Grid Margin="24">
-                        <Border Style="{DynamicResource NeuShadowLightStyle}" CornerRadius="20" />
-                        <Border Style="{DynamicResource NeuShadowDarkStyle}" CornerRadius="20" />
-                        <Border CornerRadius="20" BorderThickness="1"
+                        <Border Style="{DynamicResource NeuShadowLightStyle}" CornerRadius="10" />
+                        <Border Style="{DynamicResource NeuShadowDarkStyle}" CornerRadius="10" />
+                        <Border CornerRadius="10" BorderThickness="1"
                                 Background="{DynamicResource WindowBackgroundBrush}"
                                 BorderBrush="{DynamicResource GlassEdgeBrush}">
                             <Grid>

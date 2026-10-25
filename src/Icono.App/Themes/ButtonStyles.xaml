@@ -23,13 +23,13 @@
                     <!-- The shadow/glow lives on its own backdrop border: an Effect on the border that holds the label
                          would rasterise the text into a blurred offscreen bitmap (soft, glowing letters). -->
                     <Grid x:Name="Root">
-                        <Border x:Name="Shadow" CornerRadius="10" Background="{TemplateBinding Background}"
+                        <Border x:Name="Shadow" CornerRadius="5" Background="{TemplateBinding Background}"
                                 Effect="{DynamicResource SmallRaisedShadow}" />
                         <Border x:Name="Bg"
                                 Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="10">
+                                CornerRadius="5">
                             <ContentPresenter x:Name="Content" HorizontalAlignment="Center" VerticalAlignment="Center"
                                               Margin="{TemplateBinding Padding}" />
                         </Border>
@@ -78,13 +78,13 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ToggleButton">
                     <Grid>
-                        <Border x:Name="Shadow" CornerRadius="10" Background="{TemplateBinding Background}"
+                        <Border x:Name="Shadow" CornerRadius="5" Background="{TemplateBinding Background}"
                                 Effect="{DynamicResource SmallRaisedShadow}" />
                         <Border x:Name="Bg"
                                 Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="10">
+                                CornerRadius="5">
                             <ContentPresenter Margin="{TemplateBinding Padding}"
                                               HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                               VerticalAlignment="Center" />

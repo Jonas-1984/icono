@@ -1858,6 +1858,8 @@ public partial class PropertiesPanelView : UserControl
         }
     }
 
+    private void WallJoinButton_OnClick(object sender, RoutedEventArgs e) => _context?.JoinSelectedWalls();
+
     private void WallMergeButton_OnClick(object sender, RoutedEventArgs e) => _context?.MergeStraightWallParts();
 
     private void WallSplitAllButton_OnClick(object sender, RoutedEventArgs e) => _context?.SplitSelectedWallsAtAllPoints();
@@ -2784,6 +2786,11 @@ public partial class PropertiesPanelView : UserControl
         }
 
         _canvasSizeUnit = Enum.Parse<CanvasSizeUnit>(tag);
+        if (_context is not null)
+        {
+            _context.PageUnit = Enum.Parse<PageUnit>(tag); // the main grid in the toolbar follows
+        }
+
         RefreshCanvasSizeTextBoxes();
     }
 
