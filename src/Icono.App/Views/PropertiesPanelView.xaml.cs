@@ -492,6 +492,7 @@ public partial class PropertiesPanelView : UserControl
 
         BorderColorPicker.SelectedColor = shape.BorderColor.ToMediaColor();
         BorderThicknessSlider.Value = shape.BorderThickness;
+        RefreshThicknessUnitControls(shape);
         BorderBlurSlider.Value = shape.BorderBlurRadius;
         BorderGradientColorPicker.SelectedColor = shape.BorderGradientColor.ToMediaColor();
         DashedCheckBox.IsChecked = shape.Dashed;
@@ -1876,7 +1877,7 @@ public partial class PropertiesPanelView : UserControl
         var radiusCm = shape.CornerRadius / LinePxPerCm;
 
         LineThicknessSlider.Value = Math.Clamp(thicknessCm, LineThicknessSlider.Minimum, LineThicknessSlider.Maximum);
-        LineThicknessTextBox.Text = thicknessCm.ToString("0.00", CultureInfo.InvariantCulture);
+        RefreshThicknessUnitControls(shape);
         LineCornerRadiusSlider.Value = Math.Clamp(radiusCm, LineCornerRadiusSlider.Minimum, LineCornerRadiusSlider.Maximum);
         LineCornerRadiusTextBox.Text = radiusCm.ToString("0.00", CultureInfo.InvariantCulture);
 
@@ -1897,7 +1898,7 @@ public partial class PropertiesPanelView : UserControl
             return;
         }
 
-        LineThicknessTextBox.Text = e.NewValue.ToString("0.00", CultureInfo.InvariantCulture);
+        LineThicknessTextBox.Text = FormatThickness(e.NewValue * LinePxPerCm);
         ApplyToSelection(s => s.BorderThickness = e.NewValue * LinePxPerCm);
     }
 
@@ -1935,8 +1936,52 @@ public partial class PropertiesPanelView : UserControl
         }
     }
 
-    private void LineThicknessTextBox_OnLostFocus(object sender, RoutedEventArgs e) =>
-        ApplyLineCmTextBox(LineThicknessTextBox, minCm: 0.01, maxCm: 10, s => s.BorderThickness, (s, px) => s.BorderThickness = px);
+    private void LineThicknessTextBox_OnLostFocus(object sender, RoutedEventArgs e) => ApplyThicknessTextBox(LineThicknessTextBox, minPx: 0.1);
+
+    private void BorderThicknessTextBox_OnLostFocus(object sender, RoutedEventArgs e) => ApplyThicknessTextBox(BorderThicknessTextBox, minPx: 0);
+
+    /// <summary>A border / line thickness (page px) as text in the unit chosen under SIZE &amp; POSITION. It is a weight on the paper, so
+    /// the drawing scale does not apply.</summary>
+    private string FormatThickness(double px) =>
+        PxToUnit(px, _shapeSizeUnit).ToString(_shapeSizeUnit == CanvasSizeUnit.In ? "0.###" : "0.##", CultureInfo.InvariantCulture);
+
+    private void RefreshThicknessUnitControls(Shape shape)
+    {
+        var unit = UnitName(_shapeSizeUnit);
+        BorderThicknessLabel.Text = $"THICKNESS ({unit.ToUpperInvariant()})";
+        BorderThicknessUnitText.Text = unit;
+        BorderThicknessTextBox.Text = FormatThickness(shape.BorderThickness);
+        LineThicknessLabel.Text = $"THICKNESS ({unit.ToUpperInvariant()})";
+        LineThicknessUnitText.Text = unit;
+        LineThicknessTextBox.Text = FormatThickness(shape.BorderThickness);
+    }
+
+    /// <summary>Commits a thickness text field: the number is read in the chosen unit (comma or dot), limited to 0.1 - 200 px and applied
+    /// to the selection as one undo step. Unparsable text snaps back to the current value.</summary>
+    private void ApplyThicknessTextBox(TextBox textBox, double minPx)
+    {
+        if (_boundShape is null || _isRefreshingControls)
+        {
+            return;
+        }
+
+        var text = textBox.Text.Trim().Replace(',', '.');
+        if (!double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var typed))
+        {
+            RefreshControlsFromShape();
+            return;
+        }
+
+        var px = Math.Clamp(UnitToPx(typed, _shapeSizeUnit), minPx, 200);
+        if (Math.Abs(px - _boundShape.BorderThickness) < 0.0001)
+        {
+            RefreshControlsFromShape();
+            return;
+        }
+
+        ApplyToSelectionWithUndo(s => s.BorderThickness = px);
+        RefreshControlsFromShape();
+    }
 
     private void LineCornerRadiusTextBox_OnLostFocus(object sender, RoutedEventArgs e) =>
         ApplyLineCmTextBox(LineCornerRadiusTextBox, minCm: 0, maxCm: 20, s => s.CornerRadius, (s, px) => s.CornerRadius = px);
@@ -2000,9 +2045,9 @@ public partial class PropertiesPanelView : UserControl
 
     private void BorderThicknessSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-        if (BorderThicknessValueText is not null)
+        if (BorderThicknessTextBox is not null)
         {
-            BorderThicknessValueText.Text = $"{e.NewValue:0}px";
+            BorderThicknessTextBox.Text = FormatThickness(e.NewValue);
         }
 
         ApplyToSelection(s => s.BorderThickness = e.NewValue);

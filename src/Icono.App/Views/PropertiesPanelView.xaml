@@ -803,7 +803,7 @@
                             <Path Grid.Column="1" Style="{StaticResource CardChevronPathStyle}" />
                         </Grid>
                         <StackPanel>
-                            <TextBlock Text="THICKNESS" Style="{StaticResource PanelLabelTextStyle}" />
+                            <TextBlock x:Name="LineThicknessLabel" Text="THICKNESS (CM)" Style="{StaticResource PanelLabelTextStyle}" />
                             <Grid Margin="6,0,6,6">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -814,10 +814,10 @@
                                         ValueChanged="LineThicknessSlider_OnValueChanged"
                                         PreviewMouseLeftButtonDown="EffectSlider_OnDragStart" PreviewMouseLeftButtonUp="EffectSlider_OnDragEnd" />
                                 <TextBox x:Name="LineThicknessTextBox" Grid.Column="1" Width="52" Height="26" Margin="8,0,4,0"
-                                         TextAlignment="Center" ToolTip="Line thickness in cm"
+                                         TextAlignment="Center" ToolTip="Line thickness in the unit chosen under SIZE &amp; POSITION (px, cm, mm, in). Type a number and press Enter."
                                          LostFocus="LineThicknessTextBox_OnLostFocus" KeyDown="LineTextBox_OnKeyDown" />
-                                <TextBlock Grid.Column="2" Text="cm" VerticalAlignment="Center"
-                                           Foreground="{DynamicResource MutedTextBrush}" FontSize="11" />
+                                <TextBlock x:Name="LineThicknessUnitText" Grid.Column="2" Text="cm" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource MutedTextBrush}" FontSize="11" Width="18" />
                             </Grid>
 
                             <TextBlock Text="CORNERS" Style="{StaticResource PanelLabelTextStyle}" />
@@ -920,18 +920,21 @@
                             <Path Grid.Column="1" Style="{StaticResource CardChevronPathStyle}" />
                         </Grid>
                         <StackPanel>
-                            <TextBlock Text="THICKNESS" Style="{StaticResource PanelLabelTextStyle}" />
+                            <TextBlock x:Name="BorderThicknessLabel" Text="THICKNESS (PX)" Style="{StaticResource PanelLabelTextStyle}" />
                             <Grid Margin="6,0,6,6">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="36" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <Slider x:Name="BorderThicknessSlider" Grid.Column="0" Minimum="0" Maximum="20"
                                         ValueChanged="BorderThicknessSlider_OnValueChanged"
                                         PreviewMouseLeftButtonDown="EffectSlider_OnDragStart" PreviewMouseLeftButtonUp="EffectSlider_OnDragEnd" />
-                                <TextBlock x:Name="BorderThicknessValueText" Grid.Column="1" Text="0px"
-                                           Foreground="{DynamicResource MutedTextBrush}" FontSize="11"
-                                           VerticalAlignment="Center" HorizontalAlignment="Right" />
+                                <TextBox x:Name="BorderThicknessTextBox" Grid.Column="1" Width="52" Height="26" Margin="8,0,4,0"
+                                         TextAlignment="Center" ToolTip="Border thickness in the unit chosen under SIZE &amp; POSITION (px, cm, mm, in). Type a number and press Enter."
+                                         LostFocus="BorderThicknessTextBox_OnLostFocus" KeyDown="LineTextBox_OnKeyDown" />
+                                <TextBlock x:Name="BorderThicknessUnitText" Grid.Column="2" Text="px" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource MutedTextBrush}" FontSize="11" Width="18" />
                             </Grid>
 
                             <TextBlock Text="COLOR" Style="{StaticResource PanelLabelTextStyle}" />
