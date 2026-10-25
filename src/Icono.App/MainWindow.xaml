@@ -87,6 +87,10 @@
                 <MenuItem Header="Theme">
                     <MenuItem x:Name="ViewDarkModeMenuItem" Header="Dark Mode" Click="DarkModeMenuItem_OnClick" />
                     <MenuItem x:Name="ViewLightModeMenuItem" Header="Light Mode" Click="LightModeMenuItem_OnClick" />
+                    <Separator />
+                    <MenuItem x:Name="ViewSoftStyleMenuItem" Header="Soft Style (neumorphic keys)" Click="SoftStyleMenuItem_OnClick" />
+                    <MenuItem x:Name="ViewGlassStyleMenuItem" Header="Glass Style (translucent, like iOS)" Click="GlassStyleMenuItem_OnClick"
+                              ToolTip="Transparent menus, glass keys, light reflections on the edges and depth - in Dark and in Light Mode" />
                 </MenuItem>
             </MenuItem>
             <MenuItem Header="_Page">

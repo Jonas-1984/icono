@@ -88,8 +88,22 @@ public partial class MainWindow : Window
         NativeMethods.EnableDarkTitleBar(hwnd);
         NativeMethods.EnableRoundedCorners(hwnd);
 
-        // The window paints its own opaque graphite gradient, so Mica is only requested for the OS material.
-        NativeMethods.TryEnableMicaBackdrop(hwnd);
+        // The soft themes paint an opaque window (Mica is only the OS material behind it); the glass theme lets the blurred desktop show
+        // through the aurora.
+        ApplyBackdrop();
+        ThemeManager.ThemeChanged += (_, _) => ApplyBackdrop();
+    }
+
+    private void ApplyBackdrop()
+    {
+        var hwnd = new WindowInteropHelper(this).Handle;
+        var glass = ThemeManager.Style == ThemeStyle.Glass;
+        if (HwndSource.FromHwnd(hwnd)?.CompositionTarget is { } target)
+        {
+            target.BackgroundColor = glass ? Colors.Transparent : SystemColors.WindowColor;
+        }
+
+        NativeMethods.SetGlassBackdrop(hwnd, glass);
     }
 
     /// <summary>Zooms so the whole page is visible in the work area (with a little breathing room).</summary>
@@ -386,9 +400,19 @@ public partial class MainWindow : Window
 
     private void LightModeMenuItem_OnClick(object sender, RoutedEventArgs e) => SwitchTheme(ThemeMode.Light);
 
+    private void SoftStyleMenuItem_OnClick(object sender, RoutedEventArgs e) => SwitchStyle(ThemeStyle.Soft);
+
+    private void GlassStyleMenuItem_OnClick(object sender, RoutedEventArgs e) => SwitchStyle(ThemeStyle.Glass);
+
     private void SwitchTheme(ThemeMode mode)
     {
         ThemeManager.Apply(mode);
+        UpdateThemeMenuMarkers();
+    }
+
+    private void SwitchStyle(ThemeStyle style)
+    {
+        ThemeManager.Apply(ThemeManager.Current, style);
         UpdateThemeMenuMarkers();
     }
 
@@ -398,6 +422,8 @@ public partial class MainWindow : Window
         var dark = ThemeManager.Current == ThemeMode.Dark;
         ViewDarkModeMenuItem.IsChecked = dark;
         ViewLightModeMenuItem.IsChecked = !dark;
+        ViewSoftStyleMenuItem.IsChecked = ThemeManager.Style == ThemeStyle.Soft;
+        ViewGlassStyleMenuItem.IsChecked = ThemeManager.Style == ThemeStyle.Glass;
     }
 
     private void AboutMenuItem_OnClick(object sender, RoutedEventArgs e)

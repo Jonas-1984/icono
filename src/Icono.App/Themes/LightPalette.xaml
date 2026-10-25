@@ -155,6 +155,10 @@
     <SolidColorBrush x:Key="CaptionButtonHoverBrush" Color="#14000000" />
     <SolidColorBrush x:Key="CaptionButtonPressedBrush" Color="#24000000" />
 
+    <!-- Glass-theme keys that the soft themes leave empty: the veil over a hovered key and the second layer of an icon -->
+    <SolidColorBrush x:Key="GlassHoverBrush" Color="#00FFFFFF" />
+    <x:Null x:Key="GlyphLayerEffect" />
+
     <!-- ===== Shadows / glows ===== -->
     <DropShadowEffect x:Key="RaisedDarkShadow" Color="#FF8E9BB3" BlurRadius="16" ShadowDepth="5" Direction="315" Opacity="0.5" />
     <DropShadowEffect x:Key="RaisedLightShadow" Color="#FFFFFFFF" BlurRadius="16" ShadowDepth="5" Direction="135" Opacity="1" />

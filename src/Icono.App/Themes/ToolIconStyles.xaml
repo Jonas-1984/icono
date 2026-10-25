@@ -18,9 +18,10 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="Bg" Background="{DynamicResource RaisedBrush}"
+                    <Grid>
+<Border x:Name="Bg" Background="{DynamicResource RaisedBrush}"
                             BorderBrush="{DynamicResource RaisedEdgeBrush}" BorderThickness="1" CornerRadius="5.5">
-                        <Path x:Name="Glyph" Data="{TemplateBinding Tag}"
+                        <Path x:Name="Glyph" Effect="{DynamicResource GlyphLayerEffect}" Data="{TemplateBinding Tag}"
                               Stroke="{TemplateBinding Foreground}"
                               StrokeThickness="1.1"
                               StrokeStartLineCap="Round"
@@ -29,8 +30,12 @@
                               Stretch="Uniform"
                               Margin="8" />
                     </Border>
+                    <Border x:Name="Hover" CornerRadius="5.5" Background="{DynamicResource GlassHoverBrush}" Opacity="0" IsHitTestVisible="False" />
+                    </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
+                        <Trigger.EnterActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.14" /></Storyboard></BeginStoryboard></Trigger.EnterActions>
+                        <Trigger.ExitActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.3" /></Storyboard></BeginStoryboard></Trigger.ExitActions>
                             <Setter TargetName="Bg" Property="Background" Value="{DynamicResource RaisedHoverBrush}" />
                             <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource AccentBlueMidBrush}" />
                             <Setter TargetName="Bg" Property="Effect" Value="{DynamicResource HoverGlowEffect}" />
@@ -57,12 +62,17 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ToggleButton">
-                    <Border x:Name="Bg" Background="{DynamicResource RaisedBrush}"
+                    <Grid>
+<Border x:Name="Bg" Background="{DynamicResource RaisedBrush}"
                             BorderBrush="{DynamicResource RaisedEdgeBrush}" BorderThickness="1" CornerRadius="4.5">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
+                    <Border x:Name="Hover" CornerRadius="4.5" Background="{DynamicResource GlassHoverBrush}" Opacity="0" IsHitTestVisible="False" />
+                    </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
+                        <Trigger.EnterActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.14" /></Storyboard></BeginStoryboard></Trigger.EnterActions>
+                        <Trigger.ExitActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.3" /></Storyboard></BeginStoryboard></Trigger.ExitActions>
                             <Setter TargetName="Bg" Property="Background" Value="{DynamicResource RaisedHoverBrush}" />
                             <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource AccentBlueMidBrush}" />
                         </Trigger>
@@ -89,12 +99,17 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border x:Name="Bg" Background="{DynamicResource RaisedBrush}"
+                    <Grid>
+<Border x:Name="Bg" Background="{DynamicResource RaisedBrush}"
                             BorderBrush="{DynamicResource RaisedEdgeBrush}" BorderThickness="1" CornerRadius="5.5">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
+                    <Border x:Name="Hover" CornerRadius="5.5" Background="{DynamicResource GlassHoverBrush}" Opacity="0" IsHitTestVisible="False" />
+                    </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
+                        <Trigger.EnterActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.14" /></Storyboard></BeginStoryboard></Trigger.EnterActions>
+                        <Trigger.ExitActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.3" /></Storyboard></BeginStoryboard></Trigger.ExitActions>
                             <Setter TargetName="Bg" Property="Background" Value="{DynamicResource RaisedHoverBrush}" />
                             <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource AccentBlueMidBrush}" />
                             <Setter TargetName="Bg" Property="Effect" Value="{DynamicResource HoverGlowEffect}" />
@@ -124,9 +139,10 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="Bg" Background="{DynamicResource RaisedBrush}"
+                    <Grid>
+<Border x:Name="Bg" Background="{DynamicResource RaisedBrush}"
                             BorderBrush="{DynamicResource RaisedEdgeBrush}" BorderThickness="1" CornerRadius="5.5">
-                        <Path x:Name="Glyph" Data="{TemplateBinding Tag}"
+                        <Path x:Name="Glyph" Effect="{DynamicResource GlyphLayerEffect}" Data="{TemplateBinding Tag}"
                               Stroke="{TemplateBinding Foreground}"
                               StrokeThickness="1.3"
                               StrokeStartLineCap="Round"
@@ -135,8 +151,12 @@
                               Stretch="Uniform"
                               Margin="8" />
                     </Border>
+                    <Border x:Name="Hover" CornerRadius="5.5" Background="{DynamicResource GlassHoverBrush}" Opacity="0" IsHitTestVisible="False" />
+                    </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
+                        <Trigger.EnterActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.14" /></Storyboard></BeginStoryboard></Trigger.EnterActions>
+                        <Trigger.ExitActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.3" /></Storyboard></BeginStoryboard></Trigger.ExitActions>
                             <Setter TargetName="Bg" Property="Background" Value="{DynamicResource RaisedHoverBrush}" />
                             <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource AccentBlueMidBrush}" />
                             <Setter TargetName="Bg" Property="Effect" Value="{DynamicResource HoverGlowEffect}" />
@@ -165,7 +185,8 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="Bg" Background="{DynamicResource RaisedBrush}"
+                    <Grid>
+<Border x:Name="Bg" Background="{DynamicResource RaisedBrush}"
                             BorderBrush="{DynamicResource RaisedEdgeBrush}" BorderThickness="1" CornerRadius="5.5">
                         <!-- The raster glyph is white; using it as an opacity mask lets it take the theme foreground colour -->
                         <Rectangle x:Name="Glyph" Fill="{TemplateBinding Foreground}" Margin="8">
@@ -174,8 +195,12 @@
                             </Rectangle.OpacityMask>
                         </Rectangle>
                     </Border>
+                    <Border x:Name="Hover" CornerRadius="5.5" Background="{DynamicResource GlassHoverBrush}" Opacity="0" IsHitTestVisible="False" />
+                    </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
+                        <Trigger.EnterActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.14" /></Storyboard></BeginStoryboard></Trigger.EnterActions>
+                        <Trigger.ExitActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.3" /></Storyboard></BeginStoryboard></Trigger.ExitActions>
                             <Setter TargetName="Bg" Property="Background" Value="{DynamicResource RaisedHoverBrush}" />
                             <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource AccentBlueMidBrush}" />
                             <Setter TargetName="Bg" Property="Effect" Value="{DynamicResource HoverGlowEffect}" />
@@ -264,7 +289,8 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="Bg" Background="{DynamicResource RaisedBrush}"
+                    <Grid>
+<Border x:Name="Bg" Background="{DynamicResource RaisedBrush}"
                             BorderBrush="{DynamicResource RaisedEdgeBrush}" BorderThickness="1" CornerRadius="5.5">
                         <!-- The raster glyph is white; using it as an opacity mask lets it take the theme foreground colour -->
                         <Rectangle x:Name="Glyph" Fill="{TemplateBinding Foreground}" Margin="8">
@@ -273,8 +299,12 @@
                             </Rectangle.OpacityMask>
                         </Rectangle>
                     </Border>
+                    <Border x:Name="Hover" CornerRadius="5.5" Background="{DynamicResource GlassHoverBrush}" Opacity="0" IsHitTestVisible="False" />
+                    </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
+                        <Trigger.EnterActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.14" /></Storyboard></BeginStoryboard></Trigger.EnterActions>
+                        <Trigger.ExitActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.3" /></Storyboard></BeginStoryboard></Trigger.ExitActions>
                             <Setter TargetName="Bg" Property="Background" Value="{DynamicResource RaisedHoverBrush}" />
                             <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource AccentBlueMidBrush}" />
                             <Setter TargetName="Bg" Property="Effect" Value="{DynamicResource HoverGlowEffect}" />
