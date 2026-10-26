@@ -89,6 +89,8 @@
                     <MenuItem x:Name="ViewLightModeMenuItem" Header="Light Mode" Click="LightModeMenuItem_OnClick" />
                     <Separator />
                     <MenuItem x:Name="ViewSoftStyleMenuItem" Header="Soft Style (neumorphic keys)" Click="SoftStyleMenuItem_OnClick" />
+                    <MenuItem x:Name="ViewProStyleMenuItem" Header="Pro Style (flat, content first)" Click="ProStyleMenuItem_OnClick"
+                              ToolTip="Dark graphite surfaces, grey panels, clear icons, few decorations and light shadows: the interface steps back for the drawing" />
                     <MenuItem x:Name="ViewGlassStyleMenuItem" Header="Glass Style (translucent, like iOS)" Click="GlassStyleMenuItem_OnClick"
                               ToolTip="Transparent menus, glass keys, light reflections on the edges and depth - in Dark and in Light Mode" />
                 </MenuItem>

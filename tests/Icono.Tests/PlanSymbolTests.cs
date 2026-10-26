@@ -44,7 +44,8 @@ public class PlanSymbolTests
         Assert.NotNull(ShapeGeometryFactory.BuildSolidParts(Symbol(ShapeKind.Cooker)));
         Assert.NotNull(ShapeGeometryFactory.BuildSolidParts(Symbol(ShapeKind.Oven)));
         Assert.NotNull(ShapeGeometryFactory.BuildSolidParts(Symbol(ShapeKind.ElectricAppliance)));
-        Assert.Null(ShapeGeometryFactory.BuildSolidParts(Symbol(ShapeKind.Hood)));
+        Assert.NotNull(ShapeGeometryFactory.BuildSolidParts(Symbol(ShapeKind.Hood))); // the two filled quarters
+        Assert.Null(ShapeGeometryFactory.BuildSolidParts(Symbol(ShapeKind.Socket)));
     }
 
     [Fact]
@@ -77,7 +78,7 @@ public class PlanSymbolTests
 
         Assert.Equal(60 / 2.54 * 96 / 50, oven.Width, 3);   // 60 cm at 1:50
         Assert.Equal(20 / 2.54 * 96 / 20, socket.Width, 3); // 20 cm at 1:20
-        Assert.True(socket.Height < socket.Width);          // a half circle on a line is wider than high
+        Assert.True(socket.Height > socket.Width);          // the stem makes the socket higher than wide (80 x 120 in the drawing)
     }
 
     [Fact]

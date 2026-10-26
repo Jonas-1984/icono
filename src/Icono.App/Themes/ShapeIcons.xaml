@@ -200,8 +200,8 @@
     <PathGeometry x:Key="LampToolGeometry"
                   Figures="M5,12 A7,7 0 1 0 19,12 A7,7 0 1 0 5,12 Z M10.8,12 A1.2,1.2 0 1 0 13.2,12 A1.2,1.2 0 1 0 10.8,12 Z" />
     <!-- Electrical and kitchen plan symbols (24x24, line-art) -->
-    <PathGeometry x:Key="SocketToolGeometry" Figures="M6,15 A6,6 0 0 1 18,15 M3,15 H21 M12,15 V9" />
-    <PathGeometry x:Key="DoubleSocketToolGeometry" Figures="M4,15 A6,6 0 0 1 16,15 M2,15 H18 M10,15 V9 M18.5,9.5 H21.5 V12 H18.5 V14.5 H21.5" />
+    <PathGeometry x:Key="SocketToolGeometry" Figures="M12,1 V15.667 M4.667,15.667 H19.333 M4.667,23 A7.333,7.333 0 0 1 19.333,23" />
+    <PathGeometry x:Key="DoubleSocketToolGeometry" Figures="M12,1 V15.667 M4.667,15.667 H19.333 M4.667,23 A7.333,7.333 0 0 1 19.333,23 M13.65,5.4 C13.65,3.2 18.417,3.2 18.417,5.767 C18.417,7.6 15.117,9.433 13.65,12 L18.6,12" />
     <PathGeometry x:Key="ElectricApplianceToolGeometry" Figures="M3,3 H21 V21 H3 Z M9,7.5 H15.5 M9,7.5 V16.5 M9,12 H14 M9,16.5 H15.5" />
     <PathGeometry x:Key="CookerToolGeometry"
                   Figures="M3,3 H21 V21 H3 Z M13.6,8.5 A1.6,1.6 0 1 0 10.4,8.5 A1.6,1.6 0 1 0 13.6,8.5 Z M9.6,15.5 A1.6,1.6 0 1 0 6.4,15.5 A1.6,1.6 0 1 0 9.6,15.5 Z M17.6,15.5 A1.6,1.6 0 1 0 14.4,15.5 A1.6,1.6 0 1 0 17.6,15.5 Z" />
@@ -210,8 +210,8 @@
     <PathGeometry x:Key="MicrowaveToolGeometry"
                   Figures="M7,3 H17 A4,4 0 0 1 21,7 V17 A4,4 0 0 1 17,21 H7 A4,4 0 0 1 3,17 V7 A4,4 0 0 1 7,3 Z M6.5,8.5 C8.2,6.3 10.3,6.3 12,8.5 S15.8,10.7 17.5,8.5 M6.5,12 C8.2,9.8 10.3,9.8 12,12 S15.8,14.2 17.5,12 M6.5,15.5 C8.2,13.3 10.3,13.3 12,15.5 S15.8,17.7 17.5,15.5" />
     <PathGeometry x:Key="WaterAndWastewaterToolGeometry"
-                  Figures="M5.5,12 A2.25,2.25 0 1 0 1,12 A2.25,2.25 0 1 0 5.5,12 Z M16.5,12 A4.5,4.5 0 1 0 7.5,12 A4.5,4.5 0 1 0 16.5,12 Z M23,12 A2.25,2.25 0 1 0 18.5,12 A2.25,2.25 0 1 0 23,12 Z" />
-    <PathGeometry x:Key="HoodToolGeometry" Figures="M20.5,12 A8.5,8.5 0 1 0 3.5,12 A8.5,8.5 0 1 0 20.5,12 Z M12,3.5 V20.5 M3.5,12 H20.5" />
+                  Figures="M1,12 A2.2,2.2 0 1 0 5.4,12 A2.2,2.2 0 1 0 1,12 Z M7.6,12 A4.4,4.4 0 1 0 16.4,12 A4.4,4.4 0 1 0 7.6,12 Z M18.6,12 A2.2,2.2 0 1 0 23,12 A2.2,2.2 0 1 0 18.6,12 Z M1.644,13.555 L4.755,10.445 M4.755,13.555 L1.644,10.445" />
+    <PathGeometry x:Key="HoodToolGeometry" Figures="M1,12 A11,11 0 1 0 23,12 A11,11 0 1 0 1,12 Z M12,12 L23,12 A11,11 0 0 1 12,23 Z M12,12 L1,12 A11,11 0 0 1 12,1 Z" />
     <PathGeometry x:Key="TextToolGeometry" Figures="M12 4v16 M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2 M9 20h6" />
     <!-- Lucide "paint-bucket": tilted bucket, spilled-paint drop, brush tip and surface line (stroke-only, 24x24) -->
     <PathGeometry x:Key="RegionColorToolGeometry"

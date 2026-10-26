@@ -1,0 +1,131 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- PRO DARK - the interface steps back so the drawing is the star.
+         60 % dark UI: graphite surfaces, grey panels, calm contrast.
+         20 % flat design: clear icons, almost no decoration, function before looks.
+         15 % Fluent: a hint of transparency, light shadows, modern controls with an accent that appears only where it means something.
+          5 % skeuomorphism: keys keep a barely visible bevel (a light line at the top edge) so they still read as keys.
+         Same keys as DarkPalette.xaml. -->
+
+    <!-- ===== Stage ===== -->
+    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#FF1B1C1F" />
+    <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#FF1E1F22" />
+    <SolidColorBrush x:Key="ToolbarBackgroundBrush" Color="#FF2B2D30" />
+    <SolidColorBrush x:Key="CanvasSurroundBrush" Color="#FF141517" />
+    <SolidColorBrush x:Key="BorderLineBrush" Color="#FF3A3D42" />
+    <SolidColorBrush x:Key="ForegroundTextBrush" Color="#FFE6E8EB" />
+    <SolidColorBrush x:Key="MutedTextBrush" Color="#FF9AA0A9" />
+
+    <!-- ===== Accent (Fluent blue) ===== -->
+    <SolidColorBrush x:Key="AccentBlueMidBrush" Color="#FF3B9CFF" />
+    <SolidColorBrush x:Key="AccentBlueLightBrush" Color="#FF60CDFF" />
+    <SolidColorBrush x:Key="AccentBlueDarkBrush" Color="#FF0F6CBD" />
+    <SolidColorBrush x:Key="AccentVioletBrush" Color="#FF9F8BFF" />
+
+    <LinearGradientBrush x:Key="GlossyBlueBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FF4BA6FF" Offset="0.0" />
+        <GradientStop Color="#FF2B88D8" Offset="0.5" />
+        <GradientStop Color="#FF0F6CBD" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="GlossyBlueBrushHorizontal" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#FF1F7AD0" Offset="0.0" />
+        <GradientStop Color="#FF3B9CFF" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="GlossHighlightOverlayBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#14FFFFFF" Offset="0.0" />
+        <GradientStop Color="#00FFFFFF" Offset="0.5" />
+    </LinearGradientBrush>
+
+    <RadialGradientBrush x:Key="SoftAccentGlowBrush" Center="0.5,0.5" RadiusX="0.8" RadiusY="0.8">
+        <GradientStop Color="#263B9CFF" Offset="0.0" />
+        <GradientStop Color="#103B9CFF" Offset="0.7" />
+        <GradientStop Color="#003B9CFF" Offset="1.0" />
+    </RadialGradientBrush>
+
+    <SolidColorBrush x:Key="SoftAccentHoverBrush" Color="#2A3B9CFF" />
+    <SolidColorBrush x:Key="ToolIconHoverBrush" Color="#1F3B9CFF" />
+
+    <!-- A hairline instead of a glowing rim -->
+    <LinearGradientBrush x:Key="WindowEdgeBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FF4A4E55" Offset="0.0" />
+        <GradientStop Color="#FF2C2E33" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <!-- ===== Panels: grey, flat, a touch see-through (Fluent) ===== -->
+    <LinearGradientBrush x:Key="PanelSurfaceBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#F52F3136" Offset="0.0" />
+        <GradientStop Color="#F52A2C30" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="PopupSurfaceBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#F2323438" Offset="0.0" />
+        <GradientStop Color="#F22C2E32" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="GlassBarBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#F2323438" Offset="0.0" />
+        <GradientStop Color="#F22B2D30" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="GlassEdgeBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FF45484E" Offset="0.0" />
+        <GradientStop Color="#FF303338" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <!-- ===== Keys: flat grey with the faint bevel ===== -->
+    <LinearGradientBrush x:Key="RaisedBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FF3C3F45" Offset="0.0" />
+        <GradientStop Color="#FF35383D" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="RaisedHoverBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FF474A52" Offset="0.0" />
+        <GradientStop Color="#FF3F424A" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="RaisedEdgeBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FF5C6068" Offset="0.0" />
+        <GradientStop Color="#FF3F4248" Offset="0.12" />
+        <GradientStop Color="#FF2A2C30" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="InsetBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FF1B1C1F" Offset="0.0" />
+        <GradientStop Color="#FF202226" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="InsetEdgeBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FF141517" Offset="0.0" />
+        <GradientStop Color="#FF3A3D42" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <!-- Selected tool: the accent as a calm fill, a bright rim -->
+    <LinearGradientBrush x:Key="ActiveKeyBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FF164A7A" Offset="0.0" />
+        <GradientStop Color="#FF123F68" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="ActiveKeyEdgeBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FF60CDFF" Offset="0.0" />
+        <GradientStop Color="#FF2B88D8" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <SolidColorBrush x:Key="CaptionButtonHoverBrush" Color="#1FFFFFFF" />
+    <SolidColorBrush x:Key="CaptionButtonPressedBrush" Color="#2EFFFFFF" />
+
+    <SolidColorBrush x:Key="GlassHoverBrush" Color="#14FFFFFF" />
+
+    <!-- ===== Light shadows, almost no glow ===== -->
+    <DropShadowEffect x:Key="RaisedDarkShadow" Color="#FF000000" BlurRadius="16" ShadowDepth="4" Direction="270" Opacity="0.35" />
+    <DropShadowEffect x:Key="RaisedLightShadow" Color="#FFFFFFFF" BlurRadius="8" ShadowDepth="0" Direction="135" Opacity="0.04" />
+    <DropShadowEffect x:Key="SmallRaisedShadow" Color="#FF000000" BlurRadius="6" ShadowDepth="1.5" Direction="270" Opacity="0.30" />
+    <DropShadowEffect x:Key="HoverGlowEffect" Color="#FF3B9CFF" BlurRadius="6" ShadowDepth="0" Opacity="0.35" />
+    <DropShadowEffect x:Key="AccentGlowEffect" Color="#FF3B9CFF" BlurRadius="6" ShadowDepth="0" Opacity="0.6" />
+    <DropShadowEffect x:Key="VioletGlowEffect" Color="#FF9F8BFF" BlurRadius="8" ShadowDepth="0" Opacity="0.4" />
+
+    <x:Null x:Key="GlyphLayerEffect" />
+
+</ResourceDictionary>

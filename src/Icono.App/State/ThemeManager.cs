@@ -14,13 +14,16 @@ public enum ThemeStyle
 {
     Soft,
     Glass,
+
+    /// <summary>Flat graphite surfaces, grey panels, clear icons and light shadows: the interface steps back for the drawing.</summary>
+    Pro,
 }
 
 /// <summary>
 /// Switches the whole UI between the colour palettes at runtime: Dark and Light, each in the Soft and in the Glass style. All
 /// colour-dependent resources live in Themes/DarkPalette.xaml, LightPalette.xaml, GlassDarkPalette.xaml and GlassLightPalette.xaml
 /// under identical keys and are referenced with DynamicResource, so replacing the palette dictionary re-skins every open window.
-/// The user's choice is remembered in %LocalAppData%\Icono\theme.txt ("Dark", "Light", "GlassDark" or "GlassLight").
+/// The user's choice is remembered in %LocalAppData%\Icono\theme.txt ("Dark", "Light", "GlassDark", "GlassLight", "ProDark" or "ProLight").
 /// </summary>
 public static class ThemeManager
 {
@@ -29,14 +32,19 @@ public static class ThemeManager
 
     public static ThemeMode Current { get; private set; } = ThemeMode.Dark;
 
-    public static ThemeStyle Style { get; private set; } = ThemeStyle.Soft;
+    public static ThemeStyle Style { get; private set; } = ThemeStyle.Pro;
 
     public static event EventHandler? ThemeChanged;
 
     /// <summary>The name of the palette file for a mode and style.</summary>
-    public static string PaletteName(ThemeMode mode, ThemeStyle style) => style == ThemeStyle.Glass ? $"Glass{mode}" : mode.ToString();
+    public static string PaletteName(ThemeMode mode, ThemeStyle style) => style switch
+    {
+        ThemeStyle.Glass => $"Glass{mode}",
+        ThemeStyle.Pro => $"Pro{mode}",
+        _ => mode.ToString(),
+    };
 
-    /// <summary>Reads "Dark", "Light", "GlassDark" or "GlassLight"; false for anything else.</summary>
+    /// <summary>Reads "Dark", "Light", "GlassDark", "GlassLight", "ProDark" or "ProLight"; false for anything else.</summary>
     public static bool TryParse(string? text, out ThemeMode mode, out ThemeStyle style)
     {
         mode = ThemeMode.Dark;
@@ -47,15 +55,20 @@ public static class ThemeManager
             style = ThemeStyle.Glass;
             value = value[5..];
         }
+        else if (value.StartsWith("Pro", StringComparison.OrdinalIgnoreCase))
+        {
+            style = ThemeStyle.Pro;
+            value = value[3..];
+        }
 
         return Enum.TryParse(value, ignoreCase: true, out mode) && Enum.IsDefined(mode);
     }
 
-    /// <summary>Applies the saved theme (Dark when nothing is saved). Call before any window is created.</summary>
+    /// <summary>Applies the saved theme (Pro Dark when nothing is saved). Call before any window is created.</summary>
     public static void LoadSaved()
     {
         var mode = ThemeMode.Dark;
-        var style = ThemeStyle.Soft;
+        var style = ThemeStyle.Pro;
 
         try
         {

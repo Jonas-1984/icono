@@ -71,6 +71,13 @@
                                            Foreground="{DynamicResource AccentBlueMidBrush}" ToolTip="Write to info@bitbins.de">info@bitbins.de</Hyperlink>
                             </TextBlock>
                         </Grid>
+                        <Grid Margin="0,6,0,0">
+                            <TextBlock Text="Licenses" Foreground="{DynamicResource MutedTextBrush}" FontSize="12" />
+                            <TextBlock HorizontalAlignment="Right" FontSize="12">
+                                <Hyperlink Click="LicensesLink_OnClick" Foreground="{DynamicResource AccentBlueMidBrush}"
+                                           ToolTip="Lucide icons (ISC / MIT), SkiaSharp and Skia (MIT / BSD), .NET (MIT)">Third-party notices</Hyperlink>
+                            </TextBlock>
+                        </Grid>
                     </StackPanel>
                 </Border>
 

@@ -32,6 +32,19 @@ public partial class AboutDialog : Window
         e.Handled = true;
     }
 
+    private void LicensesLink_OnClick(object sender, RoutedEventArgs e)
+    {
+        var file = System.IO.Path.Combine(AppContext.BaseDirectory, "THIRD-PARTY-NOTICES.txt");
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(file) { UseShellExecute = true });
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or System.IO.FileNotFoundException)
+        {
+            ThemedMessageBox.Show(this, "The file THIRD-PARTY-NOTICES.txt next to icono.exe could not be opened.", "Licenses", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+    }
+
     private void OkButton_OnClick(object sender, RoutedEventArgs e) => Close();
 
     private void Card_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)

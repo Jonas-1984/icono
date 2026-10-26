@@ -350,7 +350,7 @@ public static class ShapeGeometryFactory
     /// outline of the shape; null for every other kind.</summary>
     public static SKPath? BuildSolidParts(Shape shape)
     {
-        if (PlanSymbols.SolidData(shape.Kind) is not { } data || SKPath.ParseSvgPathData(data) is not { } path)
+        if (PlanSymbols.CreateSolid(shape.Kind) is not { } path)
         {
             return null;
         }
@@ -1089,11 +1089,8 @@ public static class ShapeGeometryFactory
             case ShapeKind.WaterAndWastewater:
             case ShapeKind.Hood:
             {
-                using var symbolPath = SKPath.ParseSvgPathData(PlanSymbols.OutlineData(kind));
-                if (symbolPath is not null)
-                {
-                    path.AddPath(symbolPath);
-                }
+                using var symbolPath = PlanSymbols.CreateOutline(kind);
+                path.AddPath(symbolPath);
 
                 break;
             }

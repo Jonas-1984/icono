@@ -402,6 +402,8 @@ public partial class MainWindow : Window
 
     private void SoftStyleMenuItem_OnClick(object sender, RoutedEventArgs e) => SwitchStyle(ThemeStyle.Soft);
 
+    private void ProStyleMenuItem_OnClick(object sender, RoutedEventArgs e) => SwitchStyle(ThemeStyle.Pro);
+
     private void GlassStyleMenuItem_OnClick(object sender, RoutedEventArgs e) => SwitchStyle(ThemeStyle.Glass);
 
     private void SwitchTheme(ThemeMode mode)
@@ -424,6 +426,7 @@ public partial class MainWindow : Window
         ViewLightModeMenuItem.IsChecked = !dark;
         ViewSoftStyleMenuItem.IsChecked = ThemeManager.Style == ThemeStyle.Soft;
         ViewGlassStyleMenuItem.IsChecked = ThemeManager.Style == ThemeStyle.Glass;
+        ViewProStyleMenuItem.IsChecked = ThemeManager.Style == ThemeStyle.Pro;
     }
 
     private void AboutMenuItem_OnClick(object sender, RoutedEventArgs e)
