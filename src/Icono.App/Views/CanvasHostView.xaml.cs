@@ -306,6 +306,7 @@ public partial class CanvasHostView : UserControl
         _isPathDrawing = false;
         _pendingPathShape = null;
         ClearWallTyped();
+        ForgetTypedSegments();
         _context?.RequestRedraw();
     }
 
@@ -345,6 +346,18 @@ public partial class CanvasHostView : UserControl
 
         _wallClosePreview = false;
         PathBoundsCalculator.Recompute(shape);
+
+        if (shape.Kind == ShapeKind.Wall)
+        {
+            if (shape.WallClosed)
+            {
+                ForgetTypedSegments();
+            }
+            else
+            {
+                FitLastTypedSegment(shape);
+            }
+        }
 
         var layer = _context.SelectedLayer ?? _context.Document.Layers.FirstOrDefault();
         if (layer is not null)
@@ -2466,7 +2479,7 @@ public partial class CanvasHostView : UserControl
 
             if (_pendingPathShape.Kind == ShapeKind.Wall)
             {
-                WallEditor.ApplyDrawingDefaults(_pendingPathShape);
+                WallEditor.ApplyDrawingDefaults(_pendingPathShape, _context.Document.ScaleDenominator);
             }
 
             _context.RequestRedraw();

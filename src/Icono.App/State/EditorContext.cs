@@ -799,7 +799,7 @@ public sealed class EditorContext : ObservableObject
 
         var width = Math.Min(Document.Width * 0.6, 480);
         var height = Math.Min(Document.Height * 0.45, width * 0.75);
-        var wall = WallRooms.Build(preset, Document.Width / 2.0, Document.Height / 2.0, width, height);
+        var wall = WallRooms.Build(preset, Document.Width / 2.0, Document.Height / 2.0, width, height, Document.ScaleDenominator);
 
         layer.Shapes.Insert(0, wall);
         UndoManager.Push(UndoableAction.ForInsert(layer.Shapes, wall, 0));

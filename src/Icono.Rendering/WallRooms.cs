@@ -49,7 +49,7 @@ public static class WallRooms
     }
 
     /// <summary>A closed wall in the shape of the preset with its frame centred on (<paramref name="centerX"/>, <paramref name="centerY"/>).</summary>
-    public static Shape Build(RoomPreset preset, double centerX, double centerY, double width, double height)
+    public static Shape Build(RoomPreset preset, double centerX, double centerY, double width, double height, double? scaleDenominator = null)
     {
         var corners = Corners(preset, width, height);
         var left = centerX - width / 2;
@@ -63,7 +63,7 @@ public static class WallRooms
             WallClosed = true,
             Points = corners.Select(c => new CorePoint(c.X - corners[0].X, c.Y - corners[0].Y)).ToList(),
         };
-        WallEditor.ApplyDrawingDefaults(wall);
+        WallEditor.ApplyDrawingDefaults(wall, scaleDenominator);
         PathBoundsCalculator.Recompute(wall);
         return wall;
     }

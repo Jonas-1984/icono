@@ -73,7 +73,45 @@ public partial class CanvasHostView
     private bool TryTypedLength(Shape wall, out double px) =>
         WallGeometry.TryParseLength(_wallTyped, wall.WallDimensionUnit, _context?.Document.ScaleDenominator ?? 1, out px) && px > 0.5;
 
-    /// <summary>The moving corner of the wall at the typed length from the last placed one, in the direction it has now.</summary>
+    // The number typed is the length the wall's dimension shows (see WallTypedLength): the centre line is made as long as needed, and when
+    // the next wall is drawn the corner moves so that this wall keeps the number that was typed.
+
+    /// <summary>The wall whose typed lengths are remembered, and per segment the length the user typed (page px).</summary>
+    private Shape? _typedWall;
+
+    private readonly Dictionary<int, double> _typedSegments = [];
+
+    private void RememberTypedSegment(Shape wall, int segment, double px)
+    {
+        if (!ReferenceEquals(_typedWall, wall))
+        {
+            _typedWall = wall;
+            _typedSegments.Clear();
+        }
+
+        _typedSegments[segment] = px;
+    }
+
+    private bool TryTypedSegment(Shape wall, int segment, out double px)
+    {
+        px = 0;
+        return ReferenceEquals(_typedWall, wall) && _typedSegments.TryGetValue(segment, out px);
+    }
+
+    private void ForgetTypedSegments()
+    {
+        _typedWall = null;
+        _typedSegments.Clear();
+    }
+
+    private static void SetAbsolutePoints(Shape wall, IReadOnlyList<SKPoint> absolute)
+    {
+        wall.Points = absolute.Select(p => new CorePoint(p.X - wall.X, p.Y - wall.Y)).ToList();
+        PathBoundsCalculator.Recompute(wall);
+    }
+
+    /// <summary>The moving corner of the wall: the typed length from the last placed one, in the direction the pointer gives, with the
+    /// centre line long enough that the dimension of this wall shows the typed number.</summary>
     private Point WithTypedLength(Shape wall, Point point)
     {
         if (_wallTyped.Length == 0 || !TryTypedLength(wall, out var px))
@@ -81,14 +119,14 @@ public partial class CanvasHostView
             return point;
         }
 
-        var from = WallGeometry.AbsolutePoints(wall)[^2];
+        var points = WallGeometry.AbsolutePoints(wall).ToList();
+        var from = points[^2];
         var dx = point.X - from.X;
         var dy = point.Y - from.Y;
         var length = Math.Sqrt(dx * dx + dy * dy);
         if (length < 1e-6)
         {
             // no direction yet: carry on in the direction of the previous wall, or to the right
-            var points = WallGeometry.AbsolutePoints(wall);
             if (points.Count >= 3)
             {
                 dx = points[^2].X - points[^3].X;
@@ -104,8 +142,48 @@ public partial class CanvasHostView
             }
         }
 
-        return new Point(from.X + dx / length * px, from.Y + dy / length * px);
+        var ux = dx / length;
+        var uy = dy / length;
+        if (TryTypedSegment(wall, points.Count - 3, out var previous))
+        {
+            WallTypedLength.KeepPreviousTyped(wall, points, previous, ux, uy);
+            SetAbsolutePoints(wall, points);
+            points = WallGeometry.AbsolutePoints(wall).ToList();
+        }
+
+        var end = WallTypedLength.EndFor(wall, points, ux, uy, px);
+        return new Point(end.X, end.Y);
     }
+
+    /// <summary>A wall finished with a free end gives back what was added for a corner that never came.</summary>
+    private void FitLastTypedSegment(Shape wall)
+    {
+        if (wall.Points is { Count: >= 2 } local && TryTypedSegment(wall, local.Count - 2, out var target))
+        {
+            var points = WallGeometry.AbsolutePoints(wall).ToList();
+            WallTypedLength.FitLast(wall, points, target);
+            SetAbsolutePoints(wall, points);
+        }
+
+        ForgetTypedSegments();
+    }
+
+    /// <summary>The typed wall ends close to the start of the room: the room is closed there (see <see cref="WallTypedLength.CloseRoom"/>).</summary>
+    private bool TryCloseTypedRoom(Shape wall, double typedLast)
+    {
+        var points = WallGeometry.AbsolutePoints(wall).ToList();
+        if (points.Count - 1 < 3)
+        {
+            return false;
+        }
+
+        var start = WallTypedLength.CloseRoom(wall, points, typedLast);
+        points[0] = start;
+        points[^1] = start;
+        SetAbsolutePoints(wall, points);
+        return true;
+    }
+
 
     private void ApplyTypedLength()
     {
@@ -132,7 +210,7 @@ public partial class CanvasHostView
             return;
         }
 
-        if (!TryTypedLength(wall, out _))
+        if (!TryTypedLength(wall, out var typedPx))
         {
             _context.Notify("That is not a length. Type for example 250, 2.5 m or 2500 mm and press Enter.");
             return;
@@ -140,11 +218,12 @@ public partial class CanvasHostView
 
         ApplyTypedLength();
         ClearWallTyped();
+        RememberTypedSegment(wall, wall.Points!.Count - 2, typedPx);
 
         var points = WallGeometry.AbsolutePoints(wall);
         var (sx, sy) = WallStart(wall);
-        var closesRoom = points.Count - 1 >= 3 && Math.Abs(points[^1].X - sx) < 0.5 && Math.Abs(points[^1].Y - sy) < 0.5;
-        if (closesRoom)
+        var gap = Math.Sqrt((points[^1].X - sx) * (points[^1].X - sx) + (points[^1].Y - sy) * (points[^1].Y - sy));
+        if (points.Count - 1 >= 3 && gap <= wall.WallThickness * 1.3 && TryCloseTypedRoom(wall, typedPx))
         {
             FinishPathDraw(closeWall: true);
             return;

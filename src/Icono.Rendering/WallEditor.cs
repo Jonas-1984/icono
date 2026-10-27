@@ -11,13 +11,23 @@ public static class WallEditor
 
     /// <summary>The look a freshly made wall starts with: a light band with a diagonal hatch and a dark outline. Everything can be
     /// changed in the WALL card.</summary>
-    public static void ApplyDrawingDefaults(Shape wall)
+    public static void ApplyDrawingDefaults(Shape wall, double? scaleDenominator = null)
     {
         wall.FillColor = ArgbColor.FromRgb(0xFA, 0xFA, 0xFA);
         wall.BorderColor = ArgbColor.FromRgb(0x23, 0x29, 0x33);
         wall.BorderThickness = 1.5;
         wall.DimOffset = 14; // the dimension line of a wall sits this far from its outer face
+        if (scaleDenominator is > 0)
+        {
+            wall.WallThickness = ThicknessPx(DefaultThicknessCm, scaleDenominator.Value);
+        }
     }
+
+    /// <summary>The thickness a new wall starts with, in real-world cm (the user changes it afterwards in the WALL card).</summary>
+    public const double DefaultThicknessCm = 15;
+
+    /// <summary>A real-world length in cm as page px at the drawing scale 1:<paramref name="scaleDenominator"/> (96 dpi).</summary>
+    public static double ThicknessPx(double cm, double scaleDenominator) => cm / 2.54 * 96 / scaleDenominator;
 
     /// <summary>A corner point that was moved: where it was and by how much.</summary>
     public readonly record struct Move(double FromX, double FromY, double DeltaX, double DeltaY);
