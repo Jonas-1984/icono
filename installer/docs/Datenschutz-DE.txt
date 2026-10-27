@@ -1,0 +1,43 @@
+﻿icono - Datenschutzhinweis
+==========================
+
+Kurz gesagt: icono sammelt, sendet und teilt keine Daten über Sie. Das Programm stellt von sich aus keine Verbindung zum Internet her.
+
+1. Verantwortlicher
+   Jonas Shojaei, www.bitbins.de, E-Mail: info@bitbins.de
+
+2. Was icono NICHT tut
+   - keine Verbindung zum Internet, keine Übertragung an mich oder Dritte
+   - keine Nutzungsstatistik, keine Telemetrie, keine Tracker, keine Werbung
+   - kein Benutzerkonto, keine Cloud, keine Anmeldung
+   - keine Kamera-, Mikrofon- oder Standortzugriffe
+
+3. Was auf Ihrem Gerät gespeichert wird (nur lokal)
+   Ordner: %LocalAppData%\Icono  (im Explorer: Windows-Taste + R, dann %LocalAppData%\Icono eingeben)
+   - theme.txt        Ihr gewähltes Farbdesign (nur ein Wort)
+   - recent.txt       die Liste der zuletzt geöffneten Dateien (Dateipfade, damit "Open Recent" funktioniert)
+   - Library\         Ihre eigene Icon-Bibliothek, wenn Sie Icons dort ablegen
+   - crash.log        ein Fehlerprotokoll, wenn das Programm einen unerwarteten Fehler meldet (Zeitpunkt, Fehlermeldung und technische
+                      Aufrufliste; die Meldung kann Dateinamen oder Pfade enthalten)
+   Diese Daten verlassen Ihr Gerät nicht. Ich erhalte sie nur, wenn Sie mir das Fehlerprotokoll freiwillig schicken (zum Beispiel per E-Mail).
+   Ihre Zeichnungen speichert icono nur dort, wo Sie es wählen (Datei > Save / Export).
+
+4. Löschen
+   Beim Deinstallieren fragt das Installationsprogramm, ob diese lokalen Daten mit gelöscht werden sollen. Sie können den Ordner jederzeit
+   selbst löschen, ohne dass icono beschädigt wird.
+
+5. Links im Menü Help
+   Die Einträge "Documentation", "Check for Updates", "Website" und "Contact" öffnen auf Ihren Klick hin Ihren Browser oder Ihr
+   E-Mail-Programm. Erst dann findet eine Verbindung statt, und zwar durch diese Programme. Für sie gelten deren Datenschutzbestimmungen und
+   die der besuchten Seite.
+
+6. Wenn Sie mir schreiben
+   Schreiben Sie mir (info@bitbins.de), verarbeite ich Ihre E-Mail-Adresse und Ihre Nachricht, um Ihnen zu antworten und den gemeldeten Fehler zu
+   beheben (Art. 6 Abs. 1 lit. b und f DSGVO). Ich gebe sie nicht weiter und lösche sie, sobald die Anfrage erledigt ist und keine
+   gesetzliche Aufbewahrungspflicht besteht. Bitte senden Sie keine Zeichnungen, die personenbezogene Daten Dritter enthalten.
+
+7. Ihre Rechte
+   Sie haben das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch sowie das Recht
+   auf Beschwerde bei einer Datenschutz-Aufsichtsbehörde. Schreiben Sie dazu an info@bitbins.de.
+
+Stand: Oktober 2026. Ändert sich das Verhalten des Programms (zum Beispiel durch eine Update-Prüfung), wird dieser Hinweis vorher angepasst.

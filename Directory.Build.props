@@ -1,0 +1,23 @@
+<Project>
+
+  <!-- Identity of every assembly of icono (shown in the file properties, the About window and the installer). -->
+  <PropertyGroup>
+    <Product>icono</Product>
+    <Company>Jonas Shojaei (bitbins.de)</Company>
+    <Authors>Jonas Shojaei</Authors>
+    <Copyright>Copyright (c) 2026 Jonas Shojaei</Copyright>
+    <Version>0.1.0</Version>
+    <InformationalVersion>0.1.0-test.1</InformationalVersion>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+  </PropertyGroup>
+
+  <!-- Release builds (the ones that are handed to other people): no debug symbols and no local folder names inside the files. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <Deterministic>true</Deterministic>
+    <PathMap>$(MSBuildThisFileDirectory)=icono/</PathMap>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+</Project>

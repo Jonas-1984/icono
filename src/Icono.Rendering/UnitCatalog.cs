@@ -11,7 +11,29 @@ public static partial class UnitCatalog
 
     private static IReadOnlyList<UnitObject>? _all;
 
-    public static IReadOnlyList<UnitObject> All => _all ??= [.. Generated, .. GeneratedSinks, .. GeneratedKitchenElements, .. GeneratedComputers];
+    /// <summary>False in the builds handed to other people (Release): the Sinks catalogue is left out there until the origin of its
+    /// drawings is documented (see the project file).</summary>
+    public const bool SinksIncluded =
+#if EXCLUDE_UNVERIFIED_SINKS
+        false;
+#else
+        true;
+#endif
+
+    public static IReadOnlyList<UnitObject> All => _all ??= Collect();
+
+    private static List<UnitObject> Collect()
+    {
+        List<UnitObject> all = [.. Generated];
+        if (SinksIncluded)
+        {
+            all.AddRange(GeneratedSinks);
+        }
+
+        all.AddRange(GeneratedKitchenElements);
+        all.AddRange(GeneratedComputers);
+        return all;
+    }
 
     public static UnitObject? Find(string id) => All.FirstOrDefault(u => u.Id == id);
 

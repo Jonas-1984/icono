@@ -1,0 +1,48 @@
+﻿icono - Test terms (test version 0.1.0-test.1)
+==============================================
+
+Please read these terms. By installing and using icono you agree to them.
+
+1. What you receive
+   icono is a drawing program for icons and floor plans (Windows). You receive an unfinished TEST VERSION that is meant for trying out the
+   program and finding errors. It can contain errors, can behave differently from the later release and can create files that later
+   versions can no longer read. Please do not rely on it for important work and back up your files regularly in a second place.
+
+2. Right of use
+   You may install icono on your own devices free of charge and use it for testing. The right is non-exclusive, non-transferable and can be
+   withdrawn by me. Please do not pass the installer or the installed files on to third parties, and do not publish screenshots or reports
+   about the test version without my consent. The software must not be sold, rented or passed on in changed form. Rights that the law gives
+   you without the possibility of exclusion remain unaffected.
+
+3. Your drawings
+   Everything you draw and save with icono belongs to you. icono does not read your files out or send them to anyone. You may use the supplied
+   symbols and objects (for example kitchen elements, doors, windows) in your own drawings. Passing on the collection of objects itself, for
+   example as your own library, is not permitted.
+
+4. Feedback
+   Bug reports and suggestions are voluntary and welcome (info@bitbins.de). I may use them without payment to improve icono. Please do not send me
+   files or information that you are not allowed to share, and keep in mind that drawings can contain personal details.
+
+5. Software of others
+   icono contains software and design elements of third parties (for example .NET, SkiaSharp and the Lucide icons). Their licences are in the file
+   THIRD-PARTY-NOTICES.txt in the installation folder (also reachable in the "About icono" window).
+
+6. Liability
+   The test version is provided free of charge. I am liable without limit for intent and gross negligence, for injury to life, body and health
+   and under the product liability act. Otherwise liability is excluded as far as the law allows. Defects that I have not fraudulently concealed
+   give rise to no claims. For loss of data I am only liable if you have backed up your data regularly and appropriately, and then only for the
+   effort of restoring it from the backup. Statutory rights that cannot be excluded remain unaffected.
+
+7. Duration and end
+   The test version can be uninstalled at any time (Windows Settings > Apps, or the "Uninstall icono" shortcut). I can withdraw the right of
+   use, for example when a new version is released. Please then uninstall the test version.
+
+8. Privacy
+   Information is in the file Privacy.txt. In short: icono does not send any data and does not connect to the internet.
+
+9. Miscellaneous
+   German law applies, unless mandatory consumer protection rules of your country of residence stand against it. If a provision is invalid,
+   the others remain valid.
+
+Contact: Jonas Shojaei, www.bitbins.de, info@bitbins.de
+Version of these terms: October 2026

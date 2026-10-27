@@ -179,7 +179,7 @@ public class ShapeCombinerTests
     [Fact]
     public void Explode_ACatalogueObjectFallsApartAndKeepsItsPlaceAndSize()
     {
-        var unit = Icono.Rendering.UnitCatalog.Find("sink01")!;
+        var unit = Icono.Rendering.UnitCatalog.Find("kel01")!;
         var shape = new Shape
         {
             Kind = ShapeKind.CombinedPath, CustomPathData = unit.PathData, CustomPathStrokeOnly = true,

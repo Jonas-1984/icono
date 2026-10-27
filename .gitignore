@@ -5,3 +5,4 @@
 *.suo
 installer/Output/
 .claude/settings.local.json
+installer/publish/

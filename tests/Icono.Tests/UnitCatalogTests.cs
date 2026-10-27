@@ -10,7 +10,7 @@ public class UnitCatalogTests
     public void TheCataloguesHaveAllGroupsWithDistinctIdsAndNames()
     {
         Assert.Equal(24, UnitCatalog.All.Count(u => u.Group == UnitCatalog.CabinetsGroup));
-        Assert.Equal(8, UnitCatalog.All.Count(u => u.Group == "Sinks"));
+        Assert.Equal(UnitCatalog.SinksIncluded ? 8 : 0, UnitCatalog.All.Count(u => u.Group == "Sinks"));
         Assert.Equal(11, UnitCatalog.All.Count(u => u.Group == "Kitchen Elements"));
         Assert.Equal(3, UnitCatalog.All.Count(u => u.Group == "Computers"));
         Assert.Equal(UnitCatalog.All.Count, UnitCatalog.All.Select(u => u.Id).Distinct().Count());

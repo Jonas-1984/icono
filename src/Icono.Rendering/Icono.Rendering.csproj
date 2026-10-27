@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\Icono.Core\Icono.Core.csproj" />
@@ -12,6 +12,12 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!-- The Sinks catalogue comes from a CAD export whose origin is not documented yet: it stays out of the builds that are handed to other
+       people (Release) until the licence of the drawings is clear. Remove this line to ship it. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DefineConstants>$(DefineConstants);EXCLUDE_UNVERIFIED_SINKS</DefineConstants>
   </PropertyGroup>
 
 </Project>

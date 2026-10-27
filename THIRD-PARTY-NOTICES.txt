@@ -111,3 +111,18 @@ Copyright (c) .NET Foundation and Contributors
 4. Fonts
 --------
 The user interface uses the Segoe UI system font of Windows. It is part of Windows and is not distributed with icono.
+
+
+5. OpenTK and OpenTK.GLWpfControl
+---------------------------------
+Source: https://github.com/opentk/opentk and https://github.com/opentk/GLWpfControl
+
+These libraries come with the SkiaSharp WPF package and are part of icono. OpenTK is licensed under the MIT/X11 license,
+Copyright (c) 2006 - 2008 The Open Toolkit library (and its contributors). OpenTK.GLWpfControl is licensed under the MIT License,
+Copyright (c) Team OpenTK. (The MIT license text is the same as shown above.)
+
+
+6. Symbols and objects of icono
+-------------------------------
+The doors, windows, sockets, kitchen elements, cabinets, units and computer objects of the catalogues were drawn by the author of icono
+(Jonas Shojaei). They are not covered by the licenses above; see the test terms or the license of the final release.

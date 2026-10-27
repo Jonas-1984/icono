@@ -1,0 +1,42 @@
+﻿icono - Privacy notice
+======================
+
+In short: icono does not collect, send or share any data about you. The program does not connect to the internet on its own.
+
+1. Controller
+   Jonas Shojaei, www.bitbins.de, e-mail: info@bitbins.de
+
+2. What icono does NOT do
+   - no internet connection, no transfer to me or to third parties
+   - no usage statistics, no telemetry, no trackers, no advertising
+   - no user account, no cloud, no sign-in
+   - no camera, microphone or location access
+
+3. What is stored on your device (locally only)
+   Folder: %LocalAppData%\Icono  (in Explorer: Windows key + R, then type %LocalAppData%\Icono)
+   - theme.txt        your chosen colour theme (one word)
+   - recent.txt       the list of recently opened files (file paths, so that "Open Recent" works)
+   - Library\         your own icon library, if you put icons there
+   - crash.log        an error log when the program reports an unexpected error (time, error message and technical call list;
+                      the message can contain file names or paths)
+   This data does not leave your device. I only receive it if you send me the error log voluntarily (for example by e-mail).
+   icono saves your drawings only where you choose (File > Save / Export).
+
+4. Deleting
+   When you uninstall, the installer asks whether this local data should be deleted as well. You can delete the folder yourself at any time
+   without damaging icono.
+
+5. Links in the Help menu
+   The entries "Documentation", "Check for Updates", "Website" and "Contact" open your browser or e-mail program when you click them. Only then
+   a connection is made, by those programs. Their privacy terms and those of the visited site apply.
+
+6. If you write to me
+   If you write to me (info@bitbins.de) I process your e-mail address and your message to answer you and to fix the reported problem (Art. 6(1)(b)
+   and (f) GDPR). I do not pass it on and delete it when the request is done and no legal retention duty exists. Please do not send drawings that
+   contain personal data of third parties.
+
+7. Your rights
+   You have the right of access, rectification, erasure, restriction of processing, data portability and objection, and the right to lodge
+   a complaint with a data protection supervisory authority. Write to info@bitbins.de.
+
+Version: October 2026. If the behaviour of the program changes (for example an update check), this notice will be adjusted beforehand.

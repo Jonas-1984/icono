@@ -1,0 +1,52 @@
+﻿icono - Testbedingungen (Testversion 0.1.0-test.1)
+==================================================
+
+Bitte lesen Sie diese Bedingungen. Mit der Installation und Nutzung von icono erklären Sie sich damit einverstanden.
+
+1. Was Sie hier erhalten
+   icono ist ein Zeichenprogramm für Icons und Grundrisse (Windows). Sie erhalten eine unfertige TESTVERSION, die zum Ausprobieren und
+   zum Finden von Fehlern gedacht ist. Sie kann Fehler enthalten, sich anders verhalten als die spätere Fassung und Dateien erzeugen, die
+   spätere Versionen nicht mehr lesen können. Verlassen Sie sich bitte nicht auf sie für wichtige Arbeiten und sichern Sie Ihre Dateien
+   regelmäßig an einem zweiten Ort.
+
+2. Nutzungsrecht
+   Sie dürfen icono unentgeltlich auf Ihren eigenen Geräten installieren und zum Testen nutzen. Das Recht ist einfach, nicht übertragbar und
+   kann von mir widerrufen werden. Bitte geben Sie das Installationsprogramm und die installierten Dateien nicht an Dritte weiter und
+   veröffentlichen Sie keine Screenshots oder Berichte über die Testversion ohne meine Zustimmung. Die Software darf nicht verkauft,
+   vermietet oder verändert weitergegeben werden. Rechte, die Ihnen das Gesetz zwingend zugesteht (zum Beispiel nach den §§ 69d und 69e
+   UrhG), bleiben unberührt.
+
+3. Ihre Zeichnungen
+   Alles, was Sie mit icono zeichnen und speichern, gehört Ihnen. icono liest und sendet Ihre Dateien nicht an Dritte. Die mitgelieferten
+   Symbole und Objekte (zum Beispiel Küchenelemente, Türen, Fenster) dürfen Sie in Ihren eigenen Zeichnungen verwenden. Eine Weitergabe der
+   Objektsammlung selbst, etwa als eigene Bibliothek, ist nicht gestattet.
+
+4. Rückmeldungen
+   Fehlermeldungen und Verbesserungsvorschläge sind freiwillig und willkommen (info@bitbins.de). Ich darf sie ohne Vergütung nutzen, um icono zu
+   verbessern. Bitte senden Sie mir keine Dateien oder Informationen, die Sie nicht weitergeben dürfen, und bedenken Sie, dass Zeichnungen
+   persönliche Angaben enthalten können.
+
+5. Software anderer
+   icono enthält Software und Gestaltungselemente Dritter (zum Beispiel .NET, SkiaSharp und die Lucide-Symbole). Ihre Lizenzen stehen in der Datei
+   THIRD-PARTY-NOTICES.txt im Installationsordner (auch im Fenster "About icono" erreichbar).
+
+6. Haftung
+   Die Testversion wird unentgeltlich überlassen. Ich hafte für Vorsatz und grobe Fahrlässigkeit, bei Verletzung von Leben, Körper und
+   Gesundheit sowie nach dem Produkthaftungsgesetz unbeschränkt. Im Übrigen ist die Haftung ausgeschlossen, soweit das Gesetz es zulässt. Mängel,
+   die ich nicht arglistig verschwiegen habe, begründen keine Ansprüche. Für Datenverlust hafte ich nur, wenn Sie Ihre Daten regelmäßig und
+   gefahrentsprechend gesichert haben, und dann nur für den Aufwand der Wiederherstellung aus der Sicherung. Gesetzliche Rechte, die sich nicht
+   ausschließen lassen, bleiben unberührt.
+
+7. Dauer und Ende
+   Die Testversion kann jederzeit deinstalliert werden (Windows-Einstellungen > Apps oder die Verknüpfung "icono deinstallieren"). Ich kann das
+   Nutzungsrecht widerrufen, zum Beispiel wenn eine neue Version erscheint. Dann deinstallieren Sie die Testversion bitte.
+
+8. Datenschutz
+   Informationen dazu stehen in der Datei Datenschutz.txt. In Kürze: icono sendet keine Daten und stellt keine Verbindung zum Internet her.
+
+9. Sonstiges
+   Es gilt deutsches Recht, soweit dem keine zwingenden Verbraucherschutzvorschriften Ihres Wohnsitzstaates entgegenstehen. Sollte eine
+   Bestimmung unwirksam sein, bleiben die übrigen wirksam.
+
+Kontakt: Jonas Shojaei, www.bitbins.de, info@bitbins.de
+Stand: Oktober 2026
