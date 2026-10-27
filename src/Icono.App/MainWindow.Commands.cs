@@ -44,7 +44,7 @@ public partial class MainWindow
 
     private void Context_OnPropertyChangedForWindow(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(EditorContext.ActiveTool) or nameof(EditorContext.SelectedShapeKind) or nameof(EditorContext.CurrentDimensionKind))
+        if (e.PropertyName is nameof(EditorContext.ActiveTool) or nameof(EditorContext.SelectedShapeKind) or nameof(EditorContext.CurrentDimensionKind) or nameof(EditorContext.PendingUnit))
         {
             SyncToolUi();
         }
@@ -114,6 +114,7 @@ public partial class MainWindow
             {
                 Width = dialog.PageWidth,
                 Height = dialog.PageHeight,
+                ScaleDenominator = DefaultScale,
                 BackgroundMode = dialog.TransparentBackground ? BackgroundMode.Transparent : BackgroundMode.SolidColor,
                 Layers = [new LayerFile { Name = "Layer 1" }],
             },
@@ -695,6 +696,9 @@ public partial class MainWindow
                 return true;
             case Key.D:
                 _context.DuplicateSelection();
+                return true;
+            case Key.X when shift:
+                _context.ExplodeSelection();
                 return true;
             case Key.G:
                 if (shift)

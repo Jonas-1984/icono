@@ -48,7 +48,7 @@ public partial class ToolPanelView : UserControl
     /// clicked, so it's already checked by the time ActiveTool changes.</summary>
     private void Context_OnPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(EditorContext.ActiveTool) or nameof(EditorContext.SelectedShapeKind))
+        if (e.PropertyName is nameof(EditorContext.ActiveTool) or nameof(EditorContext.SelectedShapeKind) or nameof(EditorContext.PendingUnit))
         {
             SyncToolRadios();
         }
@@ -197,8 +197,63 @@ public partial class ToolPanelView : UserControl
         InitializeGridPalette();
 
         _ = new IconPager(ShapesWrapPanel, ShapesPagerDots, IconsPerPage);
-        _ = new IconPager(FurnitureWrapPanel, FurniturePagerDots, IconsPerPage);
+        BuildObjectGroups();
+        HideHintTexts();
         _ = new IconPager(ArrowsWrapPanel, ArrowsPagerDots, IconsPerPage);
+    }
+
+    /// <summary>Long explanatory texts (marked <c>Tag="More"</c> in the XAML) stay hidden behind a "More" link, so the cards are short;
+    /// the texts of one panel share one link. The link opens and closes them.</summary>
+    private void HideHintTexts()
+    {
+        var hints = new List<TextBlock>();
+        CollectHints(this, hints);
+
+        foreach (var panelHints in hints.Where(h => h.Parent is Panel).GroupBy(h => (Panel)h.Parent))
+        {
+            var panel = panelHints.Key;
+            var texts = panelHints.ToList();
+            var link = new TextBlock
+            {
+                Text = "More ▾", FontSize = 10.5, Cursor = Cursors.Hand, Margin = new Thickness(12, 2, 12, 6),
+                ToolTip = "Show the explanation",
+            };
+            link.SetResourceReference(TextBlock.ForegroundProperty, "AccentBlueMidBrush");
+            System.Windows.Automation.AutomationProperties.SetName(link, "More help: show or hide the explanation");
+
+            foreach (var text in texts)
+            {
+                text.Visibility = Visibility.Collapsed;
+            }
+
+            link.MouseLeftButtonDown += (_, e) =>
+            {
+                var open = texts[0].Visibility != Visibility.Visible;
+                foreach (var text in texts)
+                {
+                    text.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
+                }
+
+                link.Text = open ? "Less ▴" : "More ▾";
+                link.ToolTip = open ? "Hide the explanation" : "Show the explanation";
+                e.Handled = true;
+            };
+
+            panel.Children.Insert(panel.Children.IndexOf(texts[0]), link);
+        }
+    }
+
+    private static void CollectHints(DependencyObject parent, List<TextBlock> hints)
+    {
+        foreach (var child in LogicalTreeHelper.GetChildren(parent).OfType<DependencyObject>())
+        {
+            if (child is TextBlock { Tag: "More" } text)
+            {
+                hints.Add(text);
+            }
+
+            CollectHints(child, hints);
+        }
     }
 
     /// <summary>Collapses/expands the single sibling element right after a clicked card header —
@@ -264,6 +319,179 @@ public partial class ToolPanelView : UserControl
         (PointSnapKind.ApparentIntersection, "Apparent intersection", "M4,4 L10,10 M4,10 L10,4 M1.5,1.5 H12.5 V12.5 H1.5 Z", "Where the continuations of two lines meet although the lines themselves do not touch."),
         (PointSnapKind.Parallel, "Parallel", "M2,9 L8,3 M6,12 L12,6", "On the line from the last point that runs parallel to another line."),
     ];
+
+    // ----- OBJECTS card: collapsible groups and a search box -------------------------------------------------------
+
+    private const string PlanSymbolsGroup = "Plan symbols";
+
+    /// <summary>One group of the OBJECTS card: a header that folds the group away and the paged buttons below it.</summary>
+    private sealed class ObjectGroup(string name, FrameworkElement body, TextBlock count, System.Windows.Shapes.Path chevron, IconPager pager, WrapPanel panel, int total)
+    {
+        public string Name { get; } = name;
+        public FrameworkElement Header { get; set; } = null!;
+        public FrameworkElement Body { get; } = body;
+        public TextBlock Count { get; } = count;
+        public System.Windows.Shapes.Path Chevron { get; } = chevron;
+        public IconPager Pager { get; } = pager;
+        public WrapPanel Panel { get; } = panel;
+        public int Total { get; } = total;
+        public bool Expanded { get; set; }
+    }
+
+    private readonly List<ObjectGroup> _objectGroups = [];
+    private readonly Dictionary<UIElement, string> _objectSearchText = [];
+
+    /// <summary>Builds the groups of the OBJECTS card: the plan symbols from the XAML and one group per catalogue group. Only the plan
+    /// symbols start open so the card stays short; the search opens whatever matches.</summary>
+    private void BuildObjectGroups()
+    {
+        foreach (UIElement radio in FurnitureWrapPanel.Children)
+        {
+            _objectSearchText[radio] = $"{(radio as FrameworkElement)?.ToolTip} {PlanSymbolsGroup}";
+        }
+
+        FurnitureGroupContent.Visibility = Visibility.Visible;
+        var plan = AddObjectGroup(PlanSymbolsGroup, FurnitureGroupContent, FurnitureWrapPanel, FurniturePagerDots);
+        plan.Expanded = true;
+
+        var style = (Style)FindResource("ShapeIconRadioButtonStyle");
+        foreach (var catalogue in UnitCatalog.All.GroupBy(u => u.Group))
+        {
+            var panel = new WrapPanel { Margin = new Thickness(6, 0, 6, 0), MinHeight = 114 };
+            var dots = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 2, 0, 6) };
+            var body = new StackPanel();
+            body.Children.Add(panel);
+            body.Children.Add(dots);
+            ObjectGroupsPanel.Children.Add(body);
+
+            AddUnitButtons(panel, catalogue, style);
+            AddObjectGroup(catalogue.Key, body, panel, dots);
+        }
+
+        ApplyObjectSearch();
+    }
+
+    private ObjectGroup AddObjectGroup(string name, FrameworkElement body, WrapPanel panel, StackPanel dots)
+    {
+        var pager = new IconPager(panel, dots, IconsPerPage);
+
+        var label = new TextBlock { Text = name.ToUpperInvariant() };
+        label.SetResourceReference(FrameworkElement.StyleProperty, "PanelLabelTextStyle");
+        label.Margin = new Thickness(10, 6, 6, 4);
+        label.VerticalAlignment = VerticalAlignment.Center;
+        var count = new TextBlock { Text = panel.Children.Count.ToString(), FontSize = 10.5, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 8, 0) };
+        count.SetResourceReference(TextBlock.ForegroundProperty, "MutedTextBrush");
+        var chevron = new System.Windows.Shapes.Path();
+        chevron.SetResourceReference(FrameworkElement.StyleProperty, "CardChevronPathStyle");
+        chevron.Margin = new Thickness(0, 0, 10, 0);
+        chevron.VerticalAlignment = VerticalAlignment.Center;
+
+        var header = new Grid { Background = Brushes.Transparent, Cursor = Cursors.Hand };
+        header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        header.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        header.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        Grid.SetColumn(count, 1);
+        Grid.SetColumn(chevron, 2);
+        header.Children.Add(label);
+        header.Children.Add(count);
+        header.Children.Add(chevron);
+        System.Windows.Automation.AutomationProperties.SetName(header, $"{name} group, show or hide");
+
+        var group = new ObjectGroup(name, body, count, chevron, pager, panel, panel.Children.Count) { Header = header };
+        header.MouseLeftButtonDown += (_, _) =>
+        {
+            group.Expanded = !group.Expanded;
+            ApplyObjectGroup(group, !string.IsNullOrWhiteSpace(ObjectSearchBox.Text));
+        };
+
+        var index = ObjectGroupsPanel.Children.IndexOf(body);
+        ObjectGroupsPanel.Children.Insert(index < 0 ? ObjectGroupsPanel.Children.Count : index, header);
+        _objectGroups.Add(group);
+        return group;
+    }
+
+    /// <summary>Shows the group as the search and the user want it: open when the user opened it, or while the search finds something in it.</summary>
+    private static void ApplyObjectGroup(ObjectGroup group, bool searching)
+    {
+        var found = group.Pager.MatchCount;
+        var visible = !searching || found > 0;
+        var open = visible && (searching || group.Expanded);
+
+        group.Header.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+        group.Body.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
+        group.Chevron.RenderTransform = new RotateTransform(open ? 0 : -90);
+        group.Count.Text = searching ? $"{found} / {group.Total}" : group.Total.ToString();
+        group.Panel.MinHeight = searching ? 0 : 114;
+    }
+
+    private void ApplyObjectSearch()
+    {
+        var text = ObjectSearchBox.Text;
+        var terms = text.Split([' ', '\t', ','], StringSplitOptions.RemoveEmptyEntries);
+        var searching = terms.Length > 0;
+
+        Func<UIElement, bool>? filter = searching
+            ? element => _objectSearchText.TryGetValue(element, out var haystack)
+                         && terms.All(term => haystack.Contains(term, StringComparison.OrdinalIgnoreCase))
+            : null;
+
+        foreach (var group in _objectGroups)
+        {
+            group.Pager.SetFilter(filter);
+            ApplyObjectGroup(group, searching);
+        }
+
+        ObjectSearchHint.Visibility = text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
+        ObjectSearchClear.Visibility = text.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
+        ObjectNoMatchText.Visibility = searching && _objectGroups.All(g => g.Pager.MatchCount == 0) ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void ObjectSearchBox_OnTextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_objectGroups.Count > 0)
+        {
+            ApplyObjectSearch();
+        }
+    }
+
+    private void ObjectSearchBox_OnPreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape && ObjectSearchBox.Text.Length > 0)
+        {
+            ObjectSearchBox.Clear();
+            e.Handled = true;
+        }
+    }
+
+    private void ObjectSearchClear_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        ObjectSearchBox.Clear();
+        ObjectSearchBox.Focus();
+    }
+
+    private void AddUnitButtons(WrapPanel panel, IEnumerable<UnitObject> units, Style style)
+    {
+        foreach (var unit in units)
+        {
+            var longest = Math.Max(unit.WidthCm, unit.HeightCm);
+            var scaleX = unit.WidthCm / longest;
+            var scaleY = unit.HeightCm / longest;
+            var geometry = Geometry.Parse(unit.PathData).Clone();
+            geometry.Transform = new MatrixTransform(scaleX, 0, 0, scaleY, 12 * (1 - scaleX), 12 * (1 - scaleY));
+
+            var radio = new RadioButton
+            {
+                Style = style,
+                GroupName = "ToolSelection",
+                CommandParameter = "Unit:" + unit.Id,
+                Tag = geometry,
+                ToolTip = $"{unit.Name}: {unit.WidthCm:0.#} x {unit.HeightCm:0.#} cm",
+            };
+            radio.Checked += ToolRadioButton_OnChecked;
+            panel.Children.Add(radio);
+            _objectSearchText[radio] = $"{unit.Name} {unit.Group}";
+        }
+    }
 
     /// <summary>Opens the OBJECT SNAP card and brings it into view (View menu).</summary>
     public void ShowPointSnapCard()
@@ -455,6 +683,11 @@ public partial class ToolPanelView : UserControl
             case "Curve":
                 Context.ActiveTool = ActiveTool.PathDraw;
                 Context.SelectedShapeKind = Enum.Parse<ShapeKind>(tag);
+                break;
+            case var unitTag when unitTag.StartsWith("Unit:", StringComparison.Ordinal):
+                Context.PendingUnit = UnitCatalog.Find(unitTag[5..]);
+                Context.SelectedShapeKind = ShapeKind.CombinedPath;
+                Context.ActiveTool = ActiveTool.Shape;
                 break;
             default:
                 Context.ActiveTool = ActiveTool.Shape;

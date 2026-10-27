@@ -155,4 +155,72 @@ public class ShapeCombinerTests
         Assert.True(built.Bounds.Width > 0);
         Assert.True(built.Bounds.Height > 0);
     }
+
+    [Fact]
+    public void Explode_BreaksAMergedObjectBackIntoItsOutlines()
+    {
+        var a = new Shape { Kind = ShapeKind.Rectangle, X = 10, Y = 10, Width = 40, Height = 30 };
+        var b = new Shape { Kind = ShapeKind.Ellipse, X = 100, Y = 20, Width = 30, Height = 30 };
+        var merged = ShapeCombiner.Merge([a, b])!;
+
+        var pieces = ShapeCombiner.Explode(merged);
+
+        Assert.NotNull(pieces);
+        Assert.Equal(2, pieces!.Count);
+        using var whole = ShapeGeometryFactory.Build(merged);
+        var union = UnionOf(pieces);
+
+        Assert.Equal(whole.Bounds.Left, union.Left, 0.5);
+        Assert.Equal(whole.Bounds.Top, union.Top, 0.5);
+        Assert.Equal(whole.Bounds.Right, union.Right, 0.5);
+        Assert.Equal(whole.Bounds.Bottom, union.Bottom, 0.5);
+    }
+
+    [Fact]
+    public void Explode_ACatalogueObjectFallsApartAndKeepsItsPlaceAndSize()
+    {
+        var unit = Icono.Rendering.UnitCatalog.Find("sink01")!;
+        var shape = new Shape
+        {
+            Kind = ShapeKind.CombinedPath, CustomPathData = unit.PathData, CustomPathStrokeOnly = true,
+            X = 50, Y = 60, Width = unit.WidthCm, Height = unit.HeightCm,
+        };
+
+        var pieces = ShapeCombiner.Explode(shape);
+
+        Assert.NotNull(pieces);
+        Assert.True(pieces!.Count > 2, "a sink has an outline, an inner outline, a tap and a drain");
+        using var whole = ShapeGeometryFactory.Build(shape);
+        var union = UnionOf(pieces);
+
+        Assert.InRange(union.Left, whole.Bounds.Left - 1, whole.Bounds.Left + 1);
+        Assert.InRange(union.Right, whole.Bounds.Right - 1, whole.Bounds.Right + 1);
+        Assert.InRange(union.Bottom, whole.Bounds.Bottom - 1, whole.Bounds.Bottom + 1);
+    }
+
+    [Fact]
+    public void Explode_APolylineBecomesItsSegments_AndASinglePieceDoesNot()
+    {
+        var polyline = new Shape { Kind = ShapeKind.Polyline, X = 0, Y = 0, Points = [new CorePoint(0, 0), new CorePoint(10, 0), new CorePoint(10, 10)] };
+        PathBoundsCalculator.Recompute(polyline);
+
+        var segments = ShapeCombiner.Explode(polyline);
+
+        Assert.Equal(2, segments!.Count);
+        Assert.All(segments, s => Assert.Equal(ShapeKind.Line, s.Kind));
+        Assert.Null(ShapeCombiner.Explode(new Shape { Kind = ShapeKind.Rectangle, Width = 10, Height = 10 }));
+    }
+
+    private static SkiaSharp.SKRect UnionOf(IEnumerable<Shape> shapes)
+    {
+        var union = default(SkiaSharp.SKRect);
+        var first = true;
+        foreach (var shape in shapes)
+        {
+            using var path = ShapeGeometryFactory.Build(shape);
+            if (first) { union = path.Bounds; first = false; } else { union.Union(path.Bounds); }
+        }
+
+        return union;
+    }
 }

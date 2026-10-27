@@ -34,6 +34,11 @@ public partial class CanvasHostView : UserControl
     private Shape? _pendingShape;
 
     private bool _isMovingSelection;
+
+    /// <summary>False from the mouse-down on a shape until the pointer has really been dragged: a plain click (or a hand that trembles a pixel)
+    /// only selects, it must not snap the shape to the grid or to other objects and so make it jump.</summary>
+    private bool _moveActivated;
+    private const double MoveActivationPx = 4;
     private Point _moveStartPoint;
     private List<(double X, double Y)> _moveStartPositions = [];
     private List<ShapeSnapshot>? _moveUndoBefore;
@@ -206,6 +211,7 @@ public partial class CanvasHostView : UserControl
         AddItem("Union", _context.UnionSelection, selected.Count >= 2 && allUnlocked);
         AddItem("Trim (first selected = cutter)", _context.TrimSelection, selected.Count == 2 && allUnlocked);
         AddItem("Merge to One Shape", _context.MergeSelection, selected.Count >= 2 && allUnlocked);
+        AddItem("Explode (break into its single outlines)", _context.ExplodeSelection, selected.Any(s => s.Kind is ShapeKind.CombinedPath or ShapeKind.Polyline) && allUnlocked);
         AddItem("Reflect", _context.ReflectSelection, selected.Count >= 1 && allUnlocked);
         AddItem("Offset...", ShowOffsetDialog, selected.Count >= 1 && allUnlocked);
         AddItem("Match Properties (copy this look)", _context.BeginMatch, selected.Count == 1);
@@ -1571,11 +1577,15 @@ public partial class CanvasHostView : UserControl
     {
         var rect = BuildMarqueeDocRect();
 
-        using var fillPaint = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill, Color = AccentColor.WithAlpha(40) };
+        // like AutoCAD: dragging to the right is a window (blue, solid: only what lies completely inside is chosen), dragging to the left is a
+        // crossing (green, dashed: everything the area touches is chosen)
+        var crossing = MarqueeIsCrossing;
+        var color = crossing ? CrossingColor : AccentColor;
+        using var fillPaint = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill, Color = color.WithAlpha(40) };
         using var strokePaint = new SKPaint
         {
-            IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 1f, Color = AccentColor,
-            PathEffect = SKPathEffect.CreateDash([4, 3], 0),
+            IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 1f, Color = color,
+            PathEffect = crossing ? SKPathEffect.CreateDash([4, 3], 0) : null,
         };
 
         var screenRect = SKRect.Create(
@@ -1942,6 +1952,7 @@ public partial class CanvasHostView : UserControl
             if (!IsLocked(shape))
             {
                 _isMovingSelection = true;
+                _moveActivated = false;
                 _moveStartPoint = point;
                 _moveStartPositions = _context.SelectedShapes.Select(s => (s.X, s.Y)).ToList();
                 _moveUndoBefore = _context.SelectedShapes.Select(ShapeSnapshot.Capture).ToList();
@@ -2250,6 +2261,16 @@ public partial class CanvasHostView : UserControl
             if (PlanSymbols.IsPlanSymbol(_pendingShape.Kind))
             {
                 PlanSymbols.ApplyDefaults(_pendingShape);
+            }
+
+            if (_pendingShape.Kind == ShapeKind.CombinedPath && _context.PendingUnit is { } unit)
+            {
+                // a cabinet or unit of the catalogue: white body, thin dark line, as drawn in the catalogue
+                _pendingShape.CustomPathData = unit.PathData;
+                _pendingShape.CustomPathStrokeOnly = true;
+                _pendingShape.FillColor = ArgbColor.FromRgb(0xFF, 0xFF, 0xFF);
+                _pendingShape.BorderColor = ArgbColor.FromRgb(0x23, 0x29, 0x33);
+                _pendingShape.BorderThickness = 1;
             }
 
             if (_pendingShape.Kind == ShapeKind.DesignGrid)
@@ -2810,8 +2831,19 @@ public partial class CanvasHostView : UserControl
             FontStyle = shape.TextItalic ? FontStyles.Italic : FontStyles.Normal,
             TextWrapping = TextWrapping.Wrap,
             AcceptsReturn = true,
-            TextAlignment = TextAlignment.Center,
-            VerticalContentAlignment = VerticalAlignment.Center,
+            TextAlignment = shape.TextHAlign switch
+            {
+                TextHorizontalAlign.Left => TextAlignment.Left,
+                TextHorizontalAlign.Right => TextAlignment.Right,
+                TextHorizontalAlign.Justify => TextAlignment.Justify,
+                _ => TextAlignment.Center,
+            },
+            VerticalContentAlignment = shape.TextVAlign switch
+            {
+                TextVerticalAlign.Top => VerticalAlignment.Top,
+                TextVerticalAlign.Bottom => VerticalAlignment.Bottom,
+                _ => VerticalAlignment.Center,
+            },
             Padding = new Thickness(4),
             Width = Math.Max(72, box.Width * Zoom),
             MinHeight = Math.Max(box.Height * Zoom, fontSize * Zoom * 1.9),
@@ -3243,6 +3275,17 @@ public partial class CanvasHostView : UserControl
         if (_isMovingSelection && _context is not null && _moveStartPositions.Count == _context.SelectedShapes.Count)
         {
             var point = ToDocumentSpace(e.GetPosition(SkiaCanvas));
+            if (!_moveActivated)
+            {
+                var dragged = Math.Sqrt(Math.Pow(point.X - _moveStartPoint.X, 2) + Math.Pow(point.Y - _moveStartPoint.Y, 2)) * Zoom;
+                if (dragged < MoveActivationPx)
+                {
+                    return;
+                }
+
+                _moveActivated = true;
+            }
+
             // Total delta from the FROZEN drag-start point, applied to each shape's FROZEN start
             // position — not an incremental "+= dx" every frame. Snapping the incremental form
             // permanently rounds shape.X/Y away on every single mouse-move event, discarding the
@@ -3563,7 +3606,7 @@ public partial class CanvasHostView : UserControl
             _isMovingSelection = false;
             ReleaseMouseCapture();
 
-            if (_moveUndoBefore is not null && _context is not null && _moveUndoBefore.Count == _context.SelectedShapes.Count)
+            if (_moveActivated && _moveUndoBefore is not null && _context is not null && _moveUndoBefore.Count == _context.SelectedShapes.Count)
             {
                 var shapes = _context.SelectedShapes.ToList();
                 var after = shapes.Select(ShapeSnapshot.Capture).ToList();
@@ -3592,6 +3635,7 @@ public partial class CanvasHostView : UserControl
         }
 
         var rect = BuildMarqueeDocRect();
+        var crossing = MarqueeIsCrossing;
 
         foreach (var layer in _context.Document.Layers)
         {
@@ -3602,7 +3646,7 @@ public partial class CanvasHostView : UserControl
 
             foreach (var shape in layer.Shapes)
             {
-                if (Intersects(shape, rect) && !_context.SelectedShapes.Contains(shape))
+                if (!_context.SelectedShapes.Contains(shape) && InMarquee(shape, rect, crossing))
                 {
                     _context.SelectedShapes.Add(shape);
                 }
@@ -3612,9 +3656,39 @@ public partial class CanvasHostView : UserControl
         _context.RequestRedraw();
     }
 
-    private static bool Intersects(Shape shape, SKRect rect) =>
-        shape.X < rect.Right && shape.X + shape.Width > rect.Left &&
-        shape.Y < rect.Bottom && shape.Y + shape.Height > rect.Top;
+    /// <summary>The area was dragged from right to left (AutoCAD "crossing"): everything it touches is chosen. From left to right it is a
+    /// window and only what lies completely inside is chosen.</summary>
+    private bool MarqueeIsCrossing => _marqueeCurrent.X < _marqueeStart.X;
+
+    private static readonly SKColor CrossingColor = new(0x4C, 0xD1, 0x7A);
+
+    private static bool InMarquee(Shape shape, SKRect area, bool crossing)
+    {
+        var bounds = SelectionBounds(shape);
+        return crossing
+            ? bounds.Left <= area.Right && bounds.Right >= area.Left && bounds.Top <= area.Bottom && bounds.Bottom >= area.Top
+            : bounds.Left >= area.Left && bounds.Right <= area.Right && bounds.Top >= area.Top && bounds.Bottom <= area.Bottom;
+    }
+
+    /// <summary>Where the shape really is on the page (its drawn outline, rotation included), falling back to its frame.</summary>
+    private static SKRect SelectionBounds(Shape shape)
+    {
+        try
+        {
+            using var path = ShapeGeometryFactory.Build(shape);
+            var bounds = path.TightBounds;
+            if (bounds.Width > 0 || bounds.Height > 0)
+            {
+                return bounds;
+            }
+        }
+        catch (Exception)
+        {
+            // a shape without drawable geometry: use its frame below
+        }
+
+        return SKRect.Create((float)shape.X, (float)shape.Y, (float)shape.Width, (float)shape.Height);
+    }
 
     private void OnMouseLeave(object sender, MouseEventArgs e)
     {
@@ -3676,6 +3750,17 @@ public partial class CanvasHostView : UserControl
         {
             // a click, not a drag: the real-world size of the symbol at the drawing scale
             var size = PlanSymbols.DefaultSize(shape.Kind, _context.Document.ScaleDenominator, _context.Document.Width);
+            var outline = ShapeOutline.FrameForBox(shape, shape.X, shape.Y, size.Width, size.Height);
+            shape.X = outline.X;
+            shape.Y = outline.Y;
+            shape.Width = outline.W;
+            shape.Height = outline.H;
+        }
+
+        if (shape is { Kind: ShapeKind.CombinedPath } && _context?.PendingUnit is { } clickedUnit && shape.CustomPathData == clickedUnit.PathData && shape.Width < 6 && shape.Height < 6)
+        {
+            // a click, not a drag: the real size of the unit at the drawing scale
+            var size = UnitCatalog.DefaultSize(clickedUnit, _context.Document.ScaleDenominator);
             var outline = ShapeOutline.FrameForBox(shape, shape.X, shape.Y, size.Width, size.Height);
             shape.X = outline.X;
             shape.Y = outline.Y;

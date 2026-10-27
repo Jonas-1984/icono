@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using Icono.App.State;
@@ -321,6 +322,7 @@ public partial class PropertiesPanelView : UserControl
             .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
             .Select(name => new FontFamilyOption(name))
             .ToList();
+        BuildTextPositionGrid();
         LayerAccentColorSwatchList.ItemsSource = PresetColors.Select(pc => (Brush)new SolidColorBrush(pc.Color)).ToList();
         FillColorPicker.ColorChanged += FillColorPicker_OnColorChanged;
         BackgroundColorPicker.ColorChanged += BackgroundColorPicker_OnColorChanged;
@@ -535,6 +537,7 @@ public partial class PropertiesPanelView : UserControl
         TextItalicToggle.IsChecked = shape.TextItalic;
         TextUnderlineToggle.IsChecked = shape.TextUnderline;
         FontSizeTextBox.Text = shape.TextFontSize.ToString("0", CultureInfo.InvariantCulture);
+        RefreshTextAlignmentButtons(shape);
 
         // A Text shape is coloured by its fill; every other shape gets a separate colour for the text typed into it.
         TextColorSection.Visibility = shape.Kind == ShapeKind.Text ? Visibility.Collapsed : Visibility.Visible;
@@ -2212,6 +2215,106 @@ public partial class PropertiesPanelView : UserControl
         ApplyToSelectionWithUndo(s => s.TextUnderline = underline);
     }
 
+    // ----- Text alignment and position ---------------------------------------------------------------------------------
+
+    private readonly Dictionary<(TextHorizontalAlign, TextVerticalAlign), ToggleButton> _textPositionButtons = [];
+
+    private static readonly (TextVerticalAlign Vertical, string VerticalName, TextHorizontalAlign Horizontal, string HorizontalName)[] TextPositions =
+    [
+        (TextVerticalAlign.Top, "top", TextHorizontalAlign.Left, "left"),
+        (TextVerticalAlign.Top, "top", TextHorizontalAlign.Center, "centre"),
+        (TextVerticalAlign.Top, "top", TextHorizontalAlign.Right, "right"),
+        (TextVerticalAlign.Middle, "middle", TextHorizontalAlign.Left, "left"),
+        (TextVerticalAlign.Middle, "middle", TextHorizontalAlign.Center, "centre"),
+        (TextVerticalAlign.Middle, "middle", TextHorizontalAlign.Right, "right"),
+        (TextVerticalAlign.Bottom, "bottom", TextHorizontalAlign.Left, "left"),
+        (TextVerticalAlign.Bottom, "bottom", TextHorizontalAlign.Center, "centre"),
+        (TextVerticalAlign.Bottom, "bottom", TextHorizontalAlign.Right, "right"),
+    ];
+
+    /// <summary>The nine position buttons: each shows a small frame with a bar of text at the place it stands for.</summary>
+    private void BuildTextPositionGrid()
+    {
+        foreach (var (vertical, verticalName, horizontal, horizontalName) in TextPositions)
+        {
+            var barY = vertical switch { TextVerticalAlign.Top => 4.5, TextVerticalAlign.Bottom => 11.5, _ => 8 };
+            var barX = horizontal switch { TextHorizontalAlign.Left => 3.5, TextHorizontalAlign.Right => 8.5, _ => 6 };
+
+            var content = new Grid { Width = 16, Height = 16 };
+            var frame = new System.Windows.Shapes.Path
+            {
+                Data = Geometry.Parse("M1,1 H15 V15 H1 Z"), StrokeThickness = 1, Stretch = Stretch.None,
+            };
+            frame.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, "MutedTextBrush");
+            var bar = new System.Windows.Shapes.Path
+            {
+                Data = Geometry.Parse(FormattableString.Invariant($"M{barX},{barY} H{barX + 4}")), StrokeThickness = 2.2, Stretch = Stretch.None,
+                StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round,
+            };
+            bar.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, "ForegroundTextBrush");
+            content.Children.Add(frame);
+            content.Children.Add(bar);
+
+            var button = new ToggleButton
+            {
+                Content = content,
+                Tag = (horizontal, vertical),
+                ToolTip = vertical == TextVerticalAlign.Middle && horizontal == TextHorizontalAlign.Center
+                    ? "Centre (middle, centre)"
+                    : $"{char.ToUpperInvariant(verticalName[0])}{verticalName[1..]}, {horizontalName}",
+                Margin = new Thickness(0, 0, 4, 4),
+            };
+            button.SetResourceReference(FrameworkElement.StyleProperty, "IconToggleButtonStyle");
+            button.Click += TextPositionButton_OnClick;
+            _textPositionButtons[(horizontal, vertical)] = button;
+            TextPositionGrid.Children.Add(button);
+        }
+    }
+
+    private void RefreshTextAlignmentButtons(Shape shape)
+    {
+        TextAlignLeftToggle.IsChecked = shape.TextHAlign == TextHorizontalAlign.Left;
+        TextAlignCenterToggle.IsChecked = shape.TextHAlign == TextHorizontalAlign.Center;
+        TextAlignRightToggle.IsChecked = shape.TextHAlign == TextHorizontalAlign.Right;
+        TextAlignJustifyToggle.IsChecked = shape.TextHAlign == TextHorizontalAlign.Justify;
+
+        foreach (var ((horizontal, vertical), button) in _textPositionButtons)
+        {
+            button.IsChecked = shape.TextHAlign == horizontal && shape.TextVAlign == vertical;
+        }
+    }
+
+    private void TextAlignToggle_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is ToggleButton { Tag: string tag })
+        {
+            var align = Enum.Parse<TextHorizontalAlign>(tag);
+            ApplyToSelectionWithUndo(s => s.TextHAlign = align);
+        }
+
+        if (_boundShape is not null)
+        {
+            RefreshTextAlignmentButtons(_boundShape);
+        }
+    }
+
+    private void TextPositionButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is ToggleButton { Tag: ValueTuple<TextHorizontalAlign, TextVerticalAlign> position })
+        {
+            ApplyToSelectionWithUndo(s =>
+            {
+                s.TextHAlign = position.Item1;
+                s.TextVAlign = position.Item2;
+            });
+        }
+
+        if (_boundShape is not null)
+        {
+            RefreshTextAlignmentButtons(_boundShape);
+        }
+    }
+
     private void FontSizeTextBox_OnLostFocus(object sender, RoutedEventArgs e) => ApplyFontSizeTextBox();
 
     private void FontSizeTextBox_OnKeyDown(object sender, KeyEventArgs e)
@@ -2681,10 +2784,10 @@ public partial class PropertiesPanelView : UserControl
     private const double PxPerInch = 96.0;
     private const double MmPerInch = 25.4;
 
-    private CanvasSizeUnit _canvasSizeUnit = CanvasSizeUnit.Px;
+    private CanvasSizeUnit _canvasSizeUnit = CanvasSizeUnit.Cm;
 
     /// <summary>Unit of the selected shape's size/position boxes (SIZE &amp; POSITION card); values stay stored in px.</summary>
-    private CanvasSizeUnit _shapeSizeUnit = CanvasSizeUnit.Px;
+    private CanvasSizeUnit _shapeSizeUnit = CanvasSizeUnit.Cm;
 
     private static double PxToUnit(double px, CanvasSizeUnit unit) => unit switch
     {

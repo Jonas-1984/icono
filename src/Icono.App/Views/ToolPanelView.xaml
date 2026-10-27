@@ -50,7 +50,7 @@
                             <Path Grid.Column="1" Style="{StaticResource CardChevronPathStyle}" />
                         </Grid>
                         <StackPanel>
-                            <TextBlock Text="Every tool - lines, shapes, walls, dimensions, handles and moved objects - snaps to these points of all objects. A mark shows what was found. Hold Alt to snap off."
+                            <TextBlock Tag="More" Text="Every tool - lines, shapes, walls, dimensions, handles and moved objects - snaps to these points of all objects. A mark shows what was found. Hold Alt to snap off."
                                        Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="12,2,12,6" />
                             <CheckBox x:Name="PointSnapEnabledCheckBox" Content="Object snap on" Tag="Enabled" IsChecked="True" Click="PointSnapCheckBox_OnClick"
                                       Foreground="{DynamicResource ForegroundTextBrush}" FontSize="11" Margin="10,2,6,4"
@@ -71,7 +71,7 @@
                             <Path Grid.Column="1" Style="{StaticResource CardChevronPathStyle}" />
                         </Grid>
                         <StackPanel>
-                            <TextBlock Text="Shapes line up with the faces of walls and the edges of other shapes while you move, place or resize them: put a cabinet right against a wall. Hold Alt to snap off."
+                            <TextBlock Tag="More" Text="Shapes line up with the faces of walls and the edges of other shapes while you move, place or resize them: put a cabinet right against a wall. Hold Alt to snap off."
                                        Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="12,2,12,6" />
                             <StackPanel Margin="10,0,6,6">
                                 <CheckBox x:Name="ObjectSnapEnabledCheckBox" Content="Align shapes" Tag="Enabled" IsChecked="True" Click="ObjectSnapCheckBox_OnClick"
@@ -187,8 +187,8 @@
                                           Width="15" Height="15" Stretch="Uniform" />
                                 </Button>
                             </WrapPanel>
-                            <TextBlock Text="A room is added in the middle of the page as one closed wall. Click the number of any wall to type its length." Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="12,2,12,8" />
-                            <TextBlock Text="Pick a wall, then set thickness, hatch and dimensions in the WALL card on the right."
+                            <TextBlock Tag="More" Text="A room is added in the middle of the page as one closed wall. Click the number of any wall to type its length." Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="12,2,12,8" />
+                            <TextBlock Tag="More" Text="Pick a wall, then set thickness, hatch and dimensions in the WALL card on the right."
                                        Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="12,2,12,8" />
                             <TextBlock Text="SNAPPING" Style="{StaticResource PanelLabelTextStyle}" />
                             <StackPanel Margin="10,0,6,2">
@@ -455,6 +455,19 @@
                             <Path Grid.Column="1" Style="{StaticResource CardChevronPathStyle}" />
                         </Grid>
                         <StackPanel>
+                        <Grid Margin="10,4,10,6">
+                            <TextBox x:Name="ObjectSearchBox" Padding="6,4,24,4" FontSize="11.5"
+                                     TextChanged="ObjectSearchBox_OnTextChanged" PreviewKeyDown="ObjectSearchBox_OnPreviewKeyDown"
+                                     AutomationProperties.Name="Search objects"
+                                     ToolTip="Search the objects by name or group, e.g. sink, oven, Grohe, 2 bowls (every word must match). Esc clears the search." />
+                            <TextBlock x:Name="ObjectSearchHint" Text="Search objects ..." IsHitTestVisible="False" FontSize="11.5"
+                                       Foreground="{DynamicResource MutedTextBrush}" Margin="9,0,0,0" VerticalAlignment="Center" />
+                            <TextBlock x:Name="ObjectSearchClear" Text="&#x2715;" Visibility="Collapsed" Cursor="Hand" FontSize="11"
+                                       Foreground="{DynamicResource MutedTextBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"
+                                       ToolTip="Clear the search" MouseLeftButtonDown="ObjectSearchClear_OnMouseLeftButtonDown" />
+                        </Grid>
+                        <StackPanel x:Name="ObjectGroupsPanel">
+                        <StackPanel x:Name="FurnitureGroupContent">
                         <WrapPanel x:Name="FurnitureWrapPanel" Margin="6,0" MinHeight="114">
                             <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
                                          Tag="{StaticResource DoorSingleToolGeometry}" CommandParameter="DoorSingle" ToolTip="Door (single): drag the opening, or click for a 90 cm door at the drawing scale. Lay it over a wall: it cuts the wall open." />
@@ -484,7 +497,13 @@
                                          Tag="{StaticResource HoodToolGeometry}" CommandParameter="Hood" ToolTip="Cooker hood" />
                         </WrapPanel>
                         <StackPanel x:Name="FurniturePagerDots" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,2,0,6" />
-                        <TextBlock Text="Doors and windows lie over a wall and cut it open. The electrical and kitchen symbols (sockets, appliances, cooker, oven, microwave, water connections, hood) are placed at a point. Drag to size them or click for a real-world size at the drawing scale, turn them with Rotation, mirror them with Flip. Door: thickness and opening angle in the OPENING card on the right."
+                        </StackPanel>
+                        </StackPanel>
+                        <TextBlock x:Name="ObjectNoMatchText" Text="No object matches your search." Visibility="Collapsed"
+                                   Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" Margin="12,2,12,8" />
+                        <TextBlock Tag="More" Text="Open a group with its header, or search above. Kitchen cabinets, units, sinks, kitchen elements and computers come in their real size: click for the size at the drawing scale, or drag to size them."
+                                   Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="12,2,12,8" />
+                        <TextBlock Tag="More" Text="Doors and windows lie over a wall and cut it open. The electrical and kitchen symbols (sockets, appliances, cooker, oven, microwave, water connections, hood) are placed at a point. Drag to size them or click for a real-world size at the drawing scale, turn them with Rotation, mirror them with Flip. Door: thickness and opening angle in the OPENING card on the right."
                                    Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="12,2,12,8" />
                         </StackPanel>
                     </StackPanel>

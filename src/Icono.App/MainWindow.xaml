@@ -263,6 +263,7 @@
                 </MenuItem>
                 <Separator />
                 <MenuItem Header="Merge to One Shape" Click="MergeButton_OnClick" />
+                <MenuItem Header="Explode" InputGestureText="Ctrl+Shift+X" Click="ExplodeButton_OnClick" ToolTip="Breaks a combined object (for example a sink from the catalogue) into its single outlines" />
                 <MenuItem Header="Union" Click="UnionButton_OnClick" />
                 <MenuItem Header="Trim" Click="TrimButton_OnClick" />
                 <MenuItem Header="Reflect" Click="ReflectButton_OnClick" />
@@ -359,6 +360,11 @@
                 <StackPanel Orientation="Horizontal" Margin="0,0,10,0">
                     <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="MergeButton_OnClick" ToolTip="Merge to One Shape">
                         <Path Data="{StaticResource MergeToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
+                              StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Width="15" Height="15" Stretch="Uniform" />
+                    </Button>
+                    <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="ExplodeButton_OnClick" ToolTip="Explode: break a combined object into its single outlines (Ctrl+Shift+X)">
+                        <Path Data="{StaticResource ExplodeToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
                               StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
                               Width="15" Height="15" Stretch="Uniform" />
                     </Button>

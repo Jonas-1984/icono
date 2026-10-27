@@ -102,6 +102,8 @@ public static class MatchProperties
             target.TextBold = source.TextBold;
             target.TextItalic = source.TextItalic;
             target.TextUnderline = source.TextUnderline;
+            target.TextHAlign = source.TextHAlign;
+            target.TextVAlign = source.TextVAlign;
             target.TextColor = source.TextColor;
         }
 

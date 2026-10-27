@@ -9,6 +9,32 @@ namespace Icono.Rendering;
 /// longer needs to stay a live, re-typeable string.</summary>
 public static class TextOutliner
 {
+    private const float FramePadding = 4;
+
+    /// <summary>The text origin that puts the glyph bounds where the shape's alignment asks for it inside the text frame (centred
+    /// by default; a single line has no ragged edge, so Justify is the same as Left).</summary>
+    private static (float X, float Y) Origin(Shape textShape, SKRect bounds)
+    {
+        var left = (float)textShape.X;
+        var top = (float)textShape.Y;
+        var right = (float)(textShape.X + textShape.Width);
+        var bottom = (float)(textShape.Y + textShape.Height);
+
+        var x = textShape.TextHAlign switch
+        {
+            TextHorizontalAlign.Left or TextHorizontalAlign.Justify => left + FramePadding - bounds.Left,
+            TextHorizontalAlign.Right => right - FramePadding - bounds.Right,
+            _ => (left + right) / 2 - bounds.MidX,
+        };
+        var y = textShape.TextVAlign switch
+        {
+            TextVerticalAlign.Top => top + FramePadding - bounds.Top,
+            TextVerticalAlign.Bottom => bottom - FramePadding - bounds.Bottom,
+            _ => (top + bottom) / 2 - bounds.MidY,
+        };
+        return (x, y);
+    }
+
     /// <summary>The live text of a <see cref="ShapeKind.Text"/> shape as ONE outline path in document space, with the
     /// shape's flips and rotation baked in (underline included). The renderer feeds it through the same fill / border /
     /// shadow / blur / fade / design-style pipeline as every other shape, so all of those settings work on text too.
@@ -30,8 +56,7 @@ public static class TextOutliner
         font.MeasureText(textShape.TextContent, out var textBounds, measurePaint);
         var centerX = (float)(textShape.X + textShape.Width / 2);
         var centerY = (float)(textShape.Y + textShape.Height / 2);
-        var originX = centerX - textBounds.MidX;
-        var originY = centerY - textBounds.MidY;
+        var (originX, originY) = Origin(textShape, textBounds);
 
         var path = font.GetTextPath(textShape.TextContent, new SKPoint(originX, originY));
 
@@ -79,8 +104,7 @@ public static class TextOutliner
         font.MeasureText(textShape.TextContent, out var textBounds, measurePaint);
         var centerX = (float)(textShape.X + textShape.Width / 2);
         var centerY = (float)(textShape.Y + textShape.Height / 2);
-        var originX = centerX - textBounds.MidX;
-        var originY = centerY - textBounds.MidY;
+        var (originX, originY) = Origin(textShape, textBounds);
 
         using var outline = font.GetTextPath(textShape.TextContent, new SKPoint(originX, originY));
         var bounds = outline.Bounds;

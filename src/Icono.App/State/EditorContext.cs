@@ -35,8 +35,9 @@ public sealed class EditorContext : ObservableObject
     private ArgbColor _currentFillColor = ArgbColor.FromRgb(0x9E, 0xD9, 0xD1);
     private bool _showGrid;
     private bool _snapToGrid;
-    private double _gridSize = 8;
-    private PageUnit _pageUnit = PageUnit.Px;
+    private double _gridSize = PageUnits.ToPx(1, PageUnit.Cm); // 1 cm: the page unit starts as cm
+    private PageUnit _pageUnit = PageUnit.Cm;
+    private UnitObject? _pendingUnit;
 
     public Document Document { get; } = new();
 
@@ -53,7 +54,20 @@ public sealed class EditorContext : ObservableObject
 
     public ActiveTool ActiveTool { get => _activeTool; set => SetField(ref _activeTool, value); }
 
-    public ShapeKind SelectedShapeKind { get => _selectedShapeKind; set => SetField(ref _selectedShapeKind, value); }
+    public ShapeKind SelectedShapeKind
+    {
+        get => _selectedShapeKind;
+        set
+        {
+            if (SetField(ref _selectedShapeKind, value) && value != ShapeKind.CombinedPath)
+            {
+                PendingUnit = null;
+            }
+        }
+    }
+
+    /// <summary>The cabinet or unit of the catalogue that the shape tool places (with <see cref="ShapeKind.CombinedPath"/> as the kind), or null.</summary>
+    public UnitObject? PendingUnit { get => _pendingUnit; set => SetField(ref _pendingUnit, value); }
 
     /// <summary>The name that identifies the active tool in the palettes and menus ("Select", "Wall", "DimAligned", "Rectangle" ...), or null.
     /// The tool, the kind of shape being placed and the kind of dimension together decide it.</summary>
@@ -69,6 +83,7 @@ public sealed class EditorContext : ObservableObject
         ActiveTool.Measure => "Measure",
         ActiveTool.MeasureGap => "MeasureGap",
         ActiveTool.Match => "Match",
+        ActiveTool.Shape when SelectedShapeKind == ShapeKind.CombinedPath && PendingUnit is { } unit => "Unit:" + unit.Id,
         ActiveTool.PathDraw when SelectedShapeKind == ShapeKind.Dimension => "Dim" + CurrentDimensionKind,
         ActiveTool.Shape or ActiveTool.PathDraw => SelectedShapeKind.ToString(),
         _ => null,
@@ -85,6 +100,7 @@ public sealed class EditorContext : ObservableObject
         "Measure" => "Ruler",
         "MeasureGap" => "Distance between objects",
         "Match" => "Match Properties",
+        var tag when tag.StartsWith("Unit:", StringComparison.Ordinal) => PendingUnit?.Name ?? "Unit",
         var tag when tag.StartsWith("Dim", StringComparison.Ordinal) => tag[3..] + " dimension",
         var tag => System.Text.RegularExpressions.Regex.Replace(tag, "(?<=[a-z0-9])(?=[A-Z])", " "),
     };
@@ -1250,6 +1266,59 @@ public sealed class EditorContext : ObservableObject
         {
             ReplaceWithCombinedShape(layer, [front, back], trimmed);
         }
+    }
+
+    /// <summary>"Explode": every selected combined path (a catalogue object, a merged or imported drawing) falls apart into its single
+    /// outlines, every polyline into its segments. All the pieces stay where they were and are selected; one undo step brings the
+    /// object back.</summary>
+    public void ExplodeSelection()
+    {
+        var candidates = SelectedShapes.Where(s => !s.Locked && s.Kind is ShapeKind.CombinedPath or ShapeKind.Polyline).ToList();
+        if (candidates.Count == 0)
+        {
+            Notify(SelectedShapes.Count == 0
+                ? "Select a combined object (for example a sink or a merged drawing) to explode it."
+                : "Only combined objects and polylines can be exploded.");
+            return;
+        }
+
+        var actions = new List<UndoableAction>();
+        var pieces = new List<Shape>();
+        foreach (var shape in candidates)
+        {
+            var layer = Document.Layers.FirstOrDefault(l => l.Shapes.Contains(shape));
+            if (layer is null || ShapeCombiner.Explode(shape) is not { } parts)
+            {
+                continue;
+            }
+
+            var index = layer.Shapes.IndexOf(shape);
+            layer.Shapes.RemoveAt(index);
+            actions.Add(UndoableAction.ForRemove([(layer.Shapes, shape, index)]));
+            for (var i = 0; i < parts.Count; i++)
+            {
+                layer.Shapes.Insert(index + i, parts[i]);
+                actions.Add(UndoableAction.ForInsert(layer.Shapes, parts[i], index + i));
+            }
+
+            pieces.AddRange(parts);
+        }
+
+        if (actions.Count == 0)
+        {
+            Notify("Nothing to explode: this object has only one outline.");
+            return;
+        }
+
+        UndoManager.Push(UndoableAction.Combine(actions));
+        SelectedShapes.Clear();
+        foreach (var piece in pieces)
+        {
+            SelectedShapes.Add(piece);
+        }
+
+        RequestRedraw();
+        Notify($"Exploded into {pieces.Count} separate pieces (Ctrl+Z puts the object back).");
     }
 
     private void ReplaceWithCombinedShape(Layer layer, IReadOnlyList<Shape> sources, Shape combined)

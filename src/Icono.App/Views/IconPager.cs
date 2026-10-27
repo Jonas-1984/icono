@@ -19,12 +19,24 @@ public sealed class IconPager
     private readonly StackPanel _dots;
     private readonly int _pageSize;
     private int _page;
+    private Func<UIElement, bool>? _filter;
 
     public IconPager(WrapPanel panel, StackPanel dots, int pageSize)
     {
         _panel = panel;
         _dots = dots;
         _pageSize = pageSize;
+        Apply();
+    }
+
+    /// <summary>The number of buttons that pass the current filter (all of them without one).</summary>
+    public int MatchCount { get; private set; }
+
+    /// <summary>Pages only the buttons that pass the filter (null = all) and goes back to the first page.</summary>
+    public void SetFilter(Func<UIElement, bool>? filter)
+    {
+        _filter = filter;
+        _page = 0;
         Apply();
     }
 
@@ -39,13 +51,23 @@ public sealed class IconPager
         var start = _page * _pageSize;
         var end = start + _pageSize;
 
-        for (var i = 0; i < _panel.Children.Count; i++)
+        var matches = 0;
+        foreach (UIElement child in _panel.Children)
         {
-            _panel.Children[i].Visibility = i >= start && i < end ? Visibility.Visible : Visibility.Collapsed;
+            var visible = _filter?.Invoke(child) ?? true;
+            if (visible)
+            {
+                visible = matches >= start && matches < end;
+                matches++;
+            }
+
+            child.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        var totalPages = Math.Max(1, (int)Math.Ceiling(_panel.Children.Count / (double)_pageSize));
+        MatchCount = matches;
+        var totalPages = Math.Max(1, (int)Math.Ceiling(matches / (double)_pageSize));
         RebuildDots(totalPages);
+        _dots.Visibility = _filter is not null && totalPages == 1 ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private void RebuildDots(int totalPages)

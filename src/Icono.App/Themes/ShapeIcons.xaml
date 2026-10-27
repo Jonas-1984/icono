@@ -224,6 +224,10 @@
     <PathGeometry x:Key="BoldToolGeometry" Figures="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8" />
     <PathGeometry x:Key="ItalicToolGeometry" Figures="M19,4 L10,4 M14,20 L5,20 M15,4 L9,20" />
     <PathGeometry x:Key="UnderlineToolGeometry" Figures="M6 4v6a6 6 0 0 0 12 0V4 M4,20 L20,20" />
+    <PathGeometry x:Key="TextAlignLeftToolGeometry" Figures="M21 6H3 M15 12H3 M17 18H3" />
+    <PathGeometry x:Key="TextAlignCenterToolGeometry" Figures="M21 6H3 M17 12H7 M19 18H5" />
+    <PathGeometry x:Key="TextAlignRightToolGeometry" Figures="M21 6H3 M21 12H9 M21 18H7" />
+    <PathGeometry x:Key="TextAlignJustifyToolGeometry" Figures="M3 6H21 M3 12H21 M3 18H21" />
     <GeometryGroup x:Key="CaseSensitiveToolGeometry">
         <PathGeometry Figures="m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16 M22 9v7 M3.304 13h6.392" />
         <EllipseGeometry Center="18.5,12.5" RadiusX="3.5" RadiusY="3.5" />
@@ -284,6 +288,7 @@
         <RectangleGeometry Rect="3,3,7,7" RadiusX="1" RadiusY="1" />
         <PathGeometry Figures="M14 3a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1 M19 3a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1 M7,15 L10,18 M7,21 L10,18 L5,18 a2 2 0 0 1-2-2 v-2" />
     </GeometryGroup>
+    <PathGeometry x:Key="ExplodeToolGeometry" Figures="M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z" />
     <GeometryGroup x:Key="GroupToolGeometry">
         <RectangleGeometry Rect="7,7,7,5" RadiusX="1" RadiusY="1" />
         <RectangleGeometry Rect="10,12,7,5" RadiusX="1" RadiusY="1" />

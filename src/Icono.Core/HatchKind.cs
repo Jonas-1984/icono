@@ -24,3 +24,22 @@ public enum LengthUnit
     Meter,
     Inch,
 }
+
+/// <summary>How the lines of a text lie between the left and right edge of its shape (or text frame).</summary>
+public enum TextHorizontalAlign
+{
+    Center,
+    Left,
+    Right,
+
+    /// <summary>Both edges flush: the gaps between the words are widened (the last line of a paragraph stays left).</summary>
+    Justify,
+}
+
+/// <summary>Where the text block sits between the top and the bottom edge of its shape (or text frame).</summary>
+public enum TextVerticalAlign
+{
+    Middle,
+    Top,
+    Bottom,
+}

@@ -50,6 +50,8 @@ public sealed class Shape : ObservableObject
     private bool _textBold;
     private bool _textItalic;
     private bool _textUnderline;
+    private TextHorizontalAlign _textHAlign;
+    private TextVerticalAlign _textVAlign;
     private ArgbColor? _textColor;
     private double _wallThickness = 16;
     private bool _wallClosed;
@@ -273,6 +275,12 @@ public sealed class Shape : ObservableObject
     public bool TextItalic { get => _textItalic; set => SetField(ref _textItalic, value); }
 
     public bool TextUnderline { get => _textUnderline; set => SetField(ref _textUnderline, value); }
+
+    /// <summary>How the lines of the text are aligned in the shape (Center = the classic look).</summary>
+    public TextHorizontalAlign TextHAlign { get => _textHAlign; set => SetField(ref _textHAlign, value); }
+
+    /// <summary>Where the text block sits in the shape: top, middle or bottom.</summary>
+    public TextVerticalAlign TextVAlign { get => _textVAlign; set => SetField(ref _textVAlign, value); }
 
     /// <summary>Colour of the text typed INTO a shape (double-click). Null = automatic: dark or white, whichever reads
     /// better on the shape's fill. A <see cref="ShapeKind.Text"/> shape is coloured by its fill instead.</summary>

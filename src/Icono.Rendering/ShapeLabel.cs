@@ -85,25 +85,55 @@ public static class ShapeLabel
         var lineHeight = font.Spacing;
         var metrics = font.Metrics;
         var blockHeight = lineHeight * lines.Count;
-        var centerX = (float)(box.Left + box.Width / 2);
-        var centerY = (float)(box.Top + box.Height / 2);
-        var top = centerY - blockHeight / 2;
+        var left = (float)(box.Left + Padding);
+        var right = (float)(box.Left + box.Width - Padding);
+        var top = shape.TextVAlign switch
+        {
+            TextVerticalAlign.Top => (float)(box.Top + Padding),
+            TextVerticalAlign.Bottom => (float)(box.Top + box.Height - Padding) - blockHeight,
+            _ => (float)(box.Top + box.Height / 2) - blockHeight / 2,
+        };
 
         var path = new SKPath();
         for (var i = 0; i < lines.Count; i++)
         {
-            var line = lines[i];
+            var (line, endsParagraph) = lines[i];
             if (line.Length == 0)
             {
                 continue;
             }
 
             var width = font.MeasureText(line, measurePaint);
-            var x = centerX - width / 2;
+            var justify = shape.TextHAlign == TextHorizontalAlign.Justify && !endsParagraph && line.Contains(' ');
+            var x = shape.TextHAlign switch
+            {
+                TextHorizontalAlign.Left or TextHorizontalAlign.Justify => left,
+                TextHorizontalAlign.Right => right - width,
+                _ => (left + right) / 2 - width / 2,
+            };
             var baseline = top + i * lineHeight - metrics.Ascent;
 
-            using var glyphs = font.GetTextPath(line, new SKPoint(x, baseline));
-            path.AddPath(glyphs);
+            if (justify)
+            {
+                // Both edges flush: the words keep their own width, the gaps share what is left of the line.
+                var words = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                var wordsWidth = words.Sum(w => font.MeasureText(w, measurePaint));
+                var gap = words.Length > 1 ? (right - left - wordsWidth) / (words.Length - 1) : 0;
+                var wordX = left;
+                foreach (var word in words)
+                {
+                    using var glyphs = font.GetTextPath(word, new SKPoint(wordX, baseline));
+                    path.AddPath(glyphs);
+                    wordX += font.MeasureText(word, measurePaint) + gap;
+                }
+
+                width = right - left;
+            }
+            else
+            {
+                using var glyphs = font.GetTextPath(line, new SKPoint(x, baseline));
+                path.AddPath(glyphs);
+            }
 
             if (shape.TextUnderline)
             {
@@ -124,10 +154,11 @@ public static class ShapeLabel
     }
 
     /// <summary>Breaks the text at its own line breaks and, inside each paragraph, at spaces so no line is wider than
-    /// <paramref name="maxWidth"/> (a single longer word keeps its own line).</summary>
-    private static List<string> Wrap(string text, SKFont font, SKPaint paint, float maxWidth)
+    /// <paramref name="maxWidth"/> (a single longer word keeps its own line). Each line says whether it is the last one of its paragraph
+    /// (the line a justified text leaves ragged).</summary>
+    private static List<(string Text, bool EndsParagraph)> Wrap(string text, SKFont font, SKPaint paint, float maxWidth)
     {
-        var lines = new List<string>();
+        var lines = new List<(string, bool)>();
 
         foreach (var paragraph in text.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n'))
         {
@@ -137,7 +168,7 @@ public static class ShapeLabel
                 var candidate = current.Length == 0 ? word : current + " " + word;
                 if (current.Length > 0 && font.MeasureText(candidate, paint) > maxWidth)
                 {
-                    lines.Add(current);
+                    lines.Add((current, false));
                     current = word;
                 }
                 else
@@ -146,7 +177,7 @@ public static class ShapeLabel
                 }
             }
 
-            lines.Add(current);
+            lines.Add((current, true));
         }
 
         return lines;

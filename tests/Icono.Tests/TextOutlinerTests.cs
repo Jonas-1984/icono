@@ -65,4 +65,29 @@ public class TextOutlinerTests
         Assert.NotNull(result);
         Assert.Equal(45, result!.Rotation);
     }
+
+    [Theory]
+    [InlineData(TextHorizontalAlign.Left, TextVerticalAlign.Top)]
+    [InlineData(TextHorizontalAlign.Right, TextVerticalAlign.Bottom)]
+    [InlineData(TextHorizontalAlign.Center, TextVerticalAlign.Middle)]
+    public void TextInALargerFrame_SitsAtTheChosenPosition(TextHorizontalAlign h, TextVerticalAlign v)
+    {
+        var text = new Shape
+        {
+            Kind = ShapeKind.Text, X = 50, Y = 40, Width = 300, Height = 150,
+            TextContent = "Hi", TextFontSize = 24, TextHAlign = h, TextVAlign = v,
+        };
+
+        using var path = TextOutliner.BuildTextPath(text);
+
+        Assert.NotNull(path);
+        var b = path!.Bounds;
+        if (h == TextHorizontalAlign.Left) { Assert.InRange(b.Left, 53, 55); }
+        else if (h == TextHorizontalAlign.Right) { Assert.InRange(b.Right, 345, 347); }
+        else { Assert.InRange(b.MidX, 199, 201); }
+
+        if (v == TextVerticalAlign.Top) { Assert.InRange(b.Top, 43, 45); }
+        else if (v == TextVerticalAlign.Bottom) { Assert.InRange(b.Bottom, 185, 187); }
+        else { Assert.InRange(b.MidY, 114, 116); }
+    }
 }

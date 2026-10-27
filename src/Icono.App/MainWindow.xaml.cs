@@ -16,6 +16,9 @@ public partial class MainWindow : Window
 {
     private readonly EditorContext _context = new();
 
+    /// <summary>A new document starts at the scale 1:40 (a floor plan on an A4 sheet).</summary>
+    private const double DefaultScale = 40;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -25,6 +28,7 @@ public partial class MainWindow : Window
         _context.Document.Height = Document.A4Height;
         _context.Document.BackgroundMode = BackgroundMode.SolidColor;
         _context.Document.BackgroundColor = ArgbColor.FromRgb(0xFF, 0xFF, 0xFF);
+        _context.Document.ScaleDenominator = DefaultScale;
 
         _context.Document.Layers.Add(new Layer { Name = "Layer 1" });
         _context.SelectedLayer = _context.Document.Layers[0];
@@ -70,7 +74,11 @@ public partial class MainWindow : Window
         // A click anywhere outside the text editor (panels, menus, toolbar) keeps what was typed.
         PreviewMouseDown += (_, e) => CanvasHost.CommitTextEditUnlessInside(e.OriginalSource);
         PreviewMouseWheel += MainWindow_OnPreviewMouseWheel;
-        Loaded += (_, _) => FitPageToWindow();
+        Loaded += (_, _) =>
+        {
+            FitPageToWindow();
+            AccessibilityNames.FromToolTips(this);
+        };
 
         UpdateThemeMenuMarkers();
         InitializeDocumentTracking();
@@ -298,6 +306,8 @@ public partial class MainWindow : Window
     private void PasteButton_OnClick(object sender, RoutedEventArgs e) => PasteClipboard();
 
     private void MergeButton_OnClick(object sender, RoutedEventArgs e) => _context.MergeSelection();
+
+    private void ExplodeButton_OnClick(object sender, RoutedEventArgs e) => _context.ExplodeSelection();
 
     private void GroupButton_OnClick(object sender, RoutedEventArgs e) => _context.GroupSelection();
 

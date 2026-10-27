@@ -87,7 +87,9 @@ public readonly record struct ShapeSnapshot(
     WallDimensionPlacement WallDimensionPlacement = WallDimensionPlacement.Automatic,
     double DoorOpenAngle = 90,
     bool SymbolShowDimension = true,
-    bool SymbolShowGaps = true)
+    bool SymbolShowGaps = true,
+    TextHorizontalAlign TextHAlign = TextHorizontalAlign.Center,
+    TextVerticalAlign TextVAlign = TextVerticalAlign.Middle)
 {
     public static ShapeSnapshot Capture(Shape shape) => new(
         shape.X,
@@ -171,7 +173,9 @@ public readonly record struct ShapeSnapshot(
         shape.WallDimensionPlacement,
         shape.DoorOpenAngle,
         shape.SymbolShowDimension,
-        shape.SymbolShowGaps);
+        shape.SymbolShowGaps,
+        shape.TextHAlign,
+        shape.TextVAlign);
 
     public void ApplyTo(Shape shape)
     {
@@ -257,5 +261,7 @@ public readonly record struct ShapeSnapshot(
         shape.DoorOpenAngle = DoorOpenAngle;
         shape.SymbolShowDimension = SymbolShowDimension;
         shape.SymbolShowGaps = SymbolShowGaps;
+        shape.TextHAlign = TextHAlign;
+        shape.TextVAlign = TextVAlign;
     }
 }
