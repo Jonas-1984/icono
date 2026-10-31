@@ -41,6 +41,26 @@ public sealed class EditorContext : ObservableObject
 
     public Document Document { get; } = new();
 
+    private int _currentPage;
+
+    /// <summary>The page the pointer was last on: new objects (from the libraries, rooms) are put in the middle of it.</summary>
+    public int CurrentPage
+    {
+        get => Math.Clamp(_currentPage, 0, Document.PageCount - 1);
+        set
+        {
+            var clamped = Math.Clamp(value, 0, Document.PageCount - 1);
+            if (clamped != _currentPage)
+            {
+                _currentPage = clamped;
+                CurrentPageChanged?.Invoke();
+            }
+        }
+    }
+
+    /// <summary>The page new objects go to changed (the pointer moved to another page, or a page was picked).</summary>
+    public event Action? CurrentPageChanged;
+
     /// <summary>Which snapping helpers the wall tool uses (corners, horizontal / vertical, alignment, equal length ...).</summary>
     public WallSnapOptions WallSnap { get; } = new();
 
@@ -581,7 +601,106 @@ public sealed class EditorContext : ObservableObject
 
     /// <summary>Aligns the selection to a common edge or centre line; a single shape aligns to the page.</summary>
     public void AlignSelection(AlignKind kind) =>
-        EditSelection(shapes => ShapeArranger.Align(shapes, kind, Document.Width, Document.Height));
+        EditSelection(shapes => ShapeArranger.Align(
+            shapes, kind, Document.Width, Document.Height,
+            shapes.Count == 1 ? Document.PageTop(Document.PageIndexAt(shapes[0].Y + shapes[0].Height / 2)) : 0));
+
+    // ----- pages: the project's pages lie below each other ---------------------------------------------------
+
+    /// <summary>The number of pages changed (added, removed, undone).</summary>
+    public event Action? PagesChanged;
+
+    /// <summary>The view is asked to bring a page to the middle of the work area.</summary>
+    public event Action<int>? ShowPageRequested;
+
+    /// <summary>Brings a page into view and makes it the one new objects are put on.</summary>
+    public void ShowPage(int index)
+    {
+        CurrentPage = Math.Clamp(index, 0, Document.PageCount - 1);
+        ShowPageRequested?.Invoke(CurrentPage);
+    }
+
+    /// <summary>Adds a page below the last one (one undo step). False when the project already has the most pages.</summary>
+    public bool AddPage()
+    {
+        var count = Document.PageCount;
+        if (count >= Document.MaxPages)
+        {
+            StatusMessage?.Invoke($"A project can have {Document.MaxPages} pages at most.");
+            return false;
+        }
+
+        _currentPage = count;
+        SetPageCount(count + 1);
+        UndoManager.Push(UndoableAction.ForValue(() => SetPageCount(count), () => SetPageCount(count + 1)));
+        ShowPage(count);
+        StatusMessage?.Invoke($"Page {count + 1} added below the last one.");
+        return true;
+    }
+
+    /// <summary>The objects that lie on the last page (their middle is on it, or below it): what removing that page would delete.</summary>
+    public List<Shape> ShapesOnLastPage()
+    {
+        var from = Document.PageTop(Document.PageCount - 1) - Document.PageGap / 2.0;
+        return Document.Layers.SelectMany(l => l.Shapes).Where(s => s.Y + s.Height / 2 >= from).ToList();
+    }
+
+    /// <summary>Removes the last page with everything on it (one undo step). False when it is the only page.</summary>
+    public bool RemoveLastPage()
+    {
+        var count = Document.PageCount;
+        if (count <= 1)
+        {
+            StatusMessage?.Invoke("A project needs at least one page.");
+            return false;
+        }
+
+        var onPage = ShapesOnLastPage();
+        var removals = new List<(ObservableCollection<Shape> Collection, Shape Shape, int Index)>();
+        foreach (var shape in onPage)
+        {
+            var layer = Document.Layers.First(l => l.Shapes.Contains(shape));
+            removals.Add((layer.Shapes, shape, layer.Shapes.IndexOf(shape)));
+            layer.Shapes.Remove(shape);
+            SelectedShapes.Remove(shape);
+        }
+
+        SetPageCount(count - 1);
+        var actions = new List<UndoableAction>();
+        if (removals.Count > 0)
+        {
+            actions.Add(UndoableAction.ForRemove(removals));
+        }
+
+        actions.Add(UndoableAction.ForValue(() => SetPageCount(count), () => SetPageCount(count - 1)));
+        UndoManager.Push(UndoableAction.Combine(actions));
+        StatusMessage?.Invoke($"Page {count} removed.");
+        return true;
+    }
+
+    private void SetPageCount(int count)
+    {
+        Document.PageCount = count;
+        _currentPage = Math.Min(_currentPage, count - 1);
+        PagesChanged?.Invoke();
+        RequestRedraw();
+    }
+
+    /// <summary>Gives every page a new height. What lies on a lower page moves with it, so each page keeps its objects.</summary>
+    public void ResizePages(int width, int height)
+    {
+        var oldHeight = Document.Height;
+        if (Document.PageCount > 1 && height != oldHeight)
+        {
+            foreach (var shape in Document.Layers.SelectMany(l => l.Shapes))
+            {
+                shape.Y += Document.PageIndexAt(shape.Y + shape.Height / 2) * (double)(height - oldHeight);
+            }
+        }
+
+        Document.Width = width;
+        Document.Height = height;
+    }
 
     /// <summary>Makes the gaps between three or more selected shapes equal.</summary>
     public void DistributeSelection(bool horizontally)
@@ -856,7 +975,7 @@ public sealed class EditorContext : ObservableObject
 
         var width = Math.Min(Document.Width * 0.6, 480);
         var height = Math.Min(Document.Height * 0.45, width * 0.75);
-        var wall = WallRooms.Build(preset, Document.Width / 2.0, Document.Height / 2.0, width, height, Document.ScaleDenominator);
+        var wall = WallRooms.Build(preset, Document.Width / 2.0, Document.PageTop(CurrentPage) + Document.Height / 2.0, width, height, Document.ScaleDenominator);
 
         layer.Shapes.Insert(0, wall);
         UndoManager.Push(UndoableAction.ForInsert(layer.Shapes, wall, 0));

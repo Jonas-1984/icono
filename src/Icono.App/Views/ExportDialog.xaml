@@ -15,6 +15,11 @@
                              Foreground="{DynamicResource ForegroundTextBrush}" Checked="FormatRadio_OnChecked" />
             </StackPanel>
 
+            <StackPanel x:Name="PagesPanel" Visibility="Collapsed">
+                <TextBlock Text="PAGES" Style="{StaticResource PanelLabelTextStyle}" Margin="0,16,0,4" />
+                <ComboBox x:Name="PageComboBox" Height="32" SelectionChanged="PageComboBox_OnSelectionChanged" />
+            </StackPanel>
+
             <StackPanel x:Name="SizePanel">
                 <TextBlock Text="SIZE (LONGER SIDE)" Style="{StaticResource PanelLabelTextStyle}" Margin="0,16,0,4" />
                 <ComboBox x:Name="SizeComboBox" Height="32" DisplayMemberPath="Label" />

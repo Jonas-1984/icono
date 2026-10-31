@@ -10,8 +10,35 @@ public sealed class Document
     public const int A4Width = 794;
     public const int A4Height = 1123;
 
+    /// <summary>Width of every page.</summary>
     public int Width { get; set; } = PreviewSize;
+
+    /// <summary>Height of every page (the whole drawing is <see cref="TotalHeight"/> high when there are several pages).</summary>
     public int Height { get; set; } = PreviewSize;
+
+    public const int MaxPages = 50;
+
+    /// <summary>Space between two pages (px). The pages lie below each other in one drawing space: page <c>i</c> starts at <see cref="PageTop"/>.</summary>
+    public const int PageGap = 48;
+
+    private int _pageCount = 1;
+
+    /// <summary>How many pages the project has (1 to <see cref="MaxPages"/>), one below the other.</summary>
+    public int PageCount { get => _pageCount; set => _pageCount = Math.Clamp(value, 1, MaxPages); }
+
+    /// <summary>The y of the top edge of page <paramref name="index"/> (0 = first page).</summary>
+    public int PageTop(int index) => Math.Clamp(index, 0, PageCount - 1) * (Height + PageGap);
+
+    /// <summary>The height of all pages with the gaps between them: the extent of the drawing space.</summary>
+    public int TotalHeight => PageCount * Height + (PageCount - 1) * PageGap;
+
+    /// <summary>The page a y belongs to: the page it lies in, or the nearest one when it is in a gap or outside.</summary>
+    public int PageIndexAt(double y)
+    {
+        var step = Height + PageGap;
+        var index = (int)Math.Floor((y + PageGap / 2.0) / step);
+        return Math.Clamp(index, 0, PageCount - 1);
+    }
 
     /// <summary>The drawing scale 1:N (N = this value; 1 = full size). The page is the paper: at 1:50 one cm on the page stands for 50 cm in
     /// reality, so measurements, wall sizes and dimensions are written in real-world units, and printing the page at 100% gives the exact scale.</summary>

@@ -31,44 +31,16 @@ public static class DocumentRenderer
             // The checkerboard of the "Transparent" mode is only a preview aid. An export is transparent unless the
             // caller asks for the page background (colour / blur / picture) to be part of the image.
             canvas.Clear(SKColors.Transparent);
-
-            if (includeBackground && document.BackgroundMode != BackgroundMode.Transparent)
-            {
-                canvas.Save();
-                canvas.ClipRect(SKRect.Create(0, 0, width, height));
-                switch (document.BackgroundMode)
-                {
-                    case BackgroundMode.SolidColor:
-                        canvas.Clear(document.BackgroundColor.ToSkColor());
-                        break;
-                    case BackgroundMode.Blur:
-                        BlurBackgroundRenderer.Render(canvas, width, height, document);
-                        break;
-                    case BackgroundMode.Image:
-                        BackgroundImageRenderer.Render(canvas, width, height, document);
-                        break;
-                }
-
-                canvas.Restore();
-            }
         }
-        else
+
+        // every page has its own background; the space between the pages stays as the caller made it
+        for (var page = 0; page < document.PageCount; page++)
         {
-            switch (document.BackgroundMode)
-            {
-                case BackgroundMode.SolidColor:
-                    canvas.Clear(document.BackgroundColor.ToSkColor());
-                    break;
-                case BackgroundMode.Blur:
-                    BlurBackgroundRenderer.Render(canvas, width, height, document);
-                    break;
-                case BackgroundMode.Image:
-                    BackgroundImageRenderer.Render(canvas, width, height, document);
-                    break;
-                default:
-                    CheckerboardRenderer.Render(canvas, width, height);
-                    break;
-            }
+            canvas.Save();
+            canvas.Translate(0, document.PageTop(page));
+            canvas.ClipRect(SKRect.Create(0, 0, width, height));
+            DrawBackground(canvas, document, width, height, forExport, includeBackground);
+            canvas.Restore();
         }
 
         using var wallJoins = WallJoiner.Begin(document);
@@ -85,7 +57,38 @@ public static class DocumentRenderer
             SymbolMeasurements.Current = previousDocument;
         }
 
-        SheetRenderer.Draw(canvas, document);
+        for (var page = 0; page < document.PageCount; page++)
+        {
+            canvas.Save();
+            canvas.Translate(0, document.PageTop(page));
+            SheetRenderer.Draw(canvas, document);
+            canvas.Restore();
+        }
+    }
+
+    /// <summary>The background of one page (the canvas is already moved to it and clipped to it).</summary>
+    private static void DrawBackground(SKCanvas canvas, Document document, int width, int height, bool forExport, bool includeBackground)
+    {
+        if (forExport && (!includeBackground || document.BackgroundMode == BackgroundMode.Transparent))
+        {
+            return;
+        }
+
+        switch (document.BackgroundMode)
+        {
+            case BackgroundMode.SolidColor:
+                canvas.Clear(document.BackgroundColor.ToSkColor());
+                break;
+            case BackgroundMode.Blur:
+                BlurBackgroundRenderer.Render(canvas, width, height, document);
+                break;
+            case BackgroundMode.Image:
+                BackgroundImageRenderer.Render(canvas, width, height, document);
+                break;
+            default:
+                CheckerboardRenderer.Render(canvas, width, height);
+                break;
+        }
     }
 
     private static void DrawLayers(SKCanvas canvas, Document document, Shape? pending)

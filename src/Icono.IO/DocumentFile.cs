@@ -36,6 +36,9 @@ public sealed class DocumentFile
 
     public int Height { get; set; } = Document.PreviewSize;
 
+    /// <summary>Number of pages below each other (1 in files written before there were several).</summary>
+    public int PageCount { get; set; } = 1;
+
     /// <summary>Drawing scale 1:N (see <see cref="Document.ScaleDenominator"/>).</summary>
     public double ScaleDenominator { get; set; } = 1;
 
@@ -76,6 +79,7 @@ public sealed class DocumentFile
     {
         Width = document.Width,
         Height = document.Height,
+        PageCount = document.PageCount,
         ScaleDenominator = document.ScaleDenominator,
         Sheet = document.Sheet,
         BackgroundMode = document.BackgroundMode,
@@ -107,6 +111,7 @@ public sealed class DocumentFile
 
         document.Width = Math.Clamp(Width, 1, 20000);
         document.Height = Math.Clamp(Height, 1, 20000);
+        document.PageCount = PageCount;
         document.BackgroundMode = BackgroundMode;
         document.BackgroundColor = BackgroundColor;
         document.BackgroundImageBytes = BackgroundImageBytes;

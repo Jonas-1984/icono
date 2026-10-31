@@ -132,7 +132,7 @@ public partial class MainWindow
         var document = _context.Document;
         PortraitMenuItem.IsChecked = document.Width <= document.Height;
         LandscapeMenuItem.IsChecked = document.Width > document.Height;
-        StatusBar.SetPage(document.Width, document.Height);
+        StatusBar.SetPage(document.Width, document.Height, document.PageCount);
     }
 
     private static IEnumerable<MenuItem> AllMenuItems(ItemCollection items)

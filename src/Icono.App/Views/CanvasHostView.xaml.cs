@@ -102,6 +102,7 @@ public partial class CanvasHostView : UserControl
             if (_context is not null)
             {
                 _context.Invalidated -= OnContextInvalidated;
+                _context.ShowPageRequested -= ShowPage;
                 _context.PropertyChanged -= OnContextPropertyChanged;
                 _context.SelectedShapes.CollectionChanged -= OnSelectionChanged;
             }
@@ -111,6 +112,7 @@ public partial class CanvasHostView : UserControl
             if (_context is not null)
             {
                 _context.Invalidated += OnContextInvalidated;
+                _context.ShowPageRequested += ShowPage;
                 _context.PropertyChanged += OnContextPropertyChanged;
                 _context.SelectedShapes.CollectionChanged += OnSelectionChanged;
             }
@@ -1237,7 +1239,7 @@ public partial class CanvasHostView : UserControl
         }
 
         CanvasFrame.Width = _context.Document.Width * Zoom;
-        CanvasFrame.Height = _context.Document.Height * Zoom;
+        CanvasFrame.Height = _context.Document.TotalHeight * Zoom;
         CenterCanvasFrame();
     }
 
@@ -1275,7 +1277,7 @@ public partial class CanvasHostView : UserControl
 
         var document = _context.Document;
         var scaleX = document.Width > 0 ? e.Info.Width / (float)document.Width : 1f;
-        var scaleY = document.Height > 0 ? e.Info.Height / (float)document.Height : 1f;
+        var scaleY = document.TotalHeight > 0 ? e.Info.Height / (float)document.TotalHeight : 1f;
 
         canvas.Save();
         canvas.Scale(scaleX, scaleY);
@@ -1283,7 +1285,13 @@ public partial class CanvasHostView : UserControl
 
         if (_context.ShowGrid)
         {
-            DrawGrid(canvas, document.Width, document.Height);
+            for (var page = 0; page < document.PageCount; page++)
+            {
+                canvas.Save();
+                canvas.Translate(0, document.PageTop(page));
+                DrawGrid(canvas, document.Width, document.Height);
+                canvas.Restore();
+            }
         }
 
         canvas.Restore();
@@ -2218,6 +2226,26 @@ public partial class CanvasHostView : UserControl
         _context?.RequestRedraw();
     }
 
+    /// <summary>Brings the middle of a page to the middle of the work area (the pages lie below each other).</summary>
+    public void ShowPage(int index)
+    {
+        if (_context is null)
+        {
+            return;
+        }
+
+        var document = _context.Document;
+        PanTransform.X = 0;
+        PanTransform.Y = -(document.PageTop(index) + document.Height / 2.0 - document.TotalHeight / 2.0) * Zoom;
+    }
+
+    /// <summary>Moves the view by a number of screen pixels (the mouse wheel).</summary>
+    public void ScrollView(double dx, double dy)
+    {
+        PanTransform.X += dx;
+        PanTransform.Y += dy;
+    }
+
     /// <summary>Moves the page back to the centre of the work area (after a pan).</summary>
     public void ResetView()
     {
@@ -2237,12 +2265,12 @@ public partial class CanvasHostView : UserControl
         var document = _context.Document;
         var x = (int)Math.Floor(point.X);
         var y = (int)Math.Floor(point.Y);
-        if (x < 0 || y < 0 || x >= document.Width || y >= document.Height)
+        if (x < 0 || y < 0 || x >= document.Width || y >= document.TotalHeight)
         {
             return;
         }
 
-        using var bitmap = DocumentExporter.RenderBitmap(document, document.Width, document.Height, includeBackground: true);
+        using var bitmap = DocumentExporter.RenderBitmap(document, document.Width, document.TotalHeight, includeBackground: true);
         var pixel = bitmap.GetPixel(x, y);
         if (pixel.Alpha == 0)
         {
@@ -3137,6 +3165,12 @@ public partial class CanvasHostView : UserControl
 
         if (!IsInsideQuickPopup(e.OriginalSource))
         {
+            // the page under the pointer is the one new objects are put on
+            if (_context is not null)
+            {
+                _context.CurrentPage = _context.Document.PageIndexAt(ToDocumentSpace(e.GetPosition(SkiaCanvas)).Y);
+            }
+
             UpdatePointSnapHover(ToDocumentSpace(e.GetPosition(SkiaCanvas)));
         }
 

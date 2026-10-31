@@ -44,15 +44,19 @@ public partial class MainWindow : Window
         _context.PointSnap.PropertyChanged += (_, _) => PointSnapMenuItem.IsChecked = _context.PointSnap.Enabled;
 
         // A new page size (preset, portrait / landscape, typed size) is shown whole.
-        var shownPage = (_context.Document.Width, _context.Document.Height);
+        var shownPage = (_context.Document.Width, _context.Document.Height, _context.Document.PageCount);
         _context.Invalidated += (_, _) =>
         {
-            var page = (_context.Document.Width, _context.Document.Height);
+            var page = (_context.Document.Width, _context.Document.Height, _context.Document.PageCount);
             if (page != shownPage)
             {
+                var sizeChanged = (page.Width, page.Height) != (shownPage.Width, shownPage.Height);
                 shownPage = page;
                 UpdatePageUi();
-                FitPageToWindow();
+                if (sizeChanged)
+                {
+                    FitPageToWindow();
+                }
             }
         };
         ToolPanel.Context = _context;
@@ -127,6 +131,7 @@ public partial class MainWindow : Window
             (CanvasHost.ActualWidth - margin) / _context.Document.Width,
             (CanvasHost.ActualHeight - margin) / _context.Document.Height);
         StatusBar.SetZoom(Math.Floor(zoom * 100) / 100);
+        CanvasHost.ShowPage(_context.CurrentPage);
     }
 
     private void MainWindow_OnStateChanged(object? sender, EventArgs e)
@@ -267,11 +272,28 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>Ctrl + mouse wheel over the work area zooms the page in / out.</summary>
+    /// <summary>The mouse wheel over the work area scrolls the pages; Ctrl + wheel zooms in / out.</summary>
     private void MainWindow_OnPreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
-        if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control) || !CanvasHost.IsMouseOver || e.Delta == 0)
+        if (!CanvasHost.IsMouseOver || e.Delta == 0)
         {
+            return;
+        }
+
+        if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+        {
+            // the wheel scrolls through the pages (Shift: sideways)
+            var step = e.Delta * 0.9;
+            if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
+            {
+                CanvasHost.ScrollView(step, 0);
+            }
+            else
+            {
+                CanvasHost.ScrollView(0, step);
+            }
+
+            e.Handled = true;
             return;
         }
 

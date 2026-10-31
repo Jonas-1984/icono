@@ -115,6 +115,10 @@
                 </MenuItem>
                 <MenuItem x:Name="ScaleMenuItem" Header="Scale (1:N)" />
                 <Separator />
+                <MenuItem Header="Add Page" Click="AddPageMenuItem_OnClick" ToolTip="Adds a page of the same size below the last one" />
+                <MenuItem Header="Remove Last Page" Click="RemovePageMenuItem_OnClick" ToolTip="Removes the last page with everything on it" />
+                <MenuItem Header="Pages..." Tag="PAGES" Click="FocusCardMenuItem_OnClick" ToolTip="Go to a page, add or remove pages" />
+                <Separator />
                 <MenuItem x:Name="SheetMenuItem" Header="Sheet (frame and title block)" IsCheckable="True" Click="SheetMenuItem_OnClick"
                           ToolTip="Frame round the page with project, address, scale, date and position" />
                 <MenuItem Header="Sheet Data..." Tag="SHEET" Click="FocusCardMenuItem_OnClick" />

@@ -100,6 +100,8 @@ public partial class PropertiesPanelView : UserControl
                 _context.PropertyChanged -= OnContextPropertyChanged;
                 _context.ScaleChanged -= OnScaleChanged;
                 _context.SheetChanged -= RefreshDocumentSettings;
+                _context.PagesChanged -= RefreshPagesCard;
+                _context.CurrentPageChanged -= SyncCurrentPage;
                 _context.Document.Layers.CollectionChanged -= OnDocumentLayersChanged;
             }
 
@@ -110,6 +112,8 @@ public partial class PropertiesPanelView : UserControl
                 _context.PropertyChanged += OnContextPropertyChanged;
                 _context.ScaleChanged += OnScaleChanged;
                 _context.SheetChanged += RefreshDocumentSettings;
+                _context.PagesChanged += RefreshPagesCard;
+                _context.CurrentPageChanged += SyncCurrentPage;
                 _context.Document.Layers.CollectionChanged += OnDocumentLayersChanged;
                 RefreshDocumentSettings();
             }
@@ -153,6 +157,7 @@ public partial class PropertiesPanelView : UserControl
             BackgroundFadeAmountSlider.Value = document.BackgroundFadeAmount;
             BackgroundOpacitySlider.Value = document.BackgroundOpacity;
             RefreshCanvasSizeTextBoxes();
+            RefreshPagesCard();
         }
         finally
         {
@@ -366,7 +371,7 @@ public partial class PropertiesPanelView : UserControl
 
     private static bool IsOffCanvas(Shape shape, Document document) =>
         shape.X + shape.Width <= 0 || shape.Y + shape.Height <= 0 ||
-        shape.X >= document.Width || shape.Y >= document.Height;
+        shape.X >= document.Width || shape.Y >= document.TotalHeight;
 
     private void BringIntoViewButton_OnClick(object sender, RoutedEventArgs e)
     {
@@ -381,7 +386,7 @@ public partial class PropertiesPanelView : UserControl
         }
 
         _boundShape.X = Math.Max(0, (_context.Document.Width - _boundShape.Width) / 2);
-        _boundShape.Y = Math.Max(0, (_context.Document.Height - _boundShape.Height) / 2);
+        _boundShape.Y = _context.Document.PageTop(_context.CurrentPage) + Math.Max(0, (_context.Document.Height - _boundShape.Height) / 2);
         _context.RequestRedraw();
         RefreshForSelection();
     }
@@ -2652,6 +2657,90 @@ public partial class PropertiesPanelView : UserControl
         _context.RequestRedraw();
     }
 
+    // ----- Pages: a project can have several, one below the other ------------------------------------------
+
+    private bool _syncingPages;
+
+    private void RefreshPagesCard()
+    {
+        if (_context is null)
+        {
+            return;
+        }
+
+        var count = _context.Document.PageCount;
+        _syncingPages = true;
+        try
+        {
+            PagesInfoText.Text = count == 1
+                ? "One page. Add a page to carry on below it."
+                : $"{count} pages, one below the other. They all have the size set in CANVAS SIZE.";
+            PageJumpComboBox.ItemsSource = Enumerable.Range(1, count).Select(i => $"Page {i} of {count}").ToList();
+            PageJumpComboBox.SelectedIndex = _context.CurrentPage;
+            RemovePageButton.IsEnabled = count > 1;
+        }
+        finally
+        {
+            _syncingPages = false;
+        }
+    }
+
+    private void SyncCurrentPage()
+    {
+        if (_context is null || PageJumpComboBox.Items.Count != _context.Document.PageCount)
+        {
+            return;
+        }
+
+        _syncingPages = true;
+        try
+        {
+            PageJumpComboBox.SelectedIndex = _context.CurrentPage;
+        }
+        finally
+        {
+            _syncingPages = false;
+        }
+    }
+
+    private void AddPageButton_OnClick(object sender, RoutedEventArgs e) => _context?.AddPage();
+
+    private void RemovePageButton_OnClick(object sender, RoutedEventArgs e) => RemoveLastPageAsking();
+
+    /// <summary>Removes the last page; when objects lie on it the user is asked first (and can undo it afterwards).</summary>
+    public void RemoveLastPageAsking()
+    {
+        if (_context is null || _context.Document.PageCount <= 1)
+        {
+            _context?.RemoveLastPage();
+            return;
+        }
+
+        var objects = _context.ShapesOnLastPage().Count;
+        if (objects > 0)
+        {
+            var answer = ThemedMessageBox.Show(
+                Window.GetWindow(this), $"Page {_context.Document.PageCount} has {objects} object(s) on it. Remove the page together with them?",
+                "Remove page", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (answer != MessageBoxResult.Yes)
+            {
+                return;
+            }
+        }
+
+        _context.RemoveLastPage();
+    }
+
+    private void PageJumpComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_context is null || _syncingPages || PageJumpComboBox.SelectedIndex < 0)
+        {
+            return;
+        }
+
+        _context.ShowPage(PageJumpComboBox.SelectedIndex);
+    }
+
     // ----- Drawing scale (1:N) -----------------------------------------------------------------------
 
     private static readonly ScaleOption[] ScaleOptions =
@@ -3024,8 +3113,7 @@ public partial class PropertiesPanelView : UserControl
             return;
         }
 
-        _context.Document.Width = Math.Clamp(widthPx, 1, 10000);
-        _context.Document.Height = Math.Clamp(heightPx, 1, 10000);
+        _context.ResizePages(Math.Clamp(widthPx, 1, 10000), Math.Clamp(heightPx, 1, 10000));
         RefreshCanvasSizeTextBoxes();
         _context.RequestRedraw();
     }

@@ -17,7 +17,7 @@ public static class ShapeArranger
 {
     /// <summary>Moves the shapes onto a common edge or centre line. With several shapes they align to the frame around all of them; a
     /// single shape aligns to the page. Returns the shapes that actually moved.</summary>
-    public static List<Shape> Align(IReadOnlyList<Shape> shapes, AlignKind kind, double pageWidth, double pageHeight)
+    public static List<Shape> Align(IReadOnlyList<Shape> shapes, AlignKind kind, double pageWidth, double pageHeight, double pageTop = 0)
     {
         var moved = new List<Shape>();
         if (shapes.Count == 0)
@@ -26,9 +26,9 @@ public static class ShapeArranger
         }
 
         var left = shapes.Count == 1 ? 0 : shapes.Min(s => s.X);
-        var top = shapes.Count == 1 ? 0 : shapes.Min(s => s.Y);
+        var top = shapes.Count == 1 ? pageTop : shapes.Min(s => s.Y);
         var right = shapes.Count == 1 ? pageWidth : shapes.Max(s => s.X + s.Width);
-        var bottom = shapes.Count == 1 ? pageHeight : shapes.Max(s => s.Y + s.Height);
+        var bottom = shapes.Count == 1 ? pageTop + pageHeight : shapes.Max(s => s.Y + s.Height);
 
         foreach (var shape in shapes)
         {

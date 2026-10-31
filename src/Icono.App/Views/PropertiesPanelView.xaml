@@ -128,6 +128,30 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="PAGES" Style="{StaticResource CardHeaderTextStyle}" />
+                            <Path Grid.Column="1" Style="{StaticResource CardChevronPathStyle}" />
+                        </Grid>
+                        <StackPanel>
+                            <TextBlock x:Name="PagesInfoText" Foreground="{DynamicResource MutedTextBrush}" FontSize="11" TextWrapping="Wrap" Margin="12,0,12,6" />
+                            <ComboBox x:Name="PageJumpComboBox" Margin="6,0,6,6" AutomationProperties.Name="Go to page"
+                                      ToolTip="Show a page" SelectionChanged="PageJumpComboBox_OnSelectionChanged" />
+                            <UniformGrid Columns="2" Margin="3,0,3,6">
+                                <Button Content="Add page" Style="{StaticResource PanelKeyButtonStyle}" Click="AddPageButton_OnClick"
+                                        ToolTip="Adds a page of the same size below the last one" />
+                                <Button x:Name="RemovePageButton" Content="Remove last" Style="{StaticResource PanelKeyButtonStyle}"
+                                        Click="RemovePageButton_OnClick" ToolTip="Removes the last page with everything on it" />
+                            </UniformGrid>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource CardBorderStyle}">
+                    <StackPanel>
+                        <Grid Style="{StaticResource CollapsibleCardHeaderStyle}" MouseLeftButtonDown="CardHeader_OnToggle">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="CANVAS SIZE" Style="{StaticResource CardHeaderTextStyle}" />
                             <Path Grid.Column="1" Style="{StaticResource CardChevronPathStyle}" />
                         </Grid>

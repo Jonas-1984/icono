@@ -11,29 +11,41 @@ public static class DocumentExporter
 
     /// <summary>Renders the page so that its LONGER side is <paramref name="longSide"/> px (the aspect ratio is kept).
     /// With <paramref name="includeBackground"/> the page background (colour / blur / picture) is part of the image,
-    /// otherwise the result is transparent.</summary>
-    public static byte[] RenderPng(Document document, int longSide, bool includeBackground)
+    /// otherwise the result is transparent. <paramref name="page"/> picks one page of a project with several (0 = the first);
+    /// null renders all pages below each other.</summary>
+    public static byte[] RenderPng(Document document, int longSide, bool includeBackground, int? page = null)
     {
-        var scale = longSide / (double)Math.Max(document.Width, document.Height);
-        var width = Math.Max(1, (int)Math.Round(document.Width * scale));
-        var height = Math.Max(1, (int)Math.Round(document.Height * scale));
-        return Encode(RenderBitmap(document, width, height, includeBackground), SKEncodedImageFormat.Png, 100);
+        var (extentWidth, extentHeight) = Extent(document, page);
+        var scale = longSide / (double)Math.Max(extentWidth, extentHeight);
+        var width = Math.Max(1, (int)Math.Round(extentWidth * scale));
+        var height = Math.Max(1, (int)Math.Round(extentHeight * scale));
+        return Encode(RenderBitmap(document, width, height, includeBackground, page), SKEncodedImageFormat.Png, 100);
     }
 
-    /// <summary>Renders the page at an exact pixel size.</summary>
-    public static SKBitmap RenderBitmap(Document document, int width, int height, bool includeBackground)
+    /// <summary>The size of what is rendered: one page, or all pages below each other.</summary>
+    public static (int Width, int Height) Extent(Document document, int? page) =>
+        page is null ? (document.Width, document.TotalHeight) : (document.Width, document.Height);
+
+    /// <summary>Renders the page (or, with <paramref name="page"/> null, all pages below each other) at an exact pixel size.</summary>
+    public static SKBitmap RenderBitmap(Document document, int width, int height, bool includeBackground, int? page = null)
     {
         var bitmap = new SKBitmap(new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Premul));
         using var canvas = new SKCanvas(bitmap);
         canvas.Clear(SKColors.Transparent);
-        canvas.Scale(width / (float)document.Width, height / (float)document.Height);
+        var (extentWidth, extentHeight) = Extent(document, page);
+        canvas.Scale(width / (float)extentWidth, height / (float)extentHeight);
+        if (page is { } index)
+        {
+            canvas.Translate(0, -document.PageTop(index));
+        }
+
         DocumentRenderer.Render(canvas, document, document.Width, document.Height, null, forExport: true, includeBackground);
         return bitmap;
     }
 
     /// <summary>Builds a .ico with one PNG frame per size. The page is fitted (centred, aspect ratio kept) into each
     /// square frame; the rest of the frame stays transparent.</summary>
-    public static byte[] RenderIco(Document document, IReadOnlyList<int> sizes, bool includeBackground)
+    public static byte[] RenderIco(Document document, IReadOnlyList<int> sizes, bool includeBackground, int page = 0)
     {
         var frames = new List<(int Size, byte[] Png)>();
         foreach (var size in sizes.Distinct().Where(s => s is >= 1 and <= 256).OrderBy(s => s))
@@ -45,6 +57,8 @@ public static class DocumentExporter
             var scale = size / (float)Math.Max(document.Width, document.Height);
             canvas.Translate((size - document.Width * scale) / 2f, (size - document.Height * scale) / 2f);
             canvas.Scale(scale, scale);
+            canvas.Translate(0, -document.PageTop(page));
+            canvas.ClipRect(SKRect.Create(0, document.PageTop(page), document.Width, document.Height));
             DocumentRenderer.Render(canvas, document, document.Width, document.Height, null, forExport: true, includeBackground);
 
             frames.Add((size, Encode(square, SKEncodedImageFormat.Png, 100)));

@@ -192,7 +192,7 @@ public partial class IconLibraryView : UserControl
         }
 
         var placeX = Math.Max(0, (_context.Document.Width - placeWidth) / 2);
-        var placeY = Math.Max(0, (_context.Document.Height - placeHeight) / 2);
+        var placeY = _context.Document.PageTop(_context.CurrentPage) + Math.Max(0, (_context.Document.Height - placeHeight) / 2);
 
         var strokeOnly = SvgImporter.IsStrokeStyleSvg(svgMarkup);
         var borderThickness = strokeOnly ? 2 : 0;
@@ -321,7 +321,7 @@ public partial class IconLibraryView : UserControl
         var placeWidth = Math.Max(1, pixelWidth * scale);
         var placeHeight = Math.Max(1, pixelHeight * scale);
         var placeX = Math.Max(0, (_context.Document.Width - placeWidth) / 2);
-        var placeY = Math.Max(0, (_context.Document.Height - placeHeight) / 2);
+        var placeY = _context.Document.PageTop(_context.CurrentPage) + Math.Max(0, (_context.Document.Height - placeHeight) / 2);
 
         var shape = new Shape
         {

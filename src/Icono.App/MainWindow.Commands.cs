@@ -258,7 +258,7 @@ public partial class MainWindow
                 case ExportFormat.Ico:
                     if (AskExportPath("Windows icon (*.ico)|*.ico", ".ico") is { } icoPath)
                     {
-                        File.WriteAllBytes(icoPath, DocumentExporter.RenderIco(document, DocumentExporter.IconSizes, dialog.IncludeBackground));
+                        File.WriteAllBytes(icoPath, DocumentExporter.RenderIco(document, DocumentExporter.IconSizes, dialog.IncludeBackground, dialog.Page ?? 0));
                         ShowStatus($"Exported {Path.GetFileName(icoPath)}");
                     }
 
@@ -273,7 +273,7 @@ public partial class MainWindow
                         {
                             File.WriteAllBytes(
                                 Path.Combine(folder, $"{baseName}_{size}.png"),
-                                DocumentExporter.RenderPng(document, size, dialog.IncludeBackground));
+                                DocumentExporter.RenderPng(document, size, dialog.IncludeBackground, dialog.Page));
                         }
 
                         ShowStatus($"Exported 6 PNG sizes to {folder}");
@@ -284,7 +284,7 @@ public partial class MainWindow
                 default:
                     if (AskExportPath("PNG image (*.png)|*.png", ".png") is { } pngPath)
                     {
-                        File.WriteAllBytes(pngPath, DocumentExporter.RenderPng(document, dialog.LongSide, dialog.IncludeBackground));
+                        File.WriteAllBytes(pngPath, DocumentExporter.RenderPng(document, dialog.LongSide, dialog.IncludeBackground, dialog.Page));
                         ShowStatus($"Exported {Path.GetFileName(pngPath)}");
                     }
 
@@ -307,7 +307,7 @@ public partial class MainWindow
 
         try
         {
-            File.WriteAllBytes(path, DocumentExporter.RenderPng(document, Math.Max(document.Width, document.Height), document.BackgroundMode != BackgroundMode.Transparent));
+            File.WriteAllBytes(path, DocumentExporter.RenderPng(document, Math.Max(document.Width, document.TotalHeight), document.BackgroundMode != BackgroundMode.Transparent));
             ShowStatus($"Exported {Path.GetFileName(path)}");
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
@@ -522,6 +522,10 @@ public partial class MainWindow
                 "Design Style", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
+
+    private void AddPageMenuItem_OnClick(object sender, RoutedEventArgs e) => _context.AddPage();
+
+    private void RemovePageMenuItem_OnClick(object sender, RoutedEventArgs e) => PropertiesPanel.RemoveLastPageAsking();
 
     private void MoveButton_OnClick(object sender, RoutedEventArgs e)
     {

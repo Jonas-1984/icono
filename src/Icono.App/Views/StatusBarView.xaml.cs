@@ -32,12 +32,12 @@ public partial class StatusBarView : UserControl
     public void SetTool(string name) => ToolText.Text = "Tool: " + name;
 
     /// <summary>Shows the page size and orientation, e.g. "Page 21.0 x 29.7 cm, portrait".</summary>
-    public void SetPage(int widthPx, int heightPx)
+    public void SetPage(int widthPx, int heightPx, int pages = 1)
     {
         const double CmPerPx = 2.54 / 96;
         var culture = System.Globalization.CultureInfo.InvariantCulture;
         var orientation = widthPx > heightPx ? "landscape" : widthPx < heightPx ? "portrait" : "square";
-        PageText.Text = $"Page {(widthPx * CmPerPx).ToString("0.#", culture)} x {(heightPx * CmPerPx).ToString("0.#", culture)} cm, {orientation}";
+        PageText.Text = $"{(pages > 1 ? $"{pages} pages, each " : "Page ")}{(widthPx * CmPerPx).ToString("0.#", culture)} x {(heightPx * CmPerPx).ToString("0.#", culture)} cm, {orientation}";
     }
 
     private readonly System.Windows.Threading.DispatcherTimer _messageTimer = new() { Interval = TimeSpan.FromSeconds(4) };
