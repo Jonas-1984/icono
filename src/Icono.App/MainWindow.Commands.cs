@@ -132,7 +132,7 @@ public partial class MainWindow
         var dialog = new Microsoft.Win32.OpenFileDialog
         {
             Title = "Open document",
-            Filter = $"icono documents (*{DocumentFile.Extension})|*{DocumentFile.Extension}|All files (*.*)|*.*",
+            Filter = $"icono documents (*{DocumentFile.Extension}, *{DocumentFile.LegacyExtension})|*{DocumentFile.Extension};*{DocumentFile.LegacyExtension}|All files (*.*)|*.*",
         };
 
         if (dialog.ShowDialog(this) == true)
@@ -520,6 +520,15 @@ public partial class MainWindow
         {
             ThemedMessageBox.Show(this, "Select a closed shape (or text) first - design styles do not apply to lines, images or grids.",
                 "Design Style", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+    }
+
+    private void MoveButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (_context.SelectedShapes.Count == 0 || !PropertiesPanel.FocusMoveInput())
+        {
+            ThemedMessageBox.Show(this, "Select an object first, then type the distance in cm in the MOVE box on the right.", "Move",
+                MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 

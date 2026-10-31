@@ -334,6 +334,7 @@
         <RectangleGeometry Rect="3,3,7,7" RadiusX="1" RadiusY="1" />
         <PathGeometry Figures="M14 3a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1 M19 3a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1 M7,15 L10,18 M7,21 L10,18 L5,18 a2 2 0 0 1-2-2 v-2" />
     </GeometryGroup>
+    <PathGeometry x:Key="Move3dToolGeometry" Figures="M5 3v16h16 M5 19l6-6 M2 6l3-3 3 3 M18 16l3 3-3 3" />
     <PathGeometry x:Key="ExplodeToolGeometry" Figures="M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z" />
     <GeometryGroup x:Key="GroupToolGeometry">
         <RectangleGeometry Rect="7,7,7,5" RadiusX="1" RadiusY="1" />

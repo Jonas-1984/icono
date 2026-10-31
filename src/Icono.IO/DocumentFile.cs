@@ -4,7 +4,7 @@ using Icono.Core;
 
 namespace Icono.IO;
 
-/// <summary>One layer as stored in an .icono file.</summary>
+/// <summary>One layer as stored in an .icn file.</summary>
 public sealed class LayerFile
 {
     public string Name { get; set; } = "Layer";
@@ -22,7 +22,11 @@ public sealed class LayerFile
 /// Stored as indented JSON with enum names, so files stay readable and survive new enum members being added.</summary>
 public sealed class DocumentFile
 {
-    public const string Extension = ".icono";
+    /// <summary>The extension new documents are saved with.</summary>
+    public const string Extension = ".icn";
+
+    /// <summary>The extension of the first versions; such files still open and are saved as <see cref="Extension"/> when saved under a new name.</summary>
+    public const string LegacyExtension = ".icono";
 
     public const int CurrentVersion = 1;
 
@@ -147,7 +151,7 @@ public sealed class DocumentFile
         File.Move(temp, path, overwrite: true);
     }
 
-    /// <summary>Reads an .icono file. Throws <see cref="InvalidDataException"/> when it is not a valid document.</summary>
+    /// <summary>Reads an .icn (or legacy .icono) file. Throws <see cref="InvalidDataException"/> when it is not a valid document.</summary>
     public static DocumentFile Load(string path)
     {
         try

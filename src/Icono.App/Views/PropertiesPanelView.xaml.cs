@@ -737,6 +737,55 @@ public partial class PropertiesPanelView : UserControl
         _context?.RequestRedraw();
     }
 
+    /// <summary>Opens the MOVE card and puts the cursor into its X box (the Move tool of the toolbar and the Arrange menu).</summary>
+    public bool FocusMoveInput()
+    {
+        if (!FocusCard("MOVE"))
+        {
+            return false;
+        }
+
+        MoveXTextBox.Focus();
+        MoveXTextBox.SelectAll();
+        return true;
+    }
+
+    private void MoveTextBox_OnKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            ApplyMove();
+            e.Handled = true;
+        }
+    }
+
+    private void MoveApplyButton_OnClick(object sender, RoutedEventArgs e) => ApplyMove();
+
+    /// <summary>Moves the selection by the distances typed in the MOVE card: centimetres in the real world, so a drawing at 1:50 moves
+    /// by 1/50 of that on the page. Positive X is to the right, positive Y downwards. One undo entry.</summary>
+    private void ApplyMove()
+    {
+        if (_context is null || _context.SelectedShapes.Count == 0)
+        {
+            return;
+        }
+
+        if (!TryParseNumber(MoveXTextBox.Text, out var cmX) || !TryParseNumber(MoveYTextBox.Text, out var cmY))
+        {
+            MoveXTextBox.Text = "0";
+            MoveYTextBox.Text = "0";
+            return;
+        }
+
+        if (cmX == 0 && cmY == 0)
+        {
+            return;
+        }
+
+        _context.NudgeSelection(UnitToPx(cmX, CanvasSizeUnit.Cm) / PageScale, UnitToPx(cmY, CanvasSizeUnit.Cm) / PageScale);
+        RefreshControlsFromShape();
+    }
+
     private void RotateUpButton_OnClick(object sender, RoutedEventArgs e) => ApplyRotationDelta(1);
 
     private void RotateDownButton_OnClick(object sender, RoutedEventArgs e) => ApplyRotationDelta(-1);

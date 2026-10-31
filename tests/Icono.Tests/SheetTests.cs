@@ -113,7 +113,7 @@ public class SheetTests
     {
         var document = new Document { Width = 300, Height = 200, Sheet = On(SheetPlacement.Right) with { BlockSizeMm = 42 } };
         document.Layers.Add(new Layer { Name = "L" });
-        var path = Path.Combine(Path.GetTempPath(), $"sheet-{Guid.NewGuid():N}.icono");
+        var path = Path.Combine(Path.GetTempPath(), $"sheet-{Guid.NewGuid():N}{DocumentFile.Extension}");
         try
         {
             DocumentFile.Save(document, path);

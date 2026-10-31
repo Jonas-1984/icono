@@ -66,6 +66,26 @@ public class DocumentFileTests
     }
 
     [Fact]
+    public void NewDocumentsUseTheShortExtension_AndFilesWithTheOldOneStillLoad()
+    {
+        Assert.Equal(".icn", DocumentFile.Extension);
+
+        var path = Path.Combine(Path.GetTempPath(), $"icono-test-{Guid.NewGuid():N}{DocumentFile.LegacyExtension}");
+        try
+        {
+            DocumentFile.Save(BuildSample(), path);
+
+            var loaded = new Document();
+            DocumentFile.Load(path).ApplyTo(loaded);
+            Assert.Equal(300, loaded.Width);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
     public void Load_RejectsGarbage()
     {
         var path = Path.Combine(Path.GetTempPath(), $"icono-test-{Guid.NewGuid():N}{DocumentFile.Extension}");
