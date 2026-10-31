@@ -56,17 +56,40 @@ public static class SymbolMeasurements
         }
 
         var host = FindHost(document, symbol);
-        if (ArchitecturalSymbols.LayoutDimension(symbol, host is null ? 0f : ClearOfWallDimensions(symbol, host)) is { } width)
+        var roomSide = IsOnRoomSide(symbol, host);
+        if (ArchitecturalSymbols.LayoutDimension(symbol, host is null ? 0f : ClearOfWallDimensions(symbol, host, roomSide), roomSide) is { } width)
         {
             result.Add(new SymbolDimension(SymbolDimensionPart.Width, width, symbol.Width));
         }
 
         if (symbol.SymbolShowGaps && host is not null)
         {
-            result.AddRange(Gaps(symbol, host));
+            result.AddRange(Gaps(symbol, host, roomSide));
         }
 
         return result;
+    }
+
+    /// <summary>Whether the dimensions of the symbol are on its room side (the -y side of the symbol) or on the other one. Where the wall goes round a
+    /// room (a ring, or three or more corners) they are by default on the OUTSIDE of the plan, whichever way the door swings or the window is
+    /// drawn; "Room side" puts them inside. In a single straight wall there is no outside, so the symbol's own sides apply.</summary>
+    internal static bool IsOnRoomSide(Shape symbol, SymbolHost? host)
+    {
+        var inside = symbol.WallDimensionPlacement == WallDimensionPlacement.Inside;
+        if (host is not { Wall.Points.Count: >= 3 } room)
+        {
+            return inside;
+        }
+
+        var u = host.Direction;
+        var outside = WallRenderer.DimensionSide(room.Wall);
+        var outsideX = -u.Y * outside;
+        var outsideY = u.X * outside;
+        var (w, h) = ArchitecturalSymbols.FrameSize(symbol);
+        var plusY = ArchitecturalSymbols.PlaceMatrix(symbol, w, h).MapVector(0, 1);
+        var outsideIsPlusY = outsideX * plusY.X + outsideY * plusY.Y >= 0;
+
+        return inside == outsideIsPlusY;
     }
 
     /// <summary>The wall segment the symbol lies in, or null when it lies in no wall (it must run parallel to the wall and sit in its band).</summary>
@@ -136,7 +159,7 @@ public static class SymbolMeasurements
         return best;
     }
 
-    private static List<SymbolDimension> Gaps(Shape symbol, SymbolHost host)
+    private static List<SymbolDimension> Gaps(Shape symbol, SymbolHost host, bool roomSide)
     {
         var result = new List<SymbolDimension>();
         var (w, h) = ArchitecturalSymbols.FrameSize(symbol);
@@ -154,26 +177,26 @@ public static class SymbolMeasurements
 
         if (near > 0.5f)
         {
-            result.Add(Gap(symbol, host, SymbolDimensionPart.GapToStart, OnFace(0), OnFace(near), near));
+            result.Add(Gap(symbol, host, SymbolDimensionPart.GapToStart, OnFace(0), OnFace(near), near, roomSide));
         }
 
         var rest = host.FaceLength - far;
         if (rest > 0.5f)
         {
-            result.Add(Gap(symbol, host, SymbolDimensionPart.GapToEnd, OnFace(far), OnFace(host.FaceLength), rest));
+            result.Add(Gap(symbol, host, SymbolDimensionPart.GapToEnd, OnFace(far), OnFace(host.FaceLength), rest, roomSide));
         }
 
         return result;
     }
 
-    private static SymbolDimension Gap(Shape symbol, SymbolHost host, SymbolDimensionPart part, SKPoint from, SKPoint to, float length)
+    private static SymbolDimension Gap(Shape symbol, SymbolHost host, SymbolDimensionPart part, SKPoint from, SKPoint to, float length, bool roomSide)
     {
         var u = host.Direction;
-        var side = SideOf(symbol, host);
+        var side = SideOf(symbol, host, roomSide);
 
         // the line sits on the side chosen for the width dimension; the measured face is the room side: across the wall when they differ
         var distance = (float)Math.Max(0, symbol.DimOffset)
-            + (FaceSideOf(host) == side ? ClearOfWallDimensions(symbol, host) : (float)host.Wall.WallThickness);
+            + (FaceSideOf(host) == side ? ClearOfWallDimensions(symbol, host, roomSide) : (float)host.Wall.WallThickness);
         var along = (float)Math.Clamp(symbol.DimTextPosition ?? 0.5, 0, 1);
         var shift = (float)symbol.DimTextShift;
         var style = DimensionStyle.For(symbol);
@@ -187,16 +210,16 @@ public static class SymbolMeasurements
     }
 
     /// <summary>Which side of the wall (+1 left of its direction, -1 right) the dimensions of the symbol are on.</summary>
-    private static float SideOf(Shape symbol, SymbolHost host)
+    private static float SideOf(Shape symbol, SymbolHost host, bool roomSide)
     {
         var u = host.Direction;
-        var away = ArchitecturalSymbols.DimensionAway(symbol);
+        var away = ArchitecturalSymbols.DimensionAway(symbol, roomSide);
         return -u.Y * away.X + u.X * away.Y >= 0 ? 1f : -1f;
     }
 
     /// <summary>The extra distance that keeps the dimensions of the symbol off the wall's own dimension line when both are on the room side.</summary>
-    private static float ClearOfWallDimensions(Shape symbol, SymbolHost host) =>
-        host.Wall.WallShowDimensions && FaceSideOf(host) == SideOf(symbol, host) ? (float)host.Wall.DimOffset + 14f : 0f;
+    private static float ClearOfWallDimensions(Shape symbol, SymbolHost host, bool roomSide) =>
+        host.Wall.WallShowDimensions && FaceSideOf(host) == SideOf(symbol, host, roomSide) ? (float)host.Wall.DimOffset + 14f : 0f;
 
     private static float FaceSideOf(SymbolHost host)
     {
@@ -270,7 +293,7 @@ public static class SymbolMeasurements
             return false;
         }
 
-        var current = Gaps(symbol, host).FirstOrDefault(g => g.Part == part);
+        var current = Gaps(symbol, host, IsOnRoomSide(symbol, host)).FirstOrDefault(g => g.Part == part);
         if (current is null)
         {
             return false;

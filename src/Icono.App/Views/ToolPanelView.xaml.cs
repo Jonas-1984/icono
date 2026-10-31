@@ -608,6 +608,8 @@ public partial class ToolPanelView : UserControl
         Context.MatchAspects = box.IsChecked == true ? Context.MatchAspects | aspect : Context.MatchAspects & ~aspect;
     }
 
+    private void MatchDimensionsToAll_OnClick(object sender, System.Windows.RoutedEventArgs e) => Context?.MatchDimensionStyleToAll();
+
     private void CloseRoom_OnClick(object sender, System.Windows.RoutedEventArgs e) => Context?.CloseSelectedWalls();
 
     private void Room_OnClick(object sender, System.Windows.RoutedEventArgs e)

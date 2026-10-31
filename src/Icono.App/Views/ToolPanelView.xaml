@@ -129,6 +129,9 @@
                                           Foreground="{DynamicResource ForegroundTextBrush}" FontSize="11" Margin="0,2"
                                           ToolTip="Make the object as big as the source. Position and rotation stay." />
                             </StackPanel>
+                            <Button Content="Dimension style to ALL dimensions" Style="{StaticResource PanelKeyButtonStyle}" Margin="10,2,10,8"
+                                    HorizontalAlignment="Left" Padding="12,0" Click="MatchDimensionsToAll_OnClick"
+                                    ToolTip="Takes the dimension style of the selected (or picked) wall, dimension, door or window and gives it to every other dimension of the drawing, also those of walls, doors and windows. One undo step." />
                         </StackPanel>
                     </StackPanel>
                 </Border>

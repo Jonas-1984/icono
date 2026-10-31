@@ -787,6 +787,45 @@ public sealed class EditorContext : ObservableObject
         RequestRedraw();
     }
 
+    /// <summary>Gives the dimension style (text size, line width, end marks, unit, number position) of the match source - or of the single
+    /// selected wall, dimension, door or window - to every other dimension of the drawing, including those of walls, doors and windows,
+    /// as one undo step.</summary>
+    public void MatchDimensionStyleToAll()
+    {
+        var source = _matchSource ?? (SelectedShapes.Count == 1 ? SelectedShapes[0] : null);
+        if (source is null || !MatchProperties.HasDimensionStyle(source))
+        {
+            StatusMessage?.Invoke("Select the dimension, wall, door or window whose dimension style should go to all the others.");
+            return;
+        }
+
+        var targets = Document.Layers.Where(l => !l.Locked)
+            .SelectMany(l => l.Shapes)
+            .Where(s => !s.Locked && !ReferenceEquals(s, source) && MatchProperties.HasDimensionStyle(s))
+            .ToList();
+        var changed = new List<Shape>();
+        var before = new List<ShapeSnapshot>();
+        foreach (var target in targets)
+        {
+            var snapshot = ShapeSnapshot.Capture(target);
+            if (MatchProperties.Copy(source, target, MatchAspects.Dimension))
+            {
+                changed.Add(target);
+                before.Add(snapshot);
+            }
+        }
+
+        if (changed.Count == 0)
+        {
+            StatusMessage?.Invoke("All dimensions already have this style.");
+            return;
+        }
+
+        UndoManager.Push(UndoableAction.ForPropertyEdit(changed, before, changed.Select(ShapeSnapshot.Capture).ToList()));
+        StatusMessage?.Invoke($"Dimension style given to {changed.Count} other object{(changed.Count == 1 ? string.Empty : "s")} with dimensions.");
+        RequestRedraw();
+    }
+
     /// <summary>Puts a ready-made room (see <see cref="RoomPreset"/>) in the middle of the page as one closed wall.</summary>
     public void InsertRoom(RoomPreset preset)
     {

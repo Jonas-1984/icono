@@ -680,4 +680,35 @@ public class SymbolMeasurementTests
 
         Assert.True(red, "the distance to the corner is not drawn");
     }
+
+    [Fact]
+    public void TheDimensionsOfAWindowInARoom_AreByDefaultOutsideThePlan_WhicheverWayTheSymbolIsDrawn()
+    {
+        var (document, _, window) = RoomWithWindow();
+        double WidthLineY() => SymbolMeasurements.Layout(document, window).Single(d => d.Part == SymbolDimensionPart.Width).Layout.TextPosition.Y;
+
+        Assert.True(WidthLineY() < 92, "above the top wall = outside the room");
+
+        window.FlipVertical = true;
+        Assert.True(WidthLineY() < 92, "still outside when the symbol is mirrored");
+
+        window.WallDimensionPlacement = WallDimensionPlacement.Inside;
+        Assert.True(WidthLineY() > 108, "'room side' puts it inside");
+    }
+
+    [Fact]
+    public void TheDimensionsOfADoorInARoom_AreOutsideThePlanEvenWhenItSwingsOutwards()
+    {
+        var (document, _, _) = RoomWithWindow();
+        var door = new Shape { Kind = ShapeKind.DoorSingle, X = 300, Y = 100 - 8 - 80, Width = 80, Height = 96, WallThickness = 16 };
+        ArchitecturalSymbols.ApplyDefaults(door);
+        document.Layers[0].Shapes.Insert(0, door);
+
+        double WidthLineY() => SymbolMeasurements.Layout(document, door).Single(d => d.Part == SymbolDimensionPart.Width).Layout.TextPosition.Y;
+        var inwards = WidthLineY();
+        door.FlipVertical = !door.FlipVertical;
+        var outwards = WidthLineY();
+
+        Assert.True(inwards < 100 && outwards < 100, $"inwards {inwards}, outwards {outwards}");
+    }
 }

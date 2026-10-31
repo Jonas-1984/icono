@@ -151,17 +151,20 @@ public static class MatchProperties
         target.DimTextPosition = source.DimTextPosition;
         target.DimTextShift = source.DimTextShift;
 
-        if (target.Kind == ShapeKind.Dimension)
+        if (target.Kind == ShapeKind.Dimension || ArchitecturalSymbols.IsSymbol(target.Kind))
         {
-            // unit and decimals are what a dimension IS written in; a wall keeps its own unit switch (see the Wall aspect)
+            // unit and decimals are what a dimension (or the dimensions of a door or window) IS written in; a wall keeps its own unit switch (see the Wall aspect)
             target.DimUnit = source.Kind == ShapeKind.Wall ? source.WallDimensionUnit : source.DimUnit;
             target.DimPrecision = source.DimPrecision;
         }
         else if (target.Kind == ShapeKind.Wall)
         {
-            target.WallDimensionUnit = source.Kind == ShapeKind.Dimension ? source.DimUnit : source.WallDimensionUnit;
+            target.WallDimensionUnit = source.Kind == ShapeKind.Dimension || ArchitecturalSymbols.IsSymbol(source.Kind) ? source.DimUnit : source.WallDimensionUnit;
         }
     }
+
+    /// <summary>True for the shapes that carry a dimension style: dimensions, walls and the doors, windows and openings with their own dimensions.</summary>
+    public static bool HasDimensionStyle(Shape shape) => Kinds(shape).HasFlag(MatchAspects.Dimension);
 
     /// <summary>The aspects that mean something for this kind of shape (as source or as target).</summary>
     private static MatchAspects Kinds(Shape shape)
@@ -178,7 +181,7 @@ public static class MatchProperties
             case ShapeKind.WindowSingle:
             case ShapeKind.WindowDouble:
             case ShapeKind.WallOpening:
-                return MatchAspects.Fill | MatchAspects.Border | MatchAspects.Effects;
+                return MatchAspects.Fill | MatchAspects.Border | MatchAspects.Effects | MatchAspects.Dimension;
             case ShapeKind.Wall:
                 return MatchAspects.Fill | MatchAspects.Border | MatchAspects.Effects | MatchAspects.Wall | MatchAspects.Dimension;
             case ShapeKind.Text:

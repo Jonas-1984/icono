@@ -191,10 +191,10 @@ public static class ArchitecturalSymbols
 
     /// <summary>The direction (a unit vector in the document) the dimensions of the symbol are placed in: to the outside of the wall, away from a
     /// door's swing, or to the room side.</summary>
-    public static SKPoint DimensionAway(Shape shape)
+    public static SKPoint DimensionAway(Shape shape, bool? roomSideOverride = null)
     {
         var (w, h) = FrameSize(shape);
-        var roomSide = shape.WallDimensionPlacement == WallDimensionPlacement.Inside;
+        var roomSide = roomSideOverride ?? shape.WallDimensionPlacement == WallDimensionPlacement.Inside;
         var v = PlaceMatrix(shape, w, h).MapVector(0, roomSide ? -1 : 1);
         var length = MathF.Sqrt(v.X * v.X + v.Y * v.Y);
         return length < 1e-6f ? new SKPoint(0, 1) : new SKPoint(v.X / length, v.Y / length);
@@ -203,7 +203,7 @@ public static class ArchitecturalSymbols
     /// <summary>The dimension of the opening: its width from jamb to jamb, drawn next to the symbol - on the wall side (away from the swing)
     /// or, for <see cref="WallDimensionPlacement.Inside"/>, on the room side - at the distance <see cref="Shape.DimOffset"/>.
     /// Null when the symbol shows no dimension.</summary>
-    public static DimensionLayout? LayoutDimension(Shape shape, float extraOffset = 0)
+    public static DimensionLayout? LayoutDimension(Shape shape, float extraOffset = 0, bool? roomSideOverride = null)
     {
         if (!IsSymbol(shape.Kind) || !shape.SymbolShowDimension)
         {
@@ -211,7 +211,7 @@ public static class ArchitecturalSymbols
         }
 
         var (w, h) = FrameSize(shape);
-        var roomSide = shape.WallDimensionPlacement == WallDimensionPlacement.Inside;
+        var roomSide = roomSideOverride ?? shape.WallDimensionPlacement == WallDimensionPlacement.Inside;
 
         // the faces of the wall strip: the bottom of a door's frame, the whole frame of a window or an opening
         var innerFace = IsDoor(shape.Kind) ? h - (float)Math.Max(shape.WallThickness, 0.5) : 0f;
@@ -220,7 +220,7 @@ public static class ArchitecturalSymbols
         var matrix = PlaceMatrix(shape, w, h);
         var a = matrix.MapPoint(new SKPoint(0, y));
         var b = matrix.MapPoint(new SKPoint(w, y));
-        var away = DimensionAway(shape);
+        var away = DimensionAway(shape, roomSide);
 
         // LayoutAligned puts the line on the left of its first point to its second: take the order that points away from the symbol
         var normal = new SKPoint(-(b.Y - a.Y), b.X - a.X);

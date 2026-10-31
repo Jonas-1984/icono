@@ -170,4 +170,26 @@ public class MatchPropertiesTests
         Assert.False(MatchProperties.Copy(source, source, MatchAspects.Look));
         Assert.False(MatchProperties.Copy(source, new Shape { Kind = ShapeKind.Rectangle }, MatchAspects.None));
     }
+
+    [Fact]
+    public void TheDimensionStyle_AlsoGoesToTheDimensionsOfDoorsAndWindows()
+    {
+        var source = new Shape { Kind = ShapeKind.Dimension, DimFontSize = 22, DimLineWidth = 2.5, DimUnit = LengthUnit.Meter, DimPrecision = 3 };
+        var window = new Shape { Kind = ShapeKind.WindowSingle };
+        var wall = new Shape { Kind = ShapeKind.Wall, Points = [new CorePoint(0, 0), new CorePoint(100, 0)] };
+
+        Assert.True(MatchProperties.HasDimensionStyle(window));
+        Assert.True(MatchProperties.HasDimensionStyle(wall));
+        Assert.False(MatchProperties.HasDimensionStyle(new Shape { Kind = ShapeKind.Rectangle }));
+
+        Assert.True(MatchProperties.Copy(source, window, MatchAspects.Dimension));
+        Assert.Equal(22, window.DimFontSize);
+        Assert.Equal(2.5, window.DimLineWidth);
+        Assert.Equal(LengthUnit.Meter, window.DimUnit);
+        Assert.Equal(3, window.DimPrecision);
+
+        // and from a window to a wall: the wall takes the unit
+        Assert.True(MatchProperties.Copy(window, wall, MatchAspects.Dimension));
+        Assert.Equal(LengthUnit.Meter, wall.WallDimensionUnit);
+    }
 }
