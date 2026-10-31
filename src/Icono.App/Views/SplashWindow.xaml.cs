@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
@@ -32,8 +31,11 @@ public partial class SplashWindow : Window
         // letter-spaced name; the colours follow the theme the user chose (opaque, also for the glass themes)
         NameText.Text = string.Join(' ', "ICONO".AsEnumerable());
         var dark = ThemeManager.Current == ThemeMode.Dark;
-        Background = Brush(dark ? 0x16171A : 0xF5F6F8);
-        Card.BorderBrush = Brush(dark ? 0x34373D : 0xD3D6DB);
+        ShadowHost.Background = Brush(dark ? 0x101114 : 0xE9ECF0);
+        Card.Background = Glass(dark ? "F01A1C21" : "F4FBFCFD", dark ? "F2121317" : "F4ECEEF2");
+        Card.BorderBrush = Glass(dark ? "66FFFFFF" : "AAFFFFFF", dark ? "12FFFFFF" : "33B7BDC8", diagonal: true);
+        GlowA.Opacity = 0;
+        GlowB.Opacity = 0;
         NameText.Foreground = Brush(dark ? 0xF1F2F4 : 0x1B2332);
         TaglineText.Foreground = Brush(dark ? 0xA7ADB7 : 0x5B6472);
         PercentText.Foreground = Brush(dark ? 0xA7ADB7 : 0x5B6472);
@@ -45,17 +47,21 @@ public partial class SplashWindow : Window
     /// <summary>Raised once, after <see cref="Duration"/> or when the user skips the start screen.</summary>
     public event Action? Finished;
 
+    /// <summary>A two-colour gradient (ARGB hex), top to bottom or corner to corner: the dark glass of the card and the light on its rim.</summary>
+    private static LinearGradientBrush Glass(string from, string to, bool diagonal = false)
+    {
+        var brush = new LinearGradientBrush(
+            (Color)ColorConverter.ConvertFromString("#" + from), (Color)ColorConverter.ConvertFromString("#" + to),
+            diagonal ? new Point(0, 0) : new Point(0.5, 0), diagonal ? new Point(1, 1) : new Point(0.5, 1));
+        brush.Freeze();
+        return brush;
+    }
+
     private static SolidColorBrush Brush(int rgb)
     {
         var brush = new SolidColorBrush(Color.FromRgb((byte)(rgb >> 16), (byte)(rgb >> 8), (byte)rgb));
         brush.Freeze();
         return brush;
-    }
-
-    protected override void OnSourceInitialized(EventArgs e)
-    {
-        base.OnSourceInitialized(e);
-        NativeMethods.EnableRoundedCorners(new WindowInteropHelper(this).Handle);
     }
 
     private void Window_OnContentRendered(object? sender, EventArgs e)

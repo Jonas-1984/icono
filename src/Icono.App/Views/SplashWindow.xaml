@@ -1,8 +1,9 @@
 <Window x:Class="Icono.App.Views.SplashWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="icono" Width="640" Height="420" Icon="/Assets/icono.ico"
+        Title="icono" Width="700" Height="480" Icon="/Assets/icono.ico"
         WindowStyle="None" ResizeMode="NoResize" WindowStartupLocation="CenterScreen"
+        AllowsTransparency="True" Background="Transparent" ShowInTaskbar="True"
         UseLayoutRounding="True" SnapsToDevicePixels="True"
         AutomationProperties.Name="icono is starting"
         ContentRendered="Window_OnContentRendered" MouseLeftButtonDown="Window_OnMouseLeftButtonDown" KeyDown="Window_OnKeyDown">
@@ -30,17 +31,61 @@
 
             <DoubleAnimation Storyboard.TargetName="TaglineText" Storyboard.TargetProperty="Opacity" From="0" To="1" BeginTime="0:0:1.5" Duration="0:0:0.9" />
 
+            <DoubleAnimation Storyboard.TargetName="GlowA" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:1.8" />
+            <DoubleAnimation Storyboard.TargetName="GlowB" Storyboard.TargetProperty="Opacity" From="0" To="1" BeginTime="0:0:0.5" Duration="0:0:2.0" />
+            <DoubleAnimation Storyboard.TargetName="Gloss" Storyboard.TargetProperty="Opacity" From="0" To="1" BeginTime="0:0:0.3" Duration="0:0:1.5" />
+
             <DoubleAnimation Storyboard.TargetName="ProgressArea" Storyboard.TargetProperty="Opacity" From="0" To="1" BeginTime="0:0:2.0" Duration="0:0:0.5" />
             <DoubleAnimation Storyboard.TargetName="ProgressScale" Storyboard.TargetProperty="ScaleX" From="0" To="1" BeginTime="0:0:2.0" Duration="0:0:3.8" />
         </Storyboard>
     </Window.Resources>
 
-    <Border x:Name="Card" BorderThickness="1">
+    <Grid Margin="30">
+        <!-- soft shadow under the glass card -->
+        <Border x:Name="ShadowHost" CornerRadius="28" Background="#FF101114">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="46" ShadowDepth="10" Direction="270" Opacity="0.55" Color="Black" />
+            </Border.Effect>
+        </Border>
+
+        <Border x:Name="Card" CornerRadius="28" BorderThickness="1">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
+            <!-- the glass: soft coloured light inside the card, a gloss on its top edge (all clipped to the rounded card) -->
+            <Canvas Grid.RowSpan="2" Width="638" Height="418" IsHitTestVisible="False" HorizontalAlignment="Left" VerticalAlignment="Top">
+                <Canvas.Clip>
+                    <RectangleGeometry Rect="0,0,638,418" RadiusX="27" RadiusY="27" />
+                </Canvas.Clip>
+                <Ellipse x:Name="GlowA" Canvas.Left="-130" Canvas.Top="-170" Width="520" Height="480" Opacity="0">
+                    <Ellipse.Fill>
+                        <RadialGradientBrush>
+                            <GradientStop x:Name="GlowAStop" Color="#663B9CFF" Offset="0" />
+                            <GradientStop Color="#223B9CFF" Offset="0.5" />
+                            <GradientStop Color="#003B9CFF" Offset="1" />
+                        </RadialGradientBrush>
+                    </Ellipse.Fill>
+                </Ellipse>
+                <Ellipse x:Name="GlowB" Canvas.Left="300" Canvas.Top="170" Width="480" Height="420" Opacity="0">
+                    <Ellipse.Fill>
+                        <RadialGradientBrush>
+                            <GradientStop Color="#559F8BFF" Offset="0" />
+                            <GradientStop Color="#189F8BFF" Offset="0.5" />
+                            <GradientStop Color="#009F8BFF" Offset="1" />
+                        </RadialGradientBrush>
+                    </Ellipse.Fill>
+                </Ellipse>
+                <Rectangle x:Name="Gloss" Width="638" Height="170" Opacity="0">
+                    <Rectangle.Fill>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#26FFFFFF" Offset="0" />
+                            <GradientStop Color="#00FFFFFF" Offset="1" />
+                        </LinearGradientBrush>
+                    </Rectangle.Fill>
+                </Rectangle>
+            </Canvas>
 
             <StackPanel Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,24,0,0">
                 <Image x:Name="LogoImage" Source="/Assets/icono.png" Width="128" Height="128" Opacity="0"
@@ -79,5 +124,6 @@
                            VerticalAlignment="Center" FontSize="13" AutomationProperties.Name="Loading progress" />
             </Grid>
         </Grid>
-    </Border>
+        </Border>
+    </Grid>
 </Window>
