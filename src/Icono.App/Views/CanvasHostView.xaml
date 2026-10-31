@@ -11,23 +11,43 @@
             Background="{DynamicResource CanvasSurroundBrush}"
             BorderBrush="{DynamicResource InsetEdgeBrush}" BorderThickness="1">
         <Grid>
-            <!-- A Canvas hands its child the full size it asks for: in a Grid cell a page larger than the work area (zoomed in)
-                 would get a layout clip fixed to the cell, and panning would drag that clip along and cut the page off. -->
-            <Canvas x:Name="CanvasFrameHost" SizeChanged="CanvasFrameHost_OnSizeChanged">
-                <Border x:Name="CanvasFrame"
-                        Width="256" Height="256"
-                        BorderBrush="{DynamicResource GlossyBlueBrush}"
-                        BorderThickness="2">
-                    <Border.RenderTransform>
-                        <TranslateTransform x:Name="PanTransform" X="0" Y="0" />
-                    </Border.RenderTransform>
-                    <skia:SKElement x:Name="SkiaCanvas" PaintSurface="SkiaCanvas_OnPaintSurface" />
-                </Border>
-            </Canvas>
-            <Canvas x:Name="TextEditOverlay" IsHitTestVisible="True" />
-            <Canvas x:Name="QuickPopupLayer" IsHitTestVisible="True">
-                <local:LineQuickPopup x:Name="LineQuickPopupControl" Visibility="Collapsed" />
-            </Canvas>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="RulerColumn" Width="22" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition x:Name="RulerRow" Height="22" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- the rulers: top (x) and left (y), zero at the corner of each page; View > Show Rulers switches them off -->
+            <Border x:Name="RulerCorner" Grid.Row="0" Grid.Column="0" Background="{DynamicResource PanelSurfaceBrush}"
+                    BorderBrush="{DynamicResource InsetEdgeBrush}" BorderThickness="0,0,1,1">
+                <TextBlock x:Name="RulerUnitText" Text="cm" FontSize="9.5" Foreground="{DynamicResource MutedTextBrush}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <local:RulerView x:Name="RulerTop" Grid.Row="0" Grid.Column="1" IsHitTestVisible="False" ClipToBounds="True" />
+            <local:RulerView x:Name="RulerLeft" Grid.Row="1" Grid.Column="0" Vertical="True" IsHitTestVisible="False" ClipToBounds="True" />
+
+            <Grid Grid.Row="1" Grid.Column="1" ClipToBounds="True">
+                <!-- A Canvas hands its child the full size it asks for: in a Grid cell a page larger than the work area (zoomed in)
+                     would get a layout clip fixed to the cell, and panning would drag that clip along and cut the page off. -->
+                <Canvas x:Name="CanvasFrameHost" SizeChanged="CanvasFrameHost_OnSizeChanged">
+                    <Border x:Name="CanvasFrame"
+                            Width="256" Height="256"
+                            BorderBrush="{DynamicResource GlossyBlueBrush}"
+                            BorderThickness="2">
+                        <Border.RenderTransform>
+                            <TranslateTransform x:Name="PanTransform" X="0" Y="0" />
+                        </Border.RenderTransform>
+                        <skia:SKElement x:Name="SkiaCanvas" PaintSurface="SkiaCanvas_OnPaintSurface" />
+                    </Border>
+                </Canvas>
+                <Canvas x:Name="TextEditOverlay" IsHitTestVisible="True" />
+                <Canvas x:Name="QuickPopupLayer" IsHitTestVisible="True">
+                    <local:LineQuickPopup x:Name="LineQuickPopupControl" Visibility="Collapsed" />
+                </Canvas>
+            </Grid>
         </Grid>
     </Border>
 </UserControl>

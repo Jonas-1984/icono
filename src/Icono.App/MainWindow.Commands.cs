@@ -361,12 +361,15 @@ public partial class MainWindow
 
     private void GridMenuItem_OnClick(object sender, RoutedEventArgs e) => GridToggleButton.IsChecked = GridMenuItem.IsChecked;
 
+    private void RulersMenuItem_OnClick(object sender, RoutedEventArgs e) => _context.ShowRulers = RulersMenuItem.IsChecked;
+
     private void SnapMenuItem_OnClick(object sender, RoutedEventArgs e) => SnapToggleButton.IsChecked = SnapMenuItem.IsChecked;
 
     private void UpdateViewMenuMarkers()
     {
         GridMenuItem.IsChecked = _context.ShowGrid;
         SnapMenuItem.IsChecked = _context.SnapToGrid;
+        RulersMenuItem.IsChecked = _context.ShowRulers;
     }
 
     // ----- tools / insert / draw ------------------------------------------------------------------

@@ -169,6 +169,11 @@ public sealed class EditorContext : ObservableObject
 
     public bool ShowGrid { get => _showGrid; set => SetField(ref _showGrid, value); }
 
+    private bool _showRulers = true;
+
+    /// <summary>The rulers on the top and the left edge of the work area (on by default; View > Show Rulers).</summary>
+    public bool ShowRulers { get => _showRulers; set => SetField(ref _showRulers, value); }
+
     public bool SnapToGrid { get => _snapToGrid; set => SetField(ref _snapToGrid, value); }
 
     public double GridSize { get => _gridSize; set => SetField(ref _gridSize, value); }

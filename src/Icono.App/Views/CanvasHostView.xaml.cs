@@ -151,6 +151,7 @@ public partial class CanvasHostView : UserControl
             }
         };
         MouseLeave += OnMouseLeave;
+        LayoutUpdated += (_, _) => UpdateRulers();
         MouseRightButtonDown += OnMouseRightButtonDown;
     }
 
@@ -574,12 +575,53 @@ public partial class CanvasHostView : UserControl
         return null;
     }
 
+    // ----- the rulers on the top and the left edge of the work area ------------------------------------------
+
+    private void ApplyRulerVisibility()
+    {
+        var show = _context?.ShowRulers ?? true;
+        var size = new GridLength(show ? RulerView.Thickness : 0);
+        RulerRow.Height = size;
+        RulerColumn.Width = size;
+        var visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        RulerCorner.Visibility = visibility;
+        RulerTop.Visibility = visibility;
+        RulerLeft.Visibility = visibility;
+        UpdateRulers();
+        UpdateCanvasFrameSize();
+    }
+
+    /// <summary>Tells the rulers where the pages are on the screen (called whenever the view, the zoom or the pages change).</summary>
+    private void UpdateRulers()
+    {
+        if (_context is null || !_context.ShowRulers)
+        {
+            return;
+        }
+
+        var origin = SkiaCanvas.TranslatePoint(new Point(0, 0), CanvasFrameHost);
+        var unit = _context.DimensionUnit;
+        RulerTop.Set(origin.X, Zoom, _context.Document, unit);
+        RulerLeft.Set(origin.Y, Zoom, _context.Document, unit);
+        RulerUnitText.Text = RulerView.UnitLabel(unit);
+    }
+
+    private void UpdateRulerCursor(Point? documentPoint)
+    {
+        RulerTop.SetCursor(documentPoint?.X);
+        RulerLeft.SetCursor(documentPoint?.Y);
+    }
+
     private void OnContextPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(EditorContext.ActiveTool))
         {
             Cursor = _context?.ActiveTool == ActiveTool.Match ? Cursors.Cross : null;
             ClearSnapGuides();
+        }
+        else if (e.PropertyName == nameof(EditorContext.ShowRulers))
+        {
+            ApplyRulerVisibility();
         }
     }
 
@@ -1262,6 +1304,7 @@ public partial class CanvasHostView : UserControl
     private void OnContextInvalidated(object? sender, EventArgs e)
     {
         UpdateCanvasFrameSize();
+        UpdateRulers();
         SkiaCanvas.InvalidateVisual();
     }
 
@@ -2237,6 +2280,7 @@ public partial class CanvasHostView : UserControl
         var document = _context.Document;
         PanTransform.X = 0;
         PanTransform.Y = -(document.PageTop(index) + document.Height / 2.0 - document.TotalHeight / 2.0) * Zoom;
+        UpdateRulers();
     }
 
     /// <summary>Moves the view by a number of screen pixels (the mouse wheel).</summary>
@@ -2244,6 +2288,7 @@ public partial class CanvasHostView : UserControl
     {
         PanTransform.X += dx;
         PanTransform.Y += dy;
+        UpdateRulers();
     }
 
     /// <summary>Moves the page back to the centre of the work area (after a pan).</summary>
@@ -2251,6 +2296,7 @@ public partial class CanvasHostView : UserControl
     {
         PanTransform.X = 0;
         PanTransform.Y = 0;
+        UpdateRulers();
     }
 
     /// <summary>Eyedropper: takes the colour of the rendered page at <paramref name="point"/> (shapes, background and all) as the
@@ -3168,7 +3214,9 @@ public partial class CanvasHostView : UserControl
             // the page under the pointer is the one new objects are put on
             if (_context is not null)
             {
-                _context.CurrentPage = _context.Document.PageIndexAt(ToDocumentSpace(e.GetPosition(SkiaCanvas)).Y);
+                var under = ToDocumentSpace(e.GetPosition(SkiaCanvas));
+                UpdateRulerCursor(under);
+                _context.CurrentPage = _context.Document.PageIndexAt(under.Y);
             }
 
             UpdatePointSnapHover(ToDocumentSpace(e.GetPosition(SkiaCanvas)));
@@ -3216,6 +3264,7 @@ public partial class CanvasHostView : UserControl
             var screenPoint = e.GetPosition(this);
             PanTransform.X += screenPoint.X - _panStart.X;
             PanTransform.Y += screenPoint.Y - _panStart.Y;
+            UpdateRulers();
             _panStart = screenPoint;
             return;
         }
@@ -3813,6 +3862,7 @@ public partial class CanvasHostView : UserControl
 
     private void OnMouseLeave(object sender, MouseEventArgs e)
     {
+        UpdateRulerCursor(null);
         ClearSnapGuides();
         if (!_isPlacing && !_isPathDrawing && !_isDraggingPoint)
         {

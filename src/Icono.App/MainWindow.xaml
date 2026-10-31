@@ -76,6 +76,8 @@
                 <MenuItem Header="Actual Size (100%)" InputGestureText="Ctrl+0" Click="ActualSizeMenuItem_OnClick" />
                 <MenuItem Header="Fit Page to Window" InputGestureText="Ctrl+1" Click="FitPageMenuItem_OnClick" />
                 <Separator />
+                <MenuItem x:Name="RulersMenuItem" Header="Show Rulers" IsCheckable="True" IsChecked="True" Click="RulersMenuItem_OnClick"
+                          ToolTip="Rulers on the top and the left edge, in the unit of the dimensions and at the drawing scale; zero at the corner of every page" />
                 <MenuItem x:Name="GridMenuItem" Header="Show Grid" IsCheckable="True" Click="GridMenuItem_OnClick" />
                 <MenuItem x:Name="SnapMenuItem" Header="Snap to Grid" IsCheckable="True" Click="SnapMenuItem_OnClick" />
                 <MenuItem x:Name="PointSnapMenuItem" Header="Object Snap (End Points, Middles, Centres ...)" InputGestureText="F3" IsCheckable="True" IsChecked="True" Click="PointSnapMenuItem_OnClick"
