@@ -57,6 +57,7 @@ public sealed class PointSnapOptions : ObservableObject
     [
         PointSnapKind.Endpoint, PointSnapKind.Midpoint, PointSnapKind.Center, PointSnapKind.Intersection, PointSnapKind.Extension,
         PointSnapKind.Perpendicular, PointSnapKind.Quadrant, PointSnapKind.GeometricCenter, PointSnapKind.Node, PointSnapKind.Insertion,
+        PointSnapKind.Nearest,
     ];
 
     /// <summary>The master switch. Alt switches snapping off for as long as it is held.</summary>
@@ -142,8 +143,11 @@ public static class PointSnapper
     /// <param name="tolerance">How near (document px) a point has to be.</param>
     /// <param name="exclude">Shapes that must not attract the point (the one being drawn or dragged).</param>
     /// <param name="reference">The last point of what is being drawn: needed for perpendicular, tangent, parallel.</param>
+    /// <param name="extra">More shapes that attract the point although they are not in the document (the part of a line that is already drawn,
+    /// or the rest of a line whose point is dragged).</param>
     public static PointSnapResult? Snap(
-        Document document, SKPoint cursor, double tolerance, PointSnapOptions options, IReadOnlyCollection<Shape> exclude, SKPoint? reference = null)
+        Document document, SKPoint cursor, double tolerance, PointSnapOptions options, IReadOnlyCollection<Shape> exclude, SKPoint? reference = null,
+        IReadOnlyCollection<Shape>? extra = null)
     {
         if (!options.Enabled)
         {
@@ -156,7 +160,7 @@ public static class PointSnapper
         var wide = new List<(SnapGeometry Geometry, Shape Shape)>();
         var parallelSources = new List<(SnapGeometry Geometry, Shape Shape)>();
 
-        foreach (var shape in document.VisibleShapes())
+        foreach (var shape in extra is { Count: > 0 } ? document.VisibleShapes().Concat(extra) : document.VisibleShapes())
         {
             if (exclude.Contains(shape) || shape.Kind == ShapeKind.DesignGrid || !MayBeNear(shape, cursor, ReachForExtension))
             {

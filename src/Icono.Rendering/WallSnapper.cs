@@ -63,13 +63,13 @@ public static class WallSnapper
     /// walls that run horizontally or vertically (side by side in one row, or stacked flush). 0 lines up the centre line only.</param>
     public static WallSnapResult Snap(
         SKPoint cursor, SKPoint? previous, IReadOnlyList<SKPoint> ownPoints, Document document,
-        WallSnapOptions options, double tolerance, bool forceAxis = false, double wallThickness = 0)
+        WallSnapOptions options, double tolerance, bool forceAxis = false, double wallThickness = 0, Shape? exclude = null)
     {
         var result = new WallSnapResult { Point = cursor };
         var tol = (float)tolerance;
 
         // everything the new wall can relate to
-        var visible = document.VisibleShapes().ToList();
+        var visible = document.VisibleShapes().Where(s => !ReferenceEquals(s, exclude)).ToList();
         var walls = visible.Where(s => s.Kind == ShapeKind.Wall && s.Points is { Count: > 0 });
 
         var vertices = new List<SKPoint>();
@@ -79,6 +79,17 @@ public static class WallSnapper
             var points = WallGeometry.AbsolutePoints(wall);
             vertices.AddRange(points);
             segments.AddRange(WallGeometry.Segments(wall));
+        }
+
+        // the points of lines, polylines and curves are targets too: another line can be parallel to them, line up with them or be as long
+        foreach (var line in visible.Where(s => s.Kind != ShapeKind.Wall && s.Kind != ShapeKind.Dimension && s.Points is { Count: > 1 }))
+        {
+            var linePoints = WallGeometry.AbsolutePoints(line);
+            vertices.AddRange(linePoints);
+            for (var i = 0; i + 1 < linePoints.Count; i++)
+            {
+                segments.Add((linePoints[i], linePoints[i + 1]));
+            }
         }
 
         for (var i = 0; i < ownPoints.Count; i++)

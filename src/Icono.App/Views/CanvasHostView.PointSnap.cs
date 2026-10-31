@@ -16,7 +16,7 @@ public partial class CanvasHostView
 
     /// <summary>The point snapped to the objects around it, or null when nothing is near (or Alt holds the snapping off). Remembers the snap for
     /// the mark. <paramref name="reference"/> is the last point of what is being drawn (perpendicular, tangent, parallel need it).</summary>
-    private Point? SnapToPoints(Point raw, SKPoint? reference = null, IReadOnlyCollection<Shape>? exclude = null)
+    private Point? SnapToPoints(Point raw, SKPoint? reference = null, IReadOnlyCollection<Shape>? exclude = null, IReadOnlyCollection<Shape>? extra = null)
     {
         if (_context is null || WallSnappingSuspended)
         {
@@ -25,7 +25,7 @@ public partial class CanvasHostView
         }
 
         _pointSnap = PointSnapper.Snap(
-            _context.Document, new SKPoint((float)raw.X, (float)raw.Y), AnchorSnapDip / Zoom, _context.PointSnap, exclude ?? [], reference);
+            _context.Document, new SKPoint((float)raw.X, (float)raw.Y), AnchorSnapDip / Zoom, _context.PointSnap, exclude ?? [], reference, extra);
         return _pointSnap is null ? null : new Point(_pointSnap.Point.X, _pointSnap.Point.Y);
     }
 

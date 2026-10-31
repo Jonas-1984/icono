@@ -880,16 +880,16 @@ public partial class CanvasHostView : UserControl
     private bool WallSnappingSuspended => Keyboard.Modifiers.HasFlag(ModifierKeys.Alt);
 
     /// <summary>Runs the wall snapping for the pointer; <paramref name="previous"/> is the last placed point (null for the first one).</summary>
-    private WallSnapResult RunWallSnap(Point raw, IReadOnlyList<SKPoint> placed)
+    private WallSnapResult RunWallSnap(Point raw, IReadOnlyList<SKPoint> placed, Shape? exclude = null, bool forLine = false, SKPoint? previousPoint = null)
     {
         var options = _context!.WallSnap;
-        SKPoint? previous = placed.Count > 0 ? placed[^1] : null;
+        SKPoint? previous = previousPoint ?? (placed.Count > 0 ? placed[^1] : null);
         var suspended = WallSnappingSuspended;
         var forceAxis = !suspended && Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
         var snapOptions = suspended ? new WallSnapOptions { Enabled = false } : options;
         return WallSnapper.Snap(
             new SKPoint((float)raw.X, (float)raw.Y), previous, placed, _context.Document, snapOptions, AnchorSnapDip / Zoom, forceAxis,
-            _pendingPathShape is { Kind: ShapeKind.Wall } drawing ? drawing.WallThickness : new Shape { Kind = ShapeKind.Wall }.WallThickness);
+            forLine ? 0 : _pendingPathShape is { Kind: ShapeKind.Wall } drawing ? drawing.WallThickness : new Shape { Kind = ShapeKind.Wall }.WallThickness, exclude);
     }
 
     /// <summary>While drawing a wall: jump to the start point when it is near (a click there closes the room), otherwise apply
@@ -1012,8 +1012,8 @@ public partial class CanvasHostView : UserControl
             return;
         }
 
-        var drawing = _isPathDrawing && _pendingPathShape is { Kind: ShapeKind.Wall };
-        var hovering = !_isPathDrawing && _context.ActiveTool == ActiveTool.PathDraw && _context.SelectedShapeKind == ShapeKind.Wall;
+        var drawing = _isPathDrawing || _isPlacing || _isDraggingPoint;
+        var hovering = !drawing && IsLineToolActive;
         if (!drawing && !hovering)
         {
             return;
@@ -2264,7 +2264,7 @@ public partial class CanvasHostView : UserControl
         // (end points, middles, centres, crossings ...), else on the edges and faces for a shape.
         var isLine = TwoPointLineKinds.Contains(_context.SelectedShapeKind);
         var anchored = isLine ? TryAnchorSnap(point, null) : null;
-        var onPoint = anchored is null ? SnapToPoints(point) : null;
+        var onPoint = anchored is null ? (isLine ? SnapLinePoint(point, [], null, null) : SnapToPoints(point)) : null;
         _placeStartSnapped = anchored is not null || onPoint is not null;
         point = anchored ?? onPoint ?? (isLine ? point : SnapObjectPoint(point, []));
 
@@ -2492,7 +2492,7 @@ public partial class CanvasHostView : UserControl
             }
             else if (anchored is null)
             {
-                point = SnapToPoints(point) ?? point;
+                point = SnapLinePoint(point, [], null, null) ?? point;
             }
 
             _isPathDrawing = true;
@@ -3145,6 +3145,7 @@ public partial class CanvasHostView : UserControl
             // Hovering with a line tool: show the connection points of nearby shapes so the user sees where it will cling.
             var hoverPoint = ToDocumentSpace(e.GetPosition(SkiaCanvas));
             var before = _snappedAnchor;
+            var wallBefore = _wallSnap;
             TryAnchorSnap(hoverPoint, null);
             if (_context?.SelectedShapeKind == ShapeKind.Wall)
             {
@@ -3154,8 +3155,13 @@ public partial class CanvasHostView : UserControl
             {
                 SnapToMeasurable(hoverPoint);
             }
+            else
+            {
+                // the first point of a line: the points of the objects, else lining up with other points
+                SnapLinePoint(hoverPoint, [], null, null);
+            }
 
-            if (before != _snappedAnchor || _anchorProbe is not null)
+            if (before != _snappedAnchor || _anchorProbe is not null || !ReferenceEquals(wallBefore, _wallSnap))
             {
                 SkiaCanvas.InvalidateVisual();
             }
@@ -3187,7 +3193,12 @@ public partial class CanvasHostView : UserControl
             if (_pendingShape.Points is not null)
             {
                 var anchored = TryAnchorSnap(point, _pendingShape);
-                point = anchored ?? SnapToPoints(point, PointSnapReference()) ?? SnapObjectPoint(point, []);
+                var start = new SKPoint((float)_placeStart.X, (float)_placeStart.Y);
+                point = anchored ?? SnapLinePoint(point, [start], start, null) ?? point;
+                if (anchored is not null)
+                {
+                    _wallSnap = null;
+                }
                 // Re-anchor to the fixed drag-start point every frame (not the previous frame's
                 // possibly-recomputed X/Y) so Recompute's absolute-position math never drifts.
                 _pendingShape.X = _placeStart.X;
@@ -3225,9 +3236,17 @@ public partial class CanvasHostView : UserControl
             var point = ToDocumentSpace(e.GetPosition(SkiaCanvas));
             var rawPoint = point;
             var anchored = TryAnchorSnap(point, null);
-            var onPoint = anchored is null && _pendingPathShape.Kind is not (ShapeKind.Wall or ShapeKind.Dimension)
-                ? SnapToPoints(rawPoint, PointSnapReference())
-                : null;
+            Point? onPoint = null;
+            if (_pendingPathShape.Kind is not (ShapeKind.Wall or ShapeKind.Dimension))
+            {
+                var placed = WallGeometry.AbsolutePoints(_pendingPathShape);
+                placed.RemoveAt(placed.Count - 1); // the moving ghost point
+                onPoint = anchored is null ? SnapLinePoint(rawPoint, placed, placed.Count > 0 ? placed[^1] : null, null) : null;
+                if (anchored is not null)
+                {
+                    _wallSnap = null;
+                }
+            }
             point = anchored ?? onPoint ?? new Point(SnapIfEnabled(point.X), SnapIfEnabled(point.Y));
             _wallClosePreview = false;
             if (_pendingPathShape.Kind == ShapeKind.Wall)
@@ -3237,6 +3256,10 @@ public partial class CanvasHostView : UserControl
             else if (_pendingPathShape.Kind == ShapeKind.Dimension)
             {
                 point = SnapToMeasurable(rawPoint) ?? point;
+            }
+            else
+            {
+                point = WithTypedLength(_pendingPathShape, point);
             }
 
             var list = _pendingPathShape.Points!.ToList();
@@ -3255,7 +3278,21 @@ public partial class CanvasHostView : UserControl
             var anchored = isEnd ? TryAnchorSnap(point, _pointEditShape) : null;
 
             // a point lands on the points of the other objects: the end of a line on the corner of a wall
-            var onPoint = anchored is null ? SnapToPoints(rawPoint, PointSnapReference(), [_pointEditShape]) : null;
+            Point? onPoint;
+            if (_pointEditShape.Kind is ShapeKind.Wall or ShapeKind.Dimension)
+            {
+                onPoint = anchored is null ? SnapToPoints(rawPoint, PointSnapReference(), [_pointEditShape]) : null;
+            }
+            else
+            {
+                var (others, neighbour) = OtherPoints(_pointEditShape, draggedIndex);
+                onPoint = anchored is null ? SnapLinePoint(rawPoint, others, neighbour, _pointEditShape) : null;
+                if (anchored is not null)
+                {
+                    _wallSnap = null;
+                }
+            }
+
             point = anchored ?? onPoint ?? new Point(SnapIfEnabled(point.X), SnapIfEnabled(point.Y));
 
             // a corner of a wall snaps onto the line between its neighbours (so two walls become straight) and lines up with other corners

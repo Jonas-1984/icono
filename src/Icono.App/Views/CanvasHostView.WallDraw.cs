@@ -14,10 +14,11 @@ public partial class CanvasHostView
     /// <summary>What the user typed for the length of the wall being drawn (empty: the pointer decides).</summary>
     private string _wallTyped = string.Empty;
 
-    /// <summary>The wall being drawn when at least one corner is placed (the last point is the moving one).</summary>
-    private Shape? DrawingWallWithSegment =>
-        _context is { ActiveTool: ActiveTool.PathDraw } && _isPathDrawing && _pendingPathShape is { Kind: ShapeKind.Wall, Points.Count: >= 2 } wall
-            ? wall
+    /// <summary>The wall, polyline or curve being drawn when at least one point is placed (the last point is the moving one). A dimension
+    /// takes its length from the points it measures, so it is left out.</summary>
+    private Shape? DrawingPathWithSegment =>
+        _context is { ActiveTool: ActiveTool.PathDraw } && _isPathDrawing && _pendingPathShape is { Kind: not ShapeKind.Dimension, Points.Count: >= 2 } path
+            ? path
             : null;
 
     private void ClearWallTyped() => _wallTyped = string.Empty;
@@ -26,7 +27,7 @@ public partial class CanvasHostView
     /// Backspace edits it, Enter places the corner, Esc clears it. Returns true when the key was used.</summary>
     public bool HandleWallDrawKey(KeyEventArgs e)
     {
-        if (DrawingWallWithSegment is null || Keyboard.Modifiers.HasFlag(ModifierKeys.Control) || Keyboard.Modifiers.HasFlag(ModifierKeys.Alt))
+        if (DrawingPathWithSegment is null || Keyboard.Modifiers.HasFlag(ModifierKeys.Control) || Keyboard.Modifiers.HasFlag(ModifierKeys.Alt))
         {
             return false;
         }
@@ -70,8 +71,12 @@ public partial class CanvasHostView
         }
     }
 
-    private bool TryTypedLength(Shape wall, out double px) =>
-        WallGeometry.TryParseLength(_wallTyped, wall.WallDimensionUnit, _context?.Document.ScaleDenominator ?? 1, out px) && px > 0.5;
+    /// <summary>The unit a bare number is in: the wall's own dimension unit, else the unit of the dimensions.</summary>
+    private LengthUnit TypedUnit(Shape path) =>
+        path.Kind == ShapeKind.Wall ? path.WallDimensionUnit : _context?.DimensionUnit ?? LengthUnit.Centimeter;
+
+    private bool TryTypedLength(Shape path, out double px) =>
+        WallGeometry.TryParseLength(_wallTyped, TypedUnit(path), _context?.Document.ScaleDenominator ?? 1, out px) && px > 0.5;
 
     // The number typed is the length the wall's dimension shows (see WallTypedLength): the centre line is made as long as needed, and when
     // the next wall is drawn the corner moves so that this wall keeps the number that was typed.
@@ -144,6 +149,12 @@ public partial class CanvasHostView
 
         var ux = dx / length;
         var uy = dy / length;
+        if (wall.Kind != ShapeKind.Wall)
+        {
+            // a polyline or curve: the number is the length of the piece itself
+            return new Point(from.X + ux * px, from.Y + uy * px);
+        }
+
         if (TryTypedSegment(wall, points.Count - 3, out var previous))
         {
             WallTypedLength.KeepPreviousTyped(wall, points, previous, ux, uy);
@@ -187,7 +198,7 @@ public partial class CanvasHostView
 
     private void ApplyTypedLength()
     {
-        if (DrawingWallWithSegment is not { } wall)
+        if (DrawingPathWithSegment is not { } wall)
         {
             return;
         }
@@ -205,7 +216,7 @@ public partial class CanvasHostView
     /// corner the room is closed.</summary>
     private void PlaceTypedWallPoint()
     {
-        if (DrawingWallWithSegment is not { } wall || _context is null)
+        if (DrawingPathWithSegment is not { } wall || _context is null)
         {
             return;
         }
@@ -218,6 +229,15 @@ public partial class CanvasHostView
 
         ApplyTypedLength();
         ClearWallTyped();
+        if (wall.Kind != ShapeKind.Wall)
+        {
+            var more = wall.Points!.ToList();
+            more.Add(more[^1]);
+            wall.Points = more;
+            _context.RequestRedraw();
+            return;
+        }
+
         RememberTypedSegment(wall, wall.Points!.Count - 2, typedPx);
 
         var points = WallGeometry.AbsolutePoints(wall);
@@ -238,17 +258,21 @@ public partial class CanvasHostView
     /// <summary>The small box next to the moving corner: asks for the length of the wall, and shows what is being typed.</summary>
     private void DrawWallLengthPrompt(SKCanvas canvas, float scaleX, float scaleY)
     {
-        if (DrawingWallWithSegment is not { } wall || _context is null)
+        if (DrawingPathWithSegment is not { } wall || _context is null)
         {
             return;
         }
 
         var points = WallGeometry.AbsolutePoints(wall);
         var end = points[^1];
-        var unit = wall.WallDimensionUnit;
+        var unit = TypedUnit(wall);
         var text = _wallTyped.Length > 0
             ? $"Length  {_wallTyped}{(_wallTyped.Any(char.IsLetter) ? string.Empty : " " + UnitSuffix(unit))}|   Enter = place"
-            : "Type a length, then Enter";
+            : wall.Kind == ShapeKind.Wall
+                ? "Type a length, then Enter"
+                : _wallSnap is { Label.Length: > 0 }
+                    ? "Type a length, then Enter" // the snap label already shows the length
+                    : $"{DimensionRenderer.Format(Geo.Distance(points[^2], end), unit, 2, _context.Document.ScaleDenominator)}  -  type a length, then Enter";
         DrawPill(canvas, text, end.X * scaleX + 14, end.Y * scaleY + 6);
     }
 
