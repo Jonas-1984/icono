@@ -6,3 +6,5 @@
 installer/Output/
 .claude/settings.local.json
 installer/publish/
+src/Icono.Rendering/UnitCatalog.Local.cs
+src/Icono.Rendering/UnitCatalog.Local.*.Generated.cs

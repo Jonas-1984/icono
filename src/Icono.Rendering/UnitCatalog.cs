@@ -11,27 +11,27 @@ public static partial class UnitCatalog
 
     private static IReadOnlyList<UnitObject>? _all;
 
-    /// <summary>False in the builds handed to other people (Release): the Sinks catalogue is left out there until the origin of its
-    /// drawings is documented (see the project file).</summary>
-    public const bool SinksIncluded =
-#if EXCLUDE_UNVERIFIED_SINKS
+    public static IReadOnlyList<UnitObject> All => _all ??= Collect();
+
+    /// <summary>True when this build can contain the catalogues kept on this PC only (see UnitCatalog.Local.cs): never in Release builds, the
+    /// ones handed to other people, and never in a clone of the repository that does not have those files.</summary>
+    public const bool LocalCataloguesAllowed =
+#if EXCLUDE_UNVERIFIED_CATALOGUES
         false;
 #else
         true;
 #endif
 
-    public static IReadOnlyList<UnitObject> All => _all ??= Collect();
+    static partial void AddLocalCatalogues(List<UnitObject> all);
 
     private static List<UnitObject> Collect()
     {
-        List<UnitObject> all = [.. Generated];
-        if (SinksIncluded)
+        List<UnitObject> all = [.. Generated, .. GeneratedKitchenElements, .. GeneratedComputers];
+        if (LocalCataloguesAllowed)
         {
-            all.AddRange(GeneratedSinks);
+            AddLocalCatalogues(all);
         }
 
-        all.AddRange(GeneratedKitchenElements);
-        all.AddRange(GeneratedComputers);
         return all;
     }
 

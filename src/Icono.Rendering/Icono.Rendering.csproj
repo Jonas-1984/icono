@@ -14,10 +14,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <!-- The Sinks catalogue comes from a CAD export whose origin is not documented yet: it stays out of the builds that are handed to other
+  <!-- The Sinks, Appliances, Cooktops and Workplace catalogues come from CAD exports whose origin is not documented yet: they stay out of the builds handed to other
        people (Release) until the licence of the drawings is clear. Remove this line to ship it. -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <DefineConstants>$(DefineConstants);EXCLUDE_UNVERIFIED_SINKS</DefineConstants>
+    <DefineConstants>$(DefineConstants);EXCLUDE_UNVERIFIED_CATALOGUES</DefineConstants>
   </PropertyGroup>
 
 </Project>

@@ -10,7 +10,13 @@ public class UnitCatalogTests
     public void TheCataloguesHaveAllGroupsWithDistinctIdsAndNames()
     {
         Assert.Equal(24, UnitCatalog.All.Count(u => u.Group == UnitCatalog.CabinetsGroup));
-        Assert.Equal(UnitCatalog.SinksIncluded ? 8 : 0, UnitCatalog.All.Count(u => u.Group == "Sinks"));
+        // catalogues kept on one PC only are either all there or not at all (a clean clone, a Release build)
+        foreach (var (group, count) in new[] { ("Sinks", 8), ("Kitchen Appliances", 16), ("Cooktops", 6), ("Workplace", 8) })
+        {
+            var found = UnitCatalog.All.Count(u => u.Group == group);
+            Assert.True(found == 0 || found == count, $"{group}: {found}");
+        }
+
         Assert.Equal(11, UnitCatalog.All.Count(u => u.Group == "Kitchen Elements"));
         Assert.Equal(3, UnitCatalog.All.Count(u => u.Group == "Computers"));
         Assert.Equal(UnitCatalog.All.Count, UnitCatalog.All.Select(u => u.Id).Distinct().Count());
