@@ -12,6 +12,13 @@ public static class ShapeLabel
 {
     private const double Padding = 6;
 
+    /// <summary>Space between the outline and a text written outside it.</summary>
+    private const float OutsideGap = 6;
+
+    /// <summary>How wide an outside text may become before it wraps: above and below as wide as the shape (at least 120 px), at the sides 160 px.</summary>
+    private static float OutsideWrapWidth(TextPlacement placement, double boxWidth) =>
+        placement is TextPlacement.Left or TextPlacement.Right ? 160f : (float)Math.Max(120, boxWidth);
+
     /// <summary>Which shapes can carry a label: everything except text shapes (already text), lines and design grids.</summary>
     public static bool CanHaveLabel(Shape shape) =>
         shape.Kind is not (ShapeKind.Text or ShapeKind.DesignGrid) && shape.Points is null && !ShapeGeometryFactory.IsLineFamily(shape.Kind)
@@ -25,6 +32,11 @@ public static class ShapeLabel
         if (shape.TextColor is { } chosen)
         {
             return chosen;
+        }
+
+        if (shape.TextPlacement != TextPlacement.Inside)
+        {
+            return ArgbColor.FromRgb(0x1B, 0x23, 0x32); // on the page, not on the fill
         }
 
         if (!shape.FillEnabled || shape.FillColor.A < 90)
@@ -66,6 +78,21 @@ public static class ShapeLabel
         canvas.DrawPath(path, paint);
     }
 
+    /// <summary>The rectangle (document space, before the shape's rotation) the text outside a shape takes up, or null for text inside.</summary>
+    public static SKRect? OutsideBounds(Shape shape)
+    {
+        if (!HasLabel(shape) || shape.TextPlacement == TextPlacement.Inside)
+        {
+            return null;
+        }
+
+        var unturned = new Shape { Kind = shape.Kind };
+        ShapeSnapshot.Capture(shape).ApplyTo(unturned);
+        unturned.Rotation = 0;
+        using var path = BuildPath(unturned);
+        return path?.Bounds;
+    }
+
     /// <summary>The label's glyph outlines in document space (rotated with the shape), or null when there is nothing to draw.</summary>
     public static SKPath? BuildPath(Shape shape)
     {
@@ -79,20 +106,51 @@ public static class ShapeLabel
         using var measurePaint = new SKPaint();
 
         var box = ConnectionRouter.GetBox(shape);
-        var maxWidth = (float)Math.Max(10, box.Width - 2 * Padding);
+        var outside = shape.TextPlacement != TextPlacement.Inside;
+        var maxWidth = outside ? OutsideWrapWidth(shape.TextPlacement, box.Width) : (float)Math.Max(10, box.Width - 2 * Padding);
         var lines = Wrap(shape.TextContent!, font, measurePaint, maxWidth);
 
         var lineHeight = font.Spacing;
         var metrics = font.Metrics;
         var blockHeight = lineHeight * lines.Count;
-        var left = (float)(box.Left + Padding);
-        var right = (float)(box.Left + box.Width - Padding);
-        var top = shape.TextVAlign switch
+        float left, right, top;
+        if (outside)
         {
-            TextVerticalAlign.Top => (float)(box.Top + Padding),
-            TextVerticalAlign.Bottom => (float)(box.Top + box.Height - Padding) - blockHeight,
-            _ => (float)(box.Top + box.Height / 2) - blockHeight / 2,
-        };
+            // next to the outline: the block is as wide as its longest line
+            var blockWidth = Math.Max(1, lines.Max(l => font.MeasureText(l.Text, measurePaint)));
+            var centreX = (float)(box.Left + box.Width / 2);
+            var boxTop = (float)box.Top;
+            var boxBottom = (float)(box.Top + box.Height);
+            left = shape.TextPlacement switch
+            {
+                TextPlacement.Left => (float)box.Left - OutsideGap - blockWidth,
+                TextPlacement.Right => (float)(box.Left + box.Width) + OutsideGap,
+                _ => centreX - blockWidth / 2,
+            };
+            right = left + blockWidth;
+            top = shape.TextPlacement switch
+            {
+                TextPlacement.Below => boxBottom + OutsideGap,
+                TextPlacement.Above => boxTop - OutsideGap - blockHeight,
+                _ => shape.TextVAlign switch
+                {
+                    TextVerticalAlign.Top => boxTop,
+                    TextVerticalAlign.Bottom => boxBottom - blockHeight,
+                    _ => (boxTop + boxBottom) / 2 - blockHeight / 2,
+                },
+            };
+        }
+        else
+        {
+            left = (float)(box.Left + Padding);
+            right = (float)(box.Left + box.Width - Padding);
+            top = shape.TextVAlign switch
+            {
+                TextVerticalAlign.Top => (float)(box.Top + Padding),
+                TextVerticalAlign.Bottom => (float)(box.Top + box.Height - Padding) - blockHeight,
+                _ => (float)(box.Top + box.Height / 2) - blockHeight / 2,
+            };
+        }
 
         var path = new SKPath();
         for (var i = 0; i < lines.Count; i++)

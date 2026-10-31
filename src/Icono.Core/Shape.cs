@@ -52,6 +52,7 @@ public sealed class Shape : ObservableObject
     private bool _textUnderline;
     private TextHorizontalAlign _textHAlign;
     private TextVerticalAlign _textVAlign;
+    private TextPlacement _textPlacement;
     private ArgbColor? _textColor;
     private double _wallThickness = 16;
     private bool _wallClosed;
@@ -281,6 +282,10 @@ public sealed class Shape : ObservableObject
 
     /// <summary>Where the text block sits in the shape: top, middle or bottom.</summary>
     public TextVerticalAlign TextVAlign { get => _textVAlign; set => SetField(ref _textVAlign, value); }
+
+    /// <summary>Inside the shape (the classic look) or outside it, below / above / left / right of its outline. Outside text is dark unless a colour is chosen,
+    /// because it lies on the page and not on the fill.</summary>
+    public TextPlacement TextPlacement { get => _textPlacement; set => SetField(ref _textPlacement, value); }
 
     /// <summary>Colour of the text typed INTO a shape (double-click). Null = automatic: dark or white, whichever reads
     /// better on the shape's fill. A <see cref="ShapeKind.Text"/> shape is coloured by its fill instead.</summary>

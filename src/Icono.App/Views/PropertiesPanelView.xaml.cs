@@ -544,6 +544,9 @@ public partial class PropertiesPanelView : UserControl
         FontSizeTextBox.Text = shape.TextFontSize.ToString("0", CultureInfo.InvariantCulture);
         RefreshTextAlignmentButtons(shape);
 
+        TextPlacementSection.Visibility = shape.Kind == ShapeKind.Text ? Visibility.Collapsed : Visibility.Visible;
+        TextPlacementComboBox.SelectedItem = TextPlacementComboBox.Items.OfType<ComboBoxItem>().FirstOrDefault(i => (string)i.Tag == shape.TextPlacement.ToString());
+
         // A Text shape is coloured by its fill; every other shape gets a separate colour for the text typed into it.
         TextColorSection.Visibility = shape.Kind == ShapeKind.Text ? Visibility.Collapsed : Visibility.Visible;
         TextColorPicker.SelectedColor = ShapeLabel.EffectiveColor(shape).ToMediaColor();
@@ -2336,6 +2339,17 @@ public partial class PropertiesPanelView : UserControl
         {
             button.IsChecked = shape.TextHAlign == horizontal && shape.TextVAlign == vertical;
         }
+    }
+
+    private void TextPlacementComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isRefreshingControls || TextPlacementComboBox.SelectedItem is not ComboBoxItem { Tag: string tag })
+        {
+            return;
+        }
+
+        var placement = Enum.Parse<TextPlacement>(tag);
+        ApplyToSelectionWithUndo(s => s.TextPlacement = placement);
     }
 
     private void TextAlignToggle_OnClick(object sender, RoutedEventArgs e)

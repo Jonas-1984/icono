@@ -1285,6 +1285,20 @@
                             </ToggleButton>
                         </StackPanel>
 
+                        <StackPanel x:Name="TextPlacementSection">
+                            <TextBlock Text="TEXT PLACEMENT" Style="{StaticResource PanelLabelTextStyle}" />
+                            <ComboBox x:Name="TextPlacementComboBox" Margin="6,0,6,4" SelectionChanged="TextPlacementComboBox_OnSelectionChanged"
+                                      ToolTip="Write the text inside the shape, or outside it: below, above, left or right of its outline">
+                                <ComboBoxItem Content="Inside the shape" Tag="Inside" />
+                                <ComboBoxItem Content="Outside, below the shape" Tag="Below" />
+                                <ComboBoxItem Content="Outside, above the shape" Tag="Above" />
+                                <ComboBoxItem Content="Outside, left of the shape" Tag="Left" />
+                                <ComboBoxItem Content="Outside, right of the shape" Tag="Right" />
+                            </ComboBox>
+                            <TextBlock Text="Outside text is dark by default; left and right use the vertical position below."
+                                       Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="14,0,14,6" />
+                        </StackPanel>
+
                         <TextBlock Text="TEXT POSITION IN THE SHAPE" Style="{StaticResource PanelLabelTextStyle}" />
                         <UniformGrid x:Name="TextPositionGrid" Rows="3" Columns="3" HorizontalAlignment="Left" Margin="6,0,6,4" />
                         <TextBlock Text="Where the text sits in the shape: top, middle or bottom, at the left, centre or right."

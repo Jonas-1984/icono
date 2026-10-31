@@ -89,7 +89,8 @@ public readonly record struct ShapeSnapshot(
     bool SymbolShowDimension = true,
     bool SymbolShowGaps = true,
     TextHorizontalAlign TextHAlign = TextHorizontalAlign.Center,
-    TextVerticalAlign TextVAlign = TextVerticalAlign.Middle)
+    TextVerticalAlign TextVAlign = TextVerticalAlign.Middle,
+    TextPlacement TextPlacement = TextPlacement.Inside)
 {
     public static ShapeSnapshot Capture(Shape shape) => new(
         shape.X,
@@ -175,7 +176,8 @@ public readonly record struct ShapeSnapshot(
         shape.SymbolShowDimension,
         shape.SymbolShowGaps,
         shape.TextHAlign,
-        shape.TextVAlign);
+        shape.TextVAlign,
+        shape.TextPlacement);
 
     public void ApplyTo(Shape shape)
     {
@@ -263,5 +265,6 @@ public readonly record struct ShapeSnapshot(
         shape.SymbolShowGaps = SymbolShowGaps;
         shape.TextHAlign = TextHAlign;
         shape.TextVAlign = TextVAlign;
+        shape.TextPlacement = TextPlacement;
     }
 }

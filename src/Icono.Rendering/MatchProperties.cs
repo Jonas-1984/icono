@@ -104,6 +104,7 @@ public static class MatchProperties
             target.TextUnderline = source.TextUnderline;
             target.TextHAlign = source.TextHAlign;
             target.TextVAlign = source.TextVAlign;
+            target.TextPlacement = source.TextPlacement;
             target.TextColor = source.TextColor;
         }
 

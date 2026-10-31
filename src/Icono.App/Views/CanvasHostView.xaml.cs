@@ -2944,7 +2944,9 @@ public partial class CanvasHostView : UserControl
         var box = ConnectionRouter.GetBox(shape);
         var fontSize = string.IsNullOrEmpty(shape.TextContent) ? ShapeLabel.SuggestedFontSize(shape) : shape.TextFontSize;
         var textColor = ShapeLabel.EffectiveColor(shape);
-        var surface = shape.FillEnabled ? shape.FillColor : ArgbColor.FromRgb(0xFF, 0xFF, 0xFF);
+        var outside = shape.TextPlacement != TextPlacement.Inside;
+        var sides = shape.TextPlacement is TextPlacement.Left or TextPlacement.Right;
+        var surface = shape.FillEnabled && !outside ? shape.FillColor : ArgbColor.FromRgb(0xFF, 0xFF, 0xFF);
 
         var textBox = new TextBox
         {
@@ -2969,8 +2971,8 @@ public partial class CanvasHostView : UserControl
                 _ => VerticalAlignment.Center,
             },
             Padding = new Thickness(4),
-            Width = Math.Max(72, box.Width * Zoom),
-            MinHeight = Math.Max(box.Height * Zoom, fontSize * Zoom * 1.9),
+            Width = Math.Max(72, (outside ? (sides ? 160 : Math.Max(120, box.Width)) : box.Width) * Zoom),
+            MinHeight = Math.Max((outside ? 0 : box.Height) * Zoom, fontSize * Zoom * 1.9),
             Background = new SolidColorBrush(Color.FromRgb(surface.R, surface.G, surface.B)),
             Foreground = new SolidColorBrush(Color.FromRgb(textColor.R, textColor.G, textColor.B)),
             CaretBrush = new SolidColorBrush(Color.FromRgb(textColor.R, textColor.G, textColor.B)),
@@ -2979,7 +2981,20 @@ public partial class CanvasHostView : UserControl
         };
 
         var width = textBox.Width;
-        var center = SkiaCanvas.TranslatePoint(new Point((box.Left + box.Width / 2) * Zoom, (box.Top + box.Height / 2) * Zoom), TextEditOverlay);
+        // the editor sits where the text is: on the shape, or next to the side chosen for text outside it
+        var gap = 6.0;
+        var halfWidth = textBox.Width / Zoom / 2;
+        var halfHeight = textBox.MinHeight / Zoom / 2;
+        var middle = new Point(box.Left + box.Width / 2, box.Top + box.Height / 2);
+        var anchor = shape.TextPlacement switch
+        {
+            TextPlacement.Below => new Point(middle.X, box.Top + box.Height + gap + halfHeight),
+            TextPlacement.Above => new Point(middle.X, box.Top - gap - halfHeight),
+            TextPlacement.Right => new Point(box.Left + box.Width + gap + halfWidth, middle.Y),
+            TextPlacement.Left => new Point(box.Left - gap - halfWidth, middle.Y),
+            _ => middle,
+        };
+        var center = SkiaCanvas.TranslatePoint(new Point(anchor.X * Zoom, anchor.Y * Zoom), TextEditOverlay);
         Canvas.SetLeft(textBox, center.X - width / 2);
         Canvas.SetTop(textBox, center.Y - textBox.MinHeight / 2);
 

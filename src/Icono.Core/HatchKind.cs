@@ -36,6 +36,16 @@ public enum TextHorizontalAlign
     Justify,
 }
 
+/// <summary>Where the text of a shape is written: inside it, or outside next to one of its sides.</summary>
+public enum TextPlacement
+{
+    Inside,
+    Below,
+    Above,
+    Left,
+    Right,
+}
+
 /// <summary>Where the text block sits between the top and the bottom edge of its shape (or text frame).</summary>
 public enum TextVerticalAlign
 {
