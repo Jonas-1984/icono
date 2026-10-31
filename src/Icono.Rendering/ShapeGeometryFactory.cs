@@ -309,7 +309,7 @@ public static class ShapeGeometryFactory
         {
             var pointsPath = BuildFromPoints(
                 shape.Kind, points, shape.X, shape.Y, shape.PathRoutingStyle, shape.CornerRadius,
-                shape.LineStartHead, shape.LineEndHead);
+                shape.LineStartHead, shape.LineEndHead, shape.PointRadii);
 
             if (shape.Rotation != 0)
             {
@@ -1537,7 +1537,7 @@ public static class ShapeGeometryFactory
     private static SKPath BuildFromPoints(
         ShapeKind kind, IReadOnlyList<CorePoint> points, double originX, double originY,
         PathRoutingStyle routingStyle, double cornerRadius = 0,
-        ArrowHeadKind startHead = ArrowHeadKind.None, ArrowHeadKind endHead = ArrowHeadKind.None)
+        ArrowHeadKind startHead = ArrowHeadKind.None, ArrowHeadKind endHead = ArrowHeadKind.None, IReadOnlyList<double>? pointRadii = null)
     {
         var path = new SKPath();
         var pts = new SKPoint[points.Count];
@@ -1570,15 +1570,19 @@ public static class ShapeGeometryFactory
 
         // The Rounded connector style always rounds its bends; plain Straight/Elbow lines round them
         // as soon as the line's corner radius is above 0 (the "Round" corner option of a drawn line).
+        // The Curve tool can also give single corners their own radius (pointRadii, parallel to the points).
         var roundBends = cornerRadius > 0 && effectiveStyle != PathRoutingStyle.Curved;
+        var ownRadii = pointRadii is { } radii && radii.Count == pts.Length && effectiveStyle == PathRoutingStyle.Straight && radii.Any(r => r > 0)
+            ? radii
+            : null;
 
-        if ((effectiveStyle == PathRoutingStyle.Rounded || roundBends) && pts.Length >= 2)
+        if ((effectiveStyle == PathRoutingStyle.Rounded || roundBends || ownRadii is not null) && pts.Length >= 2)
         {
             IReadOnlyList<SKPoint> routed = effectiveStyle is PathRoutingStyle.Rounded or PathRoutingStyle.Orthogonal
                 ? BuildOrthogonalPoints(pts)
                 : pts;
-            var radius = (float)(cornerRadius > 0 ? cornerRadius : 8);
-            AddRoundedOpenPolyline(path, radius, routed, closeForFill);
+            var general = (float)(cornerRadius > 0 ? cornerRadius : effectiveStyle == PathRoutingStyle.Rounded ? 8 : 0);
+            AddRoundedCorners(path, routed, i => ownRadii is not null && ownRadii[i] > 0 ? (float)ownRadii[i] : general, closeForFill);
 
             if (routed.Count >= 2)
             {
@@ -1845,6 +1849,64 @@ public static class ShapeGeometryFactory
     /// curve, inset from the vertex by <paramref name="radius"/> along both adjacent edges
     /// (clamped per-vertex so it never exceeds half the shorter adjacent edge, avoiding
     /// self-intersecting corners on small/thin shapes).</summary>
+    /// <summary>Draws the points as a line (or, closed, a polygon) whose corner <c>i</c> is curved with radius <paramref name="radiusAt"/>(<c>i</c>);
+    /// the ends of an open line have no corner. A radius is cut back to half of the shorter of the two sides, so neighbouring curves never overlap.</summary>
+    private static void AddRoundedCorners(SKPath path, IReadOnlyList<SKPoint> points, Func<int, float> radiusAt, bool closed)
+    {
+        var n = points.Count;
+        if (n < 2)
+        {
+            return;
+        }
+
+        var first = closed ? 0 : 1;
+        var last = closed ? n - 1 : n - 2;
+        var started = false;
+
+        void Go(SKPoint p)
+        {
+            if (started)
+            {
+                path.LineTo(p);
+            }
+            else
+            {
+                path.MoveTo(p);
+                started = true;
+            }
+        }
+
+        if (!closed)
+        {
+            Go(points[0]);
+        }
+
+        for (var i = first; i <= last; i++)
+        {
+            var prev = points[(i - 1 + n) % n];
+            var curr = points[i];
+            var next = points[(i + 1) % n];
+            var r = Math.Min(radiusAt(i), Math.Min(Distance(curr, prev), Distance(curr, next)) / 2f);
+            if (r <= 0.01f)
+            {
+                Go(curr);
+                continue;
+            }
+
+            Go(PointAtDistance(curr, DirectionTo(curr, prev), r));
+            path.QuadTo(curr, PointAtDistance(curr, DirectionTo(curr, next), r));
+        }
+
+        if (!closed)
+        {
+            path.LineTo(points[^1]);
+        }
+        else
+        {
+            path.Close();
+        }
+    }
+
     private static void AddRoundedPolygon(SKPath path, float radius, IReadOnlyList<SKPoint> points)
     {
         var n = points.Count;

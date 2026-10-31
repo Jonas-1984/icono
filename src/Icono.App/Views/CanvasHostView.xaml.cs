@@ -616,7 +616,8 @@ public partial class CanvasHostView : UserControl
     {
         if (e.PropertyName == nameof(EditorContext.ActiveTool))
         {
-            Cursor = _context?.ActiveTool is ActiveTool.Match or ActiveTool.CornerCurve ? Cursors.Cross : null;
+            Cursor = _context?.ActiveTool is ActiveTool.Match or ActiveTool.CornerCurve ? PickBoxCursor.Instance : null;
+            CancelFillet();
             ClearSnapGuides();
         }
         else if (e.PropertyName == nameof(EditorContext.ShowRulers))
@@ -1347,6 +1348,7 @@ public partial class CanvasHostView : UserControl
         DrawMeasure(canvas, scaleX, scaleY);
         DrawPointSnap(canvas, scaleX, scaleY);
         DrawMatchSource(canvas, scaleX, scaleY);
+        DrawFilletPicks(canvas, scaleX, scaleY);
         DrawSnapGuides(canvas, scaleX, scaleY);
     }
 
@@ -1938,12 +1940,7 @@ public partial class CanvasHostView : UserControl
 
         if (_context.ActiveTool == ActiveTool.CornerCurve)
         {
-            if (HitTestShape(point) is { } curved)
-            {
-                _context.SelectedShape = curved.Shape;
-                _context.CurveCorners(curved.Shape, sharp: Keyboard.Modifiers.HasFlag(ModifierKeys.Shift));
-            }
-
+            HandleCurveClick(point);
             return;
         }
 
@@ -2646,6 +2643,7 @@ public partial class CanvasHostView : UserControl
         var before = ShapeSnapshot.Capture(shape);
         var list = shape.Points!.ToList();
         list.Insert(afterIndex + 1, new CorePoint(docPoint.X - shape.X, docPoint.Y - shape.Y));
+        shape.PointRadii = CornerFillet.AfterInsert(shape.PointRadii, shape.Points.Count, afterIndex);
         shape.Points = list;
         if (shape.Kind == ShapeKind.Wall)
         {
@@ -2673,6 +2671,7 @@ public partial class CanvasHostView : UserControl
             WallEditor.RemapOverridesBeforeRemove(shape, index);
         }
 
+        shape.PointRadii = CornerFillet.AfterRemove(shape.PointRadii, shape.Points.Count, index);
         list.RemoveAt(index);
         shape.Points = list;
         PathBoundsCalculator.Recompute(shape);
@@ -3242,6 +3241,7 @@ public partial class CanvasHostView : UserControl
             {
                 var under = ToDocumentSpace(e.GetPosition(SkiaCanvas));
                 UpdateRulerCursor(under);
+            UpdateFilletHover(under);
                 _context.CurrentPage = _context.Document.PageIndexAt(under.Y);
             }
 

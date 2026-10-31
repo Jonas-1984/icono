@@ -598,6 +598,18 @@ public partial class ToolPanelView : UserControl
         ObjectSnapWallsCheckBox.IsEnabled = ObjectSnapObjectsCheckBox.IsEnabled = options.Enabled;
     }
 
+    private void CurveAllCorners_OnClick(object sender, System.Windows.RoutedEventArgs e)
+    {
+        if (Context is { SelectedShapes.Count: 1 } context)
+        {
+            context.CurveCorners(context.SelectedShapes[0], sharp: false);
+        }
+        else
+        {
+            Context?.Notify("Select one line or shape first.");
+        }
+    }
+
     private void CurveSizeTextBox_OnLostFocus(object sender, System.Windows.RoutedEventArgs e) => ApplyCurveSize();
 
     private void CurveSizeTextBox_OnKeyDown(object sender, System.Windows.Input.KeyEventArgs e)

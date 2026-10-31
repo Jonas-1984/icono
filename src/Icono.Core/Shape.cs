@@ -53,6 +53,7 @@ public sealed class Shape : ObservableObject
     private TextHorizontalAlign _textHAlign;
     private TextVerticalAlign _textVAlign;
     private TextPlacement _textPlacement;
+    private IReadOnlyList<double>? _pointRadii;
     private ArgbColor? _textColor;
     private double _wallThickness = 16;
     private bool _wallClosed;
@@ -202,6 +203,10 @@ public sealed class Shape : ObservableObject
     /// shape-local (point (0,0) = this shape's X,Y), kept in sync with X/Y/Width/Height by
     /// <c>Icono.Rendering.PathBoundsCalculator.Recompute</c> after every point add/move/delete.</summary>
     public IReadOnlyList<CorePoint>? Points { get => _points; set => SetField(ref _points, value); }
+
+    /// <summary>The radius each point of <see cref="Points"/> is curved with (page px, parallel to the points; 0 or a missing list = sharp, or the
+    /// general <see cref="CornerRadius"/>). Set by the Curve tool, one corner at a time.</summary>
+    public IReadOnlyList<double>? PointRadii { get => _pointRadii; set => SetField(ref _pointRadii, value); }
 
     /// <summary>Dashed stroke, only meaningful for <see cref="Points"/>-based kinds.</summary>
     public bool Dashed { get => _dashed; set => SetField(ref _dashed, value); }

@@ -103,7 +103,7 @@
                             <Path Grid.Column="1" Style="{StaticResource CardChevronPathStyle}" />
                         </Grid>
                         <StackPanel>
-                            <TextBlock Text="Choose the Curve tool, then click a line (three points or more) or a shape: its corners get the size below. Shift+click makes them sharp again. Esc ends."
+                            <TextBlock Text="Choose the Curve tool, click one side of a corner, then the neighbouring side. Type the size in the small box and press Enter: only that corner is curved. Size 0 makes it sharp again. Esc ends."
                                        Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="12,2,12,6" />
                             <TextBlock Text="CURVE SIZE (CM)" Style="{StaticResource PanelLabelTextStyle}" />
                             <Grid Margin="6,0,6,6">
@@ -117,12 +117,16 @@
                                          LostFocus="CurveSizeTextBox_OnLostFocus" KeyDown="CurveSizeTextBox_OnKeyDown" />
                                 <TextBlock Grid.Column="2" Text="cm" Foreground="{DynamicResource MutedTextBrush}" FontSize="11" VerticalAlignment="Center" />
                             </Grid>
+                            <TextBlock Text="This size is offered in the box each time." Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" Margin="12,0,12,4" />
                             <UniformGrid Columns="4" Margin="3,0,3,6">
                                 <Button Content="0.5" Tag="0.5" Style="{StaticResource PanelKeyButtonStyle}" Click="CurveSizePreset_OnClick" />
                                 <Button Content="1" Tag="1" Style="{StaticResource PanelKeyButtonStyle}" Click="CurveSizePreset_OnClick" />
                                 <Button Content="2" Tag="2" Style="{StaticResource PanelKeyButtonStyle}" Click="CurveSizePreset_OnClick" />
                                 <Button Content="5" Tag="5" Style="{StaticResource PanelKeyButtonStyle}" Click="CurveSizePreset_OnClick" />
                             </UniformGrid>
+                            <Button Content="All corners of the selected object" Style="{StaticResource PanelKeyButtonStyle}" Margin="10,0,10,8"
+                                    HorizontalAlignment="Left" Padding="12,0" Click="CurveAllCorners_OnClick"
+                                    ToolTip="Curves every corner of the selected line or shape with the Curve size (one undo step)" />
                         </StackPanel>
                     </StackPanel>
                 </Border>

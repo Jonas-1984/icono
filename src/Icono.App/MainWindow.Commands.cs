@@ -703,7 +703,7 @@ public partial class MainWindow
             if (e.Key == Key.Escape)
             {
                 // first Esc drops a measurement in progress, the next one leaves the tool
-                if (CanvasHost.CancelMeasure())
+                if (CanvasHost.CancelMeasure() || CanvasHost.CancelFillet())
                 {
                     return true;
                 }

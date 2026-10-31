@@ -136,7 +136,7 @@ public sealed class EditorContext : ObservableObject
         "Measure" => "Ruler: click two points - nothing is added to the drawing. Shift locks the direction.",
         "MeasureGap" => "Distance: click the first object, then the second.",
         "Match" => "Match: click the source, then every object that should get its look. Esc ends.",
-        "CornerCurve" => "Curve: click a line or shape to curve its corners by the Curve size (Shift+click makes them sharp again). Esc ends.",
+        "CornerCurve" => "Curve: click one side of a corner, then the neighbouring side, type the size and press Enter. Esc ends.",
         "Eyedropper" => "Eyedropper: click anywhere to pick up a colour.",
         "RegionColor" => "Bucket: click a region to colour it.",
         "Polyline" or "Curve" => "Click each point; double-click or Enter finishes, Esc cancels.",
@@ -618,6 +618,23 @@ public sealed class EditorContext : ObservableObject
         EditSelection(shapes => ShapeArranger.Align(
             shapes, kind, Document.Width, Document.Height,
             shapes.Count == 1 ? Document.PageTop(Document.PageIndexAt(shapes[0].Y + shapes[0].Height / 2)) : 0));
+
+    /// <summary>The Curve tool (fillet): one corner of a line or shape gets the radius <paramref name="cm"/> (cm on the page; 0 = sharp). A shape with
+    /// straight sides becomes a shape of points first. One undo step.</summary>
+    public bool FilletCorner(Shape shape, int corner, double cm)
+    {
+        var before = ShapeSnapshot.Capture(shape);
+        if (!CornerFillet.Apply(shape, corner, cm * 96.0 / 2.54))
+        {
+            StatusMessage?.Invoke("That corner cannot be curved.");
+            return false;
+        }
+
+        UndoManager.Push(UndoableAction.ForPropertyEdit([shape], [before], [ShapeSnapshot.Capture(shape)]));
+        RequestRedraw();
+        StatusMessage?.Invoke(cm > 0 ? $"Corner curved with a radius of {cm:0.##} cm. Click the next corner, Esc ends." : "Corner is sharp again.");
+        return true;
+    }
 
     /// <summary>The Curve tool: the corners of a line or shape get the radius <see cref="CurveSizeCm"/> (<paramref name="sharp"/>: back to sharp corners).
     /// One undo step. False when the object has no corners to curve.</summary>
