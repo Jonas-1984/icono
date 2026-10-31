@@ -368,6 +368,14 @@
                                          Tag="{StaticResource CloudyToolGeometry}" CommandParameter="Cloudy" ToolTip="Cloudy" />
                             <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
                                          Tag="{StaticResource TrafficConeToolGeometry}" CommandParameter="TrafficCone" ToolTip="Traffic Cone" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource Undo2ToolGeometry}" CommandParameter="Undo2" ToolTip="Curved Arrow Back" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource SquareArrowRightExitToolGeometry}" CommandParameter="SquareArrowRightExit" ToolTip="Square Arrow Exit" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource SquareChevronRightToolGeometry}" CommandParameter="SquareChevronRight" ToolTip="Square Chevron Right" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource ArrowBigRightDashToolGeometry}" CommandParameter="ArrowBigRightDash" ToolTip="Big Arrow Dash" />
                         </WrapPanel>
                         <StackPanel x:Name="ShapesPagerDots" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,2,0,6" />
                         </StackPanel>

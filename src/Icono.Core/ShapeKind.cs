@@ -54,6 +54,10 @@ public enum ShapeKind
     Umbrella,
     Cloudy,
     TrafficCone,
+    Undo2,
+    SquareArrowRightExit,
+    SquareChevronRight,
+    ArrowBigRightDash,
 
     // Arrow shapes palette.
     ArrowRight,

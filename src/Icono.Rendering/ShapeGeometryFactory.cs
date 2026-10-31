@@ -21,6 +21,7 @@ public static class ShapeGeometryFactory
         ShapeKind.SquareArrowOutUpRight, ShapeKind.Blocks, ShapeKind.SwatchBook,
         ShapeKind.TriangleAlert, ShapeKind.SquareDashedBottom, ShapeKind.Share, ShapeKind.ShieldCog,
         ShapeKind.TrafficCone,
+        ShapeKind.Undo2, ShapeKind.SquareArrowRightExit, ShapeKind.SquareChevronRight, ShapeKind.ArrowBigRightDash,
 
         // Office furniture, top-view floor-plan symbols — drawn as thin line-art like an
         // architectural block, not solid-filled.
@@ -731,6 +732,50 @@ public static class ShapeGeometryFactory
                 if (trafficConePath is not null)
                 {
                     path.AddPath(trafficConePath);
+                }
+
+                break;
+            }
+            case ShapeKind.Undo2:
+            {
+                using var undo2Path = SKPath.ParseSvgPathData(
+                    "M9 14 4 9l5-5 M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11");
+                if (undo2Path is not null)
+                {
+                    path.AddPath(undo2Path);
+                }
+
+                break;
+            }
+            case ShapeKind.SquareArrowRightExit:
+            {
+                using var squareArrowRightExitPath = SKPath.ParseSvgPathData(
+                    "M10 12h11 M17 16l4-4-4-4 M21 6.344V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-1.344");
+                if (squareArrowRightExitPath is not null)
+                {
+                    path.AddPath(squareArrowRightExitPath);
+                }
+
+                break;
+            }
+            case ShapeKind.SquareChevronRight:
+            {
+                using var squareChevronRightPath = SKPath.ParseSvgPathData(
+                    "M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z M10 8l4 4-4 4");
+                if (squareChevronRightPath is not null)
+                {
+                    path.AddPath(squareChevronRightPath);
+                }
+
+                break;
+            }
+            case ShapeKind.ArrowBigRightDash:
+            {
+                using var arrowBigRightDashPath = SKPath.ParseSvgPathData(
+                    "M11 9a1 1 0 0 0 1-1V4.707a.707.707 0 0 1 1.207-.5l6.94 6.94a1.207 1.207 0 0 1 0 1.707l-6.94 6.94a.707.707 0 0 1-1.207-.5V16a1 1 0 0 0-1-1H9a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1z M4 9v6");
+                if (arrowBigRightDashPath is not null)
+                {
+                    path.AddPath(arrowBigRightDashPath);
                 }
 
                 break;

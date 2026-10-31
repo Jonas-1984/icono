@@ -31,6 +31,10 @@ public class ShapeGeometryFactoryTests
     [InlineData(ShapeKind.Gear)]
     [InlineData(ShapeKind.Club)]
     [InlineData(ShapeKind.TrafficCone)]
+    [InlineData(ShapeKind.Undo2)]
+    [InlineData(ShapeKind.SquareArrowRightExit)]
+    [InlineData(ShapeKind.SquareChevronRight)]
+    [InlineData(ShapeKind.ArrowBigRightDash)]
     [InlineData(ShapeKind.Cylinder)]
     [InlineData(ShapeKind.StarCheck)]
     public void SupportsPointEditing_MultiContourKind_StaysFalse(ShapeKind kind)
@@ -152,6 +156,10 @@ public class ShapeGeometryFactoryTests
     [InlineData(ShapeKind.Rectangle)]
     [InlineData(ShapeKind.Star)]
     [InlineData(ShapeKind.TrafficCone)]
+    [InlineData(ShapeKind.Undo2)]
+    [InlineData(ShapeKind.SquareArrowRightExit)]
+    [InlineData(ShapeKind.SquareChevronRight)]
+    [InlineData(ShapeKind.ArrowBigRightDash)]
     [InlineData(ShapeKind.Ring)]
     public void HasMixedOpenAndClosedContours_IsFalseForOrdinaryKinds(ShapeKind kind)
     {
@@ -406,6 +414,10 @@ public class ShapeGeometryFactoryTests
     [InlineData(ShapeKind.Cloudy)]
     [InlineData(ShapeKind.Shield)]
     [InlineData(ShapeKind.TrafficCone)]
+    [InlineData(ShapeKind.Undo2)]
+    [InlineData(ShapeKind.SquareArrowRightExit)]
+    [InlineData(ShapeKind.SquareChevronRight)]
+    [InlineData(ShapeKind.ArrowBigRightDash)]
     [InlineData(ShapeKind.Worktable)]
     [InlineData(ShapeKind.RoundTable)]
     [InlineData(ShapeKind.OfficeChair)]
@@ -466,6 +478,10 @@ public class ShapeGeometryFactoryTests
     [InlineData(ShapeKind.Share)]
     [InlineData(ShapeKind.ShieldCog)]
     [InlineData(ShapeKind.TrafficCone)]
+    [InlineData(ShapeKind.Undo2)]
+    [InlineData(ShapeKind.SquareArrowRightExit)]
+    [InlineData(ShapeKind.SquareChevronRight)]
+    [InlineData(ShapeKind.ArrowBigRightDash)]
     public void IconGlyphShapes_MultiPartLucideGlyphsAreStrokeOnly(ShapeKind kind)
     {
         Assert.True(ShapeGeometryFactory.IsStrokeOnly(kind));
