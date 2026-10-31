@@ -14,9 +14,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <!-- The Sinks, Appliances, Cooktops and Workplace catalogues come from CAD exports whose origin is not documented yet: they stay out of the builds handed to other
-       people (Release) until the licence of the drawings is clear. Remove this line to ship it. -->
-  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+  <!-- The Sinks, Appliances, Cooktops and Workplace catalogues come from CAD exports whose origin is not documented yet: they stay out of the
+       builds handed to other people (Release) until the licence of the drawings is clear. Build with -p:ExcludeUnverifiedCatalogues=false
+       (installer\build-installer.ps1 -IncludeLocalCatalogues) to ship them anyway. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release' And '$(ExcludeUnverifiedCatalogues)' != 'false'">
     <DefineConstants>$(DefineConstants);EXCLUDE_UNVERIFIED_CATALOGUES</DefineConstants>
   </PropertyGroup>
 

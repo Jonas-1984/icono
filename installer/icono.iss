@@ -6,6 +6,9 @@
 #define AppVersionText "0.1.0-test.1"
 #define Publisher "Jonas Shojaei (bitbins.de)"
 #define PublishDir "publish"
+#ifndef Suffix
+  #define Suffix ""
+#endif
 
 [Setup]
 ; The AppId identifies the program for updates and uninstall. Never change it.
@@ -34,7 +37,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0.17763
 
 OutputDir=Output
-OutputBaseFilename=ICONO-Setup-{#AppVersionText}
+OutputBaseFilename=ICONO-Setup-{#AppVersionText}{#Suffix}
 SetupIconFile=..\src\Icono.App\Assets\icono.ico
 UninstallDisplayIcon={app}\icono.exe
 UninstallDisplayName={#AppName} {#AppVersionText}

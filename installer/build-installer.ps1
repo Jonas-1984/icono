@@ -3,15 +3,23 @@
   Builds the installer of icono: runs the tests, publishes the app (self-contained, Windows x64) and compiles installer\icono.iss.
 
 .DESCRIPTION
-  Result: installer\Output\ICONO-Setup-<version>.exe and installer\Output\SHA256.txt (the checksum the testers can compare).
+  Result: installer\Output\ICONO-Setup-<version>.exe and installer\Output\SHA256.txt (the checksums the testers can compare).
   Needs: .NET 8 SDK and Inno Setup 6 (winget install JRSoftware.InnoSetup).
+
+  Catalogues whose drawings are kept on this PC only (src\Icono.Rendering\UnitCatalog.Local.*) are NOT part of the installer, unless
+  -IncludeLocalCatalogues is given: that builds ICONO-Setup-<version>-full.exe. Use it only for drawings that are the author's own.
 
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File installer\build-installer.ps1
+
+.EXAMPLE
+  powershell -ExecutionPolicy Bypass -File installer\build-installer.ps1 -IncludeLocalCatalogues
 #>
 [CmdletBinding()]
 param(
-    [switch]$SkipTests
+    [switch]$SkipTests,
+
+    [switch]$IncludeLocalCatalogues
 )
 
 $ErrorActionPreference = 'Stop'
@@ -40,20 +48,24 @@ if (-not $SkipTests) {
 
 Write-Host '== Publish (self-contained, win-x64) ==' -ForegroundColor Cyan
 if (Test-Path $publish) { Remove-Item $publish -Recurse -Force }
-dotnet publish (Join-Path $root 'src\Icono.App\Icono.App.csproj') -c Release -r win-x64 --self-contained true -o $publish -v q
+$publishArgs = @()
+if ($IncludeLocalCatalogues) { $publishArgs += '-p:ExcludeUnverifiedCatalogues=false' }
+dotnet publish (Join-Path $root 'src\Icono.App\Icono.App.csproj') -c Release -r win-x64 --self-contained true -o $publish -v q @publishArgs
 if ($LASTEXITCODE -ne 0) { throw 'dotnet publish failed.' }
 
 Write-Host '== Installer (Inno Setup) ==' -ForegroundColor Cyan
 if (-not (Test-Path $output)) { New-Item -ItemType Directory -Path $output | Out-Null }
-& $iscc (Join-Path $installer 'icono.iss')
+$isccArgs = @()
+if ($IncludeLocalCatalogues) { $isccArgs += '/DSuffix=-full' }
+& $iscc @isccArgs (Join-Path $installer 'icono.iss')
 if ($LASTEXITCODE -ne 0) { throw 'Inno Setup failed.' }
 
-$setup = Get-ChildItem $output -Filter 'ICONO-Setup-*.exe' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-$hash = (Get-FileHash $setup.FullName -Algorithm SHA256).Hash
-$line = "$hash  $($setup.Name)"
-Set-Content -Path (Join-Path $output 'SHA256.txt') -Value $line -Encoding ascii
+$setups = Get-ChildItem $output -Filter 'ICONO-Setup-*.exe' | Sort-Object Name
+$lines = $setups | ForEach-Object { "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash)  $($_.Name)" }
+Set-Content -Path (Join-Path $output 'SHA256.txt') -Value $lines -Encoding ascii
 
+$built = $setups | Sort-Object LastWriteTime -Descending | Select-Object -First 1
 Write-Host ''
-Write-Host "Installer: $($setup.FullName)" -ForegroundColor Green
-Write-Host ('Size:      {0:n1} MB' -f ($setup.Length / 1MB))
-Write-Host "SHA-256:   $hash"
+Write-Host "Installer: $($built.FullName)" -ForegroundColor Green
+Write-Host ('Size:      {0:n1} MB' -f ($built.Length / 1MB))
+Write-Host ($lines -join [Environment]::NewLine)
