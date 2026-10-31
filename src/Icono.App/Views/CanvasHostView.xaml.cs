@@ -616,7 +616,7 @@ public partial class CanvasHostView : UserControl
     {
         if (e.PropertyName == nameof(EditorContext.ActiveTool))
         {
-            Cursor = _context?.ActiveTool == ActiveTool.Match ? Cursors.Cross : null;
+            Cursor = _context?.ActiveTool is ActiveTool.Match or ActiveTool.CornerCurve ? Cursors.Cross : null;
             ClearSnapGuides();
         }
         else if (e.PropertyName == nameof(EditorContext.ShowRulers))
@@ -1933,6 +1933,17 @@ public partial class CanvasHostView : UserControl
         if (_context.ActiveTool == ActiveTool.Match)
         {
             HandleMatchClick(point);
+            return;
+        }
+
+        if (_context.ActiveTool == ActiveTool.CornerCurve)
+        {
+            if (HitTestShape(point) is { } curved)
+            {
+                _context.SelectedShape = curved.Shape;
+                _context.CurveCorners(curved.Shape, sharp: Keyboard.Modifiers.HasFlag(ModifierKeys.Shift));
+            }
+
             return;
         }
 

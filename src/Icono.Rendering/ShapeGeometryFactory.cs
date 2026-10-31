@@ -56,6 +56,21 @@ public static class ShapeGeometryFactory
 
     public static bool IsStrokeOnly(ShapeKind kind) => StrokeOnlyKinds.Contains(kind);
 
+    /// <summary>True when the corners of the shape can be curved with <see cref="Shape.CornerRadius"/> (the Curve tool): a polyline, polygon or
+    /// other shape made of points with at least three of them, or a straight-edge shape. Walls, dimensions, symbols and shapes that are curved
+    /// already are left out.</summary>
+    public static bool CanRoundCorners(Shape shape)
+    {
+        if (shape.Kind is ShapeKind.Wall or ShapeKind.Dimension or ShapeKind.Curve or ShapeKind.DesignGrid || shape.PathRoutingStyle == PathRoutingStyle.Curved)
+        {
+            return false;
+        }
+
+        return shape.Points is { } points
+            ? points.Count >= 3
+            : IsCornerRoundable(shape.Kind) || shape.Kind == ShapeKind.RasterImage;
+    }
+
     /// <summary>Straight-edge polygon kinds whose corners the Corner Radius setting can round.</summary>
     public static bool IsCornerRoundable(ShapeKind kind) => CornerRoundableKinds.Contains(kind);
 
@@ -1555,7 +1570,7 @@ public static class ShapeGeometryFactory
 
         // The Rounded connector style always rounds its bends; plain Straight/Elbow lines round them
         // as soon as the line's corner radius is above 0 (the "Round" corner option of a drawn line).
-        var roundBends = !closeForFill && cornerRadius > 0 && effectiveStyle != PathRoutingStyle.Curved;
+        var roundBends = cornerRadius > 0 && effectiveStyle != PathRoutingStyle.Curved;
 
         if ((effectiveStyle == PathRoutingStyle.Rounded || roundBends) && pts.Length >= 2)
         {

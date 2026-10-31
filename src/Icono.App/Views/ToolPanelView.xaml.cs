@@ -598,6 +598,43 @@ public partial class ToolPanelView : UserControl
         ObjectSnapWallsCheckBox.IsEnabled = ObjectSnapObjectsCheckBox.IsEnabled = options.Enabled;
     }
 
+    private void CurveSizeTextBox_OnLostFocus(object sender, System.Windows.RoutedEventArgs e) => ApplyCurveSize();
+
+    private void CurveSizeTextBox_OnKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key == System.Windows.Input.Key.Enter)
+        {
+            ApplyCurveSize();
+        }
+    }
+
+    private void CurveSizePreset_OnClick(object sender, System.Windows.RoutedEventArgs e)
+    {
+        if (Context is not null && sender is FrameworkElement { Tag: string tag }
+            && double.TryParse(tag, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var cm))
+        {
+            Context.CurveSizeCm = cm;
+            CurveSizeTextBox.Text = Context.CurveSizeCm.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+        }
+    }
+
+    /// <summary>Reads the Curve size the user typed (a number in cm; a comma is fine); a wrong entry goes back to the current size.</summary>
+    private void ApplyCurveSize()
+    {
+        if (Context is null)
+        {
+            return;
+        }
+
+        if (double.TryParse(CurveSizeTextBox.Text.Trim().Replace(',', '.'), System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out var cm) && cm > 0)
+        {
+            Context.CurveSizeCm = cm;
+        }
+
+        CurveSizeTextBox.Text = Context.CurveSizeCm.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+    }
+
     private void MatchAspectCheckBox_OnClick(object sender, System.Windows.RoutedEventArgs e)
     {
         if (Context is null || sender is not CheckBox { Tag: string tag } box || !Enum.TryParse<MatchAspects>(tag, out var aspect))
@@ -663,6 +700,9 @@ public partial class ToolPanelView : UserControl
                 break;
             case "MeasureGap":
                 Context.ActiveTool = ActiveTool.MeasureGap;
+                break;
+            case "CornerCurve":
+                Context.ActiveTool = ActiveTool.CornerCurve;
                 break;
             case "Match":
                 if (Context.ActiveTool != ActiveTool.Match)

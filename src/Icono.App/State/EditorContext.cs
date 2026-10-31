@@ -19,6 +19,7 @@ public enum ActiveTool
     Measure,
     MeasureGap,
     Match,
+    CornerCurve,
 }
 
 /// <summary>
@@ -103,6 +104,7 @@ public sealed class EditorContext : ObservableObject
         ActiveTool.Measure => "Measure",
         ActiveTool.MeasureGap => "MeasureGap",
         ActiveTool.Match => "Match",
+        ActiveTool.CornerCurve => "CornerCurve",
         ActiveTool.Shape when SelectedShapeKind == ShapeKind.CombinedPath && PendingUnit is { } unit => "Unit:" + unit.Id,
         ActiveTool.PathDraw when SelectedShapeKind == ShapeKind.Dimension => "Dim" + CurrentDimensionKind,
         ActiveTool.Shape or ActiveTool.PathDraw => SelectedShapeKind.ToString(),
@@ -120,6 +122,7 @@ public sealed class EditorContext : ObservableObject
         "Measure" => "Ruler",
         "MeasureGap" => "Distance between objects",
         "Match" => "Match Properties",
+        "CornerCurve" => "Curve corners",
         var tag when tag.StartsWith("Unit:", StringComparison.Ordinal) => PendingUnit?.Name ?? "Unit",
         var tag when tag.StartsWith("Dim", StringComparison.Ordinal) => tag[3..] + " dimension",
         var tag => System.Text.RegularExpressions.Regex.Replace(tag, "(?<=[a-z0-9])(?=[A-Z])", " "),
@@ -133,6 +136,7 @@ public sealed class EditorContext : ObservableObject
         "Measure" => "Ruler: click two points - nothing is added to the drawing. Shift locks the direction.",
         "MeasureGap" => "Distance: click the first object, then the second.",
         "Match" => "Match: click the source, then every object that should get its look. Esc ends.",
+        "CornerCurve" => "Curve: click a line or shape to curve its corners by the Curve size (Shift+click makes them sharp again). Esc ends.",
         "Eyedropper" => "Eyedropper: click anywhere to pick up a colour.",
         "RegionColor" => "Bucket: click a region to colour it.",
         "Polyline" or "Curve" => "Click each point; double-click or Enter finishes, Esc cancels.",
@@ -162,6 +166,11 @@ public sealed class EditorContext : ObservableObject
     public Layer? SelectedLayer { get => _selectedLayer; set => SetField(ref _selectedLayer, value); }
 
     public ArgbColor CurrentFillColor { get => _currentFillColor; set => SetField(ref _currentFillColor, value); }
+
+    private double _curveSizeCm = 1;
+
+    /// <summary>The radius the Curve tool gives to corners, in cm on the page (like the corner radius of a line).</summary>
+    public double CurveSizeCm { get => _curveSizeCm; set => SetField(ref _curveSizeCm, Math.Clamp(value, 0.01, 100)); }
 
     /// <summary>Holds clones of the last Cut/Copy selection, ready for Paste. Plain in-memory
     /// list (no OS clipboard integration) — scoped to this document/session only.</summary>
@@ -609,6 +618,36 @@ public sealed class EditorContext : ObservableObject
         EditSelection(shapes => ShapeArranger.Align(
             shapes, kind, Document.Width, Document.Height,
             shapes.Count == 1 ? Document.PageTop(Document.PageIndexAt(shapes[0].Y + shapes[0].Height / 2)) : 0));
+
+    /// <summary>The Curve tool: the corners of a line or shape get the radius <see cref="CurveSizeCm"/> (<paramref name="sharp"/>: back to sharp corners).
+    /// One undo step. False when the object has no corners to curve.</summary>
+    public bool CurveCorners(Shape shape, bool sharp)
+    {
+        if (shape.Locked)
+        {
+            StatusMessage?.Invoke("That object is locked.");
+            return false;
+        }
+
+        if (!ShapeGeometryFactory.CanRoundCorners(shape))
+        {
+            StatusMessage?.Invoke("This object has no corners to curve: use a line with three points or more, or a shape with straight sides.");
+            return false;
+        }
+
+        var radius = sharp ? 0 : CurveSizeCm * 96.0 / 2.54;
+        if (Math.Abs(shape.CornerRadius - radius) < 1e-9)
+        {
+            return false;
+        }
+
+        var before = ShapeSnapshot.Capture(shape);
+        shape.CornerRadius = radius;
+        UndoManager.Push(UndoableAction.ForPropertyEdit([shape], [before], [ShapeSnapshot.Capture(shape)]));
+        RequestRedraw();
+        StatusMessage?.Invoke(sharp ? "Corners are sharp again." : $"Corners curved with a radius of {CurveSizeCm:0.##} cm.");
+        return true;
+    }
 
     // ----- pages: the project's pages lie below each other ---------------------------------------------------
 

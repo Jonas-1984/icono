@@ -709,7 +709,7 @@ public partial class MainWindow
                 }
 
                 if (_context.ActiveTool is ActiveTool.Eyedropper or ActiveTool.RegionColor or ActiveTool.PanZoom or ActiveTool.Shape
-                    or ActiveTool.Measure or ActiveTool.MeasureGap or ActiveTool.Match)
+                    or ActiveTool.Measure or ActiveTool.MeasureGap or ActiveTool.Match or ActiveTool.CornerCurve)
                 {
                     _context.ActiveTool = ActiveTool.Select;
                 }

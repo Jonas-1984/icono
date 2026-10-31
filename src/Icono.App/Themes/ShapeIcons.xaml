@@ -39,6 +39,8 @@
     <PathGeometry x:Key="MeasureToolGeometry" Figures="M2.5,17.5 L17.5,2.5 L21.5,6.5 L6.5,21.5 Z M7,13 L9.5,15.5 M10,10 L12.5,12.5 M13,7 L15.5,9.5" />
     <PathGeometry x:Key="MatchToolGeometry"
                   Figures="M10 2v2 M14 2v4 M17 2a1 1 0 0 1 1 1v9H6V3a1 1 0 0 1 1-1z M6 12a1 1 0 0 0-1 1v1a2 2 0 0 0 2 2h2a1 1 0 0 1 1 1v2.9a2 2 0 1 0 4 0V17a1 1 0 0 1 1-1h2a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1" />
+    <PathGeometry x:Key="CornerCurveToolGeometry"
+                  Figures="M12.034 12.681a.498.498 0 0 1 .647-.647l9 3.5a.5.5 0 0 1-.033.943l-3.444 1.068a1 1 0 0 0-.66.66l-1.067 3.443a.5.5 0 0 1-.943.033z M5 17A12 12 0 0 1 17 5 M17 5a2 2 0 1 0 4 0 2 2 0 1 0-4 0 M3 19a2 2 0 1 0 4 0 2 2 0 1 0-4 0" />
     <PathGeometry x:Key="RoomClosedToolGeometry" Figures="M4,5 H20 V19 H4 Z" />
     <PathGeometry x:Key="RoomOneCornerToolGeometry" Figures="M4,5 H20 V12 H12 V19 H4 Z" />
     <PathGeometry x:Key="RoomOneSlantToolGeometry" Figures="M4,5 H15 L20,10 V19 H4 Z" />
