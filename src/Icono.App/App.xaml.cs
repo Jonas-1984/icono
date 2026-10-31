@@ -25,10 +25,38 @@ public partial class App : Application
             args.SetObserved();
         };
 
-        // Must run before base.OnStartup creates the StartupUri window so it is born with the saved palette.
+        // Must run before any window is created so that it is born with the saved palette.
         ThemeManager.LoadSaved();
 
         base.OnStartup(e);
+
+        if (e.Args.Contains("--no-splash", StringComparer.OrdinalIgnoreCase))
+        {
+            MainWindow = new MainWindow();
+            MainWindow.Show();
+            return;
+        }
+
+        ShowSplashThenMainWindow();
+    }
+
+    /// <summary>The start screen plays for six seconds; the main window is built while it is on screen and opens when it ends.</summary>
+    private void ShowSplashThenMainWindow()
+    {
+        MainWindow? main = null;
+        var splash = new SplashWindow();
+
+        splash.ContentRendered += (_, _) => Dispatcher.BeginInvoke(() => main ??= new MainWindow(), DispatcherPriority.Background);
+        splash.Finished += () =>
+        {
+            main ??= new MainWindow();
+            MainWindow = main;
+            main.Show();
+            main.Activate();
+            splash.Close();
+        };
+
+        splash.Show();
     }
 
     private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
