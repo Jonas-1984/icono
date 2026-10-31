@@ -18,6 +18,8 @@
             <StackPanel x:Name="PagesPanel" Visibility="Collapsed">
                 <TextBlock Text="PAGES" Style="{StaticResource PanelLabelTextStyle}" Margin="0,16,0,4" />
                 <ComboBox x:Name="PageComboBox" Height="32" SelectionChanged="PageComboBox_OnSelectionChanged" />
+                <TextBox x:Name="PageRangeTextBox" Height="32" Margin="0,6,0,0" Visibility="Collapsed" Text="1"
+                         ToolTip="The pages to export, for example 1,3-5 (every page becomes its own file)" />
             </StackPanel>
 
             <StackPanel x:Name="SizePanel">

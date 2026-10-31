@@ -25,6 +25,9 @@ public partial class ExportDialog : ThemedDialogWindow
     /// <summary>The page to export (0 = the first), or null for all pages below each other.</summary>
     public int? Page { get; private set; }
 
+    /// <summary>The pages typed under "Selected pages" (0-based, ascending): each becomes its own file. Null when not chosen.</summary>
+    public IReadOnlyList<int>? PageList { get; private set; }
+
     public bool IncludeBackground => BackgroundCheckBox.IsChecked == true;
 
     public ExportDialog(Document document, bool backgroundDefault)
@@ -34,7 +37,7 @@ public partial class ExportDialog : ThemedDialogWindow
 
         if (document.PageCount > 1)
         {
-            var pages = new List<string> { $"All {document.PageCount} pages (one image)" };
+            var pages = new List<string> { $"All {document.PageCount} pages (one image)", "Selected pages (one file per page) ..." };
             pages.AddRange(Enumerable.Range(1, document.PageCount).Select(i => $"Page {i}"));
             PageComboBox.ItemsSource = pages;
             PageComboBox.SelectedIndex = 0;
@@ -48,11 +51,14 @@ public partial class ExportDialog : ThemedDialogWindow
         UpdateInfo();
     }
 
-    private int? SelectedPage => PageComboBox.SelectedIndex > 0 ? PageComboBox.SelectedIndex - 1 : null;
+    private bool SelectedPagesChosen => PageComboBox.SelectedIndex == 1;
+
+    /// <summary>One page picked in the list (null for "all pages" and for the typed list).</summary>
+    private int? SelectedPage => PageComboBox.SelectedIndex > 1 ? PageComboBox.SelectedIndex - 2 : null;
 
     private void FillSizes()
     {
-        var (width, height) = Icono.Rendering.DocumentExporter.Extent(_document, SelectedPage);
+        var (width, height) = Icono.Rendering.DocumentExporter.Extent(_document, SelectedPage ?? (SelectedPagesChosen ? 0 : null));
         var pageLongSide = Math.Max(width, height);
         var keep = Math.Max(0, SizeComboBox.SelectedIndex);
         SizeComboBox.ItemsSource = new[]
@@ -73,6 +79,13 @@ public partial class ExportDialog : ThemedDialogWindow
     {
         if (SizeComboBox is not null)
         {
+            PageRangeTextBox.Visibility = SelectedPagesChosen ? Visibility.Visible : Visibility.Collapsed;
+            if (SelectedPagesChosen)
+            {
+                PageRangeTextBox.Focus();
+                PageRangeTextBox.SelectAll();
+            }
+
             FillSizes();
         }
     }
@@ -105,6 +118,19 @@ public partial class ExportDialog : ThemedDialogWindow
     private void ExportButton_OnClick(object sender, RoutedEventArgs e)
     {
         Format = IcoRadio.IsChecked == true ? ExportFormat.Ico : SetRadio.IsChecked == true ? ExportFormat.PngSet : ExportFormat.Png;
+        PageList = null;
+        if (SelectedPagesChosen)
+        {
+            if (!PageRange.TryParse(PageRangeTextBox.Text, _document.PageCount, out var picked, out var error))
+            {
+                InfoText.Text = error;
+                PageRangeTextBox.Focus();
+                return;
+            }
+
+            PageList = picked;
+        }
+
         Page = SelectedPage;
         LongSide = SizeComboBox.SelectedItem is SizeChoice choice ? choice.LongSide : Math.Max(_document.Width, _document.Height);
         DialogResult = true;

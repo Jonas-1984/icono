@@ -253,12 +253,14 @@ public partial class MainWindow
 
         try
         {
+            // The pages typed under "Selected pages" are written one file per page (name_page2.png); otherwise there is one file.
+            var pages = dialog.PageList;
             switch (dialog.Format)
             {
                 case ExportFormat.Ico:
                     if (AskExportPath("Windows icon (*.ico)|*.ico", ".ico") is { } icoPath)
                     {
-                        File.WriteAllBytes(icoPath, DocumentExporter.RenderIco(document, DocumentExporter.IconSizes, dialog.IncludeBackground, dialog.Page ?? 0));
+                        File.WriteAllBytes(icoPath, DocumentExporter.RenderIco(document, DocumentExporter.IconSizes, dialog.IncludeBackground, pages?[0] ?? dialog.Page ?? 0));
                         ShowStatus($"Exported {Path.GetFileName(icoPath)}");
                     }
 
@@ -269,14 +271,20 @@ public partial class MainWindow
                     {
                         var folder = Path.GetDirectoryName(setPath)!;
                         var baseName = Path.GetFileNameWithoutExtension(setPath);
-                        foreach (var size in new[] { 16, 32, 64, 128, 256, 512 })
+                        var written = 0;
+                        foreach (var page in pages?.Select(p => (int?)p) ?? [dialog.Page])
                         {
-                            File.WriteAllBytes(
-                                Path.Combine(folder, $"{baseName}_{size}.png"),
-                                DocumentExporter.RenderPng(document, size, dialog.IncludeBackground, dialog.Page));
+                            var name = pages is null ? baseName : $"{baseName}_page{page + 1}";
+                            foreach (var size in new[] { 16, 32, 64, 128, 256, 512 })
+                            {
+                                File.WriteAllBytes(
+                                    Path.Combine(folder, $"{name}_{size}.png"),
+                                    DocumentExporter.RenderPng(document, size, dialog.IncludeBackground, page));
+                                written++;
+                            }
                         }
 
-                        ShowStatus($"Exported 6 PNG sizes to {folder}");
+                        ShowStatus($"Exported {written} PNG files to {folder}");
                     }
 
                     break;
@@ -284,8 +292,24 @@ public partial class MainWindow
                 default:
                     if (AskExportPath("PNG image (*.png)|*.png", ".png") is { } pngPath)
                     {
-                        File.WriteAllBytes(pngPath, DocumentExporter.RenderPng(document, dialog.LongSide, dialog.IncludeBackground, dialog.Page));
-                        ShowStatus($"Exported {Path.GetFileName(pngPath)}");
+                        if (pages is null)
+                        {
+                            File.WriteAllBytes(pngPath, DocumentExporter.RenderPng(document, dialog.LongSide, dialog.IncludeBackground, dialog.Page));
+                            ShowStatus($"Exported {Path.GetFileName(pngPath)}");
+                        }
+                        else
+                        {
+                            var folder = Path.GetDirectoryName(pngPath)!;
+                            var baseName = Path.GetFileNameWithoutExtension(pngPath);
+                            foreach (var page in pages)
+                            {
+                                File.WriteAllBytes(
+                                    Path.Combine(folder, $"{baseName}_page{page + 1}.png"),
+                                    DocumentExporter.RenderPng(document, dialog.LongSide, dialog.IncludeBackground, page));
+                            }
+
+                            ShowStatus($"Exported {pages.Count} page(s) to {folder}");
+                        }
                     }
 
                     break;

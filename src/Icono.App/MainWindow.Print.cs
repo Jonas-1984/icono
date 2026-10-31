@@ -44,6 +44,19 @@ public partial class MainWindow
             return;
         }
 
+        // a project with several pages: which of them
+        IReadOnlyList<int> printPages = [0];
+        if (document.PageCount > 1)
+        {
+            var pagesDialog = new PrintPagesDialog(document.PageCount, _context.CurrentPage) { Owner = this };
+            if (pagesDialog.ShowDialog() != true)
+            {
+                return;
+            }
+
+            printPages = pagesDialog.Pages;
+        }
+
         var dialog = new PrintDialog();
         try
         {
@@ -67,9 +80,9 @@ public partial class MainWindow
             // The page at 300 DPI; it is laid out in 1/96 inch units, one page pixel being 1/96 inch on the paper.
             var longSide = (int)Math.Ceiling(Math.Max(document.Width, document.Height) / 96.0 * 300);
             // every page of the project is one sheet of paper
-            var pageCount = document.PageCount;
-            var images = Enumerable.Range(0, pageCount)
-                .Select(i => LoadImage(DocumentExporter.RenderPng(document, longSide, includeBackground: true, pageCount > 1 ? i : null)))
+            var pageCount = printPages.Count;
+            var images = printPages
+                .Select(i => LoadImage(DocumentExporter.RenderPng(document, longSide, includeBackground: true, document.PageCount > 1 ? i : null)))
                 .ToList();
 
             double width = document.Width;
