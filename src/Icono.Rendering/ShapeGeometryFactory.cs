@@ -22,6 +22,8 @@ public static class ShapeGeometryFactory
         ShapeKind.TriangleAlert, ShapeKind.SquareDashedBottom, ShapeKind.Share, ShapeKind.ShieldCog,
         ShapeKind.TrafficCone,
         ShapeKind.Undo2, ShapeKind.SquareArrowRightExit, ShapeKind.SquareChevronRight, ShapeKind.ArrowBigRightDash,
+        // IT symbols.
+        ShapeKind.MonitorPc, ShapeKind.PcCase, ShapeKind.Server, ShapeKind.ServerNas, ShapeKind.Router, ShapeKind.UserRound, ShapeKind.UsersRound, ShapeKind.UserStar, ShapeKind.EthernetPort, ShapeKind.DataTransfer, ShapeKind.Power, ShapeKind.GlobeCode, ShapeKind.GlobeOff, ShapeKind.GlobeCheck, ShapeKind.Globe, ShapeKind.LaptopMinimal, ShapeKind.TvMinimal, ShapeKind.Wifi, ShapeKind.BluetoothConnected,
 
         // Office furniture, top-view floor-plan symbols — drawn as thin line-art like an
         // architectural block, not solid-filled.
@@ -776,6 +778,215 @@ public static class ShapeGeometryFactory
                 if (arrowBigRightDashPath is not null)
                 {
                     path.AddPath(arrowBigRightDashPath);
+                }
+
+                break;
+            }
+            case ShapeKind.MonitorPc:
+            {
+                using var monitorPcPath = SKPath.ParseSvgPathData(
+                    "M10 15H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6 M10 19H5 M14 11h8 M14 7h8 M18 17h.01 M9 19v-4 M15 3h6a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1h-6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z");
+                if (monitorPcPath is not null)
+                {
+                    path.AddPath(monitorPcPath);
+                }
+
+                break;
+            }
+            case ShapeKind.PcCase:
+            {
+                using var pcCasePath = SKPath.ParseSvgPathData(
+                    "M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z M15 14h.01 M9 6h6 M9 10h6");
+                if (pcCasePath is not null)
+                {
+                    path.AddPath(pcCasePath);
+                }
+
+                break;
+            }
+            case ShapeKind.Server:
+            {
+                using var serverPath = SKPath.ParseSvgPathData(
+                    "M4 2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z M4 14h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2z M6 6h.01 M6 18h.01");
+                if (serverPath is not null)
+                {
+                    path.AddPath(serverPath);
+                }
+
+                break;
+            }
+            case ShapeKind.ServerNas:
+            {
+                using var serverNasPath = SKPath.ParseSvgPathData(
+                    "M10 16V8 M14 16V8 M18 16V8 M6 12h.01 M6 16h.01 M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z");
+                if (serverNasPath is not null)
+                {
+                    path.AddPath(serverNasPath);
+                }
+
+                break;
+            }
+            case ShapeKind.Router:
+            {
+                using var routerPath = SKPath.ParseSvgPathData(
+                    "M4 14h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2z M6.01 18H6 M10.01 18H10 M15 10v4 M17.84 7.17a4 4 0 0 0-5.66 0 M20.66 4.34a8 8 0 0 0-11.31 0");
+                if (routerPath is not null)
+                {
+                    path.AddPath(routerPath);
+                }
+
+                break;
+            }
+            case ShapeKind.UserRound:
+            {
+                using var userRoundPath = SKPath.ParseSvgPathData(
+                    "M17 8a5 5 0 1 1-10 0 5 5 0 0 1 10 0z M20 21a8 8 0 0 0-16 0");
+                if (userRoundPath is not null)
+                {
+                    path.AddPath(userRoundPath);
+                }
+
+                break;
+            }
+            case ShapeKind.UsersRound:
+            {
+                using var usersRoundPath = SKPath.ParseSvgPathData(
+                    "M18 21a8 8 0 0 0-16 0 M15 8a5 5 0 1 1-10 0 5 5 0 0 1 10 0z M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3");
+                if (usersRoundPath is not null)
+                {
+                    path.AddPath(usersRoundPath);
+                }
+
+                break;
+            }
+            case ShapeKind.UserStar:
+            {
+                using var userStarPath = SKPath.ParseSvgPathData(
+                    "M16.051 12.616a1 1 0 0 1 1.909.024l.737 1.452a1 1 0 0 0 .737.535l1.634.256a1 1 0 0 1 .588 1.806l-1.172 1.168a1 1 0 0 0-.282.866l.259 1.613a1 1 0 0 1-1.541 1.134l-1.465-.75a1 1 0 0 0-.912 0l-1.465.75a1 1 0 0 1-1.539-1.133l.258-1.613a1 1 0 0 0-.282-.866l-1.156-1.153a1 1 0 0 1 .572-1.822l1.633-.256a1 1 0 0 0 .737-.535z M8 15H7a4 4 0 0 0-4 4v2 M14 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z");
+                if (userStarPath is not null)
+                {
+                    path.AddPath(userStarPath);
+                }
+
+                break;
+            }
+            case ShapeKind.EthernetPort:
+            {
+                using var ethernetPortPath = SKPath.ParseSvgPathData(
+                    "M10 8v1 M14 8v1 M18 8v1 M6 8v1 M19 17a2 2 0 0 0-1.765 1.059l-.47.882A2 2 0 0 1 15 20H9a2 2 0 0 1-1.765-1.059l-.47-.882A2 2 0 0 0 5 17H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2z");
+                if (ethernetPortPath is not null)
+                {
+                    path.AddPath(ethernetPortPath);
+                }
+
+                break;
+            }
+            case ShapeKind.DataTransfer:
+            {
+                using var dataTransferPath = SKPath.ParseSvgPathData(
+                    "M8 3 4 7l4 4 M4 7h16 M16 21l4-4-4-4 M20 17H4");
+                if (dataTransferPath is not null)
+                {
+                    path.AddPath(dataTransferPath);
+                }
+
+                break;
+            }
+            case ShapeKind.Power:
+            {
+                using var powerPath = SKPath.ParseSvgPathData(
+                    "M12 2v10 M18.4 6.6a9 9 0 1 1-12.77.04");
+                if (powerPath is not null)
+                {
+                    path.AddPath(powerPath);
+                }
+
+                break;
+            }
+            case ShapeKind.GlobeCode:
+            {
+                using var globeCodePath = SKPath.ParseSvgPathData(
+                    "M15.5 10 13 7.5 15.5 5 M15.861 14A14.5 14.5 0 0 1 12 22a14.48 14.48 0 0 1 0-20 10 10 0 1 0 9.888 11.5 M19.5 5 22 7.5 19.5 10 M2 12h8.5");
+                if (globeCodePath is not null)
+                {
+                    path.AddPath(globeCodePath);
+                }
+
+                break;
+            }
+            case ShapeKind.GlobeOff:
+            {
+                using var globeOffPath = SKPath.ParseSvgPathData(
+                    "M10.114 4.462A14.5 14.5 0 0 1 12 2a10 10 0 0 1 9.313 13.643 M15.557 15.556A14.5 14.5 0 0 1 12 22 10 10 0 0 1 4.929 4.929 M15.892 10.234A14.5 14.5 0 0 0 12 2a10 10 0 0 0-3.643.687 M17.656 12H22 M19.071 19.071A10 10 0 0 1 12 22 14.5 14.5 0 0 1 8.44 8.45 M2 12h10 M2 2l20 20");
+                if (globeOffPath is not null)
+                {
+                    path.AddPath(globeOffPath);
+                }
+
+                break;
+            }
+            case ShapeKind.GlobeCheck:
+            {
+                using var globeCheckPath = SKPath.ParseSvgPathData(
+                    "M15 6l2 2 4-4 M2 12h20A10 10 0 1 1 12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 4-10");
+                if (globeCheckPath is not null)
+                {
+                    path.AddPath(globeCheckPath);
+                }
+
+                break;
+            }
+            case ShapeKind.Globe:
+            {
+                using var globePath = SKPath.ParseSvgPathData(
+                    "M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0z M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20 M2 12h20");
+                if (globePath is not null)
+                {
+                    path.AddPath(globePath);
+                }
+
+                break;
+            }
+            case ShapeKind.LaptopMinimal:
+            {
+                using var laptopMinimalPath = SKPath.ParseSvgPathData(
+                    "M5 4h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z M2 20h20");
+                if (laptopMinimalPath is not null)
+                {
+                    path.AddPath(laptopMinimalPath);
+                }
+
+                break;
+            }
+            case ShapeKind.TvMinimal:
+            {
+                using var tvMinimalPath = SKPath.ParseSvgPathData(
+                    "M7 21h10 M4 3h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z");
+                if (tvMinimalPath is not null)
+                {
+                    path.AddPath(tvMinimalPath);
+                }
+
+                break;
+            }
+            case ShapeKind.Wifi:
+            {
+                using var wifiPath = SKPath.ParseSvgPathData(
+                    "M12 20h.01 M2 8.82a15 15 0 0 1 20 0 M5 12.859a10 10 0 0 1 14 0 M8.5 16.429a5 5 0 0 1 7 0");
+                if (wifiPath is not null)
+                {
+                    path.AddPath(wifiPath);
+                }
+
+                break;
+            }
+            case ShapeKind.BluetoothConnected:
+            {
+                using var bluetoothConnectedPath = SKPath.ParseSvgPathData(
+                    "M7 7l10 10-5 5V2l5 5L7 17 M18 12h3 M3 12h3");
+                if (bluetoothConnectedPath is not null)
+                {
+                    path.AddPath(bluetoothConnectedPath);
                 }
 
                 break;

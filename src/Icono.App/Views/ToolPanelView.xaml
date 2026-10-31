@@ -389,6 +389,62 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="IT" Style="{StaticResource CardHeaderTextStyle}" />
+                            <Path Grid.Column="1" Style="{StaticResource CardChevronPathStyle}" />
+                        </Grid>
+                        <StackPanel>
+                        <WrapPanel x:Name="ItWrapPanel" Margin="6,0" MinHeight="114">
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource MonitorPcToolGeometry}" CommandParameter="MonitorPc" ToolTip="Monitor and PC" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource PcCaseToolGeometry}" CommandParameter="PcCase" ToolTip="PC Case" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource ServerToolGeometry}" CommandParameter="Server" ToolTip="Server" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource ServerNasToolGeometry}" CommandParameter="ServerNas" ToolTip="NAS Server" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource RouterToolGeometry}" CommandParameter="Router" ToolTip="Router" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource UserRoundToolGeometry}" CommandParameter="UserRound" ToolTip="User" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource UsersRoundToolGeometry}" CommandParameter="UsersRound" ToolTip="Users" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource UserStarToolGeometry}" CommandParameter="UserStar" ToolTip="User Star" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource EthernetPortToolGeometry}" CommandParameter="EthernetPort" ToolTip="Ethernet Port" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource DataTransferToolGeometry}" CommandParameter="DataTransfer" ToolTip="Data Transfer" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource PowerToolGeometry}" CommandParameter="Power" ToolTip="Power" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource GlobeCodeToolGeometry}" CommandParameter="GlobeCode" ToolTip="Globe with Code" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource GlobeOffToolGeometry}" CommandParameter="GlobeOff" ToolTip="Globe Off" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource GlobeCheckToolGeometry}" CommandParameter="GlobeCheck" ToolTip="Globe Check" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource GlobeToolGeometry}" CommandParameter="Globe" ToolTip="Globe" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource LaptopMinimalToolGeometry}" CommandParameter="LaptopMinimal" ToolTip="Laptop" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource TvMinimalToolGeometry}" CommandParameter="TvMinimal" ToolTip="TV / Screen" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource WifiToolGeometry}" CommandParameter="Wifi" ToolTip="Wi-Fi" />
+                            <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked" Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                         Tag="{StaticResource BluetoothConnectedToolGeometry}" CommandParameter="BluetoothConnected" ToolTip="Bluetooth Connected" />
+                        </WrapPanel>
+                        <StackPanel x:Name="ItPagerDots" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,2,0,6" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource CardBorderStyle}">
+                    <StackPanel>
+                        <Grid Style="{StaticResource CollapsibleCardHeaderStyle}" MouseLeftButtonDown="CardHeader_OnToggle">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="DESIGN GRID" Style="{StaticResource CardHeaderTextStyle}" />
                             <Path Grid.Column="1" Style="{StaticResource CardChevronPathStyle}" />
                         </Grid>

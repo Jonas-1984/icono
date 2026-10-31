@@ -59,6 +59,27 @@ public enum ShapeKind
     SquareChevronRight,
     ArrowBigRightDash,
 
+    // IT symbols (Lucide).
+    MonitorPc,
+    PcCase,
+    Server,
+    ServerNas,
+    Router,
+    UserRound,
+    UsersRound,
+    UserStar,
+    EthernetPort,
+    DataTransfer,
+    Power,
+    GlobeCode,
+    GlobeOff,
+    GlobeCheck,
+    Globe,
+    LaptopMinimal,
+    TvMinimal,
+    Wifi,
+    BluetoothConnected,
+
     // Arrow shapes palette.
     ArrowRight,
     ArrowLeft,

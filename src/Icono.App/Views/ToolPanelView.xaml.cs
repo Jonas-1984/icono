@@ -197,6 +197,7 @@ public partial class ToolPanelView : UserControl
         InitializeGridPalette();
 
         _ = new IconPager(ShapesWrapPanel, ShapesPagerDots, IconsPerPage);
+        _ = new IconPager(ItWrapPanel, ItPagerDots, IconsPerPage);
         BuildObjectGroups();
         HideHintTexts();
         _ = new IconPager(ArrowsWrapPanel, ArrowsPagerDots, IconsPerPage);
