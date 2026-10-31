@@ -520,19 +520,56 @@ public partial class CanvasHostView : UserControl
     /// <summary>The first click (or Ctrl+click) picks the source; every further click paints its look onto the object under the pointer.</summary>
     private void HandleMatchClick(Point point)
     {
-        if (_context is null || HitTestShape(point) is not { } hit)
+        if (_context is null)
+        {
+            return;
+        }
+
+        // the number of a wall's or a door's dimension counts as that object: it can be the source (then only its dimension style is
+        // carried over, exactly that dimension's distance and number position) or the target of such a style
+        var dimension = HitTestDimensionOwner(point);
+        var hit = dimension is null ? HitTestShape(point) : null;
+        var shape = dimension?.Owner ?? hit?.Shape;
+        if (shape is null)
         {
             return;
         }
 
         if (_context.MatchSource is null || Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
         {
-            _context.MatchSource = hit.Shape;
-            _context.Notify("Match: source picked - click the objects that should get its look. Esc ends.");
+            _context.PickMatchSource(shape, dimension?.Segment, dimensionOnly: dimension is not null);
+            _context.Notify(dimension is not null
+                ? "Match: dimension picked - click the numbers of other dimensions (or objects) that should get its style. Esc ends."
+                : "Match: source picked - click the objects that should get its look. Esc ends.");
             return;
         }
 
-        _context.MatchTo(hit.Shape);
+        _context.MatchTo(shape, dimensionOnly: dimension is not null, targetSegment: dimension?.Segment);
+    }
+
+    /// <summary>The wall or the door / window / opening whose dimension has its number at the point, with the segment of the wall.</summary>
+    private (Shape Owner, int? Segment)? HitTestDimensionOwner(Point point)
+    {
+        if (_context is null)
+        {
+            return null;
+        }
+
+        var tolerance = 6 / Zoom;
+        foreach (var shape in _context.Document.VisibleShapes())
+        {
+            if (shape.Kind == ShapeKind.Wall && shape.Points is { Count: > 1 } && WallRenderer.HitTestDimensionText(shape, point.X, point.Y, tolerance) is { } segment)
+            {
+                return (shape, segment);
+            }
+
+            if (ArchitecturalSymbols.IsSymbol(shape.Kind) && SymbolMeasurements.HitTestText(_context.Document, shape, point.X, point.Y, tolerance) is not null)
+            {
+                return (shape, null);
+            }
+        }
+
+        return null;
     }
 
     private void OnContextPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)

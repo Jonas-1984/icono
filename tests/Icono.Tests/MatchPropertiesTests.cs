@@ -192,4 +192,62 @@ public class MatchPropertiesTests
         Assert.True(MatchProperties.Copy(window, wall, MatchAspects.Dimension));
         Assert.Equal(LengthUnit.Meter, wall.WallDimensionUnit);
     }
+
+    private static Shape WallWithEditedTopDimension() => new()
+    {
+        Kind = ShapeKind.Wall, DimOffset = 14, Points = [new CorePoint(0, 0), new CorePoint(400, 0), new CorePoint(400, 300)],
+        WallDimensionOverrides = [new WallDimensionOverride(0, Offset: 65, TextPosition: 0.3, TextShift: 4)],
+    };
+
+    [Fact]
+    public void TheDistanceOfAnEditedWallDimension_GoesToTheDimensionsOfADoor()
+    {
+        var wall = WallWithEditedTopDimension();
+        var door = new Shape { Kind = ShapeKind.DoorSingle, DimOffset = 18 };
+
+        Assert.True(MatchProperties.Copy(wall, door, MatchAspects.Dimension, sourceSegment: 0));
+
+        Assert.Equal(65, door.DimOffset);
+        Assert.Equal(0.3, door.DimTextPosition);
+        Assert.Equal(4, door.DimTextShift);
+    }
+
+    [Fact]
+    public void WithoutASegment_TheOnlyEditedDimensionOfTheWallIsTheSource()
+    {
+        var door = new Shape { Kind = ShapeKind.WindowSingle, DimOffset = 18 };
+
+        MatchProperties.Copy(WallWithEditedTopDimension(), door, MatchAspects.Dimension);
+
+        Assert.Equal(65, door.DimOffset);
+    }
+
+    [Fact]
+    public void ClickingOneDimensionOfAWall_ChangesOnlyThatDimension()
+    {
+        var source = new Shape { Kind = ShapeKind.DoorSingle, DimOffset = 40, DimTextPosition = 0.7 };
+        var wall = WallWithEditedTopDimension();
+
+        Assert.True(MatchProperties.Copy(source, wall, MatchAspects.Dimension, targetSegment: 1));
+
+        Assert.Equal(14, wall.DimOffset);                                           // the wall as a whole stays
+        Assert.Equal(65, wall.WallDimensionOverrides!.Single(o => o.Segment == 0).Offset); // the other edited one stays
+        var matched = wall.WallDimensionOverrides!.Single(o => o.Segment == 1);
+        Assert.Equal(40, matched.Offset);
+        Assert.Equal(0.7, matched.TextPosition);
+    }
+
+    [Fact]
+    public void ADimensionStyleForAWholeWall_ReplacesTheDistancesOfItsEditedDimensions()
+    {
+        var source = new Shape { Kind = ShapeKind.Dimension, DimOffset = 30 };
+        var wall = WallWithEditedTopDimension();
+        wall.WallDimensionOverrides = [.. wall.WallDimensionOverrides!, new WallDimensionOverride(1, Hidden: true)];
+
+        MatchProperties.Copy(source, wall, MatchAspects.Dimension);
+
+        Assert.Equal(30, wall.DimOffset);
+        Assert.Single(wall.WallDimensionOverrides!);               // the edited distance is gone, the hidden dimension stays hidden
+        Assert.True(wall.WallDimensionOverrides![0].Hidden);
+    }
 }

@@ -728,6 +728,12 @@ public sealed class EditorContext : ObservableObject
 
     private Shape? _matchSource;
 
+    /// <summary>The dimension of the source wall that was being edited when Match began: its distance and number position are what the others get.</summary>
+    private int? _matchSegment;
+
+    /// <summary>True when the source was picked by clicking one of its dimensions: then only the dimension style is carried over.</summary>
+    private bool _matchDimensionOnly;
+
     /// <summary>The object whose look the Match tool paints onto the shapes that are clicked. Null until one was picked.</summary>
     public Shape? MatchSource
     {
@@ -748,14 +754,25 @@ public sealed class EditorContext : ObservableObject
     public void BeginMatch()
     {
         MatchSource = SelectedShapes.Count == 1 ? SelectedShapes[0] : null;
+        _matchSegment = MatchSource is { Kind: ShapeKind.Wall } ? WallSegmentHighlight : null;
+        _matchDimensionOnly = false;
         ActiveTool = ActiveTool.Match;
         StatusMessage?.Invoke(MatchSource is null
             ? "Match: click the object whose look you want to copy."
             : "Match: click the objects that should get this look. Ctrl+click picks another source, Esc ends.");
     }
 
+    /// <summary>Makes a shape the source of the Match tool. When it was picked by clicking one of its dimensions (<paramref name="dimensionOnly"/>), that
+    /// dimension - the <paramref name="segment"/> of a wall - is what is carried over, and nothing but the dimension style.</summary>
+    public void PickMatchSource(Shape shape, int? segment = null, bool dimensionOnly = false)
+    {
+        MatchSource = shape;
+        _matchSegment = segment;
+        _matchDimensionOnly = dimensionOnly;
+    }
+
     /// <summary>Paints the look of <see cref="MatchSource"/> onto <paramref name="target"/> as one undo step.</summary>
-    public void MatchTo(Shape target)
+    public void MatchTo(Shape target, bool dimensionOnly = false, int? targetSegment = null)
     {
         if (_matchSource is null || !Document.Layers.Any(l => l.Shapes.Contains(_matchSource)))
         {
@@ -776,7 +793,7 @@ public sealed class EditorContext : ObservableObject
         }
 
         var before = ShapeSnapshot.Capture(target);
-        if (!MatchProperties.Copy(_matchSource, target, MatchAspects))
+        if (!MatchProperties.Copy(_matchSource, target, dimensionOnly || _matchDimensionOnly ? MatchAspects.Dimension : MatchAspects, _matchSegment, targetSegment))
         {
             StatusMessage?.Invoke("Match: nothing to change - the look is already the same, or the two objects have nothing in common.");
             return;
@@ -793,6 +810,7 @@ public sealed class EditorContext : ObservableObject
     public void MatchDimensionStyleToAll()
     {
         var source = _matchSource ?? (SelectedShapes.Count == 1 ? SelectedShapes[0] : null);
+        var segment = _matchSource is not null ? _matchSegment : source is { Kind: ShapeKind.Wall } ? WallSegmentHighlight : null;
         if (source is null || !MatchProperties.HasDimensionStyle(source))
         {
             StatusMessage?.Invoke("Select the dimension, wall, door or window whose dimension style should go to all the others.");
@@ -808,7 +826,7 @@ public sealed class EditorContext : ObservableObject
         foreach (var target in targets)
         {
             var snapshot = ShapeSnapshot.Capture(target);
-            if (MatchProperties.Copy(source, target, MatchAspects.Dimension))
+            if (MatchProperties.Copy(source, target, MatchAspects.Dimension, segment))
             {
                 changed.Add(target);
                 before.Add(snapshot);
