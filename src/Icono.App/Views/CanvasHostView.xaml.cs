@@ -3430,6 +3430,16 @@ public partial class CanvasHostView : UserControl
             if (_pointEditShape.Kind is ShapeKind.Wall or ShapeKind.Dimension)
             {
                 onPoint = anchored is null ? SnapToPoints(rawPoint, PointSnapReference(), [_pointEditShape]) : null;
+
+                // the point of a dimension also lines up with the faces and edges of walls and shapes (the guides are shown)
+                if (onPoint is null && anchored is null && _pointEditShape.Kind == ShapeKind.Dimension)
+                {
+                    var frame = SnapFrame((rawPoint.X, rawPoint.Y, 0, 0), [_pointEditShape]);
+                    if (frame.Snapped)
+                    {
+                        onPoint = new Point(rawPoint.X + frame.Dx, rawPoint.Y + frame.Dy);
+                    }
+                }
             }
             else
             {

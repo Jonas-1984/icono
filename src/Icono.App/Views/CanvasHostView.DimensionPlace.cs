@@ -77,7 +77,7 @@ public partial class CanvasHostView
             _context.SelectedShape = shape;
         }
 
-        var at = ToDocumentSpace(e.GetPosition(SkiaCanvas));
+        var at = SnapDimensionPointer(ToDocumentSpace(e.GetPosition(SkiaCanvas)), shape);
         var point = new SKPoint((float)at.X, (float)at.Y);
         if (shape.Kind == ShapeKind.Wall)
         {
@@ -92,6 +92,28 @@ public partial class CanvasHostView
         }
 
         _context.RequestRedraw();
+    }
+
+    /// <summary>Where the dimension line goes for the pointer: the pointer snaps like every other point that is moved - to the points of the
+    /// objects (corners, middles, centres, crossings ...), failing that it lines up with the faces and edges of walls and shapes (the guides are
+    /// shown), failing that it goes to the grid. Alt holds the snapping off.</summary>
+    private Point SnapDimensionPointer(Point raw, Shape owner)
+    {
+        // the shape whose dimension is dragged does not attract the pointer: its own dimension line would pull it along and run away
+        IReadOnlyCollection<Shape> excluded = [owner];
+        if (SnapToPoints(raw, null, excluded) is { } onPoint)
+        {
+            _snapGuides = [];
+            return onPoint;
+        }
+
+        var frame = SnapFrame((raw.X, raw.Y, 0, 0), excluded);
+        if (frame.Snapped)
+        {
+            return new Point(raw.X + frame.Dx, raw.Y + frame.Dy);
+        }
+
+        return new Point(SnapIfEnabled(raw.X), SnapIfEnabled(raw.Y));
     }
 
     /// <summary>The number is let go: after a drag the line stays where it is (one undo step); after a click the length editor opens.</summary>
