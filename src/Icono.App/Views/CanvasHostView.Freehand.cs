@@ -70,6 +70,9 @@ public partial class CanvasHostView
         UpdateFreehandPreview();
     }
 
+    /// <summary>The page distance the tremor is averaged over: the hand shakes by screen pixels, so the distance follows the zoom.</summary>
+    private float SmoothingDistance() => _context is null ? 0 : (float)(_context.PenSmoothing * 0.75 / Zoom);
+
     private void UpdateFreehandPreview()
     {
         if (_context is null || _freehandPoints is null)
@@ -77,7 +80,7 @@ public partial class CanvasHostView
             return;
         }
 
-        _freehandShape = FreehandBuilder.CreateShape(_freehandPoints, _context.PenColor, _context.PenWidth, (float)(0.5 / Zoom));
+        _freehandShape = FreehandBuilder.CreateShape(_freehandPoints, _context.PenColor, _context.PenWidth, (float)(0.5 / Zoom), SmoothingDistance());
         _context.RequestRedraw();
     }
 
@@ -99,7 +102,7 @@ public partial class CanvasHostView
             return;
         }
 
-        var shape = FreehandBuilder.CreateShape(points, _context.PenColor, _context.PenWidth, (float)Math.Max(0.2, 0.8 / Zoom));
+        var shape = FreehandBuilder.CreateShape(points, _context.PenColor, _context.PenWidth, (float)Math.Max(0.2, 0.8 / Zoom), SmoothingDistance());
         if (shape is not null)
         {
             layer.Shapes.Insert(0, shape);

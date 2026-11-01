@@ -33,6 +33,60 @@ public class FreehandTests
         Assert.InRange(FreehandBuilder.Simplify(wave, 0.8f).Count, 5, wave.Count - 10);
     }
 
+    /// <summary>A line along y = 100 that a shaking hand drew: the pen jumps up and down by 2 px, every second point.</summary>
+    private static List<SKPoint> ShakyLine() =>
+        Enumerable.Range(0, 101).Select(i => new SKPoint(50 + i * 3, 100 + (i % 2 == 0 ? 2f : -2f))).ToList();
+
+    [Fact]
+    public void Stabilize_TakesTheTremorOut_AndKeepsBothEndsWherePenWentDownAndUp()
+    {
+        var shaky = ShakyLine();
+
+        var steady = FreehandBuilder.Stabilize(shaky, 3f);
+
+        Assert.Equal(shaky[0], steady[0]);
+        Assert.Equal(shaky[^1], steady[^1]);
+        // the middle of the line is straight now (the shake was 2 px), only the first and last points still carry the pen's own start and end
+        Assert.All(steady.Skip(8).Take(steady.Count - 16), p => Assert.InRange(p.Y, 99.5f, 100.5f));
+    }
+
+    [Fact]
+    public void Stabilize_DoesNotChangeAStraightLine_AShortStroke_OrNoSmoothing()
+    {
+        var straight = Enumerable.Range(0, 40).Select(i => new SKPoint(i * 5, 20)).ToList();
+        Assert.All(FreehandBuilder.Stabilize(straight, 3f), p => Assert.Equal(20, p.Y, 3));
+
+        var two = new List<SKPoint> { new(0, 0), new(10, 10) };
+        Assert.Equal(two, FreehandBuilder.Stabilize(two, 3f));
+
+        var shaky = ShakyLine();
+        Assert.Equal(shaky, FreehandBuilder.Stabilize(shaky, 0f));
+    }
+
+    [Fact]
+    public void Stabilize_KeepsTheShapeOfTheWriting_OnlyRoundsTheFinestDetail()
+    {
+        var wave = Wave();
+
+        var steady = FreehandBuilder.Stabilize(wave, 3f);
+
+        // a wave of 157 px length and 30 px height is not tremor: its crest is still there
+        Assert.InRange(steady.Max(p => p.Y) - steady.Min(p => p.Y), 55, 61);
+    }
+
+    [Fact]
+    public void CreateShape_WithSmoothing_MakesTheShakyLineStraight_AndSmaller()
+    {
+        var color = ArgbColor.FromRgb(0, 0, 0);
+
+        var rough = FreehandBuilder.CreateShape(ShakyLine(), color, 2, 0.8f)!;
+        var smooth = FreehandBuilder.CreateShape(ShakyLine(), color, 2, 0.8f, 3f)!;
+
+        Assert.InRange(rough.Height, 3.5, 4.5);
+        Assert.InRange(smooth.Height, 1, 2.5);
+        Assert.True(smooth.CustomPathData!.Length < rough.CustomPathData!.Length);
+    }
+
     [Fact]
     public void CreateShape_MakesAStrokeShape_WithTheFrameOfTheStroke_ColourAndWidth()
     {

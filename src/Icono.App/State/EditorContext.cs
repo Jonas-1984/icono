@@ -181,6 +181,12 @@ public sealed class EditorContext : ObservableObject
     /// <summary>The width (page px) of the stroke of the Handwriting tool.</summary>
     public double PenWidth { get => _penWidth; set => SetField(ref _penWidth, Math.Clamp(value, 0.5, 60)); }
 
+    private double _penSmoothing = 6;
+
+    /// <summary>How strongly the Handwriting tool takes the tremor out of a stroke, 0 (off) to 10: the stroke is averaged over about three quarters of this many
+    /// screen pixels, so it looks the same at every zoom.</summary>
+    public double PenSmoothing { get => _penSmoothing; set => SetField(ref _penSmoothing, Math.Clamp(value, 0, 10)); }
+
     private double _curveSizeCm = 1;
 
     /// <summary>The radius the Curve tool gives to corners, in cm on the page (like the corner radius of a line).</summary>

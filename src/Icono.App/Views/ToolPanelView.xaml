@@ -167,6 +167,17 @@
                                 <Button Content="5" Tag="5" Style="{StaticResource PanelKeyButtonStyle}" Click="PenWidthPreset_OnClick" />
                                 <Button Content="10" Tag="10" Style="{StaticResource PanelKeyButtonStyle}" Click="PenWidthPreset_OnClick" />
                             </UniformGrid>
+
+                            <TextBlock Text="SMOOTHING (0-10)" Style="{StaticResource PanelLabelTextStyle}" />
+                            <TextBox x:Name="PenSmoothingTextBox" Margin="10,0,10,6" Text="6" TextAlignment="Center" AutomationProperties.Name="Handwriting smoothing"
+                                     ToolTip="How strongly the shaking of the hand is smoothed out of a stroke: 0 keeps the stroke as drawn, 10 is the smoothest. Type a number and press Enter."
+                                     LostFocus="PenSmoothingTextBox_OnLostFocus" KeyDown="PenSmoothingTextBox_OnKeyDown" />
+                            <UniformGrid Columns="4" Margin="3,0,3,6">
+                                <Button Content="Off" Tag="0" Style="{StaticResource PanelKeyButtonStyle}" Click="PenSmoothingPreset_OnClick" />
+                                <Button Content="Low" Tag="3" Style="{StaticResource PanelKeyButtonStyle}" Click="PenSmoothingPreset_OnClick" />
+                                <Button Content="Mid" Tag="6" Style="{StaticResource PanelKeyButtonStyle}" Click="PenSmoothingPreset_OnClick" />
+                                <Button Content="High" Tag="9" Style="{StaticResource PanelKeyButtonStyle}" Click="PenSmoothingPreset_OnClick" />
+                            </UniformGrid>
                         </StackPanel>
                     </StackPanel>
                 </Border>

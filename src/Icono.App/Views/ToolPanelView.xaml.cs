@@ -623,6 +623,7 @@ public partial class ToolPanelView : UserControl
         PenColorChip.Background = new SolidColorBrush(color);
         PenColorText.Text = ToHex(color);
         PenWidthTextBox.Text = Context.PenWidth.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+        PenSmoothingTextBox.Text = Context.PenSmoothing.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
 
         _isSyncingPen = true;
         try
@@ -700,6 +701,43 @@ public partial class ToolPanelView : UserControl
                 System.Globalization.CultureInfo.InvariantCulture, out var width) && width > 0)
         {
             Context.PenWidth = width;
+        }
+
+        SyncPen();
+    }
+
+    private void PenSmoothingTextBox_OnLostFocus(object sender, RoutedEventArgs e) => ApplyPenSmoothing();
+
+    private void PenSmoothingTextBox_OnKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key == System.Windows.Input.Key.Enter)
+        {
+            ApplyPenSmoothing();
+        }
+    }
+
+    private void PenSmoothingPreset_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (Context is not null && sender is FrameworkElement { Tag: string tag }
+            && double.TryParse(tag, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var level))
+        {
+            Context.PenSmoothing = level;
+            SyncPen();
+            Context.ActiveTool = ActiveTool.Freehand;
+        }
+    }
+
+    private void ApplyPenSmoothing()
+    {
+        if (Context is null)
+        {
+            return;
+        }
+
+        if (double.TryParse(PenSmoothingTextBox.Text.Trim().Replace(',', '.'), System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out var level))
+        {
+            Context.PenSmoothing = level;
         }
 
         SyncPen();
