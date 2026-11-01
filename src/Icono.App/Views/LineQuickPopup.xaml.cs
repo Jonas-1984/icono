@@ -24,7 +24,6 @@ public partial class LineQuickPopup : UserControl
         InitializeComponent();
         StartHeadComboBox.ItemsSource = PropertiesPanelView.ArrowHeadOptions;
         EndHeadComboBox.ItemsSource = PropertiesPanelView.ArrowHeadOptions;
-        BuildSwatches();
     }
 
     /// <summary>Shows the current values of <paramref name="shape"/> in the controls.</summary>
@@ -103,34 +102,6 @@ public partial class LineQuickPopup : UserControl
     }
 
     private const double PxPerCm = 96.0 / 2.54;
-
-    private static readonly uint[] SwatchColors =
-        [0x1B2332, 0x6B7280, 0xE54B4B, 0xF39C12, 0xF4D03F, 0x2ECC71, 0x3498DB, 0x9B59B6, 0xFFFFFF];
-
-    private void BuildSwatches()
-    {
-        foreach (var rgb in SwatchColors)
-        {
-            var color = Color.FromRgb((byte)(rgb >> 16), (byte)(rgb >> 8), (byte)rgb);
-            var swatch = new Button
-            {
-                Width = 18, Height = 18, Margin = new Thickness(2, 0, 2, 4), Padding = new Thickness(0), Tag = color,
-                Background = new SolidColorBrush(color), BorderThickness = new Thickness(1), ToolTip = $"#{rgb:X6}",
-                BorderBrush = new SolidColorBrush(Color.FromArgb(0x80, 0x80, 0x80, 0x80)),
-            };
-            System.Windows.Automation.AutomationProperties.SetName(swatch, $"Line colour #{rgb:X6}");
-            swatch.Click += Swatch_OnClick;
-            SwatchPanel.Children.Add(swatch);
-        }
-    }
-
-    private void Swatch_OnClick(object sender, RoutedEventArgs e)
-    {
-        if (sender is Button { Tag: Color color })
-        {
-            Edit(s => s.BorderColor = new ArgbColor(0xFF, color.R, color.G, color.B));
-        }
-    }
 
     private void DashedCheckBox_OnClick(object sender, RoutedEventArgs e)
     {

@@ -69,10 +69,8 @@
                            Foreground="{DynamicResource MutedTextBrush}" />
             </Grid>
 
-            <!-- colour of the line and dashed stroke -->
-            <TextBlock Text="Colour" FontWeight="SemiBold" FontSize="12" Margin="2,12,0,6" Foreground="{DynamicResource ForegroundTextBrush}" />
-            <WrapPanel x:Name="SwatchPanel" />
-            <CheckBox x:Name="DashedCheckBox" Content="Dashed" Margin="2,8,0,0" FontSize="11" Foreground="{DynamicResource ForegroundTextBrush}"
+            <!-- dashed stroke -->
+            <CheckBox x:Name="DashedCheckBox" Content="Dashed" Margin="2,12,0,0" FontSize="11" Foreground="{DynamicResource ForegroundTextBrush}"
                       Click="DashedCheckBox_OnClick" />
 
             <TextBlock x:Name="LineEndTitle" Text="Line End" FontWeight="SemiBold" FontSize="12" Margin="2,12,0,6"
