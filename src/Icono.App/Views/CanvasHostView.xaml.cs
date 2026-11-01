@@ -1249,7 +1249,7 @@ public partial class CanvasHostView : UserControl
         }
 
         var shape = _context.SelectedShapes[0];
-        if (!ShapeGeometryFactory.IsLineFamily(shape.Kind) || IsLocked(shape))
+        if (!ShapeGeometryFactory.HasLineEnds(shape.Kind) || IsLocked(shape))
         {
             HideLineQuickPopup();
             return;

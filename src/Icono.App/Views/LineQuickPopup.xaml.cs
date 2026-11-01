@@ -5,6 +5,7 @@ using System.Windows.Input;
 using Icono.App.State;
 using Icono.App.State.Undo;
 using Icono.Core;
+using Icono.Rendering;
 
 namespace Icono.App.Views;
 
@@ -28,6 +29,11 @@ public partial class LineQuickPopup : UserControl
     {
         _context = context;
         _shape = shape;
+
+        // a loop arrow has no form to choose (it is an arc): only its two ends
+        var isLoop = ShapeGeometryFactory.IsLoopArrow(shape.Kind);
+        FormRow.Visibility = isLoop ? Visibility.Collapsed : Visibility.Visible;
+        LineEndTitle.Margin = new Thickness(2, isLoop ? 0 : 12, 0, 6);
 
         _syncing = true;
         try

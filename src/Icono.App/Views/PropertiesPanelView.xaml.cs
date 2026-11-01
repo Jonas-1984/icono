@@ -1933,7 +1933,8 @@ public partial class PropertiesPanelView : UserControl
 
     private void RefreshLineControls(Shape shape)
     {
-        LineCard.Visibility = IsLineFamily(shape) ? Visibility.Visible : Visibility.Collapsed;
+        LineCard.Visibility = ShapeGeometryFactory.HasLineEnds(shape.Kind) ? Visibility.Visible : Visibility.Collapsed;
+        LineCornersPanel.Visibility = IsLineFamily(shape) ? Visibility.Visible : Visibility.Collapsed;
 
         var thicknessCm = shape.BorderThickness / LinePxPerCm;
         var radiusCm = shape.CornerRadius / LinePxPerCm;

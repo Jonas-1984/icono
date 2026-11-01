@@ -895,6 +895,7 @@
                                            Foreground="{DynamicResource MutedTextBrush}" FontSize="11" Width="18" />
                             </Grid>
 
+                            <StackPanel x:Name="LineCornersPanel">
                             <TextBlock Text="CORNERS" Style="{StaticResource PanelLabelTextStyle}" />
                             <StackPanel Orientation="Horizontal" Margin="6,0,6,6">
                                 <RadioButton x:Name="LineCornerSharpRadio" GroupName="LineCorners" Content="Sharp" IsChecked="True"
@@ -921,6 +922,7 @@
                                 <TextBlock Grid.Column="2" Text="cm" VerticalAlignment="Center"
                                            Foreground="{DynamicResource MutedTextBrush}" FontSize="11" />
                             </Grid>
+                            </StackPanel>
                         </StackPanel>
                     </StackPanel>
                 </Border>

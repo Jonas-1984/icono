@@ -60,6 +60,9 @@ public static class ShapeGeometryFactory
     /// like the ends of an Arrow.</summary>
     public static bool IsLoopArrow(ShapeKind kind) => kind is ShapeKind.LoopArrowClockwise or ShapeKind.LoopArrowCounterClockwise;
 
+    /// <summary>True for the shapes that carry line ends (heads) the user can choose: the lines and the loop arrows.</summary>
+    public static bool HasLineEnds(ShapeKind kind) => IsLineFamily(kind) || IsLoopArrow(kind);
+
     /// <summary>Puts the line ends on the two ends of the arc, pointing along it (the head keeps its own size, like on every line).</summary>
     private static void AddLoopHeads(SKPath arc, ArrowHeadKind start, ArrowHeadKind end)
     {
