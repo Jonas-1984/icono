@@ -55,6 +55,8 @@ public sealed class Shape : ObservableObject
     private TextPlacement _textPlacement;
     private IReadOnlyList<double>? _pointRadii;
     private double? _loopSweep;
+    private double? _lineHeadSize;
+    private bool _sketch;
     private ArgbColor? _textColor;
     private double _wallThickness = 16;
     private bool _wallClosed;
@@ -212,6 +214,12 @@ public sealed class Shape : ObservableObject
     /// <summary>How far round the circle a loop arrow goes, in degrees (5 to 359.5). Null = the classic arc. The start stays where it is and the end moves, so
     /// this is the length of the line itself.</summary>
     public double? LoopSweep { get => _loopSweep; set => SetField(ref _loopSweep, value); }
+
+    /// <summary>The size of the line ends in px (null = the usual size of the chosen head). Applies to both ends.</summary>
+    public double? LineHeadSize { get => _lineHeadSize; set => SetField(ref _lineHeadSize, value); }
+
+    /// <summary>Drawn like by hand: a wobbling pen line that is thinner at its start, or a doubled, uneven outline for a closed shape.</summary>
+    public bool Sketch { get => _sketch; set => SetField(ref _sketch, value); }
 
     /// <summary>Dashed stroke, only meaningful for <see cref="Points"/>-based kinds.</summary>
     public bool Dashed { get => _dashed; set => SetField(ref _dashed, value); }

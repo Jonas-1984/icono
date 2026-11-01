@@ -62,6 +62,22 @@ public static class ShapeGeometryFactory
 
     private const float LoopRadius = 8f;
 
+    /// <summary>The usual size in px of a line end (its length along the line, a dot or a square across): what the Head size box shows when nothing was typed.</summary>
+    public static double NominalHeadSize(ArrowHeadKind kind) => kind switch
+    {
+        ArrowHeadKind.Open or ArrowHeadKind.Half => 7,
+        ArrowHeadKind.Filled or ArrowHeadKind.Bar => 8,
+        ArrowHeadKind.Thin => 10,
+        ArrowHeadKind.Circle => 6.4,
+        ArrowHeadKind.Diamond => 7.2,
+        ArrowHeadKind.Square => 6,
+        _ => 0,
+    };
+
+    /// <summary>How much bigger or smaller than usual a head of this kind is drawn for the typed size.</summary>
+    private static float HeadScale(ArrowHeadKind kind, double? size) =>
+        size is { } typed && typed > 0 && NominalHeadSize(kind) > 0 ? (float)(typed / NominalHeadSize(kind)) : 1f;
+
     /// <summary>The circle of a loop arrow in its 24 x 24 template: centre, and the angle (degrees, y down) the arc starts at. The classic arc runs from (17, 6)
     /// to (7, 18); a counter-clockwise loop is the mirror image.</summary>
     private static (float CentreX, float CentreY, float Start, double Classic) LoopCircle()
@@ -106,7 +122,7 @@ public static class ShapeGeometryFactory
     public static bool HasLineEnds(ShapeKind kind) => IsLineFamily(kind) || IsLoopArrow(kind);
 
     /// <summary>Puts the line ends on the two ends of the arc, pointing along it (the head keeps its own size, like on every line).</summary>
-    private static void AddLoopHeads(SKPath arc, ArrowHeadKind start, ArrowHeadKind end)
+    private static void AddLoopHeads(SKPath arc, ArrowHeadKind start, ArrowHeadKind end, double? headSize)
     {
         if (start == ArrowHeadKind.None && end == ArrowHeadKind.None)
         {
@@ -122,8 +138,8 @@ public static class ShapeGeometryFactory
         }
 
         const float lead = 10f;
-        AddHead(arc, new SKPoint(startPoint.X + startTangent.X * lead, startPoint.Y + startTangent.Y * lead), startPoint, start);
-        AddHead(arc, new SKPoint(endPoint.X - endTangent.X * lead, endPoint.Y - endTangent.Y * lead), endPoint, end);
+        AddHead(arc, new SKPoint(startPoint.X + startTangent.X * lead, startPoint.Y + startTangent.Y * lead), startPoint, start, HeadScale(start, headSize));
+        AddHead(arc, new SKPoint(endPoint.X - endTangent.X * lead, endPoint.Y - endTangent.Y * lead), endPoint, end, HeadScale(end, headSize));
     }
 
     /// <summary>True when the corners of the shape can be curved with <see cref="Shape.CornerRadius"/> (the Curve tool): a polyline, polygon or
@@ -379,7 +395,7 @@ public static class ShapeGeometryFactory
         {
             var pointsPath = BuildFromPoints(
                 shape.Kind, points, shape.X, shape.Y, shape.PathRoutingStyle, shape.CornerRadius,
-                shape.LineStartHead, shape.LineEndHead, shape.PointRadii);
+                shape.LineStartHead, shape.LineEndHead, shape.PointRadii, shape.LineHeadSize);
 
             if (shape.Rotation != 0)
             {
@@ -413,7 +429,7 @@ public static class ShapeGeometryFactory
 
         if (IsLoopArrow(shape.Kind))
         {
-            AddLoopHeads(path, shape.LineStartHead, shape.LineEndHead);
+            AddLoopHeads(path, shape.LineStartHead, shape.LineEndHead, shape.LineHeadSize);
         }
 
         // Rounding runs after scale/offset (in real output px, not the 24x24 local template) so a
@@ -1610,7 +1626,7 @@ public static class ShapeGeometryFactory
     private static SKPath BuildFromPoints(
         ShapeKind kind, IReadOnlyList<CorePoint> points, double originX, double originY,
         PathRoutingStyle routingStyle, double cornerRadius = 0,
-        ArrowHeadKind startHead = ArrowHeadKind.None, ArrowHeadKind endHead = ArrowHeadKind.None, IReadOnlyList<double>? pointRadii = null)
+        ArrowHeadKind startHead = ArrowHeadKind.None, ArrowHeadKind endHead = ArrowHeadKind.None, IReadOnlyList<double>? pointRadii = null, double? headSize = null)
     {
         var path = new SKPath();
         var pts = new SKPoint[points.Count];
@@ -1634,8 +1650,8 @@ public static class ShapeGeometryFactory
 
             if (pts.Length >= 2)
             {
-                AddHead(path, pts[1], pts[0], startHead);
-                AddHead(path, pts[^2], pts[^1], endHead);
+                AddHead(path, pts[1], pts[0], startHead, HeadScale(startHead, headSize));
+                AddHead(path, pts[^2], pts[^1], endHead, HeadScale(endHead, headSize));
             }
 
             return path;
@@ -1659,8 +1675,8 @@ public static class ShapeGeometryFactory
 
             if (routed.Count >= 2)
             {
-                AddHead(path, routed[1], routed[0], startHead);
-                AddHead(path, routed[^2], routed[^1], endHead);
+                AddHead(path, routed[1], routed[0], startHead, HeadScale(startHead, headSize));
+                AddHead(path, routed[^2], routed[^1], endHead, HeadScale(endHead, headSize));
             }
 
             return path;
@@ -1684,8 +1700,8 @@ public static class ShapeGeometryFactory
 
         if (drawnPoints.Count >= 2)
         {
-            AddHead(path, drawnPoints[1], drawnPoints[0], startHead);
-            AddHead(path, drawnPoints[^2], drawnPoints[^1], endHead);
+            AddHead(path, drawnPoints[1], drawnPoints[0], startHead, HeadScale(startHead, headSize));
+            AddHead(path, drawnPoints[^2], drawnPoints[^1], endHead, HeadScale(endHead, headSize));
         }
 
         return path;
@@ -1759,7 +1775,7 @@ public static class ShapeGeometryFactory
     /// are left as an UNCLOSED sub-path so they only get stroked, matching the line itself; the dot
     /// markers (Circle/Diamond/Square) are closed sub-paths, which <see cref="ExtractClosedContoursOnly"/>
     /// picks up automatically — no extra plumbing needed for them to render solid-filled.</summary>
-    private static void AddHead(SKPath path, SKPoint from, SKPoint to, ArrowHeadKind kind)
+    private static void AddHead(SKPath path, SKPoint from, SKPoint to, ArrowHeadKind kind, float scale = 1f)
     {
         if (kind == ArrowHeadKind.None)
         {
@@ -1782,26 +1798,26 @@ public static class ShapeGeometryFactory
         switch (kind)
         {
             case ArrowHeadKind.Open:
-                AddWings(path, to, ux, uy, 7f, 25f, close: false, singleWingOnly: false);
+                AddWings(path, to, ux, uy, 7f * scale, 25f, close: false, singleWingOnly: false);
                 break;
             case ArrowHeadKind.Filled:
-                AddWings(path, to, ux, uy, 8f, 22f, close: true, singleWingOnly: false);
+                AddWings(path, to, ux, uy, 8f * scale, 22f, close: true, singleWingOnly: false);
                 break;
             case ArrowHeadKind.Thin:
-                AddWings(path, to, ux, uy, 10f, 12f, close: false, singleWingOnly: false);
+                AddWings(path, to, ux, uy, 10f * scale, 12f, close: false, singleWingOnly: false);
                 break;
             case ArrowHeadKind.Half:
-                AddWings(path, to, ux, uy, 7f, 25f, close: false, singleWingOnly: true);
+                AddWings(path, to, ux, uy, 7f * scale, 25f, close: false, singleWingOnly: true);
                 break;
             case ArrowHeadKind.Circle:
             {
-                const float radius = 3.2f;
+                var radius = 3.2f * scale;
                 path.AddCircle(to.X - ux * radius, to.Y - uy * radius, radius);
                 break;
             }
             case ArrowHeadKind.Diamond:
             {
-                const float half = 3.6f;
+                var half = 3.6f * scale;
                 var cx = to.X - ux * half;
                 var cy = to.Y - uy * half;
                 path.MoveTo(cx + ux * half, cy + uy * half);
@@ -1813,7 +1829,7 @@ public static class ShapeGeometryFactory
             }
             case ArrowHeadKind.Square:
             {
-                const float half = 3f;
+                var half = 3f * scale;
                 var cx = to.X - ux * half;
                 var cy = to.Y - uy * half;
                 path.MoveTo(cx + ux * half + px * half, cy + uy * half + py * half);
@@ -1824,7 +1840,7 @@ public static class ShapeGeometryFactory
                 break;
             }
             case ArrowHeadKind.Bar:
-                const float barHalf = 4f;
+                var barHalf = 4f * scale;
                 path.MoveTo(to.X + px * barHalf, to.Y + py * barHalf);
                 path.LineTo(to.X - px * barHalf, to.Y - py * barHalf);
                 break;

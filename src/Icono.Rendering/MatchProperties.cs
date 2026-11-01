@@ -111,6 +111,8 @@ public static class MatchProperties
         if (aspects.HasFlag(MatchAspects.Line))
         {
             target.Dashed = source.Dashed;
+            target.LineHeadSize = source.LineHeadSize;
+            target.Sketch = source.Sketch;
             target.LineStartHead = source.LineStartHead;
             target.LineEndHead = source.LineEndHead;
         }

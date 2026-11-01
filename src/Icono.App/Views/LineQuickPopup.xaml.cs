@@ -36,15 +36,15 @@ public partial class LineQuickPopup : UserControl
         var isLoop = ShapeGeometryFactory.IsLoopArrow(shape.Kind);
         FormRow.Visibility = isLoop ? Visibility.Collapsed : Visibility.Visible;
         var isLine = ShapeGeometryFactory.IsLineFamily(shape.Kind);
-        RadiusBox.Visibility = RadiusLabel.Visibility = isLine ? Visibility.Visible : Visibility.Collapsed;
-        NumbersGrid.Margin = new Thickness(0, isLoop ? 0 : 12, 0, 0);
-        LineEndTitle.Margin = new Thickness(2, isLoop ? 0 : 12, 0, 6);
+        RadiusItem.Visibility = isLine ? Visibility.Visible : Visibility.Collapsed;
+        NumbersGrid.Margin = new Thickness(0, isLoop ? 0 : 8, 0, 0);
 
         _syncing = true;
         try
         {
             RefreshNumbers(shape);
             DashedCheckBox.IsChecked = shape.Dashed;
+            SketchCheckBox.IsChecked = shape.Sketch;
             StartHeadComboBox.SelectedItem = PropertiesPanelView.ArrowHeadOptions.First(o => o.Value == shape.LineStartHead);
             EndHeadComboBox.SelectedItem = PropertiesPanelView.ArrowHeadOptions.First(o => o.Value == shape.LineEndHead);
 
@@ -103,6 +103,12 @@ public partial class LineQuickPopup : UserControl
 
     private const double PxPerCm = 96.0 / 2.54;
 
+    private void SketchCheckBox_OnClick(object sender, RoutedEventArgs e)
+    {
+        var sketch = SketchCheckBox.IsChecked == true;
+        Edit(s => s.Sketch = sketch);
+    }
+
     private void DashedCheckBox_OnClick(object sender, RoutedEventArgs e)
     {
         var dashed = DashedCheckBox.IsChecked == true;
@@ -116,6 +122,8 @@ public partial class LineQuickPopup : UserControl
         ThicknessBox.Text = Format(shape.BorderThickness / PxPerCm);
         LengthBox.Text = Format(LineMetrics.Length(shape) * scale / PxPerCm);
         RadiusBox.Text = Format(shape.CornerRadius / PxPerCm);
+        var headKind = shape.LineEndHead != ArrowHeadKind.None ? shape.LineEndHead : shape.LineStartHead;
+        HeadBox.Text = Format(shape.LineHeadSize ?? ShapeGeometryFactory.NominalHeadSize(headKind));
         DepthBox.Text = shape.Depth3D.ToString("0.##", CultureInfo.InvariantCulture);
     }
 
@@ -165,6 +173,13 @@ public partial class LineQuickPopup : UserControl
                 }
 
                 break;
+            case "Head":
+                if (value > 0 && value <= 200 && Math.Abs(value - (shape.LineHeadSize ?? -1)) > 1e-6)
+                {
+                    Edit(s => s.LineHeadSize = value);
+                }
+
+                break;
             case "Radius":
                 var radius = Math.Min(value, 20) * PxPerCm;
                 if (Math.Abs(radius - shape.CornerRadius) > 1e-6)
@@ -207,6 +222,7 @@ public partial class LineQuickPopup : UserControl
         {
             RefreshNumbers(_shape);
             DashedCheckBox.IsChecked = _shape.Dashed;
+            SketchCheckBox.IsChecked = _shape.Sketch;
         }
         finally
         {

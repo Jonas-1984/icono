@@ -39,7 +39,7 @@ public static class ConnectionRouter
 
     private sealed class BoxCache
     {
-        public (ShapeKind, double, double, double, double, double, bool, bool, double, string?, double?) Key;
+        public (ShapeKind, double, double, double, double, double, bool, bool, double, string?, double?, double?) Key;
         public (double Left, double Top, double Width, double Height) Box;
     }
 
@@ -49,7 +49,7 @@ public static class ConnectionRouter
     /// X/Y/Width/Height frame, and a line must touch what you see), unrotated. Cached until the shape changes.</summary>
     public static (double Left, double Top, double Width, double Height) GetBox(Shape shape)
     {
-        var key = (shape.Kind, shape.X, shape.Y, shape.Width, shape.Height, shape.CornerRadius, shape.FlipHorizontal, shape.FlipVertical, shape.Depth3D, shape.CustomPathData, shape.LoopSweep);
+        var key = (shape.Kind, shape.X, shape.Y, shape.Width, shape.Height, shape.CornerRadius, shape.FlipHorizontal, shape.FlipVertical, shape.Depth3D, shape.CustomPathData, shape.LoopSweep, shape.LineHeadSize);
         var cache = Boxes.GetOrCreateValue(shape);
         if (cache.Key == key && cache.Box.Width > 0)
         {

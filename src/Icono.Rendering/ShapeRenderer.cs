@@ -164,12 +164,19 @@ public static class ShapeRenderer
                 strokePaint.ImageFilter = SKImageFilter.CreateBlur((float)effectiveBlur, (float)effectiveBlur);
             }
 
-            if (shape.Dashed)
+            if (shape.Sketch)
             {
-                strokePaint.PathEffect = SKPathEffect.CreateDash([6, 4], 0);
+                SketchStroke.Draw(canvas, path, strokePaint);
             }
+            else
+            {
+                if (shape.Dashed)
+                {
+                    strokePaint.PathEffect = SKPathEffect.CreateDash([6, 4], 0);
+                }
 
-            canvas.DrawPath(path, strokePaint);
+                canvas.DrawPath(path, strokePaint);
+            }
         }
 
         // the dots of a cooker, the E of an appliance: solid in the border colour
