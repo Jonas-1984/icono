@@ -1,4 +1,4 @@
-﻿icono - Test terms (test version 0.1.0-test.1)
+﻿icono - Test terms (test version 0.1.0-test.2)
 ==============================================
 
 Please read these terms. By installing and using icono you agree to them.
@@ -45,4 +45,4 @@ Please read these terms. By installing and using icono you agree to them.
    the others remain valid.
 
 Contact: Jonas Shojaei, www.bitbins.de, info@bitbins.de
-Version of these terms: October 2026
+Version of these terms: November 2026

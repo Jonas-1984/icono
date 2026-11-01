@@ -39,4 +39,4 @@ In short: icono does not collect, send or share any data about you. The program 
    You have the right of access, rectification, erasure, restriction of processing, data portability and objection, and the right to lodge
    a complaint with a data protection supervisory authority. Write to info@bitbins.de.
 
-Version: October 2026. If the behaviour of the program changes (for example an update check), this notice will be adjusted beforehand.
+Version: November 2026. If the behaviour of the program changes (for example an update check), this notice will be adjusted beforehand.

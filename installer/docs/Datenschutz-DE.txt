@@ -40,4 +40,4 @@ Kurz gesagt: icono sammelt, sendet und teilt keine Daten über Sie. Das Programm
    Sie haben das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch sowie das Recht
    auf Beschwerde bei einer Datenschutz-Aufsichtsbehörde. Schreiben Sie dazu an info@bitbins.de.
 
-Stand: Oktober 2026. Ändert sich das Verhalten des Programms (zum Beispiel durch eine Update-Prüfung), wird dieser Hinweis vorher angepasst.
+Stand: November 2026. Ändert sich das Verhalten des Programms (zum Beispiel durch eine Update-Prüfung), wird dieser Hinweis vorher angepasst.

@@ -3,7 +3,7 @@
 Icon and floor plan editor for Windows (WPF, .NET 8, SkiaSharp). Draw walls with typed lengths, place doors, windows and kitchen objects from the
 OBJECTS catalogue, add dimensions, export to SVG / PNG / ICO.
 
-*Status: test version `0.1.0-test.1` - not final, expect errors.*
+*Status: test version `0.1.0-test.2` - not final, expect errors.*
 
 ## Privacy
 
@@ -28,7 +28,7 @@ powershell -ExecutionPolicy Bypass -File installer\build-installer.ps1
 
 This runs the tests, publishes a self-contained Windows x64 build and writes `installer\Output\ICONO-Setup-<version>.exe` together with `SHA256.txt`.
 The installer is per user by default (no administrator rights), shows the test terms and the privacy notice, and offers to delete the local data
-when uninstalling. Release builds leave out the Sinks catalogue until the origin of its drawings is documented (see `src/Icono.Rendering/Icono.Rendering.csproj`).
+when uninstalling. Release builds leave out the catalogues whose drawings are kept on the author's PC only (`src/Icono.Rendering/UnitCatalog.Local.*`, not in the repository); `-IncludeLocalCatalogues` builds a separate `-full` installer with them.
 
 The version is set in `Directory.Build.props` and `installer/icono.iss` (keep both in step).
 

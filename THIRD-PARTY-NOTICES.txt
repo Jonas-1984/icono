@@ -98,14 +98,37 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 THE POSSIBILITY OF SUCH DAMAGE.
 
 
+The native Skia library (libSkiaSharp.dll) contains these further components, as listed in the third_party directory of Skia
+(https://skia.googlesource.com/skia/+/refs/heads/main/third_party/). Each is used under its own permissive licence:
+
+  * libpng - libpng licence. Copyright (c) 1995-2024 The PNG Reference Library Authors; Copyright (c) 2018-2024 Cosmin Truta;
+    Copyright (c) 1998-2018 Glenn Randers-Pehrson; Copyright (c) 1996-1997 Andreas Dilger; Copyright (c) 1995-1996 Guy Eric Schalnat,
+    Group 42, Inc.
+  * zlib - zlib licence. Copyright (c) 1995-2024 Jean-loup Gailly and Mark Adler.
+  * libjpeg-turbo - BSD 3-Clause and IJG licence. Copyright (C) 2009-2024 D. R. Commander and others; Copyright (C) 1991-2020 Thomas G.
+    Lane, Guido Vollbeding. This software is based in part on the work of the Independent JPEG Group.
+  * libwebp - BSD 3-Clause licence. Copyright (c) 2010, Google Inc. All rights reserved.
+  * Expat - MIT licence. Copyright (c) 1998-2000 Thai Open Source Software Center Ltd and Clark Cooper; Copyright (c) 2001-2022 Expat
+    maintainers.
+  * Wuffs - Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Copyright 2017 The Wuffs Authors.
+  * ICU (International Components for Unicode) - Unicode License. Copyright (c) 1991-2024 Unicode, Inc. All rights reserved.
+
+The full texts of these licences are in the source trees named above. If a component is missing here or wrongly listed, please tell
+info@bitbins.de.
+
+
 3. .NET
 -------
 Source: https://github.com/dotnet/runtime
 
-The .NET runtime and libraries are licensed under the MIT License.
+The .NET runtime and libraries (including Windows Presentation Foundation) are licensed under the MIT License.
 Copyright (c) .NET Foundation and Contributors
 
 (The MIT license text is the same as shown above.)
+
+The runtime is part of the installation (icono needs no separate .NET installation). The notices of the components that .NET itself
+contains are in the file THIRD-PARTY-NOTICES-DOTNET.txt in the installation folder (a copy of the ThirdPartyNotices.txt of the .NET
+release that is shipped).
 
 
 4. Fonts

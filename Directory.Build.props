@@ -7,7 +7,7 @@
     <Authors>Jonas Shojaei</Authors>
     <Copyright>Copyright (c) 2026 Jonas Shojaei</Copyright>
     <Version>0.1.0</Version>
-    <InformationalVersion>0.1.0-test.1</InformationalVersion>
+    <InformationalVersion>0.1.0-test.2</InformationalVersion>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
 

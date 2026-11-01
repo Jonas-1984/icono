@@ -21,4 +21,9 @@
     <DefineConstants>$(DefineConstants);EXCLUDE_UNVERIFIED_CATALOGUES</DefineConstants>
   </PropertyGroup>
 
+  <!-- ... and their drawing data is not even compiled in, so it cannot be read out of the DLL of such a build. -->
+  <ItemGroup Condition="'$(Configuration)' == 'Release' And '$(ExcludeUnverifiedCatalogues)' != 'false'">
+    <Compile Remove="UnitCatalog.Local.cs;UnitCatalog.Local.*.Generated.cs" />
+  </ItemGroup>
+
 </Project>

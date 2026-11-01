@@ -13,8 +13,11 @@ public partial class AboutDialog : Window
     {
         InitializeComponent();
 
-        var version = Assembly.GetExecutingAssembly().GetName().Version;
-        VersionText.Text = version is null ? "—" : $"{version.Major}.{version.Minor}.{version.Build}";
+        // the full version with its test number (0.1.0-test.2), so a tester can say exactly which build they have
+        var assembly = Assembly.GetExecutingAssembly();
+        var version = assembly.GetName().Version;
+        var full = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+        VersionText.Text = !string.IsNullOrWhiteSpace(full) ? full : version is null ? "—" : $"{version.Major}.{version.Minor}.{version.Build}";
         PlatformText.Text = $"{RuntimeInformation.FrameworkDescription} · WPF + SkiaSharp";
     }
 

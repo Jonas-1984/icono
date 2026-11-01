@@ -3,7 +3,7 @@
 
 #define AppName "icono"
 #define AppVersion "0.1.0"
-#define AppVersionText "0.1.0-test.1"
+#define AppVersionText "0.1.0-test.2"
 #define Publisher "Jonas Shojaei (bitbins.de)"
 #define PublishDir "publish"
 #ifndef Suffix
@@ -65,6 +65,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Files]
 Source: "{#PublishDir}\*"; DestDir: "{app}"; Excludes: "*.pdb"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "docs\README.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "docs\THIRD-PARTY-NOTICES-DOTNET.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "docs\Testbedingungen-DE.txt"; DestDir: "{app}"; DestName: "Testbedingungen.txt"; Flags: ignoreversion
 Source: "docs\Terms-EN.txt"; DestDir: "{app}"; DestName: "Terms.txt"; Flags: ignoreversion
 Source: "docs\Datenschutz-DE.txt"; DestDir: "{app}"; DestName: "Datenschutz.txt"; Flags: ignoreversion

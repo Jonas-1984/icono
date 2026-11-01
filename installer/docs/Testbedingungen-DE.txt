@@ -1,4 +1,4 @@
-﻿icono - Testbedingungen (Testversion 0.1.0-test.1)
+﻿icono - Testbedingungen (Testversion 0.1.0-test.2)
 ==================================================
 
 Bitte lesen Sie diese Bedingungen. Mit der Installation und Nutzung von icono erklären Sie sich damit einverstanden.
@@ -49,4 +49,4 @@ Bitte lesen Sie diese Bedingungen. Mit der Installation und Nutzung von icono er
    Bestimmung unwirksam sein, bleiben die übrigen wirksam.
 
 Kontakt: Jonas Shojaei, www.bitbins.de, info@bitbins.de
-Stand: Oktober 2026
+Stand: November 2026
