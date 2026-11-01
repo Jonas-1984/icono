@@ -1306,6 +1306,7 @@ public partial class CanvasHostView : UserControl
     {
         UpdateCanvasFrameSize();
         UpdateRulers();
+        LineQuickPopupControl.RefreshValues();
         SkiaCanvas.InvalidateVisual();
     }
 

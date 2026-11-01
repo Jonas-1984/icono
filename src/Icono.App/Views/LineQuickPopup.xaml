@@ -9,7 +9,7 @@
     <Border Background="{DynamicResource PopupSurfaceBrush}" CornerRadius="7" Effect="{DynamicResource RaisedDarkShadow}" />
     <Border Background="{DynamicResource PopupSurfaceBrush}" BorderBrush="{DynamicResource GlassEdgeBrush}"
             BorderThickness="1" CornerRadius="7" Padding="12,10,12,12" SnapsToDevicePixels="True">
-        <StackPanel Width="188">
+        <StackPanel Width="232">
             <UniformGrid x:Name="FormRow" Rows="1" Columns="4" HorizontalAlignment="Center">
                 <ToggleButton x:Name="StraightToggle" Tag="Straight" ToolTip="Straight line" Click="StyleToggle_OnClick"
                               Style="{StaticResource IconToggleButtonStyle}" Margin="0,0,6,0">
@@ -33,6 +33,47 @@
                           StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
                 </ToggleButton>
             </UniformGrid>
+
+            <!-- the numbers: thickness and length of the line, corner radius and 3D depth (the same settings as the right panel) -->
+            <Grid x:Name="NumbersGrid" Margin="0,12,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="8" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <TextBox x:Name="ThicknessBox" Grid.Row="0" Grid.Column="0" Height="26" TextAlignment="Center" Tag="Thickness"
+                         AutomationProperties.Name="Line thickness in cm" ToolTip="Thickness of the line in cm on the page. Type a number and press Enter."
+                         LostFocus="NumberBox_OnLostFocus" KeyDown="NumberBox_OnKeyDown" />
+                <TextBox x:Name="LengthBox" Grid.Row="0" Grid.Column="2" Height="26" TextAlignment="Center" Tag="Length"
+                         AutomationProperties.Name="Line length in cm" ToolTip="Length of the line in cm (real length at the drawing scale). Type a number and press Enter."
+                         LostFocus="NumberBox_OnLostFocus" KeyDown="NumberBox_OnKeyDown" />
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Thickness (cm)" FontSize="9" HorizontalAlignment="Center" Margin="0,3,0,0"
+                           Foreground="{DynamicResource MutedTextBrush}" />
+                <TextBlock Grid.Row="1" Grid.Column="2" Text="Length (cm)" FontSize="9" HorizontalAlignment="Center" Margin="0,3,0,0"
+                           Foreground="{DynamicResource MutedTextBrush}" />
+                <TextBox x:Name="RadiusBox" Grid.Row="2" Grid.Column="0" Height="26" Margin="0,8,0,0" TextAlignment="Center" Tag="Radius"
+                         AutomationProperties.Name="Corner radius in cm" ToolTip="Radius of the corners in cm (0 = sharp). Type a number and press Enter."
+                         LostFocus="NumberBox_OnLostFocus" KeyDown="NumberBox_OnKeyDown" />
+                <TextBox x:Name="DepthBox" Grid.Row="2" Grid.Column="2" Height="26" Margin="0,8,0,0" TextAlignment="Center" Tag="Depth"
+                         AutomationProperties.Name="3D depth in px" ToolTip="3D depth in px (0 = flat). Type a number and press Enter."
+                         LostFocus="NumberBox_OnLostFocus" KeyDown="NumberBox_OnKeyDown" />
+                <TextBlock x:Name="RadiusLabel" Grid.Row="3" Grid.Column="0" Text="Corner radius (cm)" FontSize="9" HorizontalAlignment="Center" Margin="0,3,0,0"
+                           Foreground="{DynamicResource MutedTextBrush}" />
+                <TextBlock x:Name="DepthLabel" Grid.Row="3" Grid.Column="2" Text="3D depth (px)" FontSize="9" HorizontalAlignment="Center" Margin="0,3,0,0"
+                           Foreground="{DynamicResource MutedTextBrush}" />
+            </Grid>
+
+            <!-- colour of the line and dashed stroke -->
+            <TextBlock Text="Colour" FontWeight="SemiBold" FontSize="12" Margin="2,12,0,6" Foreground="{DynamicResource ForegroundTextBrush}" />
+            <WrapPanel x:Name="SwatchPanel" />
+            <CheckBox x:Name="DashedCheckBox" Content="Dashed" Margin="2,8,0,0" FontSize="11" Foreground="{DynamicResource ForegroundTextBrush}"
+                      Click="DashedCheckBox_OnClick" />
 
             <TextBlock x:Name="LineEndTitle" Text="Line End" FontWeight="SemiBold" FontSize="12" Margin="2,12,0,6"
                        Foreground="{DynamicResource ForegroundTextBrush}" />
