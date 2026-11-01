@@ -115,32 +115,6 @@ public static class FreehandBuilder
 
     /// <summary>True when the point lies on the drawn stroke (within half its width and <paramref name="tolerance"/>): a stroke is picked where it is,
     /// not anywhere in its frame, so notes written over a plan do not catch the clicks meant for the plan.</summary>
-    public static bool HitTest(Shape shape, double x, double y, double tolerance)
-    {
-        using var path = ShapeGeometryFactory.Build(shape);
-        using var measure = new SKPathMeasure(path, false);
-        var reach = (float)(shape.BorderThickness / 2 + tolerance);
-        var point = new SKPoint((float)x, (float)y);
-        do
-        {
-            var length = measure.Length;
-            var step = Math.Max(1.5f, reach / 2);
-            for (var s = 0f; ; s += step)
-            {
-                measure.GetPosition(Math.Min(s, length), out var position);
-                if (Geo.Distance(position, point) <= reach)
-                {
-                    return true;
-                }
-
-                if (s >= length)
-                {
-                    break;
-                }
-            }
-        }
-        while (measure.NextContour());
-
-        return false;
-    }
+    public static bool HitTest(Shape shape, double x, double y, double tolerance) =>
+        OutlineGeometry.NearestOnOutline(shape, new SKPoint((float)x, (float)y)) is { } near && near.Distance <= shape.BorderThickness / 2 + tolerance;
 }

@@ -29,6 +29,11 @@ public partial class ImportSvgDialog : ThemedDialogWindow
 
         try
         {
+            if (new FileInfo(dialog.FileName).Length > Icono.Rendering.SvgImporter.MaxFileBytes)
+            {
+                throw new IOException("The SVG file is too big.");
+            }
+
             CodeTextBox.Text = File.ReadAllText(dialog.FileName);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)

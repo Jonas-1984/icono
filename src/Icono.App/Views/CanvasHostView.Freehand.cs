@@ -24,6 +24,14 @@ public partial class CanvasHostView
         Stylus.SetIsTouchFeedbackEnabled(this, false);
     }
 
+    /// <summary>Forgets the stroke that is being drawn and lets go of the mouse.</summary>
+    private void ResetFreehand()
+    {
+        _freehandPoints = null;
+        _freehandShape = null;
+        ReleaseMouseCapture();
+    }
+
     private void BeginFreehand(Point point)
     {
         if (_context is null)
@@ -78,30 +86,26 @@ public partial class CanvasHostView
     {
         if (_context is null || _freehandPoints is null)
         {
-            _freehandPoints = null;
             return;
         }
 
         var points = _freehandPoints;
-        _freehandPoints = null;
-        _freehandShape = null;
-        ReleaseMouseCapture();
+        ResetFreehand();
 
-        var shape = FreehandBuilder.CreateShape(points, _context.PenColor, _context.PenWidth, (float)Math.Max(0.2, 0.8 / Zoom));
         var layer = _context.SelectedLayer is { Locked: false } selected ? selected : _context.Document.Layers.FirstOrDefault(l => !l.Locked);
-        if (shape is null || layer is null)
+        if (layer is null)
         {
-            if (layer is null)
-            {
-                _context.Notify("All layers are locked.");
-            }
-
-            _context.RequestRedraw();
+            _context.Notify("All layers are locked.");
             return;
         }
 
-        layer.Shapes.Insert(0, shape);
-        _context.UndoManager.Push(UndoableAction.ForInsert(layer.Shapes, shape, 0));
+        var shape = FreehandBuilder.CreateShape(points, _context.PenColor, _context.PenWidth, (float)Math.Max(0.2, 0.8 / Zoom));
+        if (shape is not null)
+        {
+            layer.Shapes.Insert(0, shape);
+            _context.UndoManager.Push(UndoableAction.ForInsert(layer.Shapes, shape, 0));
+        }
+
         _context.RequestRedraw();
     }
 
@@ -111,9 +115,7 @@ public partial class CanvasHostView
         var had = _freehandPoints is not null;
         if (had)
         {
-            _freehandPoints = null;
-            _freehandShape = null;
-            ReleaseMouseCapture();
+            ResetFreehand();
             _context?.RequestRedraw();
         }
 

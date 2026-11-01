@@ -109,8 +109,9 @@ public sealed class SnapGeometry
     private static SnapGeometry Compute(Shape shape)
     {
         var geometry = new SnapGeometry();
-        if (shape.Kind == ShapeKind.DesignGrid)
+        if (shape.Kind == ShapeKind.DesignGrid || shape.Freehand)
         {
+            // a grid and a stroke written by hand give nothing to snap to
             return geometry;
         }
 

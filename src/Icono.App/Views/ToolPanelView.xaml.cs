@@ -80,6 +80,11 @@ public partial class ToolPanelView : UserControl
         Color.FromRgb(0x8F, 0xB8, 0xE0), Color.FromRgb(0xCB, 0xB3, 0xE0), Color.FromRgb(0x8D, 0x6E, 0x63),
     ];
 
+    /// <summary>#RRGGBB, or #AARRGGBB when the colour is see-through.</summary>
+    private static string ToHex(Color color) => color.A == 255
+        ? $"#{color.R:X2}{color.G:X2}{color.B:X2}"
+        : $"#{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}";
+
     private bool _isSyncingGridColor;
 
     private void InitializeGridPalette()
@@ -99,9 +104,7 @@ public partial class ToolPanelView : UserControl
 
         var color = Context.CurrentFillColor.ToMediaColor();
         GridPaintColorChip.Background = new SolidColorBrush(color);
-        GridPaintColorText.Text = color.A == 255
-            ? $"#{color.R:X2}{color.G:X2}{color.B:X2}"
-            : $"#{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}";
+        GridPaintColorText.Text = ToHex(color);
 
         _isSyncingGridColor = true;
         try
@@ -138,9 +141,7 @@ public partial class ToolPanelView : UserControl
 
         Context.CurrentFillColor = color.FromMediaColor();
         GridPaintColorChip.Background = new SolidColorBrush(color);
-        GridPaintColorText.Text = color.A == 255
-            ? $"#{color.R:X2}{color.G:X2}{color.B:X2}"
-            : $"#{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}";
+        GridPaintColorText.Text = ToHex(color);
     }
 
     private void GridCustomColorButton_OnClick(object sender, RoutedEventArgs e)
@@ -620,9 +621,7 @@ public partial class ToolPanelView : UserControl
 
         var color = Context.PenColor.ToMediaColor();
         PenColorChip.Background = new SolidColorBrush(color);
-        PenColorText.Text = color.A == 255
-            ? $"#{color.R:X2}{color.G:X2}{color.B:X2}"
-            : $"#{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}";
+        PenColorText.Text = ToHex(color);
         PenWidthTextBox.Text = Context.PenWidth.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
 
         _isSyncingPen = true;
@@ -660,9 +659,7 @@ public partial class ToolPanelView : UserControl
 
         Context.PenColor = color.FromMediaColor();
         PenColorChip.Background = new SolidColorBrush(color);
-        PenColorText.Text = color.A == 255
-            ? $"#{color.R:X2}{color.G:X2}{color.B:X2}"
-            : $"#{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}";
+        PenColorText.Text = ToHex(color);
     }
 
     private void PenCustomColorButton_OnClick(object sender, RoutedEventArgs e)

@@ -43,6 +43,24 @@ internal sealed class SvgDocumentReader
         return reader.Run(root);
     }
 
+    /// <summary>The most text an SVG may have (a pasted or opened file): bigger files are refused instead of eating the memory.</summary>
+    public const int MaxCharacters = SvgImporter.MaxFileBytes;
+
+    /// <summary>Reads untrusted SVG text safely: a DOCTYPE (many editors write one) is skipped, so no entity can be expanded into gigabytes (the "billion
+    /// laughs" attack) and nothing is fetched from a file or the network, and the size is limited.</summary>
+    private static XDocument ParseXml(string text)
+    {
+        var settings = new System.Xml.XmlReaderSettings
+        {
+            DtdProcessing = System.Xml.DtdProcessing.Ignore,
+            XmlResolver = null,
+            MaxCharactersInDocument = MaxCharacters,
+            MaxCharactersFromEntities = 0,
+        };
+        using var reader = System.Xml.XmlReader.Create(new System.IO.StringReader(text), settings);
+        return XDocument.Load(reader);
+    }
+
     private static XElement? Parse(string markup)
     {
         var text = markup.Trim();
@@ -53,15 +71,14 @@ internal sealed class SvgDocumentReader
 
         try
         {
-            return XDocument.Parse(text).Root;
+            return ParseXml(text).Root;
         }
         catch (System.Xml.XmlException)
         {
             // Pasted fragments (several bare elements, or an undeclared xlink prefix) — wrap them in a root.
             try
             {
-                return XDocument.Parse(
-                    "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">" + text + "</svg>").Root;
+                return ParseXml("<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">" + text + "</svg>").Root;
             }
             catch (System.Xml.XmlException)
             {

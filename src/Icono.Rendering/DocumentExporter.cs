@@ -33,6 +33,8 @@ public static class DocumentExporter
             if (page is { } index)
             {
                 canvas.Translate(0, -document.PageTop(index));
+                // only this page is written, not the drawing of the other pages
+                canvas.ClipRect(SKRect.Create(0, document.PageTop(index), document.Width, document.Height));
             }
 
             DocumentRenderer.Render(canvas, document, document.Width, document.Height, null, forExport: true, includeBackground);

@@ -54,6 +54,21 @@ public static class ShapeGeometryFactory
         ShapeKind.NotchedArrowRight, ShapeKind.PlayTriangleRight,
     ];
 
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<string, SKPath> ParsedPaths = new();
+
+    /// <summary>The path of a path shape (imported piece, handwriting stroke). Reading the SVG text is the costly part and the text of a shape does
+    /// not change, so it is read once and every paint gets a copy to scale and move.</summary>
+    private static SKPath ParseCustomPath(string data)
+    {
+        if (!ParsedPaths.TryGetValue(data, out var parsed))
+        {
+            parsed = SKPath.ParseSvgPathData(data) ?? new SKPath();
+            ParsedPaths.AddOrUpdate(data, parsed);
+        }
+
+        return new SKPath(parsed);
+    }
+
     public static bool IsStrokeOnly(ShapeKind kind) => StrokeOnlyKinds.Contains(kind);
 
     /// <summary>The two circular arrows (Loop Clockwise / Counter-Clockwise): drawn as an arc whose ends carry the line ends chosen for the shape,
@@ -408,7 +423,7 @@ public static class ShapeGeometryFactory
         }
 
         var path = shape.Kind == ShapeKind.CombinedPath
-            ? (shape.CustomPathData is not null ? SKPath.ParseSvgPathData(shape.CustomPathData) ?? new SKPath() : new SKPath())
+            ? (shape.CustomPathData is not null ? ParseCustomPath(shape.CustomPathData) : new SKPath())
             : IsLoopArrow(shape.Kind) ? BuildLoopArc(shape) : BuildLocal(shape.Kind);
 
         // Mirror in local (pre-scale) space so flipping reads the same regardless of aspect ratio.

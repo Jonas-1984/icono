@@ -282,24 +282,7 @@ public partial class MainWindow
                 case ExportFormat.Svg:
                     if (AskExportPath("SVG vector graphic (*.svg)|*.svg", ".svg") is { } svgPath)
                     {
-                        if (pages is null)
-                        {
-                            File.WriteAllBytes(svgPath, DocumentExporter.RenderSvg(document, dialog.IncludeBackground, dialog.Page));
-                            ShowStatus($"Exported {Path.GetFileName(svgPath)}");
-                        }
-                        else
-                        {
-                            var svgFolder = Path.GetDirectoryName(svgPath)!;
-                            var svgName = Path.GetFileNameWithoutExtension(svgPath);
-                            foreach (var page in pages)
-                            {
-                                File.WriteAllBytes(
-                                    Path.Combine(svgFolder, $"{svgName}_page{page + 1}.svg"),
-                                    DocumentExporter.RenderSvg(document, dialog.IncludeBackground, page));
-                            }
-
-                            ShowStatus($"Exported {pages.Count} page(s) as SVG to {svgFolder}");
-                        }
+                        ExportPages(svgPath, pages, dialog.Page, page => DocumentExporter.RenderSvg(document, dialog.IncludeBackground, page));
                     }
 
                     break;
@@ -339,24 +322,7 @@ public partial class MainWindow
                 default:
                     if (AskExportPath("PNG image (*.png)|*.png", ".png") is { } pngPath)
                     {
-                        if (pages is null)
-                        {
-                            File.WriteAllBytes(pngPath, DocumentExporter.RenderPng(document, dialog.LongSide, dialog.IncludeBackground, dialog.Page));
-                            ShowStatus($"Exported {Path.GetFileName(pngPath)}");
-                        }
-                        else
-                        {
-                            var folder = Path.GetDirectoryName(pngPath)!;
-                            var baseName = Path.GetFileNameWithoutExtension(pngPath);
-                            foreach (var page in pages)
-                            {
-                                File.WriteAllBytes(
-                                    Path.Combine(folder, $"{baseName}_page{page + 1}.png"),
-                                    DocumentExporter.RenderPng(document, dialog.LongSide, dialog.IncludeBackground, page));
-                            }
-
-                            ShowStatus($"Exported {pages.Count} page(s) to {folder}");
-                        }
+                        ExportPages(pngPath, pages, dialog.Page, page => DocumentExporter.RenderPng(document, dialog.LongSide, dialog.IncludeBackground, page));
                     }
 
                     break;
@@ -385,6 +351,27 @@ public partial class MainWindow
         {
             ThemedMessageBox.Show(this, $"The export failed.\n\n{ex.Message}", "Export", MessageBoxButton.OK, MessageBoxImage.Error);
         }
+    }
+
+    /// <summary>Writes one file, or with a typed list of pages one file per page (name_page2.ext), and says so in the status bar.</summary>
+    private void ExportPages(string path, IReadOnlyList<int>? pages, int? page, Func<int?, byte[]> render)
+    {
+        if (pages is null)
+        {
+            File.WriteAllBytes(path, render(page));
+            ShowStatus($"Exported {Path.GetFileName(path)}");
+            return;
+        }
+
+        var folder = Path.GetDirectoryName(path)!;
+        var name = Path.GetFileNameWithoutExtension(path);
+        var extension = Path.GetExtension(path);
+        foreach (var each in pages)
+        {
+            File.WriteAllBytes(Path.Combine(folder, $"{name}_page{each + 1}{extension}"), render(each));
+        }
+
+        ShowStatus($"Exported {pages.Count} page(s) to {folder}");
     }
 
     private string? AskExportPath(string filter, string extension)
@@ -725,6 +712,7 @@ public partial class MainWindow
                 Key.B => "MeasureGap",
                 Key.X => "WallCut",
                 Key.Q => "Match",
+                Key.P => "Freehand",
                 Key.T => "Text",
                 _ => null,
             };

@@ -21,6 +21,9 @@ namespace Icono.App.Views;
 /// </summary>
 public partial class IconLibraryView : UserControl
 {
+    /// <summary>The biggest picture file that is imported (bytes): a crafted file must not be able to fill the memory.</summary>
+    private const long MaxImportBytes = 64L * 1024 * 1024;
+
     private readonly IconLibraryStore _store = new();
     private EditorContext? _context;
 
@@ -267,6 +270,11 @@ public partial class IconLibraryView : UserControl
             string svgMarkup;
             try
             {
+                if (new FileInfo(dialog.FileName).Length > SvgImporter.MaxFileBytes)
+                {
+                    throw new IOException("The SVG file is too big.");
+                }
+
                 svgMarkup = File.ReadAllText(dialog.FileName);
             }
             catch (Exception)
@@ -286,6 +294,11 @@ public partial class IconLibraryView : UserControl
 
         try
         {
+            if (new FileInfo(dialog.FileName).Length > MaxImportBytes)
+            {
+                throw new IOException("The picture is too big.");
+            }
+
             using var stream = File.OpenRead(dialog.FileName);
             var extension = Path.GetExtension(dialog.FileName).ToLowerInvariant();
 

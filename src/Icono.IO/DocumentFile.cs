@@ -166,8 +166,16 @@ public sealed class DocumentFile
     }
 
     /// <summary>Reads an .icn (or legacy .icono) file. Throws <see cref="InvalidDataException"/> when it is not a valid document.</summary>
+    /// <summary>The largest document file icono opens (a document with many pictures is a few megabytes; a file this big is not a document).</summary>
+    public const long MaxFileBytes = 512L * 1024 * 1024;
+
     public static DocumentFile Load(string path)
     {
+        if (new FileInfo(path).Length > MaxFileBytes)
+        {
+            throw new InvalidDataException("The file is too big to be an icono document.");
+        }
+
         try
         {
             var file = JsonSerializer.Deserialize<DocumentFile>(File.ReadAllText(path), Options);

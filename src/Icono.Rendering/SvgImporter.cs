@@ -13,6 +13,9 @@ namespace Icono.Rendering;
 /// </summary>
 public static class SvgImporter
 {
+    /// <summary>The biggest SVG file (bytes) that is read: bigger files are refused instead of eating the memory.</summary>
+    public const int MaxFileBytes = 20_000_000;
+
     private static readonly Regex ElementRegex = new(
         """<(path|circle|ellipse|rect)\b([^>]*)/?>""", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
