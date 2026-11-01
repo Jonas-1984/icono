@@ -331,12 +331,6 @@
         <Border Grid.Row="2" Style="{StaticResource ToolBarBorderStyle}">
             <WrapPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,10,0">
-                    <Button Content="New" Margin="3,2" Click="NewMenuItem_OnClick" ToolTip="New document (Ctrl+N)" />
-                    <Button Content="Open" Margin="3,2" Click="OpenMenuItem_OnClick" ToolTip="Open document (Ctrl+O)" />
-                    <Button Content="Save" Margin="3,2" Click="SaveMenuItem_OnClick" ToolTip="Save document (Ctrl+S)" />
-                    <Button Content="Export" Margin="3,2" Click="ExportMenuItem_OnClick" ToolTip="Export as PNG or icon (Ctrl+E)" />
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="0,0,10,0">
                     <Button Style="{StaticResource ToolbarSquareIconButtonStyle}" Click="UndoMenuItem_OnClick" ToolTip="Undo (Ctrl+Z)">
                         <Path Data="{StaticResource UndoToolGeometry}" Stroke="{DynamicResource ForegroundTextBrush}"
                               StrokeThickness="1.1" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"

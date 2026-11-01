@@ -74,6 +74,7 @@ public partial class MainWindow : Window
 
         StateChanged += MainWindow_OnStateChanged;
         Closing += MainWindow_OnClosing;
+        Application.Current.SessionEnding += (_, _) => _sessionEnding = true;
         PreviewKeyDown += MainWindow_OnPreviewKeyDown;
         // A click anywhere outside the text editor (panels, menus, toolbar) keeps what was typed.
         PreviewMouseDown += (_, e) => CanvasHost.CommitTextEditUnlessInside(e.OriginalSource);
@@ -144,10 +145,17 @@ public partial class MainWindow : Window
         NativeMethods.SetCornerPreference(new WindowInteropHelper(this).Handle, round: !isMaximized);
     }
 
+    private bool _sessionEnding;
+
     private void MainWindow_OnClosing(object? sender, CancelEventArgs e)
     {
-        // Only ask when there is something to lose: offer to save unsaved changes.
-        if (!ConfirmDiscardChanges())
+        // Windows is shutting down or the user logs off: no question, the system does not wait for an answer
+        if (_sessionEnding)
+        {
+            return;
+        }
+
+        if (!ConfirmClose())
         {
             e.Cancel = true;
         }

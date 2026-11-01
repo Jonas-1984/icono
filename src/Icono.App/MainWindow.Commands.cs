@@ -82,6 +82,28 @@ public partial class MainWindow
         };
     }
 
+    /// <summary>Asked when the program is closed (the close key, Alt+F4, File > Exit): it always makes sure the user wants to leave, and when there are
+    /// unsaved changes offers to save them in the same question. True = close, false = stay.</summary>
+    private bool ConfirmClose()
+    {
+        if (!HasUnsavedChanges())
+        {
+            return ThemedMessageBox.Choose(
+                this, "Close icono", "Do you want to close icono?",
+                ["Close", "Stay"], defaultIndex: 1, cancelIndex: 1, MessageBoxImage.Question) == 0;
+        }
+
+        var choice = ThemedMessageBox.Choose(
+            this, "Close icono", $"icono will close. Save the changes to \"{DocumentName}\" first?",
+            ["Save and close", "Close without saving", "Stay"], defaultIndex: 0, cancelIndex: 2, MessageBoxImage.Question);
+        return choice switch
+        {
+            0 => SaveDocument(),
+            1 => true,
+            _ => false,
+        };
+    }
+
     /// <summary>Replaces the contents of the open document and resets everything that belongs to the old one (history, selection, view).</summary>
     private void ReplaceDocument(DocumentFile file, string? path)
     {
