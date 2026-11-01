@@ -12,7 +12,7 @@ public partial class MainWindow
 {
     private static readonly HashSet<string> ToolTags = new(Enum.GetNames<ShapeKind>())
     {
-        "Select", "PanZoom", "AddPoint", "DeletePoint", "RegionColor", "Eyedropper", "WallCut", "Measure", "MeasureGap", "Match",
+        "Select", "PanZoom", "Zoom", "AddPoint", "DeletePoint", "RegionColor", "Eyedropper", "WallCut", "Measure", "MeasureGap", "Match",
         "DimAligned", "DimHorizontal", "DimVertical", "DimAngular", "DimRadius", "DimDiameter",
     };
 

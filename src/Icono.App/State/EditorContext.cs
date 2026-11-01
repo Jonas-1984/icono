@@ -9,6 +9,7 @@ public enum ActiveTool
 {
     Select,
     PanZoom,
+    Zoom,
     Shape,
     PathDraw,
     AddPoint,
@@ -97,6 +98,7 @@ public sealed class EditorContext : ObservableObject
     {
         ActiveTool.Select => "Select",
         ActiveTool.PanZoom => "PanZoom",
+        ActiveTool.Zoom => "Zoom",
         ActiveTool.AddPoint => "AddPoint",
         ActiveTool.DeletePoint => "DeletePoint",
         ActiveTool.RegionColor => "RegionColor",
@@ -142,6 +144,7 @@ public sealed class EditorContext : ObservableObject
         "Match" => "Match: click the source, then every object that should get its look. Esc ends.",
         "Freehand" => "Handwriting: write or draw with the pen, a finger or the mouse. Every stroke is one object. Colour and width: HANDWRITING card. Esc ends.",
         "CornerCurve" => "Curve: click one side of a corner, then the neighbouring side, type the size and press Enter. Esc ends.",
+        "Zoom" => "Zoom: click to zoom in by 10 %, right-click to zoom out by 10 % - the point you click stays where it is. Esc ends.",
         "Eyedropper" => "Color Picker: click anywhere to pick up a colour.",
         "RegionColor" => "Bucket: click a region to colour it.",
         "Polyline" or "Curve" => "Click each point; double-click or Enter finishes, Esc cancels.",

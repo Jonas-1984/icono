@@ -18,6 +18,10 @@
                                      Tag="{StaticResource PanZoomToolGeometry}" CommandParameter="PanZoom" ToolTip="Pan / Zoom" />
                         <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked"
                                      Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                     Tag="{StaticResource ZoomToolGeometry}" CommandParameter="Zoom"
+                                     ToolTip="Zoom (Z): click to zoom in by 10 %, right-click to zoom out by 10 %" />
+                        <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked"
+                                     Style="{StaticResource ShapeIconRadioButtonStyle}"
                                      Tag="{StaticResource EyedropperToolGeometry}" CommandParameter="Eyedropper"
                                      ToolTip="Color Picker (I): take a colour from the page" />
                         <Button Style="{StaticResource ShapeIconButtonStyle}" Tag="{StaticResource FilesCopyToolGeometry}"

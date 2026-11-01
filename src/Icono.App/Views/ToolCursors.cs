@@ -13,10 +13,14 @@ public static class ToolCursors
     private const double IconScale = 1.25; // the 24 x 24 icon is drawn 30 x 30 in the 32 x 32 cursor
     private const double Margin = 1;
 
+    private static Cursor? _zoom;
     private static Cursor? _picker;
     private static Cursor? _bucket;
     private static Cursor? _addPoint;
     private static Cursor? _deletePoint;
+
+    /// <summary>The magnifier; its hot spot is the middle of the lens (the point that stays in place when the view zooms).</summary>
+    public static Cursor Zoom => _zoom ??= FromIcon("ZoomToolGeometry", 11, 11);
 
     public static Cursor ColorPicker => _picker ??= FromIcon("EyedropperToolGeometry", 2.3, 21.7);
 

@@ -5,6 +5,7 @@
     <PathGeometry x:Key="SelectToolGeometry" Figures="M4,3 L4,19 L9,15 L13,21 L16,19 L12,13 L18,13 Z" />
     <PathGeometry x:Key="PanZoomToolGeometry"
                   Figures="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2 M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2 M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8 M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15" />
+    <PathGeometry x:Key="ZoomToolGeometry" Figures="M21 21l-4.34-4.34 M11 8v6 M8 11h6 M19 11a8 8 0 1 1-16 0 8 8 0 0 1 16 0z" />
     <PathGeometry x:Key="AddPointToolGeometry"
                   Figures="M14 4.1 12 6 M5.1,8 l-2.9,-0.8 M6,12 l-1.9,2 M7.2 2.2 8 5.1 M9.037 9.69a.498.498 0 0 1 .653-.653l11 4.5a.5.5 0 0 1-.074.949l-4.349 1.041a1 1 0 0 0-.74.739l-1.04 4.35a.5.5 0 0 1-.95.074z" />
     <PathGeometry x:Key="DeletePointToolGeometry"

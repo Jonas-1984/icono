@@ -502,6 +502,9 @@ public partial class MainWindow
             case "PanZoom":
                 _context.ActiveTool = ActiveTool.PanZoom;
                 break;
+            case "Zoom":
+                _context.ActiveTool = ActiveTool.Zoom;
+                break;
             case "AddPoint":
                 _context.ActiveTool = ActiveTool.AddPoint;
                 break;
@@ -704,6 +707,7 @@ public partial class MainWindow
             {
                 Key.V => "Select",
                 Key.H => "PanZoom",
+                Key.Z => "Zoom",
                 Key.I => "Eyedropper",
                 Key.G => "RegionColor",
                 Key.W => "Wall",
@@ -746,7 +750,7 @@ public partial class MainWindow
                     return true;
                 }
 
-                if (_context.ActiveTool is ActiveTool.Eyedropper or ActiveTool.RegionColor or ActiveTool.PanZoom or ActiveTool.Shape
+                if (_context.ActiveTool is ActiveTool.Eyedropper or ActiveTool.RegionColor or ActiveTool.PanZoom or ActiveTool.Zoom or ActiveTool.Shape
                     or ActiveTool.Measure or ActiveTool.MeasureGap or ActiveTool.Match or ActiveTool.CornerCurve or ActiveTool.Freehand)
                 {
                     _context.ActiveTool = ActiveTool.Select;

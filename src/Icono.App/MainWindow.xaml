@@ -302,6 +302,7 @@
             <MenuItem Header="_Tools">
                 <MenuItem Header="Selection" InputGestureText="V" Tag="Select" Click="ToolMenuItem_OnClick" />
                 <MenuItem Header="Pan / Zoom" InputGestureText="H" Tag="PanZoom" Click="ToolMenuItem_OnClick" />
+                <MenuItem Header="Zoom (click in, right-click out)" InputGestureText="Z" Tag="Zoom" Click="ToolMenuItem_OnClick" />
                 <Separator />
                 <MenuItem Header="Match Properties" InputGestureText="Q" Tag="Match" Click="ToolMenuItem_OnClick"
                           ToolTip="Copy the look of one object onto others" />

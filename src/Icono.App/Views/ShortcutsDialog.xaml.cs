@@ -24,6 +24,7 @@ public partial class ShortcutsDialog : ThemedDialogWindow
         new("Zoom in / out", "Ctrl++ / Ctrl+-"),
         new("Actual size / fit page", "Ctrl+0 / Ctrl+1"),
         new("Selection / Pan / Color Picker / Bucket / Match", "V / H / I / G / Q"),
+        new("Zoom tool (click = in, right-click = out, 10 % each)", "Z"),
         new("Handwriting (pen, touch, mouse)", "P"),
         new("Move the selection by a distance in cm", "Arrange menu, MOVE card"),
         new("Scroll through the pages / zoom", "Mouse wheel / Ctrl + wheel"),

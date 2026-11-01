@@ -165,6 +165,14 @@ public partial class CanvasHostView : UserControl
             return;
         }
 
+        // the Zoom tool: a right click zooms out (no menu)
+        if (_context.ActiveTool == ActiveTool.Zoom)
+        {
+            ZoomStep(-ZoomStepPercent, e.GetPosition(SkiaCanvas));
+            e.Handled = true;
+            return;
+        }
+
         var point = ToDocumentSpace(e.GetPosition(SkiaCanvas));
         var hit = HitTestShape(point);
 
@@ -621,6 +629,7 @@ public partial class CanvasHostView : UserControl
     {
         ActiveTool.Match or ActiveTool.CornerCurve => PickBoxCursor.Instance,
         ActiveTool.Freehand => Cursors.Pen,
+        ActiveTool.Zoom => ToolCursors.Zoom,
         ActiveTool.Eyedropper => ToolCursors.ColorPicker,
         ActiveTool.RegionColor => ToolCursors.RegionColor,
         ActiveTool.AddPoint => ToolCursors.AddPoint,
@@ -1873,6 +1882,12 @@ public partial class CanvasHostView : UserControl
         if (_context.ActiveTool == ActiveTool.PanZoom)
         {
             BeginPan(e);
+            return;
+        }
+
+        if (_context.ActiveTool == ActiveTool.Zoom)
+        {
+            ZoomStep(ZoomStepPercent, e.GetPosition(SkiaCanvas));
             return;
         }
 

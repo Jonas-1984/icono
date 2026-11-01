@@ -841,6 +841,9 @@ public partial class ToolPanelView : UserControl
             case "PanZoom":
                 Context.ActiveTool = ActiveTool.PanZoom;
                 break;
+            case "Zoom":
+                Context.ActiveTool = ActiveTool.Zoom;
+                break;
             case "AddPoint":
                 Context.ActiveTool = ActiveTool.AddPoint;
                 break;

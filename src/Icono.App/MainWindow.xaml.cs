@@ -34,6 +34,7 @@ public partial class MainWindow : Window
         _context.SelectedLayer = _context.Document.Layers[0];
 
         _context.StatusMessage += message => StatusBar.ShowMessage(message);
+        CanvasHost.ZoomRequested += zoom => StatusBar.SetZoom(zoom);
         _context.ScaleChanged += denominator =>
         {
             StatusBar.SetScale(denominator);
