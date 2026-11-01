@@ -58,6 +58,12 @@ public sealed class DimensionLayout
 
     public string Text { get; set; } = string.Empty;
 
+    /// <summary>The two ends of the dimension line of a straight dimension (both are on the line; the arrowheads sit there). Equal when the
+    /// layout has no such line.</summary>
+    public SKPoint LineFrom { get; set; }
+
+    public SKPoint LineTo { get; set; }
+
     /// <summary>Centre of the text.</summary>
     public SKPoint TextPosition { get; set; }
 
@@ -269,6 +275,8 @@ public static class DimensionRenderer
 
         var u = Unit(d);
         var arrow = layout.ArrowLength;
+        layout.LineFrom = a;
+        layout.LineTo = b;
         layout.TextWidth = MeasureText(layout.Text, layout.Style);
         layout.TextAngle = Readable(lineAngleDegrees);
 

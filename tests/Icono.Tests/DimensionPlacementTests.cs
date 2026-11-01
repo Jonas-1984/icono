@@ -139,3 +139,102 @@ public class DimensionPlacementTests
         Assert.False(SymbolMeasurements.PlaceDimensionLine(document, new Shape { Kind = ShapeKind.Rectangle }, new SKPoint(0, 0)));
     }
 }
+
+/// <summary>Dimension lines snap onto each other so that dimensions stand in one row, flush.</summary>
+public class DimensionLineSnapTests
+{
+    private static Shape Wall(double y, double length)
+    {
+        var wall = new Shape
+        {
+            Kind = ShapeKind.Wall, X = 100, Y = y, WallThickness = 16,
+            Points = [new CorePoint(0, 0), new CorePoint(length, 0)],
+        };
+        PathBoundsCalculator.Recompute(wall);
+        return wall;
+    }
+
+    private static Document Document(params Shape[] shapes)
+    {
+        DrawingScale.Denominator = 1;
+        var document = new Document { Width = 1000, Height = 800 };
+        var layer = new Layer { Name = "L" };
+        foreach (var shape in shapes)
+        {
+            layer.Shapes.Add(shape);
+        }
+
+        document.Layers.Add(layer);
+        return document;
+    }
+
+    private static float LineCoordinate(Shape wall) => WallRenderer.LayoutSegmentDimension(wall, 0)!.LineFrom.Y;
+
+    [Fact]
+    public void ADimensionLine_SnapsOntoTheLineOfAnotherDimension_SoTheyStandInOneRow()
+    {
+        var first = Wall(100, 300);
+        var second = Wall(300, 200);
+        var document = Document(first, second);
+        var row = LineCoordinate(first);
+
+        var snap = DimensionLineSnapper.Snap(document, second, 0, new SKPoint(150, row + 5), new SKPoint(1, 0), 8)!;
+
+        Assert.Equal(row, snap.Point.Y, 3);
+        Assert.Equal(150, snap.Point.X, 3);              // only across the line, not along it
+        Assert.Equal(row, snap.From.Y, 3);                // the guide lies on the line it lined up with
+        Assert.Equal(row, snap.To.Y, 3);
+    }
+
+    [Fact]
+    public void TheSnappedLine_IsFlushWithTheOther_WhenTheDimensionIsPlacedThere()
+    {
+        var first = Wall(100, 300);
+        var second = Wall(300, 200);
+        var document = Document(first, second);
+        var row = LineCoordinate(first);
+
+        var snap = DimensionLineSnapper.Snap(document, second, 0, new SKPoint(150, row - 4), new SKPoint(1, 0), 8)!;
+        var line = WallRenderer.DimensionLineThrough(second, 0, snap.Point)!.Value;
+        second.WallDimensionOverrides = [new WallDimensionOverride(0, Offset: line.Offset, Flip: line.Flip)];
+
+        Assert.Equal(row, LineCoordinate(second), 0.5);
+    }
+
+    [Fact]
+    public void FarAway_ParallelToNothing_OrOnlyItself_NothingSnaps()
+    {
+        var first = Wall(100, 300);
+        var second = Wall(300, 200);
+        var document = Document(first, second);
+        var row = LineCoordinate(first);
+
+        Assert.Null(DimensionLineSnapper.Snap(document, second, 0, new SKPoint(150, row + 30), new SKPoint(1, 0), 8));   // out of reach
+        Assert.Null(DimensionLineSnapper.Snap(document, second, 0, new SKPoint(150, row + 2), new SKPoint(0, 1), 8));    // runs another way
+        Assert.Null(DimensionLineSnapper.Snap(Document(first), first, 0, new SKPoint(150, row + 2), new SKPoint(1, 0), 8)); // only itself there
+    }
+
+    [Fact]
+    public void TheDimensionsOfTheSameWall_SnapToEachOther_AndNearestWins()
+    {
+        // an L: two segments one after the other along the same side, with the first dimension pushed further out
+        DrawingScale.Denominator = 1;
+        var wall = new Shape
+        {
+            Kind = ShapeKind.Wall, X = 100, Y = 100, WallThickness = 16,
+            Points = [new CorePoint(0, 0), new CorePoint(200, 0), new CorePoint(200, 100), new CorePoint(400, 100)],
+        };
+        PathBoundsCalculator.Recompute(wall);
+        wall.WallDimensionOverrides = [new WallDimensionOverride(0, Offset: 60)];
+        var document = Document(wall);
+        var layouts = WallRenderer.AllSegmentLayouts(wall);
+        var firstLine = layouts[0]!.LineFrom.Y;
+        var thirdLine = layouts[2]!.LineFrom.Y;
+
+        var toFirst = DimensionLineSnapper.Snap(document, wall, 2, new SKPoint(300, firstLine + 3), new SKPoint(1, 0), 8);
+
+        Assert.NotNull(toFirst);
+        Assert.Equal(firstLine, toFirst!.Point.Y, 3);
+        Assert.NotEqual(firstLine, thirdLine);
+    }
+}

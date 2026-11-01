@@ -437,8 +437,9 @@ public partial class CanvasHostView : UserControl
 
     private void ClearSnapGuides()
     {
-        if (_snapGuides.Count > 0 || _vertexGuides.Count > 0 || _vertexCorner is not null || _pointSnap is not null)
+        if (_snapGuides.Count > 0 || _vertexGuides.Count > 0 || _vertexCorner is not null || _pointSnap is not null || _dimensionLineGuide is not null)
         {
+            _dimensionLineGuide = null;
             _snapGuides = [];
             _vertexGuides = [];
             _vertexCorner = null;
@@ -485,6 +486,7 @@ public partial class CanvasHostView : UserControl
     private void DrawSnapGuides(SKCanvas canvas, float scaleX, float scaleY)
     {
         DrawVertexGuides(canvas, scaleX, scaleY);
+        DrawDimensionLineGuide(canvas, scaleX, scaleY);
         if (_snapGuides.Count == 0)
         {
             return;
@@ -3403,7 +3405,11 @@ public partial class CanvasHostView : UserControl
             }
             else if (_pendingPathShape.Kind == ShapeKind.Dimension)
             {
-                point = SnapToMeasurable(rawPoint) ?? point;
+                // the third click puts the dimension line: it lines up with the dimension lines of other dimensions that run the same way
+                var inRow = _pendingPathShape.Points!.Count == 3 && FreeDimensionDirection(_pendingPathShape) is { } runs
+                    ? SnapToDimensionLines(rawPoint, _pendingPathShape, -1, runs)
+                    : null;
+                point = inRow ?? SnapToMeasurable(rawPoint) ?? point;
             }
             else
             {
@@ -3430,6 +3436,14 @@ public partial class CanvasHostView : UserControl
             if (_pointEditShape.Kind is ShapeKind.Wall or ShapeKind.Dimension)
             {
                 onPoint = anchored is null ? SnapToPoints(rawPoint, PointSnapReference(), [_pointEditShape]) : null;
+
+                // the point that puts the dimension line lines up with the dimension lines of other dimensions that run the same way
+                if (anchored is null && _pointEditShape.Kind == ShapeKind.Dimension && draggedIndex >= 2
+                    && FreeDimensionDirection(_pointEditShape) is { } dimensionRuns
+                    && SnapToDimensionLines(rawPoint, _pointEditShape, -1, dimensionRuns) is { } inRow)
+                {
+                    onPoint = inRow;
+                }
 
                 // the point of a dimension also lines up with the faces and edges of walls and shapes (the guides are shown)
                 if (onPoint is null && anchored is null && _pointEditShape.Kind == ShapeKind.Dimension)

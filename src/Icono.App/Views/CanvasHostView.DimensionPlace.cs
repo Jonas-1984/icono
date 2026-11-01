@@ -23,6 +23,10 @@ public partial class CanvasHostView
     private Point _dimensionPressPoint;
     private Point _dimensionPressScreen;
     private bool _dimensionDragging;
+    private SKPoint _dimensionDirection;
+
+    /// <summary>The dimension line the one that is placed or dragged has lined up with (shown as a guide), or null.</summary>
+    private (SKPoint From, SKPoint To)? _dimensionLineGuide;
 
     /// <summary>A press on the number of a wall or door/window dimension: remembers it. What happens (length editor or placing the line) is
     /// decided when the mouse moves or is let go. True when the point is on such a number.</summary>
@@ -44,6 +48,9 @@ public partial class CanvasHostView
             return false;
         }
 
+        // the way the dimension line runs (the lines of other dimensions that run the same way attract it)
+        var runs = _dimensionOfSymbol?.Layout ?? WallRenderer.LayoutSegmentDimension(_dimensionShape, _dimensionSegment);
+        _dimensionDirection = runs is null ? default : new SKPoint(runs.LineTo.X - runs.LineFrom.X, runs.LineTo.Y - runs.LineFrom.Y);
         _dimensionBefore = ShapeSnapshot.Capture(_dimensionShape);
         _dimensionPressPoint = point;
         _dimensionPressScreen = screen;
@@ -101,6 +108,11 @@ public partial class CanvasHostView
     {
         // the shape whose dimension is dragged does not attract the pointer: its own dimension line would pull it along and run away
         IReadOnlyCollection<Shape> excluded = [owner];
+        if (SnapToDimensionLines(raw, owner, owner.Kind == ShapeKind.Wall ? _dimensionSegment : -1, _dimensionDirection) is { } inRow)
+        {
+            return inRow;
+        }
+
         if (SnapToPoints(raw, null, excluded) is { } onPoint)
         {
             _snapGuides = [];
@@ -114,6 +126,29 @@ public partial class CanvasHostView
         }
 
         return new Point(SnapIfEnabled(raw.X), SnapIfEnabled(raw.Y));
+    }
+
+    /// <summary>Lines the dimension line up with another dimension line that runs the same way, so that two dimensions stand in one row, flush
+    /// (the line it lined up with is shown). Null when there is none within reach or Alt holds the snapping off.</summary>
+    private Point? SnapToDimensionLines(Point raw, Shape? owner, int ownerSegment, SKPoint direction)
+    {
+        _dimensionLineGuide = null;
+        if (_context is null || WallSnappingSuspended)
+        {
+            return null;
+        }
+
+        var snap = DimensionLineSnapper.Snap(
+            _context.Document, owner, ownerSegment, new SKPoint((float)raw.X, (float)raw.Y), direction, (float)(8 / Zoom));
+        if (snap is null)
+        {
+            return null;
+        }
+
+        _pointSnap = null;
+        _snapGuides = [];
+        _dimensionLineGuide = (snap.From, snap.To);
+        return new Point(snap.Point.X, snap.Point.Y);
     }
 
     /// <summary>The number is let go: after a drag the line stays where it is (one undo step); after a click the length editor opens.</summary>
@@ -179,6 +214,45 @@ public partial class CanvasHostView
         ResetDimensionPress();
         _context?.RequestRedraw();
         return true;
+    }
+
+    /// <summary>The way the line of a free dimension runs: along its first two points (aligned), the x axis (horizontal) or the y axis (vertical).
+    /// Null for the kinds that have no straight line (angle, radius, diameter, length) and while the first two points are not there.</summary>
+    private static SKPoint? FreeDimensionDirection(Shape dimension)
+    {
+        if (dimension.Points is not { Count: >= 2 } points)
+        {
+            return null;
+        }
+
+        return dimension.DimKind switch
+        {
+            DimensionKind.Horizontal => new SKPoint(1, 0),
+            DimensionKind.Vertical => new SKPoint(0, 1),
+            DimensionKind.Aligned when Math.Abs(points[1].X - points[0].X) + Math.Abs(points[1].Y - points[0].Y) > 0.01
+                => new SKPoint((float)(points[1].X - points[0].X), (float)(points[1].Y - points[0].Y)),
+            _ => null,
+        };
+    }
+
+    /// <summary>The dashed line along the dimension line that the dragged one has lined up with, with a small bar at each end.</summary>
+    private void DrawDimensionLineGuide(SKCanvas canvas, float scaleX, float scaleY)
+    {
+        if (_dimensionLineGuide is not { } guide)
+        {
+            return;
+        }
+
+        using var glow = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 4f, Color = MeasureOrange.WithAlpha(70) };
+        using var line = new SKPaint
+        {
+            IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 1.4f, Color = MeasureOrange,
+            PathEffect = SKPathEffect.CreateDash([6, 4], 0),
+        };
+        var from = new SKPoint(guide.From.X * scaleX, guide.From.Y * scaleY);
+        var to = new SKPoint(guide.To.X * scaleX, guide.To.Y * scaleY);
+        canvas.DrawLine(from, to, glow);
+        canvas.DrawLine(from, to, line);
     }
 
     /// <summary>Gives the dimension of one wall segment its own distance and side (the same entry the DIMENSION card edits).</summary>

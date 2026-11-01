@@ -265,6 +265,9 @@ public static class WallRenderer
         return wall.WallDimensionMeasure == WallMeasure.Inside ? -outside : outside;
     }
 
+    /// <summary>The dimension of every segment of the wall as it is drawn (null for a hidden one or a segment without length).</summary>
+    public static IReadOnlyList<DimensionLayout?> AllSegmentLayouts(Shape wall) => ResolveLayouts(wall);
+
     /// <summary>The dimension of one segment of the wall, with the settings of that segment applied and, where it would be cramped, moved to
     /// the outside of the plan (null when it is hidden or has no length).</summary>
     public static DimensionLayout? LayoutSegmentDimension(Shape wall, int index)
