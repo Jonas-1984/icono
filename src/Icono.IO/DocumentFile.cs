@@ -28,7 +28,8 @@ public sealed class DocumentFile
     /// <summary>The extension of the first versions; such files still open and are saved as <see cref="Extension"/> when saved under a new name.</summary>
     public const string LegacyExtension = ".icono";
 
-    public const int CurrentVersion = 1;
+    /// <summary>2: the loop arrows take their head from the line ends of the shape (older files drew it as part of the shape).</summary>
+    public const int CurrentVersion = 2;
 
     public int Version { get; set; } = CurrentVersion;
 
@@ -109,6 +110,9 @@ public sealed class DocumentFile
     {
         document.Layers.Clear();
 
+        // loop arrows of older files had their head built in: they keep it as an open head at the end
+        var givesLoopsAHead = Version < 2;
+
         document.Width = Math.Clamp(Width, 1, 20000);
         document.Height = Math.Clamp(Height, 1, 20000);
         document.PageCount = PageCount;
@@ -131,6 +135,11 @@ public sealed class DocumentFile
             var layer = new Layer { Name = file.Name, AccentColor = file.AccentColor, Visible = file.Visible, Locked = file.Locked };
             foreach (var shape in file.Shapes)
             {
+                if (givesLoopsAHead && shape.Kind is ShapeKind.LoopArrowClockwise or ShapeKind.LoopArrowCounterClockwise)
+                {
+                    shape.LineEndHead = ArrowHeadKind.Open;
+                }
+
                 layer.Shapes.Add(shape);
             }
 

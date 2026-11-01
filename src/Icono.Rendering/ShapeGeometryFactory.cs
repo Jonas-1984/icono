@@ -56,6 +56,31 @@ public static class ShapeGeometryFactory
 
     public static bool IsStrokeOnly(ShapeKind kind) => StrokeOnlyKinds.Contains(kind);
 
+    /// <summary>The two circular arrows (Loop Clockwise / Counter-Clockwise): drawn as an arc whose ends carry the line ends chosen for the shape,
+    /// like the ends of an Arrow.</summary>
+    public static bool IsLoopArrow(ShapeKind kind) => kind is ShapeKind.LoopArrowClockwise or ShapeKind.LoopArrowCounterClockwise;
+
+    /// <summary>Puts the line ends on the two ends of the arc, pointing along it (the head keeps its own size, like on every line).</summary>
+    private static void AddLoopHeads(SKPath arc, ArrowHeadKind start, ArrowHeadKind end)
+    {
+        if (start == ArrowHeadKind.None && end == ArrowHeadKind.None)
+        {
+            return;
+        }
+
+        using var measure = new SKPathMeasure(arc, false);
+        if (measure.Length < 1f
+            || !measure.GetPositionAndTangent(0, out var startPoint, out var startTangent)
+            || !measure.GetPositionAndTangent(measure.Length, out var endPoint, out var endTangent))
+        {
+            return;
+        }
+
+        const float lead = 10f;
+        AddHead(arc, new SKPoint(startPoint.X + startTangent.X * lead, startPoint.Y + startTangent.Y * lead), startPoint, start);
+        AddHead(arc, new SKPoint(endPoint.X - endTangent.X * lead, endPoint.Y - endTangent.Y * lead), endPoint, end);
+    }
+
     /// <summary>True when the corners of the shape can be curved with <see cref="Shape.CornerRadius"/> (the Curve tool): a polyline, polygon or
     /// other shape made of points with at least three of them, or a straight-edge shape. Walls, dimensions, symbols and shapes that are curved
     /// already are left out.</summary>
@@ -340,6 +365,11 @@ public static class ShapeGeometryFactory
         var sy = (float)(shape.Height / 24.0);
         path.Transform(SKMatrix.CreateScale(sx, sy));
         path.Offset((float)shape.X, (float)shape.Y);
+
+        if (IsLoopArrow(shape.Kind))
+        {
+            AddLoopHeads(path, shape.LineStartHead, shape.LineEndHead);
+        }
 
         // Rounding runs after scale/offset (in real output px, not the 24x24 local template) so a
         // given CornerRadius reads the same regardless of the shape's aspect ratio. RasterImage is
@@ -1411,12 +1441,10 @@ public static class ShapeGeometryFactory
             case ShapeKind.LoopArrowClockwise:
                 path.MoveTo(17, 6);
                 path.ArcTo(8, 8, 0, SKPathArcSize.Large, SKPathDirection.Clockwise, 7, 18);
-                path.MoveTo(4, 15); path.LineTo(7, 18); path.LineTo(10, 14);
                 break;
             case ShapeKind.LoopArrowCounterClockwise:
                 path.MoveTo(7, 6);
                 path.ArcTo(8, 8, 0, SKPathArcSize.Large, SKPathDirection.CounterClockwise, 17, 18);
-                path.MoveTo(20, 15); path.LineTo(17, 18); path.LineTo(14, 14);
                 break;
             case ShapeKind.CompassArrows:
                 AddPolygon(path,

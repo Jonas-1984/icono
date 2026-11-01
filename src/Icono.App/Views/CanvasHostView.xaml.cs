@@ -2395,6 +2395,12 @@ public partial class CanvasHostView : UserControl
                 PlanSymbols.ApplyDefaults(_pendingShape);
             }
 
+            if (ShapeGeometryFactory.IsLoopArrow(_pendingShape.Kind))
+            {
+                // the circular arrows start with an open head at the end, like an Arrow; the line ends can be changed afterwards
+                _pendingShape.LineEndHead = ArrowHeadKind.Open;
+            }
+
             if (_pendingShape.Kind == ShapeKind.CombinedPath && _context.PendingUnit is { } unit)
             {
                 // a cabinet or unit of the catalogue: white body, thin dark line, as drawn in the catalogue
