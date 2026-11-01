@@ -60,6 +60,48 @@ public static class ShapeGeometryFactory
     /// like the ends of an Arrow.</summary>
     public static bool IsLoopArrow(ShapeKind kind) => kind is ShapeKind.LoopArrowClockwise or ShapeKind.LoopArrowCounterClockwise;
 
+    private const float LoopRadius = 8f;
+
+    /// <summary>The circle of a loop arrow in its 24 x 24 template: centre, and the angle (degrees, y down) the arc starts at. The classic arc runs from (17, 6)
+    /// to (7, 18); a counter-clockwise loop is the mirror image.</summary>
+    private static (float CentreX, float CentreY, float Start, double Classic) LoopCircle()
+    {
+        // the chord runs from (17, 6) to (7, 18); the centre lies on its perpendicular (12, 10) through the middle (12, 12), one offset away
+        const double chordX = -10, chordY = 12;
+        var chord = Math.Sqrt(chordX * chordX + chordY * chordY);
+        var offset = Math.Sqrt(LoopRadius * LoopRadius - chord * chord / 4);
+        var cx = 12 + offset * 12 / chord;
+        var cy = 12 + offset * 10 / chord;
+        var start = Math.Atan2(6 - cy, 17 - cx) * 180 / Math.PI;
+        var end = Math.Atan2(18 - cy, 7 - cx) * 180 / Math.PI;
+        var classic = (end - start + 360) % 360;
+        return ((float)cx, (float)cy, (float)start, classic);
+    }
+
+    /// <summary>The sweep of the classic loop arrow in degrees.</summary>
+    public static double ClassicLoopSweep => LoopCircle().Classic;
+
+    /// <summary>The arc of a loop arrow in the 24 x 24 template, going <see cref="Shape.LoopSweep"/> degrees round from its fixed start.</summary>
+    private static SKPath BuildLoopArc(Shape shape)
+    {
+        var (cx, cy, start, classic) = LoopCircle();
+        var sweep = (float)Math.Clamp(shape.LoopSweep ?? classic, MinLoopSweep, MaxLoopSweep);
+        var path = new SKPath();
+        var clockwise = shape.Kind == ShapeKind.LoopArrowClockwise;
+        var oval = clockwise
+            ? new SKRect(cx - LoopRadius, cy - LoopRadius, cx + LoopRadius, cy + LoopRadius)
+            : new SKRect(24 - cx - LoopRadius, cy - LoopRadius, 24 - cx + LoopRadius, cy + LoopRadius);
+        // the mirror image of angle a (about x = 12) is 180 - a
+        path.AddArc(oval, clockwise ? start : 180 - start, clockwise ? sweep : -sweep);
+        return path;
+    }
+
+    /// <summary>The shortest arc of a loop arrow (degrees).</summary>
+    public const double MinLoopSweep = 5;
+
+    /// <summary>The longest arc of a loop arrow: almost the full circle (a full 360 would be a closed circle without start or end).</summary>
+    public const double MaxLoopSweep = 359.5;
+
     /// <summary>True for the shapes that carry line ends (heads) the user can choose: the lines and the loop arrows.</summary>
     public static bool HasLineEnds(ShapeKind kind) => IsLineFamily(kind) || IsLoopArrow(kind);
 
@@ -351,7 +393,7 @@ public static class ShapeGeometryFactory
 
         var path = shape.Kind == ShapeKind.CombinedPath
             ? (shape.CustomPathData is not null ? SKPath.ParseSvgPathData(shape.CustomPathData) ?? new SKPath() : new SKPath())
-            : BuildLocal(shape.Kind);
+            : IsLoopArrow(shape.Kind) ? BuildLoopArc(shape) : BuildLocal(shape.Kind);
 
         // Mirror in local (pre-scale) space so flipping reads the same regardless of aspect ratio.
         if (shape.FlipHorizontal)

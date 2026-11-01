@@ -4,7 +4,7 @@ using SkiaSharp;
 namespace Icono.Rendering;
 
 /// <summary>The length of a line or loop arrow as it is drawn, and making it a given length: a line (or polyline) is stretched from its first point,
-/// a loop arrow grows or shrinks about its centre. Used by the quick editor next to a selected line.</summary>
+/// a loop arrow is made shorter or longer along its circle (its end moves). Used by the quick editor next to a selected line.</summary>
 public static class LineMetrics
 {
     /// <summary>The length of the drawn line in page px (its path, without the line ends). 0 when there is nothing to measure.</summary>
@@ -16,12 +16,18 @@ public static class LineMetrics
     }
 
     /// <summary>Makes the line <paramref name="targetPx"/> long. A line made of points keeps its first point and its form (it is scaled from there);
-    /// a loop arrow keeps its centre. False when the shape cannot be sized this way or the length is not usable.</summary>
+    /// a loop arrow keeps its start and goes further round the circle or less far (when it would need more than the full circle, it grows about its centre instead). False when the shape cannot be sized this way or the length is not usable.</summary>
     public static bool SetLength(Shape shape, double targetPx)
     {
         if (targetPx < 0.01 || !ShapeGeometryFactory.HasLineEnds(shape.Kind) || (shape.Points is null && !ShapeGeometryFactory.IsLoopArrow(shape.Kind)))
         {
             return false;
+        }
+
+        if (ShapeGeometryFactory.IsLoopArrow(shape.Kind))
+        {
+            SetLoopLength(shape, targetPx);
+            return true;
         }
 
         // a rounded corner keeps its radius, so the length is not exactly proportional: a few passes settle it
@@ -42,6 +48,40 @@ public static class LineMetrics
         }
 
         return true;
+    }
+
+    /// <summary>A loop arrow keeps its start and size; its end goes further round or less far (a sweep of 5 to 359.5 degrees). A length beyond the full circle
+    /// makes the circle itself bigger.</summary>
+    private static void SetLoopLength(Shape shape, double targetPx)
+    {
+        shape.LoopSweep = ShapeGeometryFactory.MaxLoopSweep;
+        var full = Length(shape);
+        if (targetPx >= full)
+        {
+            if (targetPx > full + 0.005)
+            {
+                Scale(shape, targetPx / full);
+            }
+
+            return;
+        }
+
+        double low = ShapeGeometryFactory.MinLoopSweep, high = ShapeGeometryFactory.MaxLoopSweep;
+        for (var i = 0; i < 40; i++)
+        {
+            var middle = (low + high) / 2;
+            shape.LoopSweep = middle;
+            if (Length(shape) < targetPx)
+            {
+                low = middle;
+            }
+            else
+            {
+                high = middle;
+            }
+        }
+
+        shape.LoopSweep = (low + high) / 2;
     }
 
     private static void Scale(Shape shape, double factor)

@@ -91,7 +91,8 @@ public readonly record struct ShapeSnapshot(
     TextHorizontalAlign TextHAlign = TextHorizontalAlign.Center,
     TextVerticalAlign TextVAlign = TextVerticalAlign.Middle,
     TextPlacement TextPlacement = TextPlacement.Inside,
-    IReadOnlyList<double>? PointRadii = null)
+    IReadOnlyList<double>? PointRadii = null,
+    double? LoopSweep = null)
 {
     public static ShapeSnapshot Capture(Shape shape) => new(
         shape.X,
@@ -179,7 +180,8 @@ public readonly record struct ShapeSnapshot(
         shape.TextHAlign,
         shape.TextVAlign,
         shape.TextPlacement,
-        shape.PointRadii);
+        shape.PointRadii,
+        shape.LoopSweep);
 
     public void ApplyTo(Shape shape)
     {
@@ -269,5 +271,6 @@ public readonly record struct ShapeSnapshot(
         shape.TextVAlign = TextVAlign;
         shape.TextPlacement = TextPlacement;
         shape.PointRadii = PointRadii;
+        shape.LoopSweep = LoopSweep;
     }
 }

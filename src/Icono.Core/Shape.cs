@@ -54,6 +54,7 @@ public sealed class Shape : ObservableObject
     private TextVerticalAlign _textVAlign;
     private TextPlacement _textPlacement;
     private IReadOnlyList<double>? _pointRadii;
+    private double? _loopSweep;
     private ArgbColor? _textColor;
     private double _wallThickness = 16;
     private bool _wallClosed;
@@ -207,6 +208,10 @@ public sealed class Shape : ObservableObject
     /// <summary>The radius each point of <see cref="Points"/> is curved with (page px, parallel to the points; 0 or a missing list = sharp, or the
     /// general <see cref="CornerRadius"/>). Set by the Curve tool, one corner at a time.</summary>
     public IReadOnlyList<double>? PointRadii { get => _pointRadii; set => SetField(ref _pointRadii, value); }
+
+    /// <summary>How far round the circle a loop arrow goes, in degrees (5 to 359.5). Null = the classic arc. The start stays where it is and the end moves, so
+    /// this is the length of the line itself.</summary>
+    public double? LoopSweep { get => _loopSweep; set => SetField(ref _loopSweep, value); }
 
     /// <summary>Dashed stroke, only meaningful for <see cref="Points"/>-based kinds.</summary>
     public bool Dashed { get => _dashed; set => SetField(ref _dashed, value); }
