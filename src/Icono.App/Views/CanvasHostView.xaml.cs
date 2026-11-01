@@ -615,12 +615,24 @@ public partial class CanvasHostView : UserControl
         RulerLeft.SetCursor(documentPoint?.Y);
     }
 
+    /// <summary>The mouse cursor of the active tool: the icon of the Color Picker, Region Color, Add Point and Delete Point; a pick box for Match and
+    /// Curve; the pen for Handwriting; the normal arrow otherwise.</summary>
+    private void ApplyToolCursor() => Cursor = _context?.ActiveTool switch
+    {
+        ActiveTool.Match or ActiveTool.CornerCurve => PickBoxCursor.Instance,
+        ActiveTool.Freehand => Cursors.Pen,
+        ActiveTool.Eyedropper => ToolCursors.ColorPicker,
+        ActiveTool.RegionColor => ToolCursors.RegionColor,
+        ActiveTool.AddPoint => ToolCursors.AddPoint,
+        ActiveTool.DeletePoint => ToolCursors.DeletePoint,
+        _ => null,
+    };
+
     private void OnContextPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(EditorContext.ActiveTool))
         {
-            Cursor = _context?.ActiveTool is ActiveTool.Match or ActiveTool.CornerCurve ? PickBoxCursor.Instance
-                : _context?.ActiveTool == ActiveTool.Freehand ? Cursors.Pen : null;
+            ApplyToolCursor();
             CancelFillet();
             CancelFreehand();
             CancelDimensionPress();
@@ -3988,7 +4000,7 @@ public partial class CanvasHostView : UserControl
     {
         _isPanning = false;
         ReleaseMouseCapture();
-        Cursor = Cursors.Arrow;
+        ApplyToolCursor();
     }
 
     private void CommitPendingShape()
