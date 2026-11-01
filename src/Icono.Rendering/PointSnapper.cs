@@ -162,7 +162,7 @@ public static class PointSnapper
 
         foreach (var shape in extra is { Count: > 0 } ? document.VisibleShapes().Concat(extra) : document.VisibleShapes())
         {
-            if (exclude.Contains(shape) || shape.Kind == ShapeKind.DesignGrid || !MayBeNear(shape, cursor, ReachForExtension))
+            if (exclude.Contains(shape) || shape.Kind == ShapeKind.DesignGrid || shape.Freehand || !MayBeNear(shape, cursor, ReachForExtension))
             {
                 continue;
             }
@@ -302,7 +302,7 @@ public static class PointSnapper
         var candidates = new List<Candidate>();
         foreach (var shape in document.VisibleShapes())
         {
-            if (exclude.Contains(shape) || shape.Kind == ShapeKind.DesignGrid || !MayBeNear(shape, area))
+            if (exclude.Contains(shape) || shape.Kind == ShapeKind.DesignGrid || shape.Freehand || !MayBeNear(shape, area))
             {
                 continue;
             }
@@ -335,6 +335,11 @@ public static class PointSnapper
         {
             foreach (var shape in shapes)
             {
+                if (shape.Freehand)
+                {
+                    continue;
+                }
+
                 AddPoints(SnapGeometry.Of(shape), default, float.MaxValue, options, candidates);
             }
         }

@@ -20,6 +20,7 @@ public enum ActiveTool
     MeasureGap,
     Match,
     CornerCurve,
+    Freehand,
 }
 
 /// <summary>
@@ -105,6 +106,7 @@ public sealed class EditorContext : ObservableObject
         ActiveTool.MeasureGap => "MeasureGap",
         ActiveTool.Match => "Match",
         ActiveTool.CornerCurve => "CornerCurve",
+        ActiveTool.Freehand => "Freehand",
         ActiveTool.Shape when SelectedShapeKind == ShapeKind.CombinedPath && PendingUnit is { } unit => "Unit:" + unit.Id,
         ActiveTool.PathDraw when SelectedShapeKind == ShapeKind.Dimension => "Dim" + CurrentDimensionKind,
         ActiveTool.Shape or ActiveTool.PathDraw => SelectedShapeKind.ToString(),
@@ -123,6 +125,7 @@ public sealed class EditorContext : ObservableObject
         "MeasureGap" => "Distance between objects",
         "Match" => "Match Properties",
         "CornerCurve" => "Curve corners",
+        "Freehand" => "Handwriting",
         var tag when tag.StartsWith("Unit:", StringComparison.Ordinal) => PendingUnit?.Name ?? "Unit",
         var tag when tag.StartsWith("Dim", StringComparison.Ordinal) => tag[3..] + " dimension",
         var tag => System.Text.RegularExpressions.Regex.Replace(tag, "(?<=[a-z0-9])(?=[A-Z])", " "),
@@ -136,6 +139,7 @@ public sealed class EditorContext : ObservableObject
         "Measure" => "Ruler: click two points - nothing is added to the drawing. Shift locks the direction.",
         "MeasureGap" => "Distance: click the first object, then the second.",
         "Match" => "Match: click the source, then every object that should get its look. Esc ends.",
+        "Freehand" => "Handwriting: write or draw with the pen, a finger or the mouse. Every stroke is one object. Colour and width: HANDWRITING card. Esc ends.",
         "CornerCurve" => "Curve: click one side of a corner, then the neighbouring side, type the size and press Enter. Esc ends.",
         "Eyedropper" => "Eyedropper: click anywhere to pick up a colour.",
         "RegionColor" => "Bucket: click a region to colour it.",
@@ -166,6 +170,15 @@ public sealed class EditorContext : ObservableObject
     public Layer? SelectedLayer { get => _selectedLayer; set => SetField(ref _selectedLayer, value); }
 
     public ArgbColor CurrentFillColor { get => _currentFillColor; set => SetField(ref _currentFillColor, value); }
+
+    private ArgbColor _penColor = ArgbColor.FromRgb(0x1B, 0x23, 0x32);
+    private double _penWidth = 2.5;
+
+    /// <summary>The colour of the Handwriting tool.</summary>
+    public ArgbColor PenColor { get => _penColor; set => SetField(ref _penColor, value); }
+
+    /// <summary>The width (page px) of the stroke of the Handwriting tool.</summary>
+    public double PenWidth { get => _penWidth; set => SetField(ref _penWidth, Math.Clamp(value, 0.5, 60)); }
 
     private double _curveSizeCm = 1;
 

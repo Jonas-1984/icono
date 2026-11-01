@@ -57,6 +57,7 @@ public sealed class Shape : ObservableObject
     private double? _loopSweep;
     private double? _lineHeadSize;
     private bool _sketch;
+    private bool _freehand;
     private ArgbColor? _textColor;
     private double _wallThickness = 16;
     private bool _wallClosed;
@@ -220,6 +221,10 @@ public sealed class Shape : ObservableObject
 
     /// <summary>Drawn like by hand: a wobbling pen line that is thinner at its start, or a doubled, uneven outline for a closed shape.</summary>
     public bool Sketch { get => _sketch; set => SetField(ref _sketch, value); }
+
+    /// <summary>A stroke drawn by hand with the Handwriting tool (a path in <see cref="CustomPathData"/>): it is picked where the stroke is, not anywhere in its frame,
+    /// and it takes no part in the point snapping.</summary>
+    public bool Freehand { get => _freehand; set => SetField(ref _freehand, value); }
 
     /// <summary>Dashed stroke, only meaningful for <see cref="Points"/>-based kinds.</summary>
     public bool Dashed { get => _dashed; set => SetField(ref _dashed, value); }

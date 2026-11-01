@@ -183,6 +183,8 @@
                 <MenuItem Header="Polyline" Tag="Polyline" Click="ToolMenuItem_OnClick" />
                 <MenuItem Header="Curve" Tag="Curve" Click="ToolMenuItem_OnClick" />
                 <MenuItem Header="Line Options..." Tag="LINE" Click="FocusCardMenuItem_OnClick" />
+                <MenuItem Header="Handwriting (pen, touch)" Tag="Freehand" Click="ToolMenuItem_OnClick"
+                          ToolTip="Write or draw freely with a pen, a finger or the mouse; every stroke is one object in the colour you choose" />
                 <Separator />
                 <MenuItem Header="Wall" InputGestureText="W" Tag="Wall" Click="ToolMenuItem_OnClick" />
                 <MenuItem Header="Cut Wall" InputGestureText="X" Tag="WallCut" Click="ToolMenuItem_OnClick" />

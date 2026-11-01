@@ -33,6 +33,7 @@ public partial class ToolPanelView : UserControl
             {
                 _context.PropertyChanged += Context_OnPropertyChanged;
                 SyncGridPaintColor();
+                SyncPen();
                 _context.ObjectSnap.PropertyChanged += ObjectSnap_OnPropertyChanged;
                 SyncObjectSnapChecks();
                 _context.PointSnap.PropertyChanged += PointSnap_OnPropertyChanged;
@@ -195,6 +196,7 @@ public partial class ToolPanelView : UserControl
         InitializeComponent();
         BuildPointSnapList();
         InitializeGridPalette();
+        InitializePenPalette();
 
         _ = new IconPager(ShapesWrapPanel, ShapesPagerDots, IconsPerPage);
         _ = new IconPager(ItWrapPanel, ItPagerDots, IconsPerPage);
@@ -598,6 +600,114 @@ public partial class ToolPanelView : UserControl
         ObjectSnapWallsCheckBox.IsEnabled = ObjectSnapObjectsCheckBox.IsEnabled = options.Enabled;
     }
 
+    // ----- Handwriting: pen colour and width ----------------------------------------------------------
+
+    private bool _isSyncingPen;
+
+    private void InitializePenPalette()
+    {
+        PenSwatchList.ItemsSource = GridPalette.Select(c => (Brush)new SolidColorBrush(c)).ToList();
+        PenColorPicker.ColorChanged += PenColorPicker_OnColorChanged;
+    }
+
+    /// <summary>Shows the pen of the Handwriting tool: its colour (chip, hex text, custom picker) and its width.</summary>
+    private void SyncPen()
+    {
+        if (Context is null)
+        {
+            return;
+        }
+
+        var color = Context.PenColor.ToMediaColor();
+        PenColorChip.Background = new SolidColorBrush(color);
+        PenColorText.Text = color.A == 255
+            ? $"#{color.R:X2}{color.G:X2}{color.B:X2}"
+            : $"#{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}";
+        PenWidthTextBox.Text = Context.PenWidth.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+
+        _isSyncingPen = true;
+        try
+        {
+            PenColorPicker.SelectedColor = color;
+        }
+        finally
+        {
+            _isSyncingPen = false;
+        }
+    }
+
+    private void PenSwatch_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (Context is null || sender is not Border { Background: SolidColorBrush brush })
+        {
+            return;
+        }
+
+        Context.PenColor = brush.Color.FromMediaColor();
+        SyncPen();
+
+        // choosing a pen colour means "I want to write": the Handwriting tool is switched on straight away
+        Context.ActiveTool = ActiveTool.Freehand;
+        e.Handled = true;
+    }
+
+    private void PenColorPicker_OnColorChanged(object? sender, Color color)
+    {
+        if (Context is null || _isSyncingPen)
+        {
+            return;
+        }
+
+        Context.PenColor = color.FromMediaColor();
+        PenColorChip.Background = new SolidColorBrush(color);
+        PenColorText.Text = color.A == 255
+            ? $"#{color.R:X2}{color.G:X2}{color.B:X2}"
+            : $"#{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}";
+    }
+
+    private void PenCustomColorButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        SyncPen();
+        PenColorPopup.IsOpen = true;
+    }
+
+    private void PenWidthTextBox_OnLostFocus(object sender, RoutedEventArgs e) => ApplyPenWidth();
+
+    private void PenWidthTextBox_OnKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key == System.Windows.Input.Key.Enter)
+        {
+            ApplyPenWidth();
+        }
+    }
+
+    private void PenWidthPreset_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (Context is not null && sender is FrameworkElement { Tag: string tag }
+            && double.TryParse(tag, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var width))
+        {
+            Context.PenWidth = width;
+            SyncPen();
+            Context.ActiveTool = ActiveTool.Freehand;
+        }
+    }
+
+    private void ApplyPenWidth()
+    {
+        if (Context is null)
+        {
+            return;
+        }
+
+        if (double.TryParse(PenWidthTextBox.Text.Trim().Replace(',', '.'), System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out var width) && width > 0)
+        {
+            Context.PenWidth = width;
+        }
+
+        SyncPen();
+    }
+
     private void CurveAllCorners_OnClick(object sender, System.Windows.RoutedEventArgs e)
     {
         if (Context is { SelectedShapes.Count: 1 } context)
@@ -712,6 +822,9 @@ public partial class ToolPanelView : UserControl
                 break;
             case "MeasureGap":
                 Context.ActiveTool = ActiveTool.MeasureGap;
+                break;
+            case "Freehand":
+                Context.ActiveTool = ActiveTool.Freehand;
                 break;
             case "CornerCurve":
                 Context.ActiveTool = ActiveTool.CornerCurve;

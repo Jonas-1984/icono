@@ -539,6 +539,9 @@ public partial class MainWindow
             case "Match":
                 _context.BeginMatch();
                 break;
+            case "Freehand":
+                _context.ActiveTool = ActiveTool.Freehand;
+                break;
             case "DimHorizontal":
             case "DimVertical":
             case "DimAligned":
@@ -750,13 +753,13 @@ public partial class MainWindow
             if (e.Key == Key.Escape)
             {
                 // first Esc drops a measurement in progress, the next one leaves the tool
-                if (CanvasHost.CancelMeasure() || CanvasHost.CancelFillet())
+                if (CanvasHost.CancelMeasure() || CanvasHost.CancelFillet() || CanvasHost.CancelFreehand())
                 {
                     return true;
                 }
 
                 if (_context.ActiveTool is ActiveTool.Eyedropper or ActiveTool.RegionColor or ActiveTool.PanZoom or ActiveTool.Shape
-                    or ActiveTool.Measure or ActiveTool.MeasureGap or ActiveTool.Match or ActiveTool.CornerCurve)
+                    or ActiveTool.Measure or ActiveTool.MeasureGap or ActiveTool.Match or ActiveTool.CornerCurve or ActiveTool.Freehand)
                 {
                     _context.ActiveTool = ActiveTool.Select;
                 }

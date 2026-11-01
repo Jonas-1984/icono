@@ -38,6 +38,10 @@
                                      ToolTip="Match (Q): click the object whose look you want, then click the objects that should get it" />
                         <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked"
                                      Style="{StaticResource ShapeIconRadioButtonStyle}"
+                                     Tag="{StaticResource HandwritingToolGeometry}" CommandParameter="Freehand"
+                                     ToolTip="Handwriting: write or draw with a pen, a finger or the mouse (colour and width in the HANDWRITING card)" />
+                        <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked"
+                                     Style="{StaticResource ShapeIconRadioButtonStyle}"
                                      Tag="{StaticResource CornerCurveToolGeometry}" CommandParameter="CornerCurve"
                                      ToolTip="Curve: click a line or a shape to curve its corners (size in the CURVE card; Shift+click makes them sharp)" />
                     </WrapPanel>
@@ -88,6 +92,75 @@
                                           Foreground="{DynamicResource MutedTextBrush}" FontSize="11" Margin="12,2,0,2"
                                           ToolTip="Line up with, or sit flush against, the edges and centres of other shapes." />
                             </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource CardBorderStyle}">
+                    <StackPanel>
+                        <Grid Style="{StaticResource CollapsibleCardHeaderStyle}" MouseLeftButtonDown="CardHeader_OnToggle">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="HANDWRITING" Style="{StaticResource CardHeaderTextStyle}" />
+                            <Path Grid.Column="1" Style="{StaticResource CardChevronPathStyle}" />
+                        </Grid>
+                        <StackPanel>
+                            <TextBlock Text="Choose the Handwriting tool and write or draw on the plan with a pen, a finger on a touch screen or the mouse. Every stroke is one object (move, recolour, delete it, undo it). Esc ends."
+                                       Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="12,2,12,6" />
+                            <TextBlock Text="PEN COLOUR" Style="{StaticResource PanelLabelTextStyle}" />
+                            <Grid Margin="10,0,10,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Border x:Name="PenColorChip" Grid.Column="0" Width="28" Height="28" CornerRadius="4.5"
+                                        BorderBrush="{DynamicResource InsetEdgeBrush}" BorderThickness="1" Background="#1B2332" />
+                                <TextBlock x:Name="PenColorText" Grid.Column="1" Text="#1B2332" VerticalAlignment="Center" Margin="8,0"
+                                           Foreground="{DynamicResource ForegroundTextBrush}" FontSize="11" />
+                                <Button Grid.Column="2" Content="Custom..." Style="{StaticResource PanelKeyButtonStyle}" Height="26" Margin="0"
+                                        Padding="8,0" FontSize="11" Click="PenCustomColorButton_OnClick"
+                                        ToolTip="Mix any colour for the pen" />
+                                <Popup x:Name="PenColorPopup" PlacementTarget="{Binding ElementName=PenColorChip}" Placement="Bottom"
+                                       StaysOpen="False" AllowsTransparency="True">
+                                    <Grid Margin="0,4,8,8">
+                                        <Border Background="{DynamicResource PopupSurfaceBrush}" CornerRadius="6"
+                                                Effect="{DynamicResource RaisedDarkShadow}" />
+                                        <Border Background="{DynamicResource PopupSurfaceBrush}" BorderBrush="{DynamicResource RaisedEdgeBrush}"
+                                                BorderThickness="1" CornerRadius="6" Padding="10" SnapsToDevicePixels="True">
+                                            <views:ColorPickerView x:Name="PenColorPicker" />
+                                        </Border>
+                                    </Grid>
+                                </Popup>
+                            </Grid>
+
+                            <ItemsControl x:Name="PenSwatchList" Margin="6,0,6,6">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="6" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Width="24" Height="24" Margin="3" CornerRadius="3.5" Cursor="Hand"
+                                                Background="{Binding}" BorderBrush="{DynamicResource RaisedEdgeBrush}" BorderThickness="1"
+                                                MouseLeftButtonDown="PenSwatch_OnMouseLeftButtonDown" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <TextBlock Text="PEN WIDTH (PX)" Style="{StaticResource PanelLabelTextStyle}" />
+                            <TextBox x:Name="PenWidthTextBox" Margin="10,0,10,6" Text="2.5" TextAlignment="Center" AutomationProperties.Name="Pen width in px"
+                                     ToolTip="Width of the pen stroke in px on the page. Type a number and press Enter."
+                                     LostFocus="PenWidthTextBox_OnLostFocus" KeyDown="PenWidthTextBox_OnKeyDown" />
+                            <UniformGrid Columns="4" Margin="3,0,3,6">
+                                <Button Content="1.5" Tag="1.5" Style="{StaticResource PanelKeyButtonStyle}" Click="PenWidthPreset_OnClick" />
+                                <Button Content="2.5" Tag="2.5" Style="{StaticResource PanelKeyButtonStyle}" Click="PenWidthPreset_OnClick" />
+                                <Button Content="5" Tag="5" Style="{StaticResource PanelKeyButtonStyle}" Click="PenWidthPreset_OnClick" />
+                                <Button Content="10" Tag="10" Style="{StaticResource PanelKeyButtonStyle}" Click="PenWidthPreset_OnClick" />
+                            </UniformGrid>
                         </StackPanel>
                     </StackPanel>
                 </Border>

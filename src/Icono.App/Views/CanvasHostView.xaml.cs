@@ -152,6 +152,7 @@ public partial class CanvasHostView : UserControl
         };
         MouseLeave += OnMouseLeave;
         LayoutUpdated += (_, _) => UpdateRulers();
+        ConfigureInkInput();
         MouseRightButtonDown += OnMouseRightButtonDown;
     }
 
@@ -616,8 +617,10 @@ public partial class CanvasHostView : UserControl
     {
         if (e.PropertyName == nameof(EditorContext.ActiveTool))
         {
-            Cursor = _context?.ActiveTool is ActiveTool.Match or ActiveTool.CornerCurve ? PickBoxCursor.Instance : null;
+            Cursor = _context?.ActiveTool is ActiveTool.Match or ActiveTool.CornerCurve ? PickBoxCursor.Instance
+                : _context?.ActiveTool == ActiveTool.Freehand ? Cursors.Pen : null;
             CancelFillet();
+            CancelFreehand();
             ClearSnapGuides();
         }
         else if (e.PropertyName == nameof(EditorContext.ShowRulers))
@@ -1326,7 +1329,7 @@ public partial class CanvasHostView : UserControl
 
         canvas.Save();
         canvas.Scale(scaleX, scaleY);
-        DocumentRenderer.Render(canvas, document, document.Width, document.Height, _pendingShape ?? _pendingPathShape);
+        DocumentRenderer.Render(canvas, document, document.Width, document.Height, _pendingShape ?? _pendingPathShape ?? _freehandShape);
 
         if (_context.ShowGrid)
         {
@@ -1856,6 +1859,12 @@ public partial class CanvasHostView : UserControl
 
         var point = ToDocumentSpace(e.GetPosition(SkiaCanvas));
 
+        if (_context.ActiveTool == ActiveTool.Freehand)
+        {
+            BeginFreehand(point);
+            return;
+        }
+
         if (_context.ActiveTool == ActiveTool.Shape && _context.SelectedShapeKind == ShapeKind.Text)
         {
             BeginTextEdit(point, null);
@@ -2130,6 +2139,17 @@ public partial class CanvasHostView : UserControl
                 {
                     // Only its lines, arrowheads and the written value count - not the empty area between them.
                     if (DimensionRenderer.HitTest(shape, point.X, point.Y, 4 / Zoom))
+                    {
+                        return (shape, layer);
+                    }
+
+                    continue;
+                }
+
+                if (shape.Freehand)
+                {
+                    // a stroke written by hand is picked where it is drawn, not anywhere in its frame
+                    if (FreehandBuilder.HitTest(shape, point.X, point.Y, 5 / Zoom))
                     {
                         return (shape, layer);
                     }
@@ -3286,6 +3306,12 @@ public partial class CanvasHostView : UserControl
             ClearAnchorProbe();
         }
 
+        if (_freehandPoints is not null)
+        {
+            ContinueFreehand(e);
+            return;
+        }
+
         if (_isGridPainting)
         {
             ContinueGridPaint(ToDocumentSpace(e.GetPosition(SkiaCanvas)));
@@ -3674,6 +3700,12 @@ public partial class CanvasHostView : UserControl
         if (_isPanning)
         {
             EndPan();
+            return;
+        }
+
+        if (_freehandPoints is not null)
+        {
+            EndFreehand();
             return;
         }
 
