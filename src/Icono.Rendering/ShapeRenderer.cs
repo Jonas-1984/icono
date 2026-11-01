@@ -166,7 +166,12 @@ public static class ShapeRenderer
 
             if (shape.Sketch)
             {
-                SketchStroke.Draw(canvas, path, strokePaint);
+                // a line with no head at one end runs out thin there (the loop arrows too)
+                var lineWithEnds = ShapeGeometryFactory.HasLineEnds(shape.Kind);
+                SketchStroke.Draw(
+                    canvas, path, strokePaint,
+                    taperStart: lineWithEnds && shape.LineStartHead == ArrowHeadKind.None,
+                    taperEnd: lineWithEnds && shape.LineEndHead == ArrowHeadKind.None);
             }
             else
             {
