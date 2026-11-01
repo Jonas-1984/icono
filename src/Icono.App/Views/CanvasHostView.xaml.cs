@@ -2670,7 +2670,7 @@ public partial class CanvasHostView : UserControl
         var before = ShapeSnapshot.Capture(shape);
         var list = shape.Points!.ToList();
         list.Insert(afterIndex + 1, new CorePoint(docPoint.X - shape.X, docPoint.Y - shape.Y));
-        shape.PointRadii = CornerFillet.AfterInsert(shape.PointRadii, shape.Points.Count, afterIndex);
+        shape.PointRadii = CornerFillet.AfterInsert(shape.PointRadii, list.Count - 1, afterIndex);
         shape.Points = list;
         if (shape.Kind == ShapeKind.Wall)
         {
@@ -2698,7 +2698,7 @@ public partial class CanvasHostView : UserControl
             WallEditor.RemapOverridesBeforeRemove(shape, index);
         }
 
-        shape.PointRadii = CornerFillet.AfterRemove(shape.PointRadii, shape.Points.Count, index);
+        shape.PointRadii = CornerFillet.AfterRemove(shape.PointRadii, list.Count, index);
         list.RemoveAt(index);
         shape.Points = list;
         PathBoundsCalculator.Recompute(shape);
