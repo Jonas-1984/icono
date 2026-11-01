@@ -19,9 +19,3 @@ public sealed record ArrowStyleOption(string Label, DimensionArrowStyle Value);
 
 /// <summary>One entry of the "what do the dimensions measure" drop-down of a wall.</summary>
 public sealed record WallMeasureOption(string Label, WallMeasure Value);
-
-/// <summary>One entry of the "where are the dimension lines" drop-down of a wall.</summary>
-public sealed record WallPlacementOption(string Label, WallDimensionPlacement Value);
-
-/// <summary>One entry of the "which side is the dimension of a door or window on" drop-down.</summary>
-public sealed record SymbolSideOption(string Label, WallDimensionPlacement Value);

@@ -52,14 +52,6 @@ public partial class MainWindow
         }
     }
 
-    private void WallDimensionPlacementMenuItem_OnClick(object sender, RoutedEventArgs e)
-    {
-        if (sender is MenuItem { Tag: string tag } && Enum.TryParse<WallDimensionPlacement>(tag, out var placement))
-        {
-            _context.SetWallDimensionPlacement(placement);
-        }
-    }
-
     private void PointSnapSettingsMenuItem_OnClick(object sender, RoutedEventArgs e) => ToolPanel.ShowPointSnapCard();
 
     private void PointSnapMenuItem_OnClick(object sender, RoutedEventArgs e) =>

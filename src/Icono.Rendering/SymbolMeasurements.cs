@@ -92,6 +92,44 @@ public static class SymbolMeasurements
         return inside == outsideIsPlusY;
     }
 
+    /// <summary>Sets the dimensions of the symbol so that their line runs through the point: on the side of the wall the point is on, at the point's
+    /// distance from the wall's face. This is how a door or window dimension is placed with the mouse alone. False for a shape that is no symbol.</summary>
+    public static bool PlaceDimensionLine(Document document, Shape symbol, SKPoint point)
+    {
+        if (!ArchitecturalSymbols.IsSymbol(symbol.Kind))
+        {
+            return false;
+        }
+
+        var host = FindHost(document, symbol);
+        var (w, h) = ArchitecturalSymbols.FrameSize(symbol);
+        var matrix = ArchitecturalSymbols.PlaceMatrix(symbol, w, h);
+        var innerFace = ArchitecturalSymbols.IsDoor(symbol.Kind) ? h - (float)Math.Max(symbol.WallThickness, 0.5) : 0f;
+
+        // both sides in turn: the line goes to the one the point lies beyond (its face is the nearer one)
+        var best = symbol.WallDimensionPlacement;
+        var bestDistance = float.MinValue;
+        var bestExtra = 0f;
+        foreach (var placement in new[] { WallDimensionPlacement.Outside, WallDimensionPlacement.Inside })
+        {
+            symbol.WallDimensionPlacement = placement;
+            var roomSide = IsOnRoomSide(symbol, host);
+            var away = ArchitecturalSymbols.DimensionAway(symbol, roomSide);
+            var face = matrix.MapPoint(new SKPoint(w / 2, roomSide ? innerFace : h));
+            var distance = (point.X - face.X) * away.X + (point.Y - face.Y) * away.Y;
+            if (distance > bestDistance)
+            {
+                best = placement;
+                bestDistance = distance;
+                bestExtra = host is null ? 0f : ClearOfWallDimensions(symbol, host, roomSide);
+            }
+        }
+
+        symbol.WallDimensionPlacement = best;
+        symbol.DimOffset = Math.Max(0, bestDistance - bestExtra);
+        return true;
+    }
+
     /// <summary>The wall segment the symbol lies in, or null when it lies in no wall (it must run parallel to the wall and sit in its band).</summary>
     public static SymbolHost? FindHost(Document document, Shape symbol)
     {

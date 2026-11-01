@@ -313,8 +313,6 @@ public partial class PropertiesPanelView : UserControl
         WallHatchComboBox.ItemsSource = HatchOptions;
         WallUnitComboBox.ItemsSource = WallUnitOptions;
         WallMeasureComboBox.ItemsSource = WallMeasureOptions;
-        WallPlacementComboBox.ItemsSource = WallPlacementOptions;
-        SymbolSideComboBox.ItemsSource = SymbolSideOptions;
         DimensionUnitComboBox.ItemsSource = WallUnitOptions;
         DimensionArrowStyleComboBox.ItemsSource = ArrowStyleOptions;
         WallHatchColorPicker.ColorChanged += WallHatchColorPicker_OnColorChanged;
@@ -1122,19 +1120,6 @@ public partial class PropertiesPanelView : UserControl
         new("Zigzag", HatchKind.Zigzag),
     ];
 
-    private static readonly SymbolSideOption[] SymbolSideOptions =
-    [
-        new("Outside of the wall", WallDimensionPlacement.Outside),
-        new("Room side (the side the door swings to)", WallDimensionPlacement.Inside),
-    ];
-
-    private static readonly WallPlacementOption[] WallPlacementOptions =
-    [
-        new("Automatic", WallDimensionPlacement.Automatic),
-        new("Inside the plan (in the room)", WallDimensionPlacement.Inside),
-        new("Outside the plan", WallDimensionPlacement.Outside),
-    ];
-
     private static readonly WallMeasureOption[] WallMeasureOptions =
     [
         new("Inside (clear size of the room)", WallMeasure.Inside),
@@ -1177,7 +1162,6 @@ public partial class PropertiesPanelView : UserControl
         SymbolDoorSection.Visibility = isDoor ? Visibility.Visible : Visibility.Collapsed;
         SymbolShowDimensionCheckBox.IsChecked = shape.SymbolShowDimension;
         SymbolShowGapsCheckBox.IsChecked = shape.SymbolShowGaps;
-        SymbolSideComboBox.SelectedItem = SymbolSideOptions.First(o => o.Value == (shape.WallDimensionPlacement == WallDimensionPlacement.Inside ? WallDimensionPlacement.Inside : WallDimensionPlacement.Outside));
         SymbolThicknessLabel.Text = $"WALL THICKNESS ({UnitName(_shapeSizeUnit)})";
         SymbolThicknessTextBox.Text = FormatReal(shape.WallThickness);
         SymbolAngleSlider.Value = Math.Clamp(shape.DoorOpenAngle, SymbolAngleSlider.Minimum, SymbolAngleSlider.Maximum);
@@ -1218,22 +1202,6 @@ public partial class PropertiesPanelView : UserControl
             }
         });
         RefreshControlsFromShape();
-    }
-
-    private void SymbolSideComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (_isRefreshingControls || SymbolSideComboBox.SelectedItem is not SymbolSideOption option)
-        {
-            return;
-        }
-
-        ApplyToSelectionWithUndo(s =>
-        {
-            if (ArchitecturalSymbols.IsSymbol(s.Kind))
-            {
-                s.WallDimensionPlacement = option.Value;
-            }
-        });
     }
 
     private void SymbolThicknessTextBox_OnLostFocus(object sender, RoutedEventArgs e)
@@ -1311,7 +1279,6 @@ public partial class PropertiesPanelView : UserControl
         WallDimensionsCheckBox.IsChecked = shape.WallShowDimensions;
         WallUnitComboBox.SelectedItem = WallUnitOptions.First(o => o.Value == shape.WallDimensionUnit);
         WallMeasureComboBox.SelectedItem = WallMeasureOptions.First(o => o.Value == shape.WallDimensionMeasure);
-        WallPlacementComboBox.SelectedItem = WallPlacementOptions.First(o => o.Value == shape.WallDimensionPlacement);
     }
 
     // ----- Dimension card (a dimension shape, and the dimensions written next to a wall) ------------------------
@@ -1384,20 +1351,10 @@ public partial class PropertiesPanelView : UserControl
         var custom = isWall && segment >= 0 ? WallRenderer.FindOverride(shape, segment) : null;
         DimensionSegmentOptions.Visibility = isWall && segment >= 0 ? Visibility.Visible : Visibility.Collapsed;
         DimensionShowCheckBox.IsChecked = custom is not { Hidden: true };
-        DimensionFlipCheckBox.IsChecked = custom is { Flip: true };
         if (_context is not null)
         {
             _context.WallSegmentHighlight = isWall && segment >= 0 ? segment : null;
         }
-
-        // The distance is editable for a wall, and for a dimension that was created for its shape.
-        DimensionOffsetSection.Visibility = isWall || linked || isSymbol ? Visibility.Visible : Visibility.Collapsed;
-        DimensionOffsetLabel.Text = isWall
-            ? $"DISTANCE FROM WALL ({UnitName(_shapeSizeUnit)})"
-            : isSymbol
-                ? $"DISTANCE FROM THE OPENING ({UnitName(_shapeSizeUnit)})"
-                : $"DISTANCE FROM SHAPE ({UnitName(_shapeSizeUnit)})";
-        DimensionOffsetTextBox.Text = FormatInUnit(custom?.Offset ?? shape.DimOffset, _shapeSizeUnit);
 
         DimensionTextSection.Visibility = isDimension || (isWall && segment >= 0) ? Visibility.Visible : Visibility.Collapsed;
         DimensionTextBox.Text = isDimension ? shape.DimText ?? string.Empty : custom?.Text ?? string.Empty;
@@ -1513,51 +1470,6 @@ public partial class PropertiesPanelView : UserControl
         }
     }
 
-    private void DimensionOffsetTextBox_OnLostFocus
-(object sender, RoutedEventArgs e)
-    {
-        if (_boundShape is null || !HasDimensions(_boundShape) || _isRefreshingControls)
-        {
-            return;
-        }
-
-        var text = DimensionOffsetTextBox.Text.Trim().Replace(',', '.');
-        var perSegment = _boundShape.Kind == ShapeKind.Wall && _dimensionSegment >= 0;
-        var currentOffset = perSegment
-            ? WallRenderer.FindOverride(_boundShape, _dimensionSegment)?.Offset ?? _boundShape.DimOffset
-            : _boundShape.DimOffset;
-        if (text == FormatInUnit(currentOffset, _shapeSizeUnit))
-
-        {
-            return;
-        }
-
-        if (!double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var typed))
-        {
-            RefreshControlsFromShape();
-            return;
-        }
-
-        var px = UnitToPx(typed, _shapeSizeUnit);
-        if (perSegment)
-        {
-            var segment = _dimensionSegment;
-            EditWallDimension(segment, c => c with { Offset = px });
-            RefreshControlsFromShape();
-            return;
-        }
-
-        ApplyToSelectionWithUndo(s =>
-        {
-            if (HasDimensions(s))
-            {
-                s.DimOffset = px;
-
-            }
-        });
-        RefreshControlsFromShape();
-    }
-
     private static readonly ArrowStyleOption[] ArrowStyleOptions =
     [
         new("Arrow (filled)", DimensionArrowStyle.Arrow),
@@ -1659,17 +1571,6 @@ public partial class PropertiesPanelView : UserControl
         var hidden = DimensionShowCheckBox.IsChecked != true;
         EditWallDimension(_dimensionSegment, c => c with { Hidden = hidden });
         RefreshControlsFromShape();
-    }
-
-    private void DimensionFlipCheckBox_OnCheckedChanged(object sender, RoutedEventArgs e)
-    {
-        if (_isRefreshingControls || _boundShape is not { Kind: ShapeKind.Wall } || _dimensionSegment < 0)
-        {
-            return;
-        }
-
-        var flip = DimensionFlipCheckBox.IsChecked == true;
-        EditWallDimension(_dimensionSegment, c => c with { Flip = flip });
     }
 
     /// <summary>Where the number sits along the dimension line, in percent (0 = start, 50 = middle, 100 = end).</summary>
@@ -1899,20 +1800,6 @@ public partial class PropertiesPanelView : UserControl
                 if (s.Kind == ShapeKind.Wall)
                 {
                     s.WallDimensionMeasure = option.Value;
-                }
-            });
-        }
-    }
-
-    private void WallPlacementComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (WallPlacementComboBox.SelectedItem is WallPlacementOption option)
-        {
-            ApplyToSelectionWithUndo(s =>
-            {
-                if (s.Kind == ShapeKind.Wall)
-                {
-                    s.WallDimensionPlacement = option.Value;
                 }
             });
         }

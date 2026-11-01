@@ -653,6 +653,7 @@
                             <Path Grid.Column="1" Style="{StaticResource CardChevronPathStyle}" />
                         </Grid>
                         <StackPanel>
+                            <TextBlock Text="Place a dimension with the mouse: drag its number to where the line should run (either side, any distance). A click on the number types a length." Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="12,0,12,6" />
                             <StackPanel x:Name="DimensionLinkSection">
                                 <TextBlock x:Name="DimensionLinkText" Text="" Foreground="{DynamicResource MutedTextBrush}" FontSize="11"
                                            TextWrapping="Wrap" Margin="14,0,14,6" />
@@ -670,9 +671,6 @@
                                     <CheckBox x:Name="DimensionShowCheckBox" Content="SHOW THIS DIMENSION" Margin="6,2,6,4"
                                               Foreground="{DynamicResource MutedTextBrush}" FontSize="11"
                                               Checked="DimensionShowCheckBox_OnCheckedChanged" Unchecked="DimensionShowCheckBox_OnCheckedChanged" />
-                                    <CheckBox x:Name="DimensionFlipCheckBox" Content="OTHER SIDE OF THE WALL" Margin="6,2,6,6"
-                                              Foreground="{DynamicResource MutedTextBrush}" FontSize="11"
-                                              Checked="DimensionFlipCheckBox_OnCheckedChanged" Unchecked="DimensionFlipCheckBox_OnCheckedChanged" />
                                 </StackPanel>
                             </StackPanel>
 
@@ -690,12 +688,6 @@
                                 <TextBlock Text="TEXT" Style="{StaticResource PanelLabelTextStyle}" />
                                 <TextBox x:Name="DimensionTextBox" Margin="6,0,6,6" ToolTip="Your own text. Write &lt;&gt; where the measured value should appear."
                                          LostFocus="DimensionTextBox_OnLostFocus" KeyDown="WallTextBox_OnKeyDown" />
-                            </StackPanel>
-
-                            <StackPanel x:Name="DimensionOffsetSection">
-                                <TextBlock x:Name="DimensionOffsetLabel" Text="DISTANCE FROM SHAPE" Style="{StaticResource PanelLabelTextStyle}" />
-                                <TextBox x:Name="DimensionOffsetTextBox" Margin="6,0,6,6" ToolTip="How far the dimension line sits from the shape"
-                                         LostFocus="DimensionOffsetTextBox_OnLostFocus" KeyDown="WallTextBox_OnKeyDown" />
                             </StackPanel>
 
                             <TextBlock Text="NUMBER POSITION ALONG THE LINE (%)" Style="{StaticResource PanelLabelTextStyle}" />
@@ -762,10 +754,6 @@
                                       Foreground="{DynamicResource MutedTextBrush}" FontSize="11"
                                       ToolTip="The clear distance from each jamb to the corner of the wall. Click a number and type the distance you want: the symbol slides along the wall."
                                       Checked="SymbolShowGapsCheckBox_OnCheckedChanged" Unchecked="SymbolShowGapsCheckBox_OnCheckedChanged" />
-                            <TextBlock Text="DIMENSION SIDE" Style="{StaticResource PanelLabelTextStyle}" />
-                            <ComboBox x:Name="SymbolSideComboBox" Margin="6,0,6,6" DisplayMemberPath="Label"
-                                      ToolTip="Which side of the wall the dimension is on: the outside of the wall (away from a door's swing) or the room side"
-                                      SelectionChanged="SymbolSideComboBox_OnSelectionChanged" />
                             <StackPanel x:Name="SymbolDoorSection">
                                 <TextBlock x:Name="SymbolThicknessLabel" Text="WALL THICKNESS" Style="{StaticResource PanelLabelTextStyle}" />
                                 <TextBox x:Name="SymbolThicknessTextBox" Margin="6,0,6,6"
@@ -847,10 +835,6 @@
                             <ComboBox x:Name="WallMeasureComboBox" Margin="6,0,6,6" DisplayMemberPath="Label"
                                       ToolTip="What the numbers show: the clear size on the inside of the room (default), the centre line of the wall or the outside"
                                       SelectionChanged="WallMeasureComboBox_OnSelectionChanged" />
-                            <TextBlock Text="DIMENSIONS PLACED" Style="{StaticResource PanelLabelTextStyle}" />
-                            <ComboBox x:Name="WallPlacementComboBox" Margin="6,0,6,6" DisplayMemberPath="Label"
-                                      ToolTip="Where the dimension lines run: inside the plan (in the room), outside the plan, or automatically. A single dimension can still be put on the other side in the DIMENSION card."
-                                      SelectionChanged="WallPlacementComboBox_OnSelectionChanged" />
 
                             <Button Content="Join selected walls into one" Style="{StaticResource PanelKeyButtonStyle}" Margin="6,2,6,4"
                                     ToolTip="Select two walls (click one, Shift+click the other) and make them one wall. The nearest ends are joined; when they do not touch a new wall bridges the gap, and walls in one line become one straight wall."

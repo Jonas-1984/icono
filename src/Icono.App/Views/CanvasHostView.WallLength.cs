@@ -19,12 +19,12 @@ public partial class CanvasHostView
     private Shape? _lengthSymbol;
     private SymbolDimensionPart _lengthPart;
 
-    /// <summary>Opens the length editor when the point is on the number of a wall dimension. True when it did.</summary>
-    private bool TryBeginWallLengthEdit(Point point)
+    /// <summary>The wall and the segment whose dimension has its number at the point, or null.</summary>
+    private (Shape Wall, int Segment)? FindWallDimensionNumber(Point point)
     {
         if (_context is null)
         {
-            return false;
+            return null;
         }
 
         foreach (var layer in _context.Document.Layers.Where(l => l.Visible && !l.Locked))
@@ -33,22 +33,20 @@ public partial class CanvasHostView
             {
                 if (WallRenderer.HitTestDimensionText(wall, point.X, point.Y, 3 / Zoom) is { } segment)
                 {
-                    BeginWallLengthEdit(wall, segment);
-                    return true;
+                    return (wall, segment);
                 }
             }
         }
 
-        return false;
+        return null;
     }
 
-    /// <summary>Opens the editor when the point is on the number of a dimension of a door, window or opening: the width resizes the
-    /// opening, a distance to a wall corner slides it along the wall.</summary>
-    private bool TryBeginSymbolDimensionEdit(Point point)
+    /// <summary>The door, window or opening whose dimension has its number at the point, with that dimension, or null.</summary>
+    private (Shape Symbol, SymbolDimension Dimension)? FindSymbolDimensionNumber(Point point)
     {
         if (_context is null)
         {
-            return false;
+            return null;
         }
 
         foreach (var layer in _context.Document.Layers.Where(l => l.Visible && !l.Locked))
@@ -57,13 +55,12 @@ public partial class CanvasHostView
             {
                 if (SymbolMeasurements.HitTestText(_context.Document, symbol, point.X, point.Y, 3 / Zoom) is { } dimension)
                 {
-                    BeginSymbolDimensionEdit(symbol, dimension);
-                    return true;
+                    return (symbol, dimension);
                 }
             }
         }
 
-        return false;
+        return null;
     }
 
     private void BeginSymbolDimensionEdit(Shape symbol, SymbolDimension dimension)

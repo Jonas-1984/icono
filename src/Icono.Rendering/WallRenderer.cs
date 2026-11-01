@@ -222,6 +222,30 @@ public static class WallRenderer
         };
     }
 
+    /// <summary>Where the dimension of one segment has to be set so that its line runs through the point: which side of the wall it is on
+    /// (<c>Flip</c> = the other side than the wall's own) and how far from the wall's face (<c>Offset</c>, px). This is how a dimension is placed
+    /// with the mouse alone: the line goes where the pointer is, on either side of the wall. Null for a segment that does not exist.</summary>
+    public static (double Offset, bool Flip)? DimensionLineThrough(Shape wall, int segment, SKPoint point)
+    {
+        var segments = WallGeometry.Segments(wall);
+        if (segment < 0 || segment >= segments.Count)
+        {
+            return null;
+        }
+
+        var (from, to) = segments[segment];
+        var length = Geo.Distance(from, to);
+        if (length < 1f)
+        {
+            return null;
+        }
+
+        // distance of the point from the centre line, positive on the left of the walking direction
+        var across = (-(point.X - from.X) * (to.Y - from.Y) + (point.Y - from.Y) * (to.X - from.X)) / length;
+        var side = across >= 0 ? 1f : -1f;
+        return (Math.Max(0, Math.Abs(across) - wall.WallThickness / 2), side != LineSide(wall));
+    }
+
     /// <summary>The wall face an inside or outside dimension measures: for a ring - and for an open wall of three or more points, which
     /// goes round a room too - the inner or outer face, for a single straight wall the face the dimension line is on.</summary>
     public static float FaceSide(Shape wall, float lineSide)

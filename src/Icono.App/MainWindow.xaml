@@ -227,11 +227,6 @@
                     <MenuItem Header="Show All" Tag="ShowAll" Click="SymbolDimensionMenuItem_OnClick" />
                     <MenuItem Header="Hide All" Tag="HideAll" Click="SymbolDimensionMenuItem_OnClick" />
                 </MenuItem>
-                <MenuItem Header="Wall Dimensions">
-                    <MenuItem Header="Inside the Plan (in the room)" Tag="Inside" Click="WallDimensionPlacementMenuItem_OnClick" />
-                    <MenuItem Header="Outside the Plan" Tag="Outside" Click="WallDimensionPlacementMenuItem_OnClick" />
-                    <MenuItem Header="Automatic" Tag="Automatic" Click="WallDimensionPlacementMenuItem_OnClick" />
-                </MenuItem>
                 <Separator />
                 <MenuItem Header="Distance between Objects" InputGestureText="B" Tag="MeasureGap" Click="ToolMenuItem_OnClick" />
                 <MenuItem Header="Ruler (nothing is added)" InputGestureText="M" Tag="Measure" Click="ToolMenuItem_OnClick" />

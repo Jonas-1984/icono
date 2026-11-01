@@ -795,27 +795,6 @@ public sealed class EditorContext : ObservableObject
         EditSelection(shapes => ShapeArranger.Distribute(shapes, horizontally));
     }
 
-    /// <summary>Puts the dimension lines of the selected walls inside the plan, outside it, or automatically.</summary>
-    public void SetWallDimensionPlacement(WallDimensionPlacement placement)
-    {
-        if (!SelectedShapes.Any(s => s.Kind == ShapeKind.Wall))
-        {
-            StatusMessage?.Invoke("Select a wall first.");
-            return;
-        }
-
-        EditSelection(shapes =>
-        {
-            var walls = shapes.Where(s => s.Kind == ShapeKind.Wall && s.WallDimensionPlacement != placement).ToList();
-            foreach (var wall in walls)
-            {
-                wall.WallDimensionPlacement = placement;
-            }
-
-            return walls;
-        });
-    }
-
     public void FlipSelection(bool horizontally) => EditSelection(shapes =>
     {
         foreach (var shape in shapes)

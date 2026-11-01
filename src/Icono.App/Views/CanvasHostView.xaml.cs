@@ -621,6 +621,7 @@ public partial class CanvasHostView : UserControl
                 : _context?.ActiveTool == ActiveTool.Freehand ? Cursors.Pen : null;
             CancelFillet();
             CancelFreehand();
+            CancelDimensionPress();
             ClearSnapGuides();
         }
         else if (e.PropertyName == nameof(EditorContext.ShowRulers))
@@ -1960,13 +1961,8 @@ public partial class CanvasHostView : UserControl
             return;
         }
 
-        // Select tool: a click on the number of a wall dimension opens the length editor.
-        if (_context.ActiveTool == ActiveTool.Select && e.ClickCount == 1 && TryBeginWallLengthEdit(point))
-        {
-            return;
-        }
-
-        if (_context.ActiveTool == ActiveTool.Select && e.ClickCount == 1 && TryBeginSymbolDimensionEdit(point))
+        // Select tool: the number of a wall, door or window dimension - a click opens the length editor, dragging places the dimension line
+        if (_context.ActiveTool == ActiveTool.Select && e.ClickCount == 1 && TryPressDimensionNumber(point, e.GetPosition(this)))
         {
             return;
         }
@@ -3306,6 +3302,12 @@ public partial class CanvasHostView : UserControl
             ClearAnchorProbe();
         }
 
+        if (_dimensionShape is not null)
+        {
+            ContinueDimensionPress(e);
+            return;
+        }
+
         if (_freehandPoints is not null)
         {
             ContinueFreehand(e);
@@ -3700,6 +3702,12 @@ public partial class CanvasHostView : UserControl
         if (_isPanning)
         {
             EndPan();
+            return;
+        }
+
+        if (_dimensionShape is not null)
+        {
+            EndDimensionPress();
             return;
         }
 
