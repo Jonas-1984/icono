@@ -53,6 +53,43 @@
         </Setter>
     </Style>
 
+    <!-- An action key that looks like the tool keys of the TOOLS card (it does something once and does not stay pressed). -->
+    <Style x:Key="ShapeIconButtonStyle" TargetType="Button">
+        <Setter Property="Width" Value="33" />
+        <Setter Property="Height" Value="33" />
+        <Setter Property="Margin" Value="3" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Foreground" Value="{DynamicResource ForegroundTextBrush}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="Bg" Background="{DynamicResource RaisedBrush}"
+                                BorderBrush="{DynamicResource RaisedEdgeBrush}" BorderThickness="1" CornerRadius="5.5">
+                            <Path x:Name="Glyph" Effect="{DynamicResource GlyphLayerEffect}" Data="{TemplateBinding Tag}"
+                                  Stroke="{TemplateBinding Foreground}" StrokeThickness="1.1"
+                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                  Stretch="Uniform" Margin="8" />
+                        </Border>
+                        <Border x:Name="Hover" CornerRadius="5.5" Background="{DynamicResource GlassHoverBrush}" Opacity="0" IsHitTestVisible="False" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Hover" Property="Opacity" Value="1" />
+                            <Setter TargetName="Bg" Property="Background" Value="{DynamicResource RaisedHoverBrush}" />
+                            <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource AccentBlueMidBrush}" />
+                            <Setter TargetName="Bg" Property="Effect" Value="{DynamicResource HoverGlowEffect}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="{DynamicResource ActiveKeyBrush}" />
+                            <Setter TargetName="Bg" Property="Effect" Value="{x:Null}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- Square icon toggle (Bold/Italic text-format toggles): fixed 28x28 key, sinks in when checked. -->
     <Style x:Key="IconToggleButtonStyle" TargetType="ToggleButton">
         <Setter Property="Width" Value="28" />

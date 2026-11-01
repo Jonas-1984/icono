@@ -39,6 +39,10 @@
     <PathGeometry x:Key="MeasureToolGeometry" Figures="M2.5,17.5 L17.5,2.5 L21.5,6.5 L6.5,21.5 Z M7,13 L9.5,15.5 M10,10 L12.5,12.5 M13,7 L15.5,9.5" />
     <PathGeometry x:Key="MatchToolGeometry"
                   Figures="M10 2v2 M14 2v4 M17 2a1 1 0 0 1 1 1v9H6V3a1 1 0 0 1 1-1z M6 12a1 1 0 0 0-1 1v1a2 2 0 0 0 2 2h2a1 1 0 0 1 1 1v2.9a2 2 0 1 0 4 0V17a1 1 0 0 1 1-1h2a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1" />
+    <PathGeometry x:Key="FilesCopyToolGeometry"
+                  Figures="M15 2h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8 M16.706 2.706A2.4 2.4 0 0 0 15 2v5a1 1 0 0 0 1 1h5a2.4 2.4 0 0 0-.706-1.706z M5 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 1.732-1" />
+    <PathGeometry x:Key="ClipboardPasteToolGeometry"
+                  Figures="M9 2h6a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2 M16 4h2a2 2 0 0 1 2 2v4 M21 14H11 M15 10l-4 4 4 4" />
     <PathGeometry x:Key="HandwritingToolGeometry"
                   Figures="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7 M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" />
     <PathGeometry x:Key="CornerCurveToolGeometry"
@@ -60,7 +64,7 @@
     <PathGeometry x:Key="WallOpeningToolGeometry"
                   Figures="M1,8 H6 V16 H1 Z M18,8 H23 V16 H18 Z M6,8 V16 M18,8 V16" />
     <PathGeometry x:Key="EyedropperToolGeometry"
-                  Figures="M2 22l1-1h3l9-9 M3 21v-3l9-9 M15 6l3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4z" />
+                  Figures="M12 9l-8.414 8.414A2 2 0 0 0 3 18.828v1.344a2 2 0 0 1-.586 1.414A2 2 0 0 1 3.828 21h1.344a2 2 0 0 0 1.414-.586L15 12 M18 9l.4.4a1 1 0 1 1-3 3l-3.8-3.8a1 1 0 1 1 3-3l.4.4 3.4-3.4a1 1 0 1 1 3 3z M2 22l.414-.414" />
     <PathGeometry x:Key="AlignLeftToolGeometry" Figures="M4 3v18 M8 6h12v5H8z M8 14h7v5H8z" />
     <PathGeometry x:Key="AlignCenterHToolGeometry" Figures="M12 3v18 M5 6h14v4H5z M8 14h8v4H8z" />
     <PathGeometry x:Key="AlignRightToolGeometry" Figures="M20 3v18 M4 6h12v5H4z M9 14h7v5H9z" />

@@ -708,6 +708,10 @@ public partial class ToolPanelView : UserControl
         SyncPen();
     }
 
+    private void CopyToolButton_OnClick(object sender, System.Windows.RoutedEventArgs e) => Context?.CopySelection();
+
+    private void PasteToolButton_OnClick(object sender, System.Windows.RoutedEventArgs e) => Context?.PasteClipboard();
+
     private void CurveAllCorners_OnClick(object sender, System.Windows.RoutedEventArgs e)
     {
         if (Context is { SelectedShapes.Count: 1 } context)

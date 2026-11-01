@@ -19,7 +19,13 @@
                         <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked"
                                      Style="{StaticResource ShapeIconRadioButtonStyle}"
                                      Tag="{StaticResource EyedropperToolGeometry}" CommandParameter="Eyedropper"
-                                     ToolTip="Eyedropper (I): take a colour from the page" />
+                                     ToolTip="Color Picker (I): take a colour from the page" />
+                        <Button Style="{StaticResource ShapeIconButtonStyle}" Tag="{StaticResource FilesCopyToolGeometry}"
+                                Click="CopyToolButton_OnClick" AutomationProperties.Name="Copy"
+                                ToolTip="Copy the selected objects (Ctrl+C)" />
+                        <Button Style="{StaticResource ShapeIconButtonStyle}" Tag="{StaticResource ClipboardPasteToolGeometry}"
+                                Click="PasteToolButton_OnClick" AutomationProperties.Name="Paste"
+                                ToolTip="Paste the copied objects (Ctrl+V)" />
                         <RadioButton GroupName="ToolSelection" Checked="ToolRadioButton_OnChecked"
                                      Style="{StaticResource ShapeIconRadioButtonStyle}"
                                      Tag="{StaticResource RegionColorToolGeometry}" CommandParameter="RegionColor"

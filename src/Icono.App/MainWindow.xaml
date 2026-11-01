@@ -310,7 +310,7 @@
                 <Separator />
                 <MenuItem Header="Match Properties" InputGestureText="Q" Tag="Match" Click="ToolMenuItem_OnClick"
                           ToolTip="Copy the look of one object onto others" />
-                <MenuItem Header="Eyedropper" InputGestureText="I" Tag="Eyedropper" Click="ToolMenuItem_OnClick" />
+                <MenuItem Header="Color Picker" InputGestureText="I" Tag="Eyedropper" Click="ToolMenuItem_OnClick" />
                 <MenuItem Header="Region Color (Bucket)" InputGestureText="G" Tag="RegionColor" Click="ToolMenuItem_OnClick" />
                 <Separator />
                 <MenuItem Header="Add Point" Tag="AddPoint" Click="ToolMenuItem_OnClick" />
