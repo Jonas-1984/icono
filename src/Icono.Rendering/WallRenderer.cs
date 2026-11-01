@@ -187,6 +187,12 @@ public static class WallRenderer
     public static WallDimensionOverride? FindOverride(Shape wall, int segment) =>
         wall.WallDimensionOverrides?.FirstOrDefault(o => o.Segment == segment);
 
+    /// <summary>The unit the dimension of one segment is written in: its own, else the wall's.</summary>
+    public static LengthUnit SegmentUnit(Shape wall, int segment) => FindOverride(wall, segment)?.Unit ?? wall.WallDimensionUnit;
+
+    /// <summary>The decimal places of the dimension of one segment: its own, else the wall's.</summary>
+    public static int SegmentPrecision(Shape wall, int segment) => FindOverride(wall, segment)?.Precision ?? wall.DimPrecision;
+
     /// <summary>Which side of the walking direction the dimension numbers go: for a ring (or a nearly closed wall) outside, otherwise the
     /// left. Returns 1 for the left-hand normal, -1 for the right-hand one.</summary>
     public static float DimensionSide(Shape wall)
@@ -333,6 +339,8 @@ public static class WallRenderer
             return null;
         }
 
+        style = DimensionStyle.For(wall, custom);
+
         var (from, to) = segments[index];
         var dx = to.X - from.X;
         var dy = to.Y - from.Y;
@@ -383,7 +391,7 @@ public static class WallRenderer
 
     private static string SegmentText(Shape wall, WallDimensionOverride? custom, float length)
     {
-        var measured = DimensionRenderer.Format(length, wall.WallDimensionUnit, wall.DimPrecision);
+        var measured = DimensionRenderer.Format(length, SegmentUnit(wall, custom?.Segment ?? -1), SegmentPrecision(wall, custom?.Segment ?? -1));
         if (string.IsNullOrWhiteSpace(custom?.Text))
         {
             return measured;
@@ -489,6 +497,7 @@ public static class WallRenderer
         float minX = points.Min(p => p.X), maxX = points.Max(p => p.X), minY = points.Min(p => p.Y), maxY = points.Max(p => p.Y);
 
         var custom = FindOverride(wall, index);
+        style = DimensionStyle.For(wall, custom);
         var face = (float)(wall.WallThickness / 2);
         var distance = (float)(custom?.Offset ?? wall.DimOffset);
         var along = (float)Math.Clamp(custom?.TextPosition ?? wall.DimTextPosition ?? 0.5, 0, 1);

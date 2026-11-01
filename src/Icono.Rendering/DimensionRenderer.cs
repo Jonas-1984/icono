@@ -10,6 +10,29 @@ public readonly record struct DimensionStyle(
     string FontFamily, bool Bold, bool Italic, bool Underline, DimensionArrowStyle ArrowStyle = DimensionArrowStyle.Arrow)
 {
     /// <summary>The style of a dimension shape or of the dimensions of a wall: what was chosen, else the defaults.</summary>
+    /// <summary>The style of ONE dimension of a wall: what that dimension chose for itself, else what the wall chose, else the defaults.</summary>
+    public static DimensionStyle For(Shape wall, WallDimensionOverride? own)
+    {
+        var style = For(wall);
+        if (own is null || !own.HasOwnStyle)
+        {
+            return style;
+        }
+
+        var font = (float)Math.Clamp(own.FontSize ?? style.FontSize, 4, 200);
+        var fontChanged = own.FontSize is not null && wall.DimArrowSize is null && own.ArrowSize is null;
+        return style with
+        {
+            FontSize = font,
+            LineWidth = (float)Math.Clamp(own.LineWidth ?? style.LineWidth, 0.1, 30),
+            // an arrowhead that was never sized follows the number, as it does for the wall itself
+            ArrowSize = (float)Math.Clamp(own.ArrowSize ?? (fontChanged ? Math.Max(6, font * 0.7) : style.ArrowSize), 1, 200),
+            ExtGap = (float)Math.Clamp(own.ExtGap ?? style.ExtGap, 0, 200),
+            ExtOvershoot = (float)Math.Clamp(own.ExtOvershoot ?? style.ExtOvershoot, 0, 200),
+            ArrowStyle = own.ArrowStyle ?? style.ArrowStyle,
+        };
+    }
+
     public static DimensionStyle For(Shape shape)
     {
         var isDimension = shape.Kind == ShapeKind.Dimension;

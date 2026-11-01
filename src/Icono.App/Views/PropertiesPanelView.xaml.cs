@@ -1308,33 +1308,40 @@ public partial class PropertiesPanelView : UserControl
                 ? "Stuck to its shape by its points: it follows when the shape moves or is resized."
                 : "Free dimension (its points are its own).";
         DimensionDetachButton.Visibility = linked ? Visibility.Visible : Visibility.Collapsed;
-        DimensionUnitSection.Visibility = isDimension || isSymbol ? Visibility.Visible : Visibility.Collapsed;
+        DimensionUnitSection.Visibility = isDimension || isSymbol || isWall ? Visibility.Visible : Visibility.Collapsed;
         DimensionColorHint.Visibility = isDimension ? Visibility.Visible : Visibility.Collapsed;
 
-        // A wall has one dimension per segment: pick which one the fields below edit (or the wall's own settings for all of them).
+        // A wall has one dimension per segment and each is set on its own (the Match tool carries a look over to others): pick which one the
+        // fields below edit - the one whose number was clicked on the page, else the first.
         if (!ReferenceEquals(_dimensionSegmentShape, shape))
         {
             _dimensionSegmentShape = shape;
-            _dimensionSegment = -1;
+            _dimensionSegment = 0;
+        }
+
+        if (isWall && _context?.PickedDimensionSegment is { } picked)
+        {
+            _dimensionSegment = picked;
+            _context.PickedDimensionSegment = null;
         }
 
         var segment = isWall ? _dimensionSegment : -1;
         DimensionSegmentSection.Visibility = isWall ? Visibility.Visible : Visibility.Collapsed;
         if (isWall)
         {
-            var options = new List<SegmentOption> { new("All dimensions (wall settings)", -1) };
+            var options = new List<SegmentOption>();
             var lengths = WallGeometry.Segments(shape);
             for (var i = 0; i < lengths.Count; i++)
             {
                 var hidden = WallRenderer.FindOverride(shape, i) is { Hidden: true };
                 // the same length the dimension on the page shows (inside, centre line or outside, as the wall measures)
-                var measured = DimensionRenderer.Format(WallGeometry.MeasuredLength(shape, i), shape.WallDimensionUnit, shape.DimPrecision);
+                var measured = DimensionRenderer.Format(WallGeometry.MeasuredLength(shape, i), WallRenderer.SegmentUnit(shape, i), WallRenderer.SegmentPrecision(shape, i));
                 options.Add(new SegmentOption($"{i + 1}:  {measured}{(hidden ? "  (hidden)" : string.Empty)}", i));
             }
 
-            if (segment >= lengths.Count)
+            if (segment >= lengths.Count || segment < 0)
             {
-                segment = _dimensionSegment = -1;
+                segment = _dimensionSegment = 0;
             }
 
             // the list is rebuilt only when its entries changed (every drag frame refreshes this card)
@@ -1345,7 +1352,7 @@ public partial class PropertiesPanelView : UserControl
                 DimensionSegmentComboBox.ItemsSource = options;
             }
 
-            DimensionSegmentComboBox.SelectedItem = ((IEnumerable<SegmentOption>)DimensionSegmentComboBox.ItemsSource).First(o => o.Index == segment);
+            DimensionSegmentComboBox.SelectedItem = ((IEnumerable<SegmentOption>)DimensionSegmentComboBox.ItemsSource).FirstOrDefault(o => o.Index == segment);
         }
 
         var custom = isWall && segment >= 0 ? WallRenderer.FindOverride(shape, segment) : null;
@@ -1365,12 +1372,16 @@ public partial class PropertiesPanelView : UserControl
         {
             DimensionUnitComboBox.SelectedItem = WallUnitOptions.First(o => o.Value == shape.DimUnit);
         }
+        else if (isWall)
+        {
+            DimensionUnitComboBox.SelectedItem = WallUnitOptions.First(o => o.Value == (custom?.Unit ?? shape.WallDimensionUnit));
+        }
 
-        DimensionPrecisionTextBox.Text = shape.DimPrecision.ToString(CultureInfo.InvariantCulture);
+        DimensionPrecisionTextBox.Text = (custom?.Precision ?? shape.DimPrecision).ToString(CultureInfo.InvariantCulture);
 
-        DimensionArrowStyleComboBox.SelectedItem = ArrowStyleOptions.First(o => o.Value == shape.DimArrowStyle);
+        DimensionArrowStyleComboBox.SelectedItem = ArrowStyleOptions.First(o => o.Value == (custom?.ArrowStyle ?? shape.DimArrowStyle));
 
-        var style = DimensionStyle.For(shape);
+        var style = DimensionStyle.For(shape, custom);
         DimensionFontSizeTextBox.Text = style.FontSize.ToString("0.##", CultureInfo.InvariantCulture);
         DimensionLineWidthTextBox.Text = style.LineWidth.ToString("0.##", CultureInfo.InvariantCulture);
         DimensionArrowSizeTextBox.Text = style.ArrowSize.ToString("0.##", CultureInfo.InvariantCulture);
@@ -1396,9 +1407,9 @@ public partial class PropertiesPanelView : UserControl
     {
         if (DimensionUnitComboBox.SelectedItem is LengthUnitOption option)
         {
-            if (_context is not null && !_isRefreshingControls)
+            if (_isRefreshingControls || TryEditPickedWallDimension(c => c with { Unit = option.Value }))
             {
-                _context.DimensionUnit = option.Value; // new dimensions use the unit last chosen
+                return;
             }
 
             ApplyToSelectionWithUndo(s =>
@@ -1425,6 +1436,11 @@ public partial class PropertiesPanelView : UserControl
         }
 
         places = Math.Clamp(places, 0, 6);
+        if (TryEditPickedWallDimension(c => c with { Precision = places }))
+        {
+            return;
+        }
+
         if (places != _boundShape.DimPrecision)
         {
             ApplyToSelectionWithUndo(s =>
@@ -1490,6 +1506,11 @@ public partial class PropertiesPanelView : UserControl
             return;
         }
 
+        if (TryEditPickedWallDimension(c => c with { ArrowStyle = option.Value }))
+        {
+            return;
+        }
+
         ApplyToSelectionWithUndo(s =>
         {
             if (HasDimensions(s))
@@ -1525,6 +1546,19 @@ public partial class PropertiesPanelView : UserControl
         }
 
         RefreshControlsFromShape();
+    }
+
+    /// <summary>When a wall is shown, the card edits the ONE dimension that is picked: its own setting changes and nothing else. False for other shapes.</summary>
+    private bool TryEditPickedWallDimension(Func<WallDimensionOverride, WallDimensionOverride> change)
+    {
+        if (_boundShape is not { Kind: ShapeKind.Wall } || _dimensionSegment < 0)
+        {
+            return false;
+        }
+
+        EditWallDimension(_dimensionSegment, change);
+        RefreshControlsFromShape();
+        return true;
     }
 
     /// <summary>Changes the settings of one dimension of every selected wall (one undo step); defaults are dropped again.</summary>
@@ -1623,7 +1657,8 @@ public partial class PropertiesPanelView : UserControl
             return;
         }
 
-        var current = DimensionStyle.For(_boundShape);
+        var picked = _boundShape.Kind == ShapeKind.Wall && _dimensionSegment >= 0 ? WallRenderer.FindOverride(_boundShape, _dimensionSegment) : null;
+        var current = DimensionStyle.For(_boundShape, picked);
         var already = which switch
         {
             "Font" => current.FontSize,
@@ -1633,6 +1668,18 @@ public partial class PropertiesPanelView : UserControl
             _ => current.ExtOvershoot,
         };
         if (Math.Abs(typed - already) < 0.0001)
+        {
+            return;
+        }
+
+        if (TryEditPickedWallDimension(c => which switch
+        {
+            "Font" => c with { FontSize = Math.Clamp(typed, 4, 200) },
+            "Line" => c with { LineWidth = Math.Clamp(typed, 0.1, 30) },
+            "Arrow" => c with { ArrowSize = Math.Clamp(typed, 1, 200) },
+            "Gap" => c with { ExtGap = Math.Clamp(typed, 0, 200) },
+            _ => c with { ExtOvershoot = Math.Clamp(typed, 0, 200) },
+        }))
         {
             return;
         }
@@ -1658,6 +1705,11 @@ public partial class PropertiesPanelView : UserControl
 
     private void DimensionResetStyleButton_OnClick(object sender, RoutedEventArgs e)
     {
+        if (TryEditPickedWallDimension(c => c.WithoutStyle()))
+        {
+            return;
+        }
+
         ApplyToSelectionWithUndo(s =>
         {
             if (HasDimensions(s))

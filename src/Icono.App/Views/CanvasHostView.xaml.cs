@@ -628,6 +628,10 @@ public partial class CanvasHostView : UserControl
         {
             ApplyRulerVisibility();
         }
+        else if (e.PropertyName == nameof(EditorContext.PageUnit))
+        {
+            UpdateRulers();
+        }
     }
 
     private void DrawMatchSource(SKCanvas canvas, float scaleX, float scaleY)

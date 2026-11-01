@@ -97,10 +97,11 @@ public partial class CanvasHostView
         var length = WallGeometry.MeasuredLength(wall, segment);
         _lengthWall = wall;
         _lengthSegment = segment;
+        _context.PickedDimensionSegment = segment;
         _context.SelectedShape = wall;
 
         OpenLengthBox(
-            DimensionRenderer.Format(length, wall.WallDimensionUnit, wall.DimPrecision),
+            DimensionRenderer.Format(length, WallRenderer.SegmentUnit(wall, segment), WallRenderer.SegmentPrecision(wall, segment)),
             layout.TextPosition,
             "Type the length (for example 250, 2.5 m or 2500 mm) and press Enter. Esc cancels.");
     }
@@ -174,7 +175,7 @@ public partial class CanvasHostView
         var segment = _lengthSegment;
         RemoveLengthBox();
 
-        if (!WallGeometry.TryParseLength(text, wall.WallDimensionUnit, _context.Document.ScaleDenominator, out var px))
+        if (!WallGeometry.TryParseLength(text, WallRenderer.SegmentUnit(wall, segment), _context.Document.ScaleDenominator, out var px))
         {
             _context.Notify("That is not a length. Type for example 250, 2.5 m or 2500 mm.");
             return;
@@ -182,7 +183,7 @@ public partial class CanvasHostView
 
         if (_context.SetWallSegmentLength(wall, segment, px))
         {
-            _context.Notify($"Wall set to {DimensionRenderer.Format(px, wall.WallDimensionUnit, wall.DimPrecision, _context.Document.ScaleDenominator)}.");
+            _context.Notify($"Wall set to {DimensionRenderer.Format(px, WallRenderer.SegmentUnit(wall, segment), WallRenderer.SegmentPrecision(wall, segment), _context.Document.ScaleDenominator)}.");
         }
     }
 

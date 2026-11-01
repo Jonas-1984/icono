@@ -69,6 +69,11 @@ public partial class CanvasHostView
             }
 
             _dimensionDragging = true;
+            if (shape.Kind == ShapeKind.Wall)
+            {
+                _context.PickedDimensionSegment = _dimensionSegment;
+            }
+
             _context.SelectedShape = shape;
         }
 

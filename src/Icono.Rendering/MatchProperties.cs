@@ -143,6 +143,24 @@ public static class MatchProperties
         return !ShapeSnapshot.Capture(target).Equals(before);
     }
 
+    /// <summary>The dimension of a wall that is meant: the one of <paramref name="segment"/>, else the only one that was edited for itself
+    /// (its place or its look). Null for other shapes and when there is no such dimension.</summary>
+    private static WallDimensionOverride? ChosenOverride(Shape source, int? segment)
+    {
+        if (source.Kind != ShapeKind.Wall)
+        {
+            return null;
+        }
+
+        if (segment is { } index)
+        {
+            return WallRenderer.FindOverride(source, index);
+        }
+
+        var edited = source.WallDimensionOverrides?.Where(o => o.Offset is not null || o.TextPosition is not null || o.TextShift is not null || o.HasOwnStyle).ToList() ?? [];
+        return edited.Count == 1 ? edited[0] : null;
+    }
+
     /// <summary>Distance of the dimension line from its object, where the number sits on the line and how far it is off the line - for a wall the
     /// values of the dimension of <paramref name="segment"/> (what was edited for that one dimension), else of the wall as a whole. Without a
     /// segment the only segment of the wall that was edited is taken.</summary>
@@ -153,36 +171,44 @@ public static class MatchProperties
             return (source.DimOffset, source.DimTextPosition, source.DimTextShift);
         }
 
-        var edited = source.WallDimensionOverrides?.Where(o => o.Offset is not null || o.TextPosition is not null || o.TextShift is not null).ToList() ?? [];
-        var chosen = segment is { } index
-            ? WallRenderer.FindOverride(source, index)
-            : edited.Count == 1 ? edited[0] : null;
+        var chosen = ChosenOverride(source, segment);
         return (chosen?.Offset ?? source.DimOffset, chosen?.TextPosition ?? source.DimTextPosition, chosen?.TextShift ?? source.DimTextShift);
     }
 
     private static void CopyDimensionLook(Shape source, Shape target, int? sourceSegment, int? targetSegment)
     {
         var (offset, textPosition, textShift) = EffectiveDimensionPlacement(source, sourceSegment);
+        var own = ChosenOverride(source, sourceSegment);
         var onlyThatDimension = target.Kind == ShapeKind.Wall && targetSegment is not null;
+
+        // what the source dimension is written like: its own settings, else those of its wall (or of itself)
+        var unit = own?.Unit ?? (source.Kind == ShapeKind.Wall ? source.WallDimensionUnit : source.DimUnit);
+        var precision = own?.Precision ?? source.DimPrecision;
+        var arrowStyle = own?.ArrowStyle ?? source.DimArrowStyle;
+        var font = own?.FontSize ?? source.DimFontSize;
+        var line = own?.LineWidth ?? source.DimLineWidth;
+        var arrow = own?.ArrowSize ?? source.DimArrowSize;
+        var gap = own?.ExtGap ?? source.DimExtGap;
+        var overshoot = own?.ExtOvershoot ?? source.DimExtOvershoot;
+
         // a free-standing dimension keeps its own place (its offset is where it sits, not a style); walls, doors and windows take the distance
         if (!onlyThatDimension && target.Kind != ShapeKind.Dimension)
         {
             target.DimOffset = offset;
         }
 
-        target.DimFontSize = source.DimFontSize;
-        target.DimLineWidth = source.DimLineWidth;
-        target.DimArrowSize = source.DimArrowSize;
-        target.DimExtGap = source.DimExtGap;
-        target.DimExtOvershoot = source.DimExtOvershoot;
-        target.DimArrowStyle = source.DimArrowStyle;
         if (onlyThatDimension)
         {
-            // one dimension of a wall was clicked: only that one gets the distance and number position (as its own settings)
+            // one dimension of a wall was clicked: only that one gets the distance, number position and look - as its own settings
             var list = (target.WallDimensionOverrides ?? []).ToList();
             var index = list.FindIndex(o => o.Segment == targetSegment);
             var current = index >= 0 ? list[index] : new WallDimensionOverride(targetSegment!.Value);
-            var updated = current with { Offset = offset, TextPosition = textPosition, TextShift = textShift };
+            var updated = current with
+            {
+                Offset = offset, TextPosition = textPosition, TextShift = textShift,
+                Unit = unit, Precision = precision, ArrowStyle = arrowStyle,
+                FontSize = font, LineWidth = line, ArrowSize = arrow, ExtGap = gap, ExtOvershoot = overshoot,
+            };
             if (index >= 0)
             {
                 list[index] = updated;
@@ -193,29 +219,34 @@ public static class MatchProperties
             }
 
             target.WallDimensionOverrides = list.OrderBy(o => o.Segment).ToList();
-        }
-        else
-        {
-            target.DimTextPosition = textPosition;
-            target.DimTextShift = textShift;
+            return;
         }
 
-        // a wall whose single dimensions were edited takes the new distance and number position for all of them
-        if (!onlyThatDimension && target.Kind == ShapeKind.Wall && target.WallDimensionOverrides is { Count: > 0 } overrides)
+        target.DimFontSize = font;
+        target.DimLineWidth = line;
+        target.DimArrowSize = arrow;
+        target.DimExtGap = gap;
+        target.DimExtOvershoot = overshoot;
+        target.DimArrowStyle = arrowStyle;
+        target.DimTextPosition = textPosition;
+        target.DimTextShift = textShift;
+
+        // a wall whose single dimensions were edited takes the new distance, number position and look for all of them
+        if (target.Kind == ShapeKind.Wall && target.WallDimensionOverrides is { Count: > 0 } overrides)
         {
-            var kept = overrides.Select(o => o with { Offset = null, TextPosition = null, TextShift = null }).Where(o => !o.IsDefault).ToList();
+            var kept = overrides.Select(o => (o with { Offset = null, TextPosition = null, TextShift = null }).WithoutStyle()).Where(o => !o.IsDefault).ToList();
             target.WallDimensionOverrides = kept.Count == 0 ? null : kept;
         }
 
         if (target.Kind == ShapeKind.Dimension || ArchitecturalSymbols.IsSymbol(target.Kind))
         {
             // unit and decimals are what a dimension (or the dimensions of a door or window) IS written in; a wall keeps its own unit switch (see the Wall aspect)
-            target.DimUnit = source.Kind == ShapeKind.Wall ? source.WallDimensionUnit : source.DimUnit;
-            target.DimPrecision = source.DimPrecision;
+            target.DimUnit = unit;
+            target.DimPrecision = precision;
         }
         else if (target.Kind == ShapeKind.Wall)
         {
-            target.WallDimensionUnit = source.Kind == ShapeKind.Dimension || ArchitecturalSymbols.IsSymbol(source.Kind) ? source.DimUnit : source.WallDimensionUnit;
+            target.WallDimensionUnit = unit;
         }
     }
 

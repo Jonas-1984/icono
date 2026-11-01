@@ -221,8 +221,17 @@ public sealed class EditorContext : ObservableObject
     /// <summary>Raised when the drawing scale of the document changed (new value 1:N).</summary>
     public event Action<double>? ScaleChanged;
 
-    /// <summary>The unit new dimensions are written in; it follows what the user last chose for a dimension.</summary>
-    public LengthUnit DimensionUnit { get; set; } = LengthUnit.Centimeter;
+    /// <summary>The unit new dimensions and the rulers are written in: the unit of the canvas (CANVAS SIZE card). Changing the unit of one dimension
+    /// changes nothing else.</summary>
+    public LengthUnit DimensionUnit => PageUnit switch
+    {
+        PageUnit.Mm => LengthUnit.Millimeter,
+        PageUnit.In => LengthUnit.Inch,
+        _ => LengthUnit.Centimeter,
+    };
+
+    /// <summary>The wall dimension whose number was just clicked or dragged on the page: the DIMENSION card shows that one (taken once).</summary>
+    public int? PickedDimensionSegment { get; set; }
 
     private int? _wallSegmentHighlight;
 
