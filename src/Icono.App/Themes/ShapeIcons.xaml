@@ -40,7 +40,7 @@
     <PathGeometry x:Key="MatchToolGeometry"
                   Figures="M10 2v2 M14 2v4 M17 2a1 1 0 0 1 1 1v9H6V3a1 1 0 0 1 1-1z M6 12a1 1 0 0 0-1 1v1a2 2 0 0 0 2 2h2a1 1 0 0 1 1 1v2.9a2 2 0 1 0 4 0V17a1 1 0 0 1 1-1h2a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1" />
     <PathGeometry x:Key="HandwritingToolGeometry"
-                  Figures="M13 21h8 M15 5l4 4 M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
+                  Figures="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7 M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" />
     <PathGeometry x:Key="CornerCurveToolGeometry"
                   Figures="M12.034 12.681a.498.498 0 0 1 .647-.647l9 3.5a.5.5 0 0 1-.033.943l-3.444 1.068a1 1 0 0 0-.66.66l-1.067 3.443a.5.5 0 0 1-.943.033z M5 17A12 12 0 0 1 17 5 M17 5a2 2 0 1 0 4 0 2 2 0 1 0-4 0 M3 19a2 2 0 1 0 4 0 2 2 0 1 0-4 0" />
     <PathGeometry x:Key="RoomClosedToolGeometry" Figures="M4,5 H20 V19 H4 Z" />

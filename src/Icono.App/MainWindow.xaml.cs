@@ -42,6 +42,13 @@ public partial class MainWindow : Window
         _context.SheetChanged += () => SheetMenuItem.IsChecked = _context.Document.Sheet.Enabled;
         _context.ObjectSnap.PropertyChanged += (_, _) => ObjectSnapMenuItem.IsChecked = _context.ObjectSnap.Enabled;
         _context.PointSnap.PropertyChanged += (_, _) => PointSnapMenuItem.IsChecked = _context.PointSnap.Enabled;
+        _context.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(EditorContext.ActiveTool))
+            {
+                HandwritingToggleButton.IsChecked = _context.ActiveTool == ActiveTool.Freehand;
+            }
+        };
 
         // A new page size (preset, portrait / landscape, typed size) is shown whole.
         var shownPage = (_context.Document.Width, _context.Document.Height, _context.Document.PageCount);
@@ -382,6 +389,10 @@ public partial class MainWindow : Window
         _context.ActiveTool = ActiveTool.Shape;
         _context.SelectedShapeKind = ShapeKind.Text;
     }
+
+    /// <summary>The blue Handwriting key of the top bar switches the tool on and off.</summary>
+    private void HandwritingToggleButton_OnClick(object sender, RoutedEventArgs e) =>
+        _context.ActiveTool = _context.ActiveTool == ActiveTool.Freehand ? ActiveTool.Select : ActiveTool.Freehand;
 
     private void GridToggleButton_OnToggled(object sender, RoutedEventArgs e)
     {
