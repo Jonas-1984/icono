@@ -543,7 +543,7 @@ public partial class CanvasHostView : UserControl
         {
             _context.PickMatchSource(shape, dimension?.Segment, dimensionOnly: dimension is not null);
             _context.Notify(dimension is not null
-                ? "Match: dimension picked - click the numbers of other dimensions (or objects) that should get its style. Esc ends."
+                ? $"Match: dimension {(dimension!.Value.Segment is { } n ? (n + 1).ToString() : "of the opening")} picked - click the numbers of other dimensions (or objects) that should get its style. Esc ends."
                 : "Match: source picked - click the objects that should get its look. Esc ends.");
             return;
         }

@@ -47,7 +47,10 @@ public static class MatchProperties
     /// <summary>Copies the requested aspects that both shapes understand. Returns false when nothing changed.</summary>
     public static bool Copy(Shape source, Shape target, MatchAspects requested, int? sourceSegment = null, int? targetSegment = null)
     {
-        if (ReferenceEquals(source, target))
+        // a shape is never matched onto itself - except one dimension of a wall onto another dimension of the same wall
+        var otherDimensionOfTheSameWall = requested.HasFlag(MatchAspects.Dimension) && target.Kind == ShapeKind.Wall
+            && targetSegment is not null && targetSegment != sourceSegment;
+        if (ReferenceEquals(source, target) && !otherDimensionOfTheSameWall)
         {
             return false;
         }

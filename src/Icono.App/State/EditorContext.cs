@@ -947,7 +947,9 @@ public sealed class EditorContext : ObservableObject
         ActiveTool = ActiveTool.Match;
         StatusMessage?.Invoke(MatchSource is null
             ? "Match: click the object whose look you want to copy."
-            : "Match: click the objects that should get this look. Ctrl+click picks another source, Esc ends.");
+            : _matchSegment is { } picked
+                ? $"Match: the look of dimension {picked + 1} of this wall is carried over - click the numbers of other dimensions or other objects. Ctrl+click picks another source, Esc ends."
+                : "Match: click the objects that should get this look. Ctrl+click picks another source, Esc ends.");
     }
 
     /// <summary>Makes a shape the source of the Match tool. When it was picked by clicking one of its dimensions (<paramref name="dimensionOnly"/>), that
@@ -969,7 +971,9 @@ public sealed class EditorContext : ObservableObject
             return;
         }
 
-        if (ReferenceEquals(target, _matchSource))
+        // a wall has many dimensions: one of them can be matched to another of the same wall (but not onto itself)
+        var otherDimensionOfTheSameWall = dimensionOnly && target.Kind == ShapeKind.Wall && targetSegment is not null && targetSegment != _matchSegment;
+        if (ReferenceEquals(target, _matchSource) && !otherDimensionOfTheSameWall)
         {
             return;
         }

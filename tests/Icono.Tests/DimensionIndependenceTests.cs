@@ -131,3 +131,44 @@ public class DimensionIndependenceTests
         Assert.Equal(16, target.DimFontSize);
     }
 }
+
+public class MatchWithinOneWallTests
+{
+    [Fact]
+    public void Match_FromOneDimensionOfAWallToAnotherDimensionOfTheSameWall_Works()
+    {
+        DrawingScale.Denominator = 1;
+        var wall = new Shape
+        {
+            Kind = ShapeKind.Wall, X = 100, Y = 100, WallThickness = 16, WallClosed = true,
+            Points = [new CorePoint(0, 0), new CorePoint(400, 0), new CorePoint(400, 300), new CorePoint(0, 300)],
+        };
+        PathBoundsCalculator.Recompute(wall);
+        wall.WallDimensionOverrides = [new WallDimensionOverride(0, FontSize: 20)];
+
+        Assert.True(MatchProperties.Copy(wall, wall, MatchAspects.Dimension, 0, 2));
+
+        Assert.Equal(20, WallRenderer.FindOverride(wall, 2)!.FontSize);
+        Assert.Equal(20, WallRenderer.FindOverride(wall, 0)!.FontSize);
+        Assert.Null(WallRenderer.FindOverride(wall, 1));
+        Assert.Equal(20, WallRenderer.LayoutSegmentDimension(wall, 2)!.FontSize);
+    }
+
+    [Fact]
+    public void TheNumberOfEveryDimensionOfARoom_IsFoundByAClickOnIt()
+    {
+        DrawingScale.Denominator = 1;
+        var wall = new Shape
+        {
+            Kind = ShapeKind.Wall, X = 100, Y = 100, WallThickness = 16, WallClosed = true,
+            Points = [new CorePoint(0, 0), new CorePoint(400, 0), new CorePoint(400, 300), new CorePoint(0, 300)],
+        };
+        PathBoundsCalculator.Recompute(wall);
+
+        for (var segment = 0; segment < 4; segment++)
+        {
+            var at = WallRenderer.LayoutSegmentDimension(wall, segment)!.TextPosition;
+            Assert.Equal(segment, WallRenderer.HitTestDimensionText(wall, at.X, at.Y, 3));
+        }
+    }
+}
