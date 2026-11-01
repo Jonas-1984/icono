@@ -279,6 +279,31 @@ public partial class MainWindow
             var pages = dialog.PageList;
             switch (dialog.Format)
             {
+                case ExportFormat.Svg:
+                    if (AskExportPath("SVG vector graphic (*.svg)|*.svg", ".svg") is { } svgPath)
+                    {
+                        if (pages is null)
+                        {
+                            File.WriteAllBytes(svgPath, DocumentExporter.RenderSvg(document, dialog.IncludeBackground, dialog.Page));
+                            ShowStatus($"Exported {Path.GetFileName(svgPath)}");
+                        }
+                        else
+                        {
+                            var svgFolder = Path.GetDirectoryName(svgPath)!;
+                            var svgName = Path.GetFileNameWithoutExtension(svgPath);
+                            foreach (var page in pages)
+                            {
+                                File.WriteAllBytes(
+                                    Path.Combine(svgFolder, $"{svgName}_page{page + 1}.svg"),
+                                    DocumentExporter.RenderSvg(document, dialog.IncludeBackground, page));
+                            }
+
+                            ShowStatus($"Exported {pages.Count} page(s) as SVG to {svgFolder}");
+                        }
+                    }
+
+                    break;
+
                 case ExportFormat.Ico:
                     if (AskExportPath("Windows icon (*.ico)|*.ico", ".ico") is { } icoPath)
                     {

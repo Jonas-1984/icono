@@ -9,6 +9,8 @@
             <StackPanel>
                 <RadioButton x:Name="PngRadio" GroupName="ExportFormat" Content="PNG image" IsChecked="True" Margin="0,0,0,8"
                              Foreground="{DynamicResource ForegroundTextBrush}" Checked="FormatRadio_OnChecked" />
+                <RadioButton x:Name="SvgRadio" GroupName="ExportFormat" Content="SVG vector graphic (.svg)" Margin="0,0,0,8"
+                             Foreground="{DynamicResource ForegroundTextBrush}" Checked="FormatRadio_OnChecked" />
                 <RadioButton x:Name="IcoRadio" GroupName="ExportFormat" Content="Windows icon (.ico, 16 - 256 px)" Margin="0,0,0,8"
                              Foreground="{DynamicResource ForegroundTextBrush}" Checked="FormatRadio_OnChecked" />
                 <RadioButton x:Name="SetRadio" GroupName="ExportFormat" Content="PNG set (16, 32, 64, 128, 256, 512 px)"

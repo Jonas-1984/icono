@@ -22,6 +22,25 @@ public static class DocumentExporter
         return Encode(RenderBitmap(document, width, height, includeBackground, page), SKEncodedImageFormat.Png, 100);
     }
 
+    /// <summary>The drawing as an SVG file (vector graphic, text as outlines, sizes in px at 96 per inch): one page, or with <paramref name="page"/> null all
+    /// pages below each other. With <paramref name="includeBackground"/> the page background is part of the file.</summary>
+    public static byte[] RenderSvg(Document document, bool includeBackground, int? page = null)
+    {
+        var (width, height) = Extent(document, page);
+        using var stream = new MemoryStream();
+        using (var canvas = SKSvgCanvas.Create(new SKRect(0, 0, width, height), stream))
+        {
+            if (page is { } index)
+            {
+                canvas.Translate(0, -document.PageTop(index));
+            }
+
+            DocumentRenderer.Render(canvas, document, document.Width, document.Height, null, forExport: true, includeBackground);
+        }
+
+        return stream.ToArray();
+    }
+
     /// <summary>The size of what is rendered: one page, or all pages below each other.</summary>
     public static (int Width, int Height) Extent(Document document, int? page) =>
         page is null ? (document.Width, document.TotalHeight) : (document.Width, document.Height);

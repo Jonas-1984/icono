@@ -8,6 +8,7 @@ public enum ExportFormat
     Png,
     Ico,
     PngSet,
+    Svg,
 }
 
 /// <summary>"File > Export": choose PNG / icon / PNG set, the size and whether the page background is exported.</summary>
@@ -108,7 +109,9 @@ public partial class ExportDialog : ThemedDialogWindow
             return;
         }
 
-        InfoText.Text = IcoRadio.IsChecked == true
+        InfoText.Text = SvgRadio.IsChecked == true
+            ? "A vector graphic: it stays sharp at any size and opens in Inkscape, Illustrator, a browser ... Text becomes outlines."
+            : IcoRadio.IsChecked == true
             ? "The page is fitted into square frames of 16, 24, 32, 48, 64, 128 and 256 px."
             : SetRadio.IsChecked == true
                 ? "You pick a file name; one PNG per size is written next to it (name_64.png, name_128.png, ...)."
@@ -117,7 +120,10 @@ public partial class ExportDialog : ThemedDialogWindow
 
     private void ExportButton_OnClick(object sender, RoutedEventArgs e)
     {
-        Format = IcoRadio.IsChecked == true ? ExportFormat.Ico : SetRadio.IsChecked == true ? ExportFormat.PngSet : ExportFormat.Png;
+        Format = SvgRadio.IsChecked == true ? ExportFormat.Svg
+            : IcoRadio.IsChecked == true ? ExportFormat.Ico
+            : SetRadio.IsChecked == true ? ExportFormat.PngSet
+            : ExportFormat.Png;
         PageList = null;
         if (SelectedPagesChosen)
         {
