@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>icono – Benutzerhandbuch</title>
+<style>
+  :root { --bg:#ffffff; --fg:#1b2332; --muted:#5b6472; --line:#d9dee7; --accent:#1f5fd0; --box:#f3f6fb; --warn:#fff4e0; --warnline:#e0a030; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#16181d; --fg:#e8eaee; --muted:#a3aab6; --line:#2e323a; --accent:#6aa3ff; --box:#1d2027; --warn:#2b2417; --warnline:#9a7326; } }
+  html { scroll-behavior:smooth; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.6 "Segoe UI", system-ui, sans-serif; }
+  main { max-width:900px; margin:0 auto; padding:24px 20px 80px; }
+  h1 { font-size:2rem; margin:0 0 4px; } h2 { margin:2.2em 0 .4em; padding-top:.6em; border-top:1px solid var(--line); font-size:1.45rem; }
+  h3 { margin:1.4em 0 .3em; font-size:1.1rem; } p, li { color:var(--fg); } .muted { color:var(--muted); }
+  a { color:var(--accent); } code, kbd { background:var(--box); border:1px solid var(--line); border-radius:4px; padding:1px 6px; font:0.92em Consolas, monospace; }
+  kbd { border-bottom-width:2px; } table { border-collapse:collapse; width:100%; margin:.6em 0 1em; } th, td { text-align:left; border:1px solid var(--line); padding:6px 10px; vertical-align:top; } th { background:var(--box); }
+  .note, .warn { border-left:4px solid var(--accent); background:var(--box); padding:10px 14px; margin:1em 0; border-radius:0 6px 6px 0; } .warn { border-color:var(--warnline); background:var(--warn); }
+  nav.toc { background:var(--box); border:1px solid var(--line); border-radius:8px; padding:10px 18px; margin:1.2em 0; } nav.toc ol { margin:.3em 0; columns:2; } nav.toc li { break-inside:avoid; }
+  @media print { nav.toc { display:none; } h2 { page-break-after:avoid; } }
+</style>
+</head>
+<body>
+<main>
+<h1>icono – Benutzerhandbuch</h1>
+<p class="muted">Version 0.1.0-test.3 · Stand: November 2026 · <a href="Manual-EN.html">English version</a></p>
+
+<div class="warn"><strong>Testversion.</strong> icono ist noch nicht fertig und kann Fehler enthalten. Sichern Sie wichtige Zeichnungen regelmäßig an einem zweiten Ort. Die Testbedingungen (<code>Testbedingungen.txt</code>) und der Datenschutzhinweis (<code>Datenschutz.txt</code>) liegen im Installationsordner.</div>
+
+<nav class="toc"><strong>Inhalt</strong>
+<ol>
+<li><a href="#start">Installation, Start, Deinstallation</a></li>
+<li><a href="#oberflaeche">Die Oberfläche</a></li>
+<li><a href="#dokument">Dokument, Seiten und Maßstab</a></li>
+<li><a href="#zeichnen">Zeichnen: Formen, Linien, Handschrift, Text</a></li>
+<li><a href="#grundriss">Grundrisse: Wände, Räume, Türen, Objekte</a></li>
+<li><a href="#masse">Maße (Dimensionen)</a></li>
+<li><a href="#fangen">Fangen und Ausrichten</a></li>
+<li><a href="#bearbeiten">Bearbeiten und Werkzeuge</a></li>
+<li><a href="#ansicht">Ansicht, Zoom, Designs</a></li>
+<li><a href="#export">Speichern, Export und Druck</a></li>
+<li><a href="#tasten">Kurzbefehle</a></li>
+<li><a href="#daten">Dateien, Daten und Datenschutz</a></li>
+<li><a href="#sicherheit">Sicherheit</a></li>
+<li><a href="#recht">Rechtliche Hinweise</a></li>
+<li><a href="#hilfe">Fehlersuche und Kontakt</a></li>
+</ol></nav>
+
+<h2 id="start">1. Installation, Start, Deinstallation</h2>
+<h3>Voraussetzungen</h3>
+<ul><li>Windows 10 (Version 1809 oder neuer) oder Windows 11, 64 Bit.</li><li>Rund 200 MB freier Speicher. Alles Nötige (auch .NET) ist im Installationsprogramm enthalten, es wird kein Internet gebraucht.</li></ul>
+<h3>Installieren</h3>
+<ol>
+<li><code>ICONO-Setup-0.1.0-test.3.exe</code> doppelt anklicken.</li>
+<li>Zeigt Windows „Der Computer wurde durch Windows geschützt“ (SmartScreen), ist das bei dieser Testversion normal: Sie ist noch nicht digital signiert. Prüfen Sie, dass die Datei von Ihrem Ansprechpartner kommt (Prüfsumme siehe <code>SHA256.txt</code>), und wählen Sie „Weitere Informationen“ → „Trotzdem ausführen“.</li>
+<li>Sprache wählen, die Testbedingungen und den Datenschutzhinweis lesen und annehmen. Es werden keine Administratorrechte gebraucht, die Installation gilt nur für Ihr Benutzerkonto.</li>
+<li>Eine ältere Testversion wird dabei ersetzt, Ihre Einstellungen und Zeichnungen bleiben erhalten.</li>
+</ol>
+<h3>Prüfsumme prüfen (optional)</h3>
+<p>In PowerShell: <code>Get-FileHash .\ICONO-Setup-0.1.0-test.3.exe -Algorithm SHA256</code>. Der Wert muss mit <code>SHA256.txt</code> übereinstimmen.</p>
+<h3>Starten</h3>
+<p>Startmenü → <strong>icono</strong> (oder die Desktop-Verknüpfung, falls gewählt). Beim Start läuft sechs Sekunden ein Ladebildschirm; ein Klick oder eine Taste überspringt ihn. Mit dem Startparameter <code>--no-splash</code> entfällt er.</p>
+<h3>Deinstallieren</h3>
+<p>Windows-Einstellungen → Apps → icono → Deinstallieren (oder Startmenü → „icono deinstallieren“). Das Programm fragt, ob auch Ihre lokalen Daten (Einstellungen, zuletzt geöffnete Dateien, Icon-Bibliothek, Fehlerprotokoll) gelöscht werden sollen. Ihre gespeicherten Zeichnungen bleiben in jedem Fall erhalten.</p>
+
+<h2 id="oberflaeche">2. Die Oberfläche</h2>
+<table>
+<tr><th>Bereich</th><th>Was dort ist</th></tr>
+<tr><td>Menüleiste</td><td>File, Edit, View, Page, Insert, Draw, Arrange, Design, Tools, Help. Mit <kbd>Alt</kbd> + dem unterstrichenen Buchstaben per Tastatur.</td></tr>
+<tr><td>Symbolleiste</td><td>Handschrift (orange Taste ganz links), Rückgängig/Wiederholen, Ausschneiden/Kopieren/Einfügen/Löschen, Ausrichten, Gruppieren, Sperren, Ebenen, Raster- und Fangtasten und das Rasterfeld in cm.</td></tr>
+<tr><td>Linke Seite</td><td>Karten: <strong>TOOLS</strong> (Auswahl, Verschieben der Ansicht, Zoom, Farbwähler, Kopieren, Einfügen, Eimer, Punkte hinzufügen/löschen, Match, Bearbeiten, Rundung), <strong>OBJECT SNAP</strong>, <strong>ALIGN WHILE MOVING</strong>, <strong>HANDWRITING</strong>, <strong>CURVE</strong>, <strong>SHAPES</strong>, <strong>IT</strong> und <strong>OBJECTS</strong> (Küchen- und Plansymbole mit Suchfeld). Karten lassen sich mit dem Pfeil ein- und ausklappen.</td></tr>
+<tr><td>Arbeitsfläche</td><td>Die Seite(n) mit Linealen oben und links (in der Maßeinheit und im Maßstab der Zeichnung).</td></tr>
+<tr><td>Rechte Seite</td><td>Karten für das, was ausgewählt ist: <strong>BACKGROUND, PAGES, CANVAS SIZE, SHEET, DESIGN STYLE, DESIGN GRID, MOVE, DIMENSION, OPENING, WALL, LINE, BORDER</strong> u. a. Ohne Auswahl zeigt sie die Seiteneinstellungen.</td></tr>
+<tr><td>Statusleiste</td><td>Zoom-Regler, aktives Werkzeug, Maßstab, Seitengröße und kurze Meldungen („Look matched“ …). Rechts steht ein Hinweis zum aktiven Werkzeug.</td></tr>
+</table>
+<div class="note"><strong>Eingaben bestätigen:</strong> In jedem einzeiligen Eingabefeld übernimmt <kbd>Enter</kbd> den Wert sofort. Das gilt auch für Farbcodes (zum Beispiel <code>FFC27A</code> oder <code>#FFC27A</code>) im Farbwähler. Eine ungültige Eingabe wird verworfen, die alte Farbe bleibt.</div>
+
+<h2 id="dokument">3. Dokument, Seiten und Maßstab</h2>
+<h3>Neu, öffnen, speichern</h3>
+<ul>
+<li><strong>File → New</strong> (<kbd>Ctrl+N</kbd>): neue Zeichnung. <strong>Open</strong> (<kbd>Ctrl+O</kbd>), <strong>Save</strong> (<kbd>Ctrl+S</kbd>), <strong>Save As</strong> (<kbd>Ctrl+Shift+S</kbd>).</li>
+<li>Das Dateiformat heißt <code>.icn</code>. Ältere Dateien mit der Endung <code>.icono</code> lassen sich weiter öffnen.</li>
+<li>Beim Schließen mit ungespeicherten Änderungen fragt icono nach (Speichern / Verwerfen / Abbrechen).</li>
+<li>Zur Sicherheit öffnet icono keine Dateien über 512 MB und keine Bilder über 64 MB (siehe Abschnitt Sicherheit).</li>
+</ul>
+<h3>Seiten</h3>
+<p>Eine Zeichnung kann mehrere Seiten gleicher Größe haben, die untereinander liegen. <strong>Page → Add Page / Remove Last Page / Pages…</strong> oder die Karte <strong>PAGES</strong>. Das Mausrad blättert durch die Seiten (<kbd>Shift</kbd>+Rad seitwärts). <strong>Page → Size</strong> bietet A5, A4, A3, Letter und Pixelgrößen (64 bis 512 px) sowie eigene Größen (Karte CANVAS SIZE) und Hoch-/Querformat.</p>
+<h3>Maßeinheit</h3>
+<p>Karte CANVAS SIZE → UNIT: px, cm, mm, inch. Die Einheit gilt für die Lineale und für neue Maße; jede Dimension kann zusätzlich ihre eigene Einheit haben.</p>
+<h3>Der Maßstab (Scale) gehört zur Seite</h3>
+<p>Der Maßstab (zum Beispiel 1:40) sagt, wie viel Wirklichkeit ein Zentimeter der Seite darstellt. Sie stellen ihn unter <strong>CANVAS SIZE → SCALE</strong> ein (Auswahl oder eigene Zahl, dann <kbd>Enter</kbd>).</p>
+<div class="note"><strong>Beim Ändern des Maßstabs bleiben alle Maße gleich.</strong> Wechseln Sie von 1:40 auf 1:50, wird die Zeichnung auf der Seite im Verhältnis 40 : 50 kleiner (um die Mitte der Seite, auf der sie liegt), und jede Dimension zeigt weiter denselben Wert. Wandstärken behalten ihre wirkliche Größe. Was zum Papier gehört, bleibt unverändert: Strichstärken, Schriftgrößen, Pfeilgrößen und der Abstand der Maßlinien. Der ganze Vorgang ist ein einziger Rückgängig-Schritt. Raster für Icons (Design Grid) sind davon nicht betroffen.</div>
+<p>Zum Drucken im genauen Maßstab drucken Sie mit 100 % (siehe Export und Druck).</p>
+<h3>Ebenen und Hintergrund</h3>
+<p><strong>Page → New Layer</strong> legt eine Ebene an; Ebenen können sichtbar/unsichtbar und gesperrt sein. <strong>Page → Background…</strong> (Karte BACKGROUND): transparent, Farbe (mit Farbwähler), Unschärfe oder Bild. <strong>Page → Sheet Data…</strong> fügt einen Plankopf mit Rahmen hinzu (Projekt, Adresse, Datum, Maßstab aus der Seite).</p>
+
+<h2 id="zeichnen">4. Zeichnen: Formen, Linien, Handschrift, Text</h2>
+<ul>
+<li><strong>Formen</strong> (<strong>Insert → Shape</strong> oder Karte SHAPES): Rechteck, Ellipse, Dreieck, Stern, Herz, Pfeile, 3D-Box und viele Symbole. Aufziehen mit der Maus. Eckgriffe halten die Proportionen, mit <kbd>Shift</kbd> frei.</li>
+<li><strong>Linien</strong> (<strong>Draw → Line, Arrow, Double Arrow, Polyline, Curve</strong>): Klicken Sie Punkt für Punkt; Doppelklick oder <kbd>Enter</kbd> beendet, <kbd>Esc</kbd> bricht ab. Optionen (Strichart, Pfeilköpfe, Länge, Rundung von Ecken, Skizzenstil) in der Karte <strong>LINE</strong> und im kleinen Fenster, das neben einer angeklickten Linie erscheint.</li>
+<li><strong>Handschrift</strong> (<kbd>P</kbd> oder die orange Taste links oben): schreiben und zeichnen mit E-Pen, Finger (Touch) oder Maus. Jeder Strich ist ein eigenes Objekt. Farbe, Breite und <strong>SMOOTHING</strong> (0–10, Zittern wird herausgerechnet) stellen Sie in der Karte HANDWRITING ein. <kbd>Esc</kbd> beendet.</li>
+<li><strong>Rundung</strong> (Werkzeug „Curve“ in der Karte TOOLS): Ecken von Linien und Formen abrunden – Seite anklicken, Nachbarseite anklicken, Größe eintippen, <kbd>Enter</kbd>.</li>
+<li><strong>Text</strong> (<kbd>T</kbd>): klicken und schreiben. Doppelklick auf eine Form schreibt Text in die Form. Format und Ausrichtung in <strong>Design → Text Formats…</strong>.</li>
+<li><strong>Bilder und SVG</strong> (<strong>Insert → Image… / SVG Code…</strong>): Bilder und SVG-Grafiken einfügen (SVG auch als Code einfügen oder aus einer Datei laden).</li>
+</ul>
+
+<h2 id="grundriss">5. Grundrisse: Wände, Räume, Türen, Objekte</h2>
+<h3>Wände</h3>
+<ul>
+<li><strong>Wand zeichnen</strong> (<kbd>W</kbd>): Ecken anklicken. Oder eine Länge <strong>eintippen</strong> und <kbd>Enter</kbd> drücken: die Ecke wird in der Richtung der Maus gesetzt. Die getippte Länge ist das Innenmaß (die freie Länge im Raum). <kbd>Enter</kbd> ohne Zahl beendet, <kbd>Esc</kbd> bricht ab. Neue Wände sind im gewählten Maßstab 15 cm dick.</li>
+<li><strong>Raum einfügen</strong>: <strong>Draw → Add Room</strong> (geschlossener Raum, L-Form, schräge Wände, Säulen).</li>
+<li><strong>Länge ändern</strong>: Auf die Zahl einer Wanddimension klicken, die gewünschte Länge tippen (zum Beispiel <code>250</code>, <code>2.5 m</code>, <code>2500 mm</code>), <kbd>Enter</kbd>.</li>
+<li><strong>Bearbeiten</strong>: Ecken ziehen, Wände schneiden (<kbd>X</kbd>), verbinden, geradeziehen, einen Raum schließen (<strong>Draw</strong>-Menü, Karte <strong>WALL</strong>: Dicke, Schraffur, Maßeinheit, Messart innen/Mitte/außen, Dimensionen zeigen).</li>
+</ul>
+<h3>Türen und Fenster</h3>
+<p><strong>Insert → Door and Window</strong> legt Tür, Doppeltür, Fenster, Doppelfenster oder Wandöffnung auf eine Wand; sie schneiden die Wand auf. Drehen, spiegeln, Öffnungswinkel und Wanddicke stehen in der Karte <strong>OPENING</strong>. Ihre Maße (Breite der Öffnung und lichter Abstand zu den Wandecken) lassen sich anzeigen; ein Klick auf eine Zahl und eine neue Länge verschiebt das Element entlang der Wand.</p>
+<h3>Objekte und Möbel</h3>
+<p>Die Karte <strong>OBJECTS</strong> enthält Plansymbole (Steckdosen, Geräte, Sanitär …), Schränke und Elemente sowie Computer in echter Größe. Gruppen lassen sich auf- und zuklappen, das Suchfeld filtert alle Gruppen. Klicken Sie ein Objekt an und dann auf die Zeichnung; es erscheint in seiner wirklichen Größe im aktuellen Maßstab.</p>
+
+<h2 id="masse">6. Maße (Dimensionen)</h2>
+<h3>Freie Dimensionen</h3>
+<p><strong>Draw → Dimension</strong> (<kbd>D</kbd>): ausgerichtet, horizontal, vertikal, Winkel, Radius, Durchmesser. Sie klicken die Messpunkte und dann <strong>einmal dorthin, wo die Maßlinie laufen soll</strong>. Die Punkte rasten an Objekten ein und bleiben mit ihnen verbunden. <strong>Add Dimensions to Selection</strong> setzt Maße automatisch an die ausgewählte Form (Breite/Höhe/Tiefe, Durchmesser, Ecken, Segmente).</p>
+<h3>Maße an Wänden, Türen und Fenstern platzieren – nur mit der Maus</h3>
+<ul>
+<li><strong>Zahl anklicken</strong> (ohne Ziehen): die Längeneingabe öffnet sich.</li>
+<li><strong>Zahl ziehen</strong>: Die Maßlinie folgt der Maus, auf beiden Seiten der Wand und in jedem Abstand. Beim Loslassen bleibt sie liegen. <kbd>Esc</kbd> während des Ziehens setzt sie zurück; <kbd>Ctrl+Z</kbd> danach macht es rückgängig.</li>
+<li>Eigene Felder für „innen/außen“ oder „Abstand“ gibt es nicht mehr: Seite und Abstand bestimmt allein die Maus.</li>
+</ul>
+<h3>In einer Reihe bündig ausrichten</h3>
+<p>Beim Ziehen (oder beim Setzen einer freien Maßlinie) rastet die Maßlinie auf der Linie einer anderen Dimension ein, die in dieselbe Richtung läuft, sobald sie in Reichweite ist (etwa 8 Bildschirmpixel). Eine orange gestrichelte Hilfslinie zeigt, woran sie sich ausrichtet. So stehen Maßketten bündig in einer Reihe. Das gilt zwischen Dimensionen derselben Wand, verschiedener Wände, von Türen/Fenstern und freien Dimensionen. <kbd>Alt</kbd> hält das Einrasten aus.</p>
+<h3>Jede Dimension hat ihre eigenen Einstellungen</h3>
+<p>In der Karte <strong>DIMENSION</strong> (rechts) stellen Sie Einheit, Nachkommastellen, Text, Position und Abstand der Zahl, Zahlgröße, Linienstärke, Pfeilform und -größe sowie Hilfslinien ein. Bei Wänden wählen Sie unter „WHICH DIMENSION“ die Dimension, die sich ändern soll (Standard ist die Dimension, deren Zahl Sie zuletzt angeklickt oder gezogen haben). <strong>Eine Einstellung wirkt nur auf diese eine Dimension</strong>, nicht auf die anderen der Wand und nicht auf neue Dimensionen.</p>
+<h3>Stil übertragen mit Match</h3>
+<p>Das Werkzeug <strong>Match</strong> (<kbd>Q</kbd> oder Farbwalze in der Karte TOOLS) überträgt das Aussehen von einem Objekt auf andere: Quelle auswählen, Werkzeug einschalten, dann die Ziele anklicken. Klicken Sie die <em>Zahl</em> einer Dimension an, wird nur deren Stil übertragen – auch von einer Dimension auf eine andere derselben Wand. Mit <kbd>Strg</kbd>+Klick wählen Sie eine neue Quelle. Die Schaltfläche „Dimension style to ALL dimensions“ überträgt einen Stil ausdrücklich auf alle.</p>
+
+<h2 id="fangen">7. Fangen und Ausrichten</h2>
+<ul>
+<li><strong>Objektfang</strong> (<kbd>F3</kbd> ein/aus, Karte OBJECT SNAP): Endpunkte, Mitten, Zentren, Schnittpunkte, Lote, Tangenten, nächster Punkt und mehr. Eine orange Marke und ein Kurzname zeigen den Fang.</li>
+<li><strong>Ausrichtung</strong> (Karte ALIGN WHILE MOVING): Beim Verschieben richtet sich die Auswahl an Flächen, Kanten und Mitten anderer Objekte aus; Hilfslinien zeigen es.</li>
+<li><strong>Raster</strong>: Rasterweite im Feld rechts in der Symbolleiste (cm); Rasterfang mit der Rastertaste.</li>
+<li><strong>Alt</strong> gedrückt halten: kein Fangen für diese eine Bewegung.</li>
+<li>Das Fangen gilt auch für Dimensionen: beim Setzen, beim Ziehen der Maßlinie und beim Verschieben ihrer Punkte.</li>
+</ul>
+
+<h2 id="bearbeiten">8. Bearbeiten und Werkzeuge</h2>
+<ul>
+<li><strong>Auswählen</strong>: Klick, <kbd>Shift</kbd>+Klick (mehrere), Rahmen aufziehen (nach rechts = alles, was ganz im Rahmen liegt; nach links = alles, was ihn berührt), <kbd>Ctrl+A</kbd>.</li>
+<li><strong>Verschieben</strong>: ziehen, Pfeiltasten (10 px mit <kbd>Shift</kbd>) oder <strong>Arrange → Move…</strong> (Karte MOVE: Abstand in cm in X und Y). <strong>Ausrichten/Verteilen, Spiegeln, Drehen</strong> im Menü <strong>Arrange</strong>.</li>
+<li><strong>Gruppieren / Sperren</strong>: <kbd>Ctrl+G</kbd>, <kbd>Ctrl+Shift+G</kbd>; gesperrte Objekte lassen sich nicht verändern. Vorne/hinten im Menü Arrange.</li>
+<li><strong>Punkte bearbeiten</strong>: Ein Objekt auswählen und Punkte ziehen; Werkzeuge <strong>Add Point</strong> / <strong>Delete Point</strong> in der Karte TOOLS (der Mauszeiger zeigt das Symbol des Werkzeugs).</li>
+<li><strong>Zusammenführen</strong>: Union, Trim, Reflect, Offset, Merge to One Shape, Explode (<kbd>Ctrl+Shift+X</kbd>) im Menü Arrange.</li>
+<li><strong>Farbwähler</strong> (<kbd>I</kbd>): eine Farbe von der Seite aufnehmen. <strong>Eimer / Region Color</strong> (<kbd>G</kbd>): einen geschlossenen Bereich einfärben.</li>
+<li><strong>Kopieren/Einfügen</strong> mit <kbd>Ctrl+C/X/V</kbd> oder den Tasten in der Karte TOOLS; <kbd>Ctrl+D</kbd> dupliziert.</li>
+<li><strong>Rückgängig / Wiederholen</strong>: <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Y</kbd>. Fast jede Änderung ist ein eigener Schritt.</li>
+</ul>
+
+<h2 id="ansicht">9. Ansicht, Zoom, Designs</h2>
+<ul>
+<li><strong>Zoom</strong>: Regler unten links, <kbd>Ctrl</kbd>+Mausrad, <kbd>Ctrl++</kbd> / <kbd>Ctrl+-</kbd>, <kbd>Ctrl+0</kbd> (100 %), <kbd>Ctrl+1</kbd> (Seite einpassen).</li>
+<li><strong>Zoom-Werkzeug</strong> (<kbd>Z</kbd> oder die Lupe in der Karte TOOLS): Linksklick = +10 %, Rechtsklick = −10 %; der angeklickte Punkt bleibt an seiner Stelle. <kbd>Esc</kbd> beendet.</li>
+<li><strong>Verschieben der Ansicht</strong>: Werkzeug Pan (<kbd>H</kbd>) oder mittlere Maustaste.</li>
+<li><strong>Lineale</strong>: <strong>View → Show Rulers</strong>. Sie zeigen die wirkliche Größe im Maßstab der Zeichnung.</li>
+<li><strong>Designs</strong> (<strong>View → Theme</strong>): dunkel und hell, jeweils flach oder als Glas. Die Wahl wird gespeichert.</li>
+</ul>
+
+<h2 id="export">10. Speichern, Export und Druck</h2>
+<table>
+<tr><th>Funktion</th><th>Beschreibung</th></tr>
+<tr><td>File → Export… (<kbd>Ctrl+E</kbd>)</td><td><strong>PNG</strong> (eine Seite oder mehrere), <strong>PNG-Satz</strong> in mehreren Größen, <strong>ICO</strong> (Windows-Symbol) und <strong>SVG</strong> (Vektorgrafik). Sie wählen die Seiten (alle, eine oder eine Liste wie <code>1,3-5</code>) und ob der Seitenhintergrund mitgeht.</td></tr>
+<tr><td>File → Export PNG (page size)</td><td>Schnell: die Seite als PNG in ihrer Größe.</td></tr>
+<tr><td>File → Print… (<kbd>Ctrl+P</kbd>)</td><td>Druck im Maßstab der Zeichnung. Seiten auswählen. Für einen exakten Plan im Maßstab drucken Sie mit 100 % (nicht „an Seite anpassen“).</td></tr>
+</table>
+<p>Exportierte Dateien und Ausdrucke enthalten nur Ihre Zeichnung, keine versteckten Daten über Sie.</p>
+
+<h2 id="tasten">11. Kurzbefehle</h2>
+<table>
+<tr><th>Aktion</th><th>Taste</th></tr>
+<tr><td>Neu / Öffnen / Speichern / Speichern unter</td><td><kbd>Ctrl+N</kbd> / <kbd>Ctrl+O</kbd> / <kbd>Ctrl+S</kbd> / <kbd>Ctrl+Shift+S</kbd></td></tr>
+<tr><td>Export / Drucken</td><td><kbd>Ctrl+E</kbd> / <kbd>Ctrl+P</kbd></td></tr>
+<tr><td>Rückgängig / Wiederholen</td><td><kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Y</kbd></td></tr>
+<tr><td>Ausschneiden / Kopieren / Einfügen / Duplizieren / Löschen</td><td><kbd>Ctrl+X</kbd> / <kbd>Ctrl+C</kbd> / <kbd>Ctrl+V</kbd> / <kbd>Ctrl+D</kbd> / <kbd>Entf</kbd></td></tr>
+<tr><td>Alles auswählen / Auswahl aufheben, Werkzeug beenden</td><td><kbd>Ctrl+A</kbd> / <kbd>Esc</kbd></td></tr>
+<tr><td>Gruppieren / Gruppe lösen / Explode</td><td><kbd>Ctrl+G</kbd> / <kbd>Ctrl+Shift+G</kbd> / <kbd>Ctrl+Shift+X</kbd></td></tr>
+<tr><td>Auswahl / Ansicht verschieben / Farbwähler / Eimer / Match</td><td><kbd>V</kbd> / <kbd>H</kbd> / <kbd>I</kbd> / <kbd>G</kbd> / <kbd>Q</kbd></td></tr>
+<tr><td>Zoom-Werkzeug / Handschrift / Text</td><td><kbd>Z</kbd> / <kbd>P</kbd> / <kbd>T</kbd></td></tr>
+<tr><td>Wand / Wand schneiden</td><td><kbd>W</kbd> / <kbd>X</kbd></td></tr>
+<tr><td>Dimension / Lineal (Messen) / Abstand zwischen Objekten</td><td><kbd>D</kbd> / <kbd>M</kbd> / <kbd>B</kbd></td></tr>
+<tr><td>Zoom ein / aus / 100 % / Seite einpassen</td><td><kbd>Ctrl++</kbd> / <kbd>Ctrl+-</kbd> / <kbd>Ctrl+0</kbd> / <kbd>Ctrl+1</kbd></td></tr>
+<tr><td>Objektfang ein/aus · Fang für eine Bewegung aus</td><td><kbd>F3</kbd> · <kbd>Alt</kbd> halten</td></tr>
+<tr><td>Auswahl bewegen (10 px mit Shift)</td><td>Pfeiltasten</td></tr>
+<tr><td>Seiten blättern / zoomen</td><td>Mausrad / <kbd>Ctrl</kbd>+Mausrad</td></tr>
+<tr><td>Eingabe übernehmen · Linie/Kurve beenden · abbrechen</td><td><kbd>Enter</kbd> · <kbd>Enter</kbd> · <kbd>Esc</kbd></td></tr>
+</table>
+<p>Die vollständige Liste öffnen Sie mit <strong>Help → Keyboard Shortcuts</strong>.</p>
+
+<h2 id="daten">12. Dateien, Daten und Datenschutz</h2>
+<p><strong>icono sendet nichts.</strong> Das Programm verbindet sich von sich aus nicht mit dem Internet, hat keine Nutzungsstatistik, keine Werbung, keine Anmeldung und keinen Cloud-Zwang. Es greift nicht auf Kamera, Mikrofon oder Standort zu.</p>
+<table>
+<tr><th>Was</th><th>Wo</th></tr>
+<tr><td>Ihre Zeichnungen</td><td>Nur dort, wo Sie sie speichern (File → Save / Export).</td></tr>
+<tr><td>Einstellungen und Listen</td><td><code>%LocalAppData%\Icono</code> (Windows-Taste+R, den Pfad eintippen): <code>theme.txt</code> (Ihr Design), <code>recent.txt</code> (zuletzt geöffnete Dateien), <code>Library\</code> (Ihre Icon-Bibliothek), <code>crash.log</code> (Fehlerprotokoll).</td></tr>
+</table>
+<p>Das Fehlerprotokoll <code>crash.log</code> entsteht nur bei einem unerwarteten Fehler und kann Dateinamen oder Pfade enthalten. Es bleibt auf Ihrem Gerät; schicken Sie es nur freiwillig mit, wenn Sie einen Fehler melden, und sehen Sie es vorher durch. Der Ordner kann jederzeit gelöscht werden.</p>
+<p>Die Einträge <strong>Check for Updates</strong>, <strong>Website</strong> und <strong>Contact</strong> im Menü Help öffnen auf Ihren Klick den Browser oder Ihr E-Mail-Programm; erst dann findet eine Verbindung statt, durch diese Programme. Das Handbuch selbst öffnet sich lokal.</p>
+<p>Enthalten Ihre Zeichnungen personenbezogene Daten Dritter (zum Beispiel Namen in einem Plankopf), sind Sie für den Umgang damit verantwortlich. Schicken Sie solche Zeichnungen nicht an den Hersteller.</p>
+<p>Der vollständige Datenschutzhinweis: <code>Datenschutz.txt</code> im Installationsordner (auch beim Installieren angezeigt).</p>
+
+<h2 id="sicherheit">13. Sicherheit</h2>
+<ul>
+<li><strong>Keine Netzwerkzugriffe</strong> durch das Programm; keine Hintergrunddienste.</li>
+<li><strong>Dateien von außen sind „fremde Daten“:</strong> SVG-Dateien werden ohne DTD und ohne Entitäten gelesen (Schutz vor „Billion Laughs“ und dem Auslesen lokaler Dateien); es wird nichts von Datenträger oder Netz nachgeladen. SVG bis 20 MB, Dokumente bis 512 MB und Bilder bis 64 MB werden angenommen, größere abgelehnt.</li>
+<li><strong>Nur feste Adressen</strong> werden geöffnet (Projektseite, bitbins.de, Kontakt-Mail), nie Adressen aus Dokumenten.</li>
+<li>Der Installer ist <strong>nicht signiert</strong> (Testversion): Prüfen Sie die Herkunft und die Prüfsumme (SHA-256). Laden Sie icono nur von Ihrem Ansprechpartner.</li>
+<li>Sicherheitslücken melden Sie bitte vertraulich an <a href="mailto:info@bitbins.de">info@bitbins.de</a> (siehe auch <code>SECURITY.md</code> im Projekt).</li>
+</ul>
+
+<h2 id="recht">14. Rechtliche Hinweise</h2>
+<ul>
+<li><strong>Testversion, Nutzungsrecht, Haftung:</strong> maßgeblich sind die Testbedingungen (<code>Testbedingungen.txt</code>, beim Installieren angezeigt). Kurz: unentgeltliches, nicht übertragbares Recht zum Testen auf eigenen Geräten; keine Weitergabe des Installers oder der Dateien; keine Veröffentlichung von Screenshots oder Berichten ohne Zustimmung; Haftung nur im gesetzlich nötigen Umfang. Sichern Sie Ihre Daten selbst.</li>
+<li><strong>Ihre Zeichnungen gehören Ihnen.</strong> Die mitgelieferten Symbole und Objekte dürfen Sie in Ihren eigenen Zeichnungen verwenden; die Sammlung selbst dürfen Sie nicht weitergeben.</li>
+<li><strong>Software Dritter:</strong> icono nutzt unter anderem .NET/WPF (MIT), SkiaSharp und Skia (MIT/BSD-3) mit ihren Bausteinen (libpng, zlib, libjpeg-turbo, libwebp, Expat, Wuffs, ICU), OpenTK (MIT) und die Lucide-Symbole (ISC, teils MIT). Die Lizenztexte stehen in <code>THIRD-PARTY-NOTICES.txt</code> und <code>THIRD-PARTY-NOTICES-DOTNET.txt</code> (Help → About icono → Third-party notices).</li>
+<li><strong>Logo und Name:</strong> Name, Logo und Programm sind Eigentum des Herstellers (Copyright © 2026 Jonas Shojaei). Ob der Name „icono“ Rechte Dritter berührt, wurde nicht geprüft; vor einer öffentlichen Veröffentlichung ist eine Markenrecherche nötig.</li>
+<li><strong>Impressum:</strong> Für die nichtöffentliche Weitergabe an einzelne Tester ist keines nötig. Bei einem öffentlichen Angebot (Webseite, Download) ist ein Impressum mit ladungsfähiger Anschrift Pflicht.</li>
+<li><strong>Technische Maße sind keine Bauvorlage.</strong> Ergebnisse (Maße, Flächen, Pläne) sind Hilfsmittel und müssen vor einer Ausführung (Bau, Kauf, Einbau) geprüft werden.</li>
+<li><strong>Vertrauliches:</strong> Zeichnen Sie keine vertraulichen oder rechtlich geschützten Pläne Dritter, wenn Sie dafür keine Erlaubnis haben.</li>
+</ul>
+
+<h2 id="hilfe">15. Fehlersuche und Kontakt</h2>
+<table>
+<tr><th>Problem</th><th>Lösung</th></tr>
+<tr><td>Windows warnt beim Start des Installers</td><td>Erwartet bei unsignierten Testversionen: „Weitere Informationen“ → „Trotzdem ausführen“, nachdem Sie die Prüfsumme verglichen haben.</td></tr>
+<tr><td>Der Virenschutz meldet etwas</td><td>Unbekannte, unsignierte Installer lösen manchmal Fehlalarme aus. Prüfen Sie die Prüfsumme; im Zweifel melden Sie es an info@bitbins.de, statt die Warnung zu ignorieren.</td></tr>
+<tr><td>Eine Datei lässt sich nicht öffnen</td><td>Sie ist beschädigt, zu groß (über 512 MB) oder von einer neueren Version. Öffnen Sie eine Sicherung.</td></tr>
+<tr><td>Eine Eingabe wirkt nicht</td><td>Mit <kbd>Enter</kbd> bestätigen. Zahlen akzeptieren Einheiten wie <code>2.5 m</code> oder <code>900 mm</code>.</td></tr>
+<tr><td>Einrasten stört</td><td><kbd>Alt</kbd> gedrückt halten oder <kbd>F3</kbd> drücken.</td></tr>
+<tr><td>Absturz oder Fehlermeldung</td><td>Speichern Sie, wenn möglich, unter einem neuen Namen und starten Sie neu. Zum Melden: Schritte, Screenshot, Version (Help → About icono) und gegebenenfalls <code>crash.log</code>.</td></tr>
+<tr><td>Altes Symbol im Explorer</td><td>Windows merkt sich Symbole; Explorer neu starten oder neu anmelden.</td></tr>
+</table>
+<p><strong>Kontakt:</strong> Jonas Shojaei · <a href="https://www.bitbins.de">www.bitbins.de</a> · <a href="mailto:info@bitbins.de">info@bitbins.de</a></p>
+<p class="muted">© 2026 Jonas Shojaei. Alle Rechte vorbehalten. Dieses Handbuch beschreibt Version 0.1.0-test.3; Funktionen können sich bis zur fertigen Version ändern.</p>
+</main>
+</body>
+</html>

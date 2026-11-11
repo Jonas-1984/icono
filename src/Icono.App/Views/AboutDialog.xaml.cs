@@ -13,11 +13,7 @@ public partial class AboutDialog : Window
     {
         InitializeComponent();
 
-        // the logo is a blue drawing: the dark designs get a brighter blue so it reads on the dark window
-        if (Icono.App.State.ThemeManager.Current == Icono.App.State.ThemeMode.Dark)
-        {
-            LogoImage.Source = new System.Windows.Media.Imaging.BitmapImage(new Uri("/Assets/icono-dark.png", UriKind.Relative));
-        }
+        LogoImage.Source = AppLogo.Load(560);
 
         // the full version with its test number (0.1.0-test.2), so a tester can say exactly which build they have
         var assembly = Assembly.GetExecutingAssembly();
@@ -41,16 +37,20 @@ public partial class AboutDialog : Window
         e.Handled = true;
     }
 
-    private void LicensesLink_OnClick(object sender, RoutedEventArgs e)
+    private void LicensesLink_OnClick(object sender, RoutedEventArgs e) => OpenDocument(LocalDocuments.Kind.ThirdParty);
+
+    private void ManualLink_OnClick(object sender, RoutedEventArgs e) => OpenDocument(LocalDocuments.Kind.Manual);
+
+    private void TermsLink_OnClick(object sender, RoutedEventArgs e) => OpenDocument(LocalDocuments.Kind.Terms);
+
+    private void PrivacyLink_OnClick(object sender, RoutedEventArgs e) => OpenDocument(LocalDocuments.Kind.Privacy);
+
+    /// <summary>Opens a document that lies next to icono.exe; says so when it is not there (a build that was not installed).</summary>
+    private void OpenDocument(LocalDocuments.Kind kind)
     {
-        var file = System.IO.Path.Combine(AppContext.BaseDirectory, "THIRD-PARTY-NOTICES.txt");
-        try
+        if (!LocalDocuments.TryOpen(kind))
         {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(file) { UseShellExecute = true });
-        }
-        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or System.IO.FileNotFoundException)
-        {
-            ThemedMessageBox.Show(this, "The file THIRD-PARTY-NOTICES.txt next to icono.exe could not be opened.", "Licenses", MessageBoxButton.OK, MessageBoxImage.Information);
+            ThemedMessageBox.Show(this, $"The file {LocalDocuments.FileName(kind)} next to icono.exe could not be opened.", "icono", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 

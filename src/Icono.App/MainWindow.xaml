@@ -314,7 +314,7 @@
             </MenuItem>
             <MenuItem Header="_Help">
                 <MenuItem Header="Keyboard Shortcuts" Click="ShortcutsMenuItem_OnClick" />
-                <MenuItem Header="Documentation" Click="DocumentationMenuItem_OnClick" />
+                <MenuItem Header="User Manual" Click="DocumentationMenuItem_OnClick" />
                 <MenuItem Header="Check for Updates" Click="UpdatesMenuItem_OnClick" />
                 <MenuItem Header="Website (www.bitbins.de)" Click="WebsiteMenuItem_OnClick" />
                 <MenuItem Header="Contact (info@bitbins.de)" Click="ContactMenuItem_OnClick" />

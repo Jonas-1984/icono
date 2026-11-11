@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>icono – User manual</title>
+<style>
+  :root { --bg:#ffffff; --fg:#1b2332; --muted:#5b6472; --line:#d9dee7; --accent:#1f5fd0; --box:#f3f6fb; --warn:#fff4e0; --warnline:#e0a030; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#16181d; --fg:#e8eaee; --muted:#a3aab6; --line:#2e323a; --accent:#6aa3ff; --box:#1d2027; --warn:#2b2417; --warnline:#9a7326; } }
+  html { scroll-behavior:smooth; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.6 "Segoe UI", system-ui, sans-serif; }
+  main { max-width:900px; margin:0 auto; padding:24px 20px 80px; }
+  h1 { font-size:2rem; margin:0 0 4px; } h2 { margin:2.2em 0 .4em; padding-top:.6em; border-top:1px solid var(--line); font-size:1.45rem; }
+  h3 { margin:1.4em 0 .3em; font-size:1.1rem; } .muted { color:var(--muted); }
+  a { color:var(--accent); } code, kbd { background:var(--box); border:1px solid var(--line); border-radius:4px; padding:1px 6px; font:0.92em Consolas, monospace; }
+  kbd { border-bottom-width:2px; } table { border-collapse:collapse; width:100%; margin:.6em 0 1em; } th, td { text-align:left; border:1px solid var(--line); padding:6px 10px; vertical-align:top; } th { background:var(--box); }
+  .note, .warn { border-left:4px solid var(--accent); background:var(--box); padding:10px 14px; margin:1em 0; border-radius:0 6px 6px 0; } .warn { border-color:var(--warnline); background:var(--warn); }
+  nav.toc { background:var(--box); border:1px solid var(--line); border-radius:8px; padding:10px 18px; margin:1.2em 0; } nav.toc ol { margin:.3em 0; columns:2; } nav.toc li { break-inside:avoid; }
+  @media print { nav.toc { display:none; } h2 { page-break-after:avoid; } }
+</style>
+</head>
+<body>
+<main>
+<h1>icono – User manual</h1>
+<p class="muted">Version 0.1.0-test.3 · November 2026 · <a href="Handbuch-DE.html">Deutsche Fassung</a></p>
+
+<div class="warn"><strong>Test version.</strong> icono is not finished and can contain errors. Back up important drawings regularly in a second place. The test terms (<code>Terms.txt</code>) and the privacy notice (<code>Privacy.txt</code>) are in the installation folder.</div>
+
+<nav class="toc"><strong>Contents</strong>
+<ol>
+<li><a href="#start">Installing, starting, uninstalling</a></li>
+<li><a href="#ui">The window</a></li>
+<li><a href="#doc">Document, pages and scale</a></li>
+<li><a href="#draw">Drawing: shapes, lines, handwriting, text</a></li>
+<li><a href="#plan">Floor plans: walls, rooms, doors, objects</a></li>
+<li><a href="#dims">Dimensions</a></li>
+<li><a href="#snap">Snapping and alignment</a></li>
+<li><a href="#edit">Editing and tools</a></li>
+<li><a href="#view">View, zoom, themes</a></li>
+<li><a href="#export">Saving, export and printing</a></li>
+<li><a href="#keys">Keyboard shortcuts</a></li>
+<li><a href="#data">Files, data and privacy</a></li>
+<li><a href="#security">Security</a></li>
+<li><a href="#legal">Legal notes</a></li>
+<li><a href="#help">Troubleshooting and contact</a></li>
+</ol></nav>
+
+<h2 id="start">1. Installing, starting, uninstalling</h2>
+<h3>Requirements</h3>
+<ul><li>Windows 10 (version 1809 or newer) or Windows 11, 64-bit.</li><li>About 200 MB of free space. Everything needed (including .NET) is part of the installer; no internet is needed.</li></ul>
+<h3>Install</h3>
+<ol>
+<li>Double-click <code>ICONO-Setup-0.1.0-test.3.exe</code>.</li>
+<li>If Windows shows “Windows protected your PC” (SmartScreen), that is normal for this test version: it is not digitally signed yet. Check that the file comes from your contact (checksum in <code>SHA256.txt</code>), then choose “More info” → “Run anyway”.</li>
+<li>Choose a language, read and accept the test terms and the privacy notice. No administrator rights are needed; the installation is for your user account only.</li>
+<li>An older test version is replaced; your settings and drawings are kept.</li>
+</ol>
+<h3>Check the checksum (optional)</h3>
+<p>In PowerShell: <code>Get-FileHash .\ICONO-Setup-0.1.0-test.3.exe -Algorithm SHA256</code>. The value must match <code>SHA256.txt</code>.</p>
+<h3>Start</h3>
+<p>Start menu → <strong>icono</strong> (or the desktop shortcut, if you chose one). A start screen plays for six seconds; a click or a key skips it. The start parameter <code>--no-splash</code> skips it too.</p>
+<h3>Uninstall</h3>
+<p>Windows Settings → Apps → icono → Uninstall (or Start menu → “Uninstall icono”). The uninstaller asks whether your local data (settings, recent files, icon library, error log) should be deleted too. Your saved drawings are always kept.</p>
+
+<h2 id="ui">2. The window</h2>
+<table>
+<tr><th>Area</th><th>What is there</th></tr>
+<tr><td>Menu bar</td><td>File, Edit, View, Page, Insert, Draw, Arrange, Design, Tools, Help. Use <kbd>Alt</kbd> + the underlined letter from the keyboard.</td></tr>
+<tr><td>Toolbar</td><td>Handwriting (orange key at the far left), undo/redo, cut/copy/paste/delete, align, group, lock, layers, grid and snap keys and the grid field in cm.</td></tr>
+<tr><td>Left side</td><td>Cards: <strong>TOOLS</strong> (select, pan, zoom, colour picker, copy, paste, bucket, add/delete point, match, edit, curve), <strong>OBJECT SNAP</strong>, <strong>ALIGN WHILE MOVING</strong>, <strong>HANDWRITING</strong>, <strong>CURVE</strong>, <strong>SHAPES</strong>, <strong>IT</strong> and <strong>OBJECTS</strong> (plan and kitchen symbols with a search box). Cards fold open and shut with the arrow.</td></tr>
+<tr><td>Work area</td><td>The page(s) with rulers at the top and left (in the unit and at the scale of the drawing).</td></tr>
+<tr><td>Right side</td><td>Cards for what is selected: <strong>BACKGROUND, PAGES, CANVAS SIZE, SHEET, DESIGN STYLE, DESIGN GRID, MOVE, DIMENSION, OPENING, WALL, LINE, BORDER</strong> and more. With nothing selected it shows the page settings.</td></tr>
+<tr><td>Status bar</td><td>Zoom slider, active tool, scale, page size and short messages (“Look matched” …). A hint for the active tool is shown at the right.</td></tr>
+</table>
+<div class="note"><strong>Confirming input:</strong> in every single-line field, <kbd>Enter</kbd> applies the value at once. This includes colour codes (for example <code>FFC27A</code> or <code>#FFC27A</code>) in the colour picker. An invalid entry is dropped and the old colour stays.</div>
+
+<h2 id="doc">3. Document, pages and scale</h2>
+<h3>New, open, save</h3>
+<ul>
+<li><strong>File → New</strong> (<kbd>Ctrl+N</kbd>), <strong>Open</strong> (<kbd>Ctrl+O</kbd>), <strong>Save</strong> (<kbd>Ctrl+S</kbd>), <strong>Save As</strong> (<kbd>Ctrl+Shift+S</kbd>).</li>
+<li>The file format is <code>.icn</code>. Older files ending in <code>.icono</code> still open.</li>
+<li>When you close with unsaved changes, icono asks (save / discard / cancel).</li>
+<li>For safety icono does not open documents over 512 MB or pictures over 64 MB (see Security).</li>
+</ul>
+<h3>Pages</h3>
+<p>A drawing can have several pages of the same size, one below the other. <strong>Page → Add Page / Remove Last Page / Pages…</strong> or the <strong>PAGES</strong> card. The mouse wheel scrolls through the pages (<kbd>Shift</kbd>+wheel sideways). <strong>Page → Size</strong> offers A5, A4, A3, Letter and pixel sizes (64 to 512 px), custom sizes (CANVAS SIZE card) and portrait/landscape.</p>
+<h3>Unit</h3>
+<p>CANVAS SIZE card → UNIT: px, cm, mm, inch. It applies to the rulers and to new dimensions; every dimension can also have its own unit.</p>
+<h3>The scale belongs to the page</h3>
+<p>The scale (for example 1:40) says how much reality one centimetre of the page stands for. Set it in <strong>CANVAS SIZE → SCALE</strong> (pick one or type a number, then <kbd>Enter</kbd>).</p>
+<div class="note"><strong>Changing the scale keeps all measurements.</strong> If you go from 1:40 to 1:50, the drawing becomes 40 : 50 as big on the page (about the middle of the page it lies on) and every dimension keeps its value. Wall thicknesses keep their real size. What belongs to the paper stays: line weights, text sizes, arrowhead sizes and the distance of dimension lines. The whole change is one undo step. Icon grids (Design Grid) are not affected.</div>
+<p>To print a plan at the exact scale, print at 100 % (see Export and printing).</p>
+<h3>Layers and background</h3>
+<p><strong>Page → New Layer</strong> adds a layer; layers can be hidden or locked. <strong>Page → Background…</strong> (BACKGROUND card): transparent, colour (with the colour picker), blur or image. <strong>Page → Sheet Data…</strong> adds a title block with a frame (project, address, date, scale from the page).</p>
+
+<h2 id="draw">4. Drawing: shapes, lines, handwriting, text</h2>
+<ul>
+<li><strong>Shapes</strong> (<strong>Insert → Shape</strong> or the SHAPES card): rectangle, ellipse, triangle, star, heart, arrows, 3D box and many symbols. Drag with the mouse. Corner handles keep the proportions, <kbd>Shift</kbd> frees them.</li>
+<li><strong>Lines</strong> (<strong>Draw → Line, Arrow, Double Arrow, Polyline, Curve</strong>): click point by point; double-click or <kbd>Enter</kbd> finishes, <kbd>Esc</kbd> cancels. Options (dash, arrowheads, length, rounded corners, sketch style) are in the <strong>LINE</strong> card and in the small box next to a clicked line.</li>
+<li><strong>Handwriting</strong> (<kbd>P</kbd> or the orange key top left): write and draw with an e-pen, a finger (touch) or the mouse. Every stroke is its own object. Colour, width and <strong>SMOOTHING</strong> (0–10, hand tremor is smoothed out) are in the HANDWRITING card. <kbd>Esc</kbd> ends.</li>
+<li><strong>Curve</strong> (tool “Curve” in the TOOLS card): round the corners of lines and shapes – click one side, click the neighbouring side, type the size, <kbd>Enter</kbd>.</li>
+<li><strong>Text</strong> (<kbd>T</kbd>): click and type. Double-click a shape to type into it. Format and alignment in <strong>Design → Text Formats…</strong>.</li>
+<li><strong>Images and SVG</strong> (<strong>Insert → Image… / SVG Code…</strong>): insert pictures and SVG graphics (SVG as code or from a file).</li>
+</ul>
+
+<h2 id="plan">5. Floor plans: walls, rooms, doors, objects</h2>
+<h3>Walls</h3>
+<ul>
+<li><strong>Draw a wall</strong> (<kbd>W</kbd>): click the corners. Or <strong>type a length</strong> and press <kbd>Enter</kbd>: the corner is placed in the direction of the mouse. The typed length is the inside length (the clear length in the room). <kbd>Enter</kbd> without a number ends, <kbd>Esc</kbd> cancels. New walls are 15 cm thick at the chosen scale.</li>
+<li><strong>Insert a room</strong>: <strong>Draw → Add Room</strong> (closed room, L-shape, slanted walls, columns).</li>
+<li><strong>Change a length</strong>: click the number of a wall dimension, type the length you want (for example <code>250</code>, <code>2.5 m</code>, <code>2500 mm</code>), <kbd>Enter</kbd>.</li>
+<li><strong>Edit</strong>: drag corners, cut walls (<kbd>X</kbd>), join, straighten, close a room (<strong>Draw</strong> menu, <strong>WALL</strong> card: thickness, hatch, unit, measure inside/centre/outside, show dimensions).</li>
+</ul>
+<h3>Doors and windows</h3>
+<p><strong>Insert → Door and Window</strong> puts a door, double door, window, double window or wall opening on a wall; they cut the wall open. Rotation, flip, opening angle and wall thickness are in the <strong>OPENING</strong> card. Their dimensions (width of the opening and clear distance to the wall corners) can be shown; click a number and type a new length to slide the element along the wall.</p>
+<h3>Objects and furniture</h3>
+<p>The <strong>OBJECTS</strong> card holds plan symbols (sockets, appliances, sanitary …), cabinets and kitchen elements and computers at real size. Groups fold open and shut; the search box filters all groups. Click an object, then click the drawing; it appears at its real size at the current scale.</p>
+
+<h2 id="dims">6. Dimensions</h2>
+<h3>Free dimensions</h3>
+<p><strong>Draw → Dimension</strong> (<kbd>D</kbd>): aligned, horizontal, vertical, angle, radius, diameter. Click the measured points, then <strong>once where the dimension line should run</strong>. The points snap to objects and stay attached to them. <strong>Add Dimensions to Selection</strong> adds dimensions to the selected shape automatically (width/height/depth, diameter, corners, segments).</p>
+<h3>Placing dimensions of walls, doors and windows – with the mouse only</h3>
+<ul>
+<li><strong>Click the number</strong> (without dragging): the length input opens.</li>
+<li><strong>Drag the number</strong>: the dimension line follows the mouse, on either side of the wall and at any distance. Let go and it stays. <kbd>Esc</kbd> while dragging puts it back; <kbd>Ctrl+Z</kbd> undoes it afterwards.</li>
+<li>There are no separate fields for “inside/outside” or “distance”: the mouse alone decides side and distance.</li>
+</ul>
+<h3>Lining up in one row</h3>
+<p>While you drag (or when you place a free dimension line) the line snaps onto the line of another dimension that runs the same way as soon as it is within reach (about 8 screen pixels). A dashed orange guide shows what it lines up with, so chains of dimensions stand flush in one row. This works between dimensions of the same wall, of different walls, of doors/windows and free dimensions. <kbd>Alt</kbd> switches snapping off.</p>
+<h3>Every dimension has its own settings</h3>
+<p>In the <strong>DIMENSION</strong> card (right) you set unit, decimal places, text, position and distance of the number, number size, line width, arrow style and size and extension lines. For walls pick the dimension to change under “WHICH DIMENSION” (by default the one whose number you last clicked or dragged). <strong>A setting only affects that one dimension</strong> – not the other dimensions of the wall and not new dimensions.</p>
+<h3>Carrying a style over with Match</h3>
+<p>The <strong>Match</strong> tool (<kbd>Q</kbd> or the paint roller in the TOOLS card) copies the look of one object to others: pick the source, switch the tool on, then click the targets. If you click the <em>number</em> of a dimension, only its style is carried over – also from one dimension to another of the same wall. <kbd>Ctrl</kbd>+click picks a new source. The button “Dimension style to ALL dimensions” deliberately copies a style to all.</p>
+
+<h2 id="snap">7. Snapping and alignment</h2>
+<ul>
+<li><strong>Object snap</strong> (<kbd>F3</kbd> on/off, OBJECT SNAP card): end points, middles, centres, crossings, perpendicular, tangent, nearest and more. An orange mark and a short name show the snap.</li>
+<li><strong>Alignment</strong> (ALIGN WHILE MOVING card): while moving, the selection lines up with faces, edges and middles of other objects; guides show it.</li>
+<li><strong>Grid</strong>: grid size in the field at the right of the toolbar (cm); grid snap with the grid key.</li>
+<li>Hold <strong>Alt</strong>: no snapping for this one move.</li>
+<li>Snapping also applies to dimensions: when placing them, when dragging the dimension line and when moving their points.</li>
+</ul>
+
+<h2 id="edit">8. Editing and tools</h2>
+<ul>
+<li><strong>Select</strong>: click, <kbd>Shift</kbd>+click (several), drag a frame (to the right = everything fully inside; to the left = everything it touches), <kbd>Ctrl+A</kbd>.</li>
+<li><strong>Move</strong>: drag, arrow keys (10 px with <kbd>Shift</kbd>) or <strong>Arrange → Move…</strong> (MOVE card: distance in cm in X and Y). <strong>Align/distribute, flip, rotate</strong> are in the <strong>Arrange</strong> menu.</li>
+<li><strong>Group / lock</strong>: <kbd>Ctrl+G</kbd>, <kbd>Ctrl+Shift+G</kbd>; locked objects cannot be changed. Front/back in the Arrange menu.</li>
+<li><strong>Edit points</strong>: select an object and drag its points; tools <strong>Add Point</strong> / <strong>Delete Point</strong> in the TOOLS card (the mouse cursor shows the tool’s icon).</li>
+<li><strong>Combine</strong>: Union, Trim, Reflect, Offset, Merge to One Shape, Explode (<kbd>Ctrl+Shift+X</kbd>) in the Arrange menu.</li>
+<li><strong>Colour picker</strong> (<kbd>I</kbd>): take a colour from the page. <strong>Bucket / Region Color</strong> (<kbd>G</kbd>): colour a closed area.</li>
+<li><strong>Copy/paste</strong> with <kbd>Ctrl+C/X/V</kbd> or the keys in the TOOLS card; <kbd>Ctrl+D</kbd> duplicates.</li>
+<li><strong>Undo / redo</strong>: <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Y</kbd>. Almost every change is a step of its own.</li>
+</ul>
+
+<h2 id="view">9. View, zoom, themes</h2>
+<ul>
+<li><strong>Zoom</strong>: slider bottom left, <kbd>Ctrl</kbd>+mouse wheel, <kbd>Ctrl++</kbd> / <kbd>Ctrl+-</kbd>, <kbd>Ctrl+0</kbd> (100 %), <kbd>Ctrl+1</kbd> (fit page).</li>
+<li><strong>Zoom tool</strong> (<kbd>Z</kbd> or the magnifier in the TOOLS card): left click = +10 %, right click = −10 %; the clicked point stays where it is. <kbd>Esc</kbd> ends.</li>
+<li><strong>Moving the view</strong>: Pan tool (<kbd>H</kbd>) or the middle mouse button.</li>
+<li><strong>Rulers</strong>: <strong>View → Show Rulers</strong>. They show real-world size at the scale of the drawing.</li>
+<li><strong>Themes</strong> (<strong>View → Theme</strong>): dark and light, each flat or as glass. Your choice is saved.</li>
+</ul>
+
+<h2 id="export">10. Saving, export and printing</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td>File → Export… (<kbd>Ctrl+E</kbd>)</td><td><strong>PNG</strong> (one page or several), a <strong>PNG set</strong> in several sizes, <strong>ICO</strong> (Windows icon) and <strong>SVG</strong> (vector graphic). You choose the pages (all, one or a list such as <code>1,3-5</code>) and whether the page background is included.</td></tr>
+<tr><td>File → Export PNG (page size)</td><td>Quick: the page as a PNG at its size.</td></tr>
+<tr><td>File → Print… (<kbd>Ctrl+P</kbd>)</td><td>Printing at the scale of the drawing. Choose the pages. For an exact plan at scale print at 100 % (not “fit to page”).</td></tr>
+</table>
+<p>Exported files and printouts contain only your drawing, no hidden data about you.</p>
+
+<h2 id="keys">11. Keyboard shortcuts</h2>
+<table>
+<tr><th>Action</th><th>Key</th></tr>
+<tr><td>New / Open / Save / Save As</td><td><kbd>Ctrl+N</kbd> / <kbd>Ctrl+O</kbd> / <kbd>Ctrl+S</kbd> / <kbd>Ctrl+Shift+S</kbd></td></tr>
+<tr><td>Export / Print</td><td><kbd>Ctrl+E</kbd> / <kbd>Ctrl+P</kbd></td></tr>
+<tr><td>Undo / Redo</td><td><kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Y</kbd></td></tr>
+<tr><td>Cut / Copy / Paste / Duplicate / Delete</td><td><kbd>Ctrl+X</kbd> / <kbd>Ctrl+C</kbd> / <kbd>Ctrl+V</kbd> / <kbd>Ctrl+D</kbd> / <kbd>Del</kbd></td></tr>
+<tr><td>Select all / Deselect, end tool</td><td><kbd>Ctrl+A</kbd> / <kbd>Esc</kbd></td></tr>
+<tr><td>Group / Ungroup / Explode</td><td><kbd>Ctrl+G</kbd> / <kbd>Ctrl+Shift+G</kbd> / <kbd>Ctrl+Shift+X</kbd></td></tr>
+<tr><td>Select / Pan / Colour picker / Bucket / Match</td><td><kbd>V</kbd> / <kbd>H</kbd> / <kbd>I</kbd> / <kbd>G</kbd> / <kbd>Q</kbd></td></tr>
+<tr><td>Zoom tool / Handwriting / Text</td><td><kbd>Z</kbd> / <kbd>P</kbd> / <kbd>T</kbd></td></tr>
+<tr><td>Wall / Cut wall</td><td><kbd>W</kbd> / <kbd>X</kbd></td></tr>
+<tr><td>Dimension / Ruler (measure) / Distance between objects</td><td><kbd>D</kbd> / <kbd>M</kbd> / <kbd>B</kbd></td></tr>
+<tr><td>Zoom in / out / 100 % / fit page</td><td><kbd>Ctrl++</kbd> / <kbd>Ctrl+-</kbd> / <kbd>Ctrl+0</kbd> / <kbd>Ctrl+1</kbd></td></tr>
+<tr><td>Object snap on/off · snap off for one move</td><td><kbd>F3</kbd> · hold <kbd>Alt</kbd></td></tr>
+<tr><td>Move selection (10 px with Shift)</td><td>Arrow keys</td></tr>
+<tr><td>Scroll pages / zoom</td><td>Mouse wheel / <kbd>Ctrl</kbd>+wheel</td></tr>
+<tr><td>Apply input · finish line/curve · cancel</td><td><kbd>Enter</kbd> · <kbd>Enter</kbd> · <kbd>Esc</kbd></td></tr>
+</table>
+<p>Open the full list with <strong>Help → Keyboard Shortcuts</strong>.</p>
+
+<h2 id="data">12. Files, data and privacy</h2>
+<p><strong>icono sends nothing.</strong> The program does not connect to the internet on its own, has no usage statistics, no advertising, no sign-in and no cloud requirement. It does not use the camera, microphone or location.</p>
+<table>
+<tr><th>What</th><th>Where</th></tr>
+<tr><td>Your drawings</td><td>Only where you save them (File → Save / Export).</td></tr>
+<tr><td>Settings and lists</td><td><code>%LocalAppData%\Icono</code> (Windows key+R, type the path): <code>theme.txt</code> (your theme), <code>recent.txt</code> (recent files), <code>Library\</code> (your icon library), <code>crash.log</code> (error log).</td></tr>
+</table>
+<p>The error log <code>crash.log</code> is only written when an unexpected error occurs and can contain file names or paths. It stays on your device; send it only voluntarily when you report a problem, and look through it first. You can delete the folder at any time.</p>
+<p>The entries <strong>Check for Updates</strong>, <strong>Website</strong> and <strong>Contact</strong> in the Help menu open your browser or e-mail program when you click them; only then a connection is made, by those programs. This manual itself opens locally.</p>
+<p>If your drawings contain personal data of third parties (for example names in a title block), you are responsible for handling it. Do not send such drawings to the maker.</p>
+<p>The full privacy notice is <code>Privacy.txt</code> in the installation folder (also shown during installation).</p>
+
+<h2 id="security">13. Security</h2>
+<ul>
+<li><strong>No network access</strong> by the program; no background services.</li>
+<li><strong>Files from outside are untrusted data:</strong> SVG files are read without a DTD and without entities (protection against “billion laughs” and reading local files); nothing is loaded from disk or network. SVG up to 20 MB, documents up to 512 MB and pictures up to 64 MB are accepted, larger ones are refused.</li>
+<li><strong>Only fixed addresses</strong> are opened (project page, bitbins.de, the contact mail), never addresses from documents.</li>
+<li>The installer is <strong>not signed</strong> (test version): check where it came from and the checksum (SHA-256). Only get icono from your contact.</li>
+<li>Please report security problems confidentially to <a href="mailto:info@bitbins.de">info@bitbins.de</a> (see also <code>SECURITY.md</code> in the project).</li>
+</ul>
+
+<h2 id="legal">14. Legal notes</h2>
+<ul>
+<li><strong>Test version, right of use, liability:</strong> the test terms apply (<code>Terms.txt</code>, shown during installation). In short: a free, non-transferable right to test on your own devices; do not pass on the installer or the files; do not publish screenshots or reports without consent; liability only to the extent the law requires. Back up your data yourself.</li>
+<li><strong>Your drawings belong to you.</strong> You may use the supplied symbols and objects in your own drawings; you may not pass on the collection itself.</li>
+<li><strong>Third-party software:</strong> icono uses, among others, .NET/WPF (MIT), SkiaSharp and Skia (MIT/BSD-3) with their components (libpng, zlib, libjpeg-turbo, libwebp, Expat, Wuffs, ICU), OpenTK (MIT) and the Lucide icons (ISC, partly MIT). The licence texts are in <code>THIRD-PARTY-NOTICES.txt</code> and <code>THIRD-PARTY-NOTICES-DOTNET.txt</code> (Help → About icono → Third-party notices).</li>
+<li><strong>Logo and name:</strong> the name, logo and program belong to the maker (copyright © 2026 Jonas Shojaei). Whether the name “icono” touches rights of third parties has not been checked; a trademark search is needed before a public release.</li>
+<li><strong>Imprint:</strong> none is needed for passing the program privately to individual testers. A public offer (website, download) requires an imprint with a postal address.</li>
+<li><strong>Technical measures are not a building document.</strong> Results (dimensions, areas, plans) are aids and must be checked before anything is built, bought or installed from them.</li>
+<li>Do not draw confidential or legally protected plans of third parties without permission.</li>
+</ul>
+
+<h2 id="help">15. Troubleshooting and contact</h2>
+<table>
+<tr><th>Problem</th><th>Solution</th></tr>
+<tr><td>Windows warns when the installer starts</td><td>Expected for unsigned test versions: “More info” → “Run anyway” after you compared the checksum.</td></tr>
+<tr><td>The antivirus reports something</td><td>Unknown unsigned installers sometimes cause false alarms. Check the checksum; if in doubt report it to info@bitbins.de instead of ignoring the warning.</td></tr>
+<tr><td>A file will not open</td><td>It is damaged, too big (over 512 MB) or from a newer version. Open a backup.</td></tr>
+<tr><td>An input has no effect</td><td>Confirm with <kbd>Enter</kbd>. Numbers accept units such as <code>2.5 m</code> or <code>900 mm</code>.</td></tr>
+<tr><td>Snapping is in the way</td><td>Hold <kbd>Alt</kbd> or press <kbd>F3</kbd>.</td></tr>
+<tr><td>Crash or error message</td><td>If possible save under a new name and restart. To report it: the steps, a screenshot, the version (Help → About icono) and possibly <code>crash.log</code>.</td></tr>
+<tr><td>Old icon in Explorer</td><td>Windows caches icons; restart Explorer or sign in again.</td></tr>
+</table>
+<p><strong>Contact:</strong> Jonas Shojaei · <a href="https://www.bitbins.de">www.bitbins.de</a> · <a href="mailto:info@bitbins.de">info@bitbins.de</a></p>
+<p class="muted">© 2026 Jonas Shojaei. All rights reserved. This manual describes version 0.1.0-test.3; features can change until the final version.</p>
+</main>
+</body>
+</html>

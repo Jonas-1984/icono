@@ -27,8 +27,9 @@ In short: icono does not collect, send or share any data about you. The program 
    without damaging icono.
 
 5. Links in the Help menu
-   The entries "Documentation", "Check for Updates", "Website" and "Contact" open your browser or e-mail program when you click them. Only then
+   The entries "Check for Updates", "Website" and "Contact" open your browser or e-mail program when you click them. Only then
    a connection is made, by those programs. Their privacy terms and those of the visited site apply.
+   The user manual (Help > User Manual) and the notes in the "About icono" window open locally from the installation folder, without internet.
 
 6. If you write to me
    If you write to me (info@bitbins.de) I process your e-mail address and your message to answer you and to fix the reported problem (Art. 6(1)(b)

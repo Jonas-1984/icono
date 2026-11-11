@@ -1,4 +1,4 @@
-﻿icono 0.1.0-test.2 - Hinweise für Tester / Notes for testers
+﻿icono 0.1.0-test.3 - Hinweise für Tester / Notes for testers
 ============================================================
 
 DEUTSCH
@@ -12,13 +12,16 @@ Systemvoraussetzungen
   - Internet wird nicht gebraucht
 
 Installation
-  1. ICONO-Setup-0.1.0-test.2.exe doppelt anklicken.
+  1. ICONO-Setup-0.1.0-test.3.exe doppelt anklicken.
   2. Windows zeigt eventuell "Der Computer wurde durch Windows geschützt" (SmartScreen). Das liegt daran, dass die Testversion noch nicht
      digital signiert ist. Klicken Sie auf "Weitere Informationen" und dann auf "Trotzdem ausführen". Prüfen Sie vorher, dass die Datei von mir
      kommt; die Prüfsumme (SHA-256) steht in der Datei SHA256.txt, die ich mitgeschickt habe.
   3. Sprache wählen, Testbedingungen und Datenschutzhinweis lesen, installieren. Es werden keine Administratorrechte gebraucht (Installation
      nur für Ihr Benutzerkonto).
   4. Eine ältere Testversion (zum Beispiel 0.1.0-test.1) wird dabei einfach ersetzt; Ihre Einstellungen und Zeichnungen bleiben erhalten.
+
+Handbuch
+  Das Benutzerhandbuch (Startmenü > icono Handbuch, oder in icono: Help > User Manual) erklärt alle Funktionen, Kurzbefehle, Datenschutz, Sicherheit und die rechtlichen Hinweise.
 
 Was ich gern von Ihnen wüsste
   - Stürzt das Programm ab oder zeigt es eine Fehlermeldung?
@@ -57,12 +60,15 @@ Requirements
   - no internet needed
 
 Installation
-  1. Double-click ICONO-Setup-0.1.0-test.2.exe.
+  1. Double-click ICONO-Setup-0.1.0-test.3.exe.
   2. Windows may show "Windows protected your PC" (SmartScreen) because the test version is not digitally signed yet. Click "More info" and then
      "Run anyway". Please first check that the file comes from me; its checksum (SHA-256) is in SHA256.txt, which I sent along.
   3. Choose a language, read the test terms and the privacy notice, install. No administrator rights are needed (installation for your user
      account only).
   4. An older test version (for example 0.1.0-test.1) is simply replaced; your settings and drawings are kept.
+
+Manual
+  The user manual (Start menu > icono User Manual, or in icono: Help > User Manual) explains all functions, shortcuts, privacy, security and the legal notes.
 
 What I would like to know
   - Does the program crash or show an error?

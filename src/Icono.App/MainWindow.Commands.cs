@@ -621,7 +621,14 @@ public partial class MainWindow
 
     private void ShortcutsMenuItem_OnClick(object sender, RoutedEventArgs e) => new ShortcutsDialog { Owner = this }.ShowDialog();
 
-    private void DocumentationMenuItem_OnClick(object sender, RoutedEventArgs e) => OpenUrl($"{RepositoryUrl}#readme");
+    /// <summary>The user manual opens from the installation folder (no internet); a build without it falls back to the project page.</summary>
+    private void DocumentationMenuItem_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (!LocalDocuments.TryOpen(LocalDocuments.Kind.Manual))
+        {
+            OpenUrl($"{RepositoryUrl}#readme");
+        }
+    }
 
     private void UpdatesMenuItem_OnClick(object sender, RoutedEventArgs e) => OpenUrl($"{RepositoryUrl}/releases");
 

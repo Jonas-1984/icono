@@ -30,10 +30,12 @@ public static class PageRescaler
         }
     }
 
+    /// <summary>False for what a scale does not touch: a design grid is the grid of an icon (its squares are pixels of the icon), not a drawing at a scale.</summary>
+    public static bool Affects(Shape shape) => shape.Kind != ShapeKind.DesignGrid;
+
     private static void Rescale(Document document, Shape shape, double factor)
     {
-        // a design grid is the grid of an icon (its squares are pixels of the icon), not something at a scale
-        if (shape.Kind == ShapeKind.DesignGrid)
+        if (!Affects(shape))
         {
             return;
         }
@@ -54,26 +56,15 @@ public static class PageRescaler
             return;
         }
 
-        var newX = Across(shape.X, centreX);
-        var newY = Across(shape.Y, centreY);
+        // the frame is scaled about the middle of the page: its corner moves, its size scales (a turned shape turns about its middle, which
+        // moves the same way); the points of a path are relative to the corner, so only their distances scale
+        shape.X = Across(shape.X, centreX);
+        shape.Y = Across(shape.Y, centreY);
+        shape.Width *= factor;
+        shape.Height *= factor;
         if (shape.Points is { Count: > 0 } points)
         {
-            // points are relative to the corner of the frame: the frame's corner moves, the distances between the points scale
             shape.Points = points.Select(p => new CorePoint(p.X * factor, p.Y * factor)).ToList();
-            shape.X = newX;
-            shape.Y = newY;
-            shape.Width *= factor;
-            shape.Height *= factor;
-        }
-        else
-        {
-            // the frame is scaled about the middle of the page: its middle moves, its size scales
-            var middleX = Across(shape.X + shape.Width / 2, centreX);
-            var middleY = Across(shape.Y + shape.Height / 2, centreY);
-            shape.Width *= factor;
-            shape.Height *= factor;
-            shape.X = middleX - shape.Width / 2;
-            shape.Y = middleY - shape.Height / 2;
         }
 
         // the lengths that are real-world sizes: the thickness of a wall (and of the wall a door or window sits in), rounded corners and

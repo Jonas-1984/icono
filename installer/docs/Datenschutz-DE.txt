@@ -27,9 +27,10 @@ Kurz gesagt: icono sammelt, sendet und teilt keine Daten über Sie. Das Programm
    selbst löschen, ohne dass icono beschädigt wird.
 
 5. Links im Menü Help
-   Die Einträge "Documentation", "Check for Updates", "Website" und "Contact" öffnen auf Ihren Klick hin Ihren Browser oder Ihr
+   Die Einträge "Check for Updates", "Website" und "Contact" öffnen auf Ihren Klick hin Ihren Browser oder Ihr
    E-Mail-Programm. Erst dann findet eine Verbindung statt, und zwar durch diese Programme. Für sie gelten deren Datenschutzbestimmungen und
    die der besuchten Seite.
+   Das Benutzerhandbuch (Help > User Manual) und die Hinweise im Fenster "About icono" öffnen sich lokal aus dem Installationsordner, ohne Internet.
 
 6. Wenn Sie mir schreiben
    Schreiben Sie mir (info@bitbins.de), verarbeite ich Ihre E-Mail-Adresse und Ihre Nachricht, um Ihnen zu antworten und den gemeldeten Fehler zu

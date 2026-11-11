@@ -3,7 +3,7 @@
 
 #define AppName "icono"
 #define AppVersion "0.1.0"
-#define AppVersionText "0.1.0-test.2"
+#define AppVersionText "0.1.0-test.3"
 #define Publisher "Jonas Shojaei (bitbins.de)"
 #define PublishDir "publish"
 #ifndef Suffix
@@ -74,6 +74,8 @@ Source: "docs\Privacy-EN.txt"; DestDir: "{app}"; DestName: "Privacy.txt"; Flags:
 [Icons]
 Name: "{autoprograms}\icono"; Filename: "{app}\icono.exe"
 Name: "{autoprograms}\{cm:UninstallLink}"; Filename: "{uninstallexe}"
+Name: "{autoprograms}\icono Handbuch"; Filename: "{app}\Handbuch-DE.html"; Languages: german
+Name: "{autoprograms}\icono User Manual"; Filename: "{app}\Manual-EN.html"; Languages: english
 Name: "{autodesktop}\icono"; Filename: "{app}\icono.exe"; Tasks: desktopicon
 
 [Run]

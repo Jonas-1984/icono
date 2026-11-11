@@ -1,4 +1,4 @@
-﻿icono - Test terms (test version 0.1.0-test.2)
+﻿icono - Test terms (test version 0.1.0-test.3)
 ==============================================
 
 Please read these terms. By installing and using icono you agree to them.
@@ -7,6 +7,7 @@ Please read these terms. By installing and using icono you agree to them.
    icono is a drawing program for icons and floor plans (Windows). You receive an unfinished TEST VERSION that is meant for trying out the
    program and finding errors. It can contain errors, can behave differently from the later release and can create files that later
    versions can no longer read. Please do not rely on it for important work and back up your files regularly in a second place.
+   Results of the program (dimensions, areas, plans) are aids and not a building document: check them before you build, buy or install anything.
 
 2. Right of use
    You may install icono on your own devices free of charge and use it for testing. The right is non-exclusive, non-transferable and can be

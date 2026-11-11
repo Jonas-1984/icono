@@ -617,9 +617,8 @@ public sealed class EditorContext : ObservableObject
         }
 
         // every shape of every layer is resized with the page: one undo step with the scale
-        var shapes = Document.Layers.SelectMany(l => l.Shapes).ToList();
+        var shapes = Document.Layers.SelectMany(l => l.Shapes).Where(PageRescaler.Affects).ToList();
         var shapesBefore = shapes.Select(ShapeSnapshot.Capture).ToList();
-        Document.ScaleDenominator = denominator;
         PageRescaler.Rescale(Document, PageRescaler.Factor(before, denominator));
         var shapesAfter = shapes.Select(ShapeSnapshot.Capture).ToList();
 

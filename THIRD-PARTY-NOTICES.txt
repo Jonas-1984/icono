@@ -149,3 +149,4 @@ Copyright (c) Team OpenTK. (The MIT license text is the same as shown above.)
 -------------------------------
 The doors, windows, sockets, kitchen elements, cabinets, units and computer objects of the catalogues were drawn by the author of icono
 (Jonas Shojaei). They are not covered by the licenses above; see the test terms or the license of the final release.
+The icono logo and the program icon were supplied by the author of icono (Jonas Shojaei) and belong to him.
