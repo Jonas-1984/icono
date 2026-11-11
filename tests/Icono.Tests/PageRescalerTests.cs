@@ -4,8 +4,11 @@ using Icono.Rendering;
 namespace Icono.Tests;
 
 /// <summary>The scale belongs to the page: changing it resizes the drawing on the page, so every real-world size and every dimension keeps its value.</summary>
-public class PageRescalerTests
+public class PageRescalerTests : IDisposable
 {
+    /// <summary>The tests change the global drawing scale: it goes back to the default after each one.</summary>
+    public void Dispose() => DrawingScale.Denominator = 1;
+
     private static Document Page(int pages = 1)
     {
         var document = new Document { Width = 1000, Height = 800, PageCount = pages, ScaleDenominator = 40 };
