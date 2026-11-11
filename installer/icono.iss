@@ -3,7 +3,7 @@
 
 #define AppName "icono"
 #define AppVersion "0.1.0"
-#define AppVersionText "0.1.0-test.3"
+#define AppVersionText "0.1.0-test.4"
 #define Publisher "Jonas Shojaei (bitbins.de)"
 #define PublishDir "publish"
 #ifndef Suffix
@@ -44,6 +44,8 @@ UninstallDisplayName={#AppName} {#AppVersionText}
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
+; icono files (.icn) get the icono file icon and open with icono (a choice in the wizard, per user, nothing else in the system is changed)
+ChangesAssociations=yes
 CloseApplications=yes
 RestartApplications=no
 ShowLanguageDialog=auto
@@ -58,9 +60,16 @@ german.DeleteUserData=Sollen auch Ihre lokalen icono-Daten gelöscht werden (Ein
 english.DeleteUserData=Do you also want to delete your local icono data (settings, list of recent files, icon library, error log)?%n%nYour saved drawings are kept in any case.
 german.UninstallLink=icono deinstallieren
 english.UninstallLink=Uninstall icono
+german.AssociateFiles=icono-Dateien (.icn) mit icono öffnen und das icono-Dateisymbol verwenden
+english.AssociateFiles=Open icono files (.icn) with icono and show the icono file icon
+german.FileAssociations=Dateien:
+english.FileAssociations=Files:
+german.DocumentType=icono-Zeichnung
+english.DocumentType=icono document
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "associate"; Description: "{cm:AssociateFiles}"; GroupDescription: "{cm:FileAssociations}"
 
 [Files]
 Source: "{#PublishDir}\*"; DestDir: "{app}"; Excludes: "*.pdb"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -70,6 +79,14 @@ Source: "docs\Testbedingungen-DE.txt"; DestDir: "{app}"; DestName: "Testbedingun
 Source: "docs\Terms-EN.txt"; DestDir: "{app}"; DestName: "Terms.txt"; Flags: ignoreversion
 Source: "docs\Datenschutz-DE.txt"; DestDir: "{app}"; DestName: "Datenschutz.txt"; Flags: ignoreversion
 Source: "docs\Privacy-EN.txt"; DestDir: "{app}"; DestName: "Privacy.txt"; Flags: ignoreversion
+
+[Registry]
+; the file type of icono documents (.icn, and the older .icono): its icon and the command that opens it. HKA is the current user for a per user install; uninstall removes it.
+Root: HKA; Subkey: "Software\Classes\.icn"; ValueType: string; ValueName: ""; ValueData: "icono.Document"; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.icono"; ValueType: string; ValueName: ""; ValueData: "icono.Document"; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\icono.Document"; ValueType: string; ValueName: ""; ValueData: "{cm:DocumentType}"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\icono.Document\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\icono-file.ico"; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\icono.Document\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\icono.exe"" ""%1"""; Tasks: associate
 
 [Icons]
 Name: "{autoprograms}\icono"; Filename: "{app}\icono.exe"

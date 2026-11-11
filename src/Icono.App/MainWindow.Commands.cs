@@ -163,6 +163,28 @@ public partial class MainWindow
         }
     }
 
+    /// <summary>Opens the document that was given on the command line (a double click on an icono file in Explorer). Anything that is not an icono document
+    /// or does not exist is ignored.</summary>
+    public void OpenFromCommandLine(string path)
+    {
+        try
+        {
+            path = Path.GetFullPath(path);
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            return;
+        }
+
+        var extension = Path.GetExtension(path);
+        var isDocument = extension.Equals(DocumentFile.Extension, StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(DocumentFile.LegacyExtension, StringComparison.OrdinalIgnoreCase);
+        if (isDocument && File.Exists(path))
+        {
+            OpenDocument(path);
+        }
+    }
+
     private void OpenDocument(string path)
     {
         try

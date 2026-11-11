@@ -1,4 +1,4 @@
-﻿icono - Test terms (test version 0.1.0-test.3)
+﻿icono - Test terms (test version 0.1.0-test.4)
 ==============================================
 
 Please read these terms. By installing and using icono you agree to them.

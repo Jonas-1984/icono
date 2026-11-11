@@ -22,7 +22,7 @@
 <body>
 <main>
 <h1>icono – User manual</h1>
-<p class="muted">Version 0.1.0-test.3 · November 2026 · <a href="Handbuch-DE.html">Deutsche Fassung</a></p>
+<p class="muted">Version 0.1.0-test.4 · November 2026 · <a href="Handbuch-DE.html">Deutsche Fassung</a></p>
 
 <div class="warn"><strong>Test version.</strong> icono is not finished and can contain errors. Back up important drawings regularly in a second place. The test terms (<code>Terms.txt</code>) and the privacy notice (<code>Privacy.txt</code>) are in the installation folder.</div>
 
@@ -50,13 +50,13 @@
 <ul><li>Windows 10 (version 1809 or newer) or Windows 11, 64-bit.</li><li>About 200 MB of free space. Everything needed (including .NET) is part of the installer; no internet is needed.</li></ul>
 <h3>Install</h3>
 <ol>
-<li>Double-click <code>ICONO-Setup-0.1.0-test.3.exe</code>.</li>
+<li>Double-click <code>ICONO-Setup-0.1.0-test.4.exe</code>.</li>
 <li>If Windows shows “Windows protected your PC” (SmartScreen), that is normal for this test version: it is not digitally signed yet. Check that the file comes from your contact (checksum in <code>SHA256.txt</code>), then choose “More info” → “Run anyway”.</li>
 <li>Choose a language, read and accept the test terms and the privacy notice. No administrator rights are needed; the installation is for your user account only.</li>
 <li>An older test version is replaced; your settings and drawings are kept.</li>
 </ol>
 <h3>Check the checksum (optional)</h3>
-<p>In PowerShell: <code>Get-FileHash .\ICONO-Setup-0.1.0-test.3.exe -Algorithm SHA256</code>. The value must match <code>SHA256.txt</code>.</p>
+<p>In PowerShell: <code>Get-FileHash .\ICONO-Setup-0.1.0-test.4.exe -Algorithm SHA256</code>. The value must match <code>SHA256.txt</code>.</p>
 <h3>Start</h3>
 <p>Start menu → <strong>icono</strong> (or the desktop shortcut, if you chose one). A start screen plays for six seconds; a click or a key skips it. The start parameter <code>--no-splash</code> skips it too.</p>
 <h3>Uninstall</h3>
@@ -79,6 +79,7 @@
 <ul>
 <li><strong>File → New</strong> (<kbd>Ctrl+N</kbd>), <strong>Open</strong> (<kbd>Ctrl+O</kbd>), <strong>Save</strong> (<kbd>Ctrl+S</kbd>), <strong>Save As</strong> (<kbd>Ctrl+Shift+S</kbd>).</li>
 <li>The file format is <code>.icn</code>. Older files ending in <code>.icono</code> still open.</li>
+<li>With the file association (the installer asks; on by default) your drawings carry the icono file icon and a <strong>double click</strong> on an <code>.icn</code> file in Explorer opens it in icono. Uninstalling removes the association again.</li>
 <li>When you close with unsaved changes, icono asks (save / discard / cancel).</li>
 <li>For safety icono does not open documents over 512 MB or pictures over 64 MB (see Security).</li>
 </ul>
@@ -200,7 +201,7 @@
 <tr><td>Settings and lists</td><td><code>%LocalAppData%\Icono</code> (Windows key+R, type the path): <code>theme.txt</code> (your theme), <code>recent.txt</code> (recent files), <code>Library\</code> (your icon library), <code>crash.log</code> (error log).</td></tr>
 </table>
 <p>The error log <code>crash.log</code> is only written when an unexpected error occurs and can contain file names or paths. It stays on your device; send it only voluntarily when you report a problem, and look through it first. You can delete the folder at any time.</p>
-<p>The entries <strong>Check for Updates</strong>, <strong>Website</strong> and <strong>Contact</strong> in the Help menu open your browser or e-mail program when you click them; only then a connection is made, by those programs. This manual itself opens locally.</p>
+<p>The entries <strong>Check for Updates</strong>, <strong>Website</strong> and <strong>Contact</strong> in the Help menu open your browser or e-mail program when you click them; only then a connection is made, by those programs. The manual, the test terms and the privacy notice open locally from the installation folder in your default web browser (no internet).</p>
 <p>If your drawings contain personal data of third parties (for example names in a title block), you are responsible for handling it. Do not send such drawings to the maker.</p>
 <p>The full privacy notice is <code>Privacy.txt</code> in the installation folder (also shown during installation).</p>
 
@@ -236,7 +237,7 @@
 <tr><td>Old icon in Explorer</td><td>Windows caches icons; restart Explorer or sign in again.</td></tr>
 </table>
 <p><strong>Contact:</strong> Jonas Shojaei · <a href="https://www.bitbins.de">www.bitbins.de</a> · <a href="mailto:info@bitbins.de">info@bitbins.de</a></p>
-<p class="muted">© 2026 Jonas Shojaei. All rights reserved. This manual describes version 0.1.0-test.3; features can change until the final version.</p>
+<p class="muted">© 2026 Jonas Shojaei. All rights reserved. This manual describes version 0.1.0-test.4; features can change until the final version.</p>
 </main>
 </body>
 </html>

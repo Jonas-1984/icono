@@ -1,4 +1,4 @@
-﻿icono 0.1.0-test.3 - Hinweise für Tester / Notes for testers
+﻿icono 0.1.0-test.4 - Hinweise für Tester / Notes for testers
 ============================================================
 
 DEUTSCH
@@ -12,7 +12,7 @@ Systemvoraussetzungen
   - Internet wird nicht gebraucht
 
 Installation
-  1. ICONO-Setup-0.1.0-test.3.exe doppelt anklicken.
+  1. ICONO-Setup-0.1.0-test.4.exe doppelt anklicken.
   2. Windows zeigt eventuell "Der Computer wurde durch Windows geschützt" (SmartScreen). Das liegt daran, dass die Testversion noch nicht
      digital signiert ist. Klicken Sie auf "Weitere Informationen" und dann auf "Trotzdem ausführen". Prüfen Sie vorher, dass die Datei von mir
      kommt; die Prüfsumme (SHA-256) steht in der Datei SHA256.txt, die ich mitgeschickt habe.
@@ -60,7 +60,7 @@ Requirements
   - no internet needed
 
 Installation
-  1. Double-click ICONO-Setup-0.1.0-test.3.exe.
+  1. Double-click ICONO-Setup-0.1.0-test.4.exe.
   2. Windows may show "Windows protected your PC" (SmartScreen) because the test version is not digitally signed yet. Click "More info" and then
      "Run anyway". Please first check that the file comes from me; its checksum (SHA-256) is in SHA256.txt, which I sent along.
   3. Choose a language, read the test terms and the privacy notice, install. No administrator rights are needed (installation for your user

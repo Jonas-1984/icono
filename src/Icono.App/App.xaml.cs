@@ -30,18 +30,23 @@ public partial class App : Application
 
         base.OnStartup(e);
 
+        // a document given on the command line (double click on an icono file in Explorer) is opened as soon as the window is there
+        var document = e.Args.FirstOrDefault(a => !a.StartsWith("--", StringComparison.Ordinal));
+
         if (e.Args.Contains("--no-splash", StringComparer.OrdinalIgnoreCase))
         {
-            MainWindow = new MainWindow();
-            MainWindow.Show();
+            var window = new MainWindow();
+            MainWindow = window;
+            window.Show();
+            OpenGiven(window, document);
             return;
         }
 
-        ShowSplashThenMainWindow();
+        ShowSplashThenMainWindow(document);
     }
 
     /// <summary>The start screen plays for six seconds; the main window is built while it is on screen and opens when it ends.</summary>
-    private void ShowSplashThenMainWindow()
+    private void ShowSplashThenMainWindow(string? document)
     {
         MainWindow? main = null;
         var splash = new SplashWindow();
@@ -53,10 +58,19 @@ public partial class App : Application
             MainWindow = main;
             main.Show();
             main.Activate();
+            OpenGiven(main, document);
             splash.Close();
         };
 
         splash.Show();
+    }
+
+    private static void OpenGiven(MainWindow window, string? document)
+    {
+        if (!string.IsNullOrWhiteSpace(document))
+        {
+            window.OpenFromCommandLine(document);
+        }
     }
 
     private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)

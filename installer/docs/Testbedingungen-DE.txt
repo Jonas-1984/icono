@@ -1,4 +1,4 @@
-﻿icono - Testbedingungen (Testversion 0.1.0-test.3)
+﻿icono - Testbedingungen (Testversion 0.1.0-test.4)
 ==================================================
 
 Bitte lesen Sie diese Bedingungen. Mit der Installation und Nutzung von icono erklären Sie sich damit einverstanden.

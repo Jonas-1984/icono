@@ -21,6 +21,11 @@
     <None Include="..\..\THIRD-PARTY-NOTICES.txt" Link="THIRD-PARTY-NOTICES.txt" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\installer\docs\Handbuch-DE.html" Link="Handbuch-DE.html" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\installer\docs\Manual-EN.html" Link="Manual-EN.html" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\installer\docs\Testbedingungen-DE.html" Link="Testbedingungen.html" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\installer\docs\Terms-EN.html" Link="Terms.html" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\installer\docs\Datenschutz-DE.html" Link="Datenschutz.html" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\installer\docs\Privacy-EN.html" Link="Privacy.html" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Assets\icono-file.ico" Link="icono-file.ico" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <PropertyGroup>

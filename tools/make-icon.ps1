@@ -3,6 +3,7 @@
   Makes the program icon from a logo picture (PNG with a transparent background):
     src\Icono.App\Assets\icono.png       the wide logo shown in the About and start windows of the light designs (1200 px wide)
     src\Icono.App\Assets\icono-dark.png  the same with a brighter blue, for the dark designs
+    src\Icono.App\Assets\icono-file.ico      the icon of the document files (.icn), made from -FileSource (a picture of a page with the logo)
     src\Icono.App\Assets\icono.ico  the Windows icon: the brush with the splash on a light plate at 16-64 px, the whole logo at 128 and 256 px.
 .NOTES
   The brush is cut out of the logo with fixed pixel limits that fit the current logo (2172 x 724 px, brush on the left). A logo of another
@@ -10,7 +11,7 @@
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File tools\make-icon.ps1 -Source "C:\Users\me\Downloads\logo.png"
 #>
-param([Parameter(Mandatory = $true)][string]$Source)
+param([Parameter(Mandatory = $true)][string]$Source, [string]$FileSource)
 
 Add-Type -ReferencedAssemblies System.Drawing @"
 using System;
@@ -165,6 +166,44 @@ public static class Gen
         using (MemoryStream m = new MemoryStream()) { b.Save(m, ImageFormat.Png); return m.ToArray(); }
     }
 
+    static void WriteIco(string path, int[] sizes, List<byte[]> pngs)
+    {
+        using (FileStream f = new FileStream(path, FileMode.Create))
+        using (BinaryWriter w = new BinaryWriter(f))
+        {
+            w.Write((ushort)0); w.Write((ushort)1); w.Write((ushort)sizes.Length);
+            int offset = 6 + 16 * sizes.Length;
+            for (int i = 0; i < sizes.Length; i++)
+            {
+                w.Write((byte)(sizes[i] >= 256 ? 0 : sizes[i])); w.Write((byte)(sizes[i] >= 256 ? 0 : sizes[i]));
+                w.Write((byte)0); w.Write((byte)0); w.Write((ushort)1); w.Write((ushort)32);
+                w.Write((uint)pngs[i].Length); w.Write((uint)offset);
+                offset += pngs[i].Length;
+            }
+            foreach (byte[] p in pngs) w.Write(p);
+        }
+    }
+
+    // the icon of the document files (.icn): a page with the logo. The picture has a faint dark glow round the page: only what is (nearly)
+    // opaque is kept, then the page is cut out and fitted (by its height) into every size.
+    public static void RunFile(string src, string assets)
+    {
+        Bitmap all = ToArgb(Image.FromFile(src));
+        for (int y = 0; y < all.Height; y++)
+            for (int x = 0; x < all.Width; x++)
+            {
+                Color c = all.GetPixel(x, y);
+                int a = c.A <= 120 ? 0 : Math.Min(255, (c.A - 120) * 255 / 135);
+                if (a != c.A) all.SetPixel(x, y, Color.FromArgb(a, c.R, c.G, c.B));
+            }
+        Bitmap page = Crop(all, BBox(all, 12), 0);
+        int[] sizes = new int[] { 16, 24, 32, 48, 64, 128, 256 };
+        List<byte[]> pngs = new List<byte[]>();
+        foreach (int s in sizes) pngs.Add(Png(Square(page, s, 0.96, false)));
+        WriteIco(Path.Combine(assets, "icono-file.ico"), sizes, pngs);
+        Console.WriteLine("document icon from " + page.Width + "x" + page.Height);
+    }
+
     public static void Run(string src, string assets, string preview)
     {
         Bitmap all = ToArgb(Image.FromFile(src));
@@ -207,20 +246,7 @@ public static class Gen
             pngs.Add(Png(pic));
         }
 
-        using (FileStream f = new FileStream(Path.Combine(assets, "icono.ico"), FileMode.Create))
-        using (BinaryWriter w = new BinaryWriter(f))
-        {
-            w.Write((ushort)0); w.Write((ushort)1); w.Write((ushort)sizes.Length);
-            int offset = 6 + 16 * sizes.Length;
-            for (int i = 0; i < sizes.Length; i++)
-            {
-                w.Write((byte)(sizes[i] >= 256 ? 0 : sizes[i])); w.Write((byte)(sizes[i] >= 256 ? 0 : sizes[i]));
-                w.Write((byte)0); w.Write((byte)0); w.Write((ushort)1); w.Write((ushort)32);
-                w.Write((uint)pngs[i].Length); w.Write((uint)offset);
-                offset += pngs[i].Length;
-            }
-            foreach (byte[] p in pngs) w.Write(p);
-        }
+        WriteIco(Path.Combine(assets, "icono.ico"), sizes, pngs);
     }
 }
 "@
@@ -229,4 +255,5 @@ $assets = Join-Path $root 'src\Icono.App\Assets'
 $preview = Join-Path $env:TEMP 'icono-icon-preview'
 New-Item -ItemType Directory -Force $preview | Out-Null
 [Gen]::Run($Source, $assets, $preview)
+if ($FileSource) { [Gen]::RunFile($FileSource, $assets) }
 Write-Host "Written: $assets\icono.ico and icono.png (previews in $preview)"

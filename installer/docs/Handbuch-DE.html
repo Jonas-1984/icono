@@ -22,7 +22,7 @@
 <body>
 <main>
 <h1>icono – Benutzerhandbuch</h1>
-<p class="muted">Version 0.1.0-test.3 · Stand: November 2026 · <a href="Manual-EN.html">English version</a></p>
+<p class="muted">Version 0.1.0-test.4 · Stand: November 2026 · <a href="Manual-EN.html">English version</a></p>
 
 <div class="warn"><strong>Testversion.</strong> icono ist noch nicht fertig und kann Fehler enthalten. Sichern Sie wichtige Zeichnungen regelmäßig an einem zweiten Ort. Die Testbedingungen (<code>Testbedingungen.txt</code>) und der Datenschutzhinweis (<code>Datenschutz.txt</code>) liegen im Installationsordner.</div>
 
@@ -50,13 +50,13 @@
 <ul><li>Windows 10 (Version 1809 oder neuer) oder Windows 11, 64 Bit.</li><li>Rund 200 MB freier Speicher. Alles Nötige (auch .NET) ist im Installationsprogramm enthalten, es wird kein Internet gebraucht.</li></ul>
 <h3>Installieren</h3>
 <ol>
-<li><code>ICONO-Setup-0.1.0-test.3.exe</code> doppelt anklicken.</li>
+<li><code>ICONO-Setup-0.1.0-test.4.exe</code> doppelt anklicken.</li>
 <li>Zeigt Windows „Der Computer wurde durch Windows geschützt“ (SmartScreen), ist das bei dieser Testversion normal: Sie ist noch nicht digital signiert. Prüfen Sie, dass die Datei von Ihrem Ansprechpartner kommt (Prüfsumme siehe <code>SHA256.txt</code>), und wählen Sie „Weitere Informationen“ → „Trotzdem ausführen“.</li>
 <li>Sprache wählen, die Testbedingungen und den Datenschutzhinweis lesen und annehmen. Es werden keine Administratorrechte gebraucht, die Installation gilt nur für Ihr Benutzerkonto.</li>
 <li>Eine ältere Testversion wird dabei ersetzt, Ihre Einstellungen und Zeichnungen bleiben erhalten.</li>
 </ol>
 <h3>Prüfsumme prüfen (optional)</h3>
-<p>In PowerShell: <code>Get-FileHash .\ICONO-Setup-0.1.0-test.3.exe -Algorithm SHA256</code>. Der Wert muss mit <code>SHA256.txt</code> übereinstimmen.</p>
+<p>In PowerShell: <code>Get-FileHash .\ICONO-Setup-0.1.0-test.4.exe -Algorithm SHA256</code>. Der Wert muss mit <code>SHA256.txt</code> übereinstimmen.</p>
 <h3>Starten</h3>
 <p>Startmenü → <strong>icono</strong> (oder die Desktop-Verknüpfung, falls gewählt). Beim Start läuft sechs Sekunden ein Ladebildschirm; ein Klick oder eine Taste überspringt ihn. Mit dem Startparameter <code>--no-splash</code> entfällt er.</p>
 <h3>Deinstallieren</h3>
@@ -79,6 +79,7 @@
 <ul>
 <li><strong>File → New</strong> (<kbd>Ctrl+N</kbd>): neue Zeichnung. <strong>Open</strong> (<kbd>Ctrl+O</kbd>), <strong>Save</strong> (<kbd>Ctrl+S</kbd>), <strong>Save As</strong> (<kbd>Ctrl+Shift+S</kbd>).</li>
 <li>Das Dateiformat heißt <code>.icn</code>. Ältere Dateien mit der Endung <code>.icono</code> lassen sich weiter öffnen.</li>
+<li>Mit der Dateizuordnung (der Installer fragt danach, Standard: an) tragen Ihre Zeichnungen das icono-Dateisymbol, und ein <strong>Doppelklick</strong> auf eine <code>.icn</code>-Datei im Explorer öffnet sie in icono. Beim Deinstallieren wird die Zuordnung wieder entfernt.</li>
 <li>Beim Schließen mit ungespeicherten Änderungen fragt icono nach (Speichern / Verwerfen / Abbrechen).</li>
 <li>Zur Sicherheit öffnet icono keine Dateien über 512 MB und keine Bilder über 64 MB (siehe Abschnitt Sicherheit).</li>
 </ul>
@@ -200,7 +201,7 @@
 <tr><td>Einstellungen und Listen</td><td><code>%LocalAppData%\Icono</code> (Windows-Taste+R, den Pfad eintippen): <code>theme.txt</code> (Ihr Design), <code>recent.txt</code> (zuletzt geöffnete Dateien), <code>Library\</code> (Ihre Icon-Bibliothek), <code>crash.log</code> (Fehlerprotokoll).</td></tr>
 </table>
 <p>Das Fehlerprotokoll <code>crash.log</code> entsteht nur bei einem unerwarteten Fehler und kann Dateinamen oder Pfade enthalten. Es bleibt auf Ihrem Gerät; schicken Sie es nur freiwillig mit, wenn Sie einen Fehler melden, und sehen Sie es vorher durch. Der Ordner kann jederzeit gelöscht werden.</p>
-<p>Die Einträge <strong>Check for Updates</strong>, <strong>Website</strong> und <strong>Contact</strong> im Menü Help öffnen auf Ihren Klick den Browser oder Ihr E-Mail-Programm; erst dann findet eine Verbindung statt, durch diese Programme. Das Handbuch selbst öffnet sich lokal.</p>
+<p>Die Einträge <strong>Check for Updates</strong>, <strong>Website</strong> und <strong>Contact</strong> im Menü Help öffnen auf Ihren Klick den Browser oder Ihr E-Mail-Programm; erst dann findet eine Verbindung statt, durch diese Programme. Das Handbuch, die Testbedingungen und der Datenschutzhinweis öffnen sich lokal aus dem Installationsordner in Ihrem Standard-Webbrowser (ohne Internet).</p>
 <p>Enthalten Ihre Zeichnungen personenbezogene Daten Dritter (zum Beispiel Namen in einem Plankopf), sind Sie für den Umgang damit verantwortlich. Schicken Sie solche Zeichnungen nicht an den Hersteller.</p>
 <p>Der vollständige Datenschutzhinweis: <code>Datenschutz.txt</code> im Installationsordner (auch beim Installieren angezeigt).</p>
 
@@ -236,7 +237,7 @@
 <tr><td>Altes Symbol im Explorer</td><td>Windows merkt sich Symbole; Explorer neu starten oder neu anmelden.</td></tr>
 </table>
 <p><strong>Kontakt:</strong> Jonas Shojaei · <a href="https://www.bitbins.de">www.bitbins.de</a> · <a href="mailto:info@bitbins.de">info@bitbins.de</a></p>
-<p class="muted">© 2026 Jonas Shojaei. Alle Rechte vorbehalten. Dieses Handbuch beschreibt Version 0.1.0-test.3; Funktionen können sich bis zur fertigen Version ändern.</p>
+<p class="muted">© 2026 Jonas Shojaei. Alle Rechte vorbehalten. Dieses Handbuch beschreibt Version 0.1.0-test.4; Funktionen können sich bis zur fertigen Version ändern.</p>
 </main>
 </body>
 </html>
