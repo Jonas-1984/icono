@@ -2735,7 +2735,7 @@ public partial class PropertiesPanelView : UserControl
         DocumentScaleTextBox.Text = scale.ToString("0.##", CultureInfo.InvariantCulture);
         DocumentScaleNote.Text = Math.Abs(scale - 1) < 1e-9
             ? "Full size: what you draw is what it measures."
-            : $"On the page 1 cm stands for {scale:0.##} cm in reality. Measurements and wall sizes are written in real-world units; print at 100% for an exact {DrawingScale.Label(scale)} plot.";
+            : $"On the page 1 cm stands for {scale:0.##} cm in reality. Changing the scale resizes the drawing on the page - real-world sizes and dimensions stay the same. Print at 100% for an exact {DrawingScale.Label(scale)} plot.";
     }
 
     private void DocumentScaleComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)

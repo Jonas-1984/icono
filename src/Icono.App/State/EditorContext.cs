@@ -598,8 +598,8 @@ public sealed class EditorContext : ObservableObject
         RequestRedraw();
     }
 
-    /// <summary>Sets the drawing scale 1:N (for example 50 for 1:50) as an undo step. Shapes keep their size on the page; what changes
-    /// is the real-world size they stand for, so every measurement is written at the new scale.</summary>
+    /// <summary>Sets the drawing scale 1:N (for example 50 for 1:50) as an undo step. The scale belongs to the page: the drawing is resized on the page
+    /// (see <see cref="PageRescaler"/>) so that everything keeps its real-world size and every dimension keeps its value.</summary>
     public void SetScale(double denominator)
     {
         denominator = Math.Clamp(denominator, 0.01, 100000);
@@ -616,9 +616,20 @@ public sealed class EditorContext : ObservableObject
             ScaleChanged?.Invoke(value);
         }
 
+        // every shape of every layer is resized with the page: one undo step with the scale
+        var shapes = Document.Layers.SelectMany(l => l.Shapes).ToList();
+        var shapesBefore = shapes.Select(ShapeSnapshot.Capture).ToList();
+        Document.ScaleDenominator = denominator;
+        PageRescaler.Rescale(Document, PageRescaler.Factor(before, denominator));
+        var shapesAfter = shapes.Select(ShapeSnapshot.Capture).ToList();
+
         Apply(denominator);
-        UndoManager.Push(UndoableAction.ForValue(() => Apply(before), () => Apply(denominator)));
-        StatusMessage?.Invoke($"Scale {DrawingScale.Label(denominator)}");
+        UndoManager.Push(UndoableAction.Combine(
+        [
+            UndoableAction.ForValue(() => Apply(before), () => Apply(denominator)),
+            UndoableAction.ForPropertyEdit(shapes, shapesBefore, shapesAfter),
+        ]));
+        StatusMessage?.Invoke($"Scale {DrawingScale.Label(denominator)}: the drawing was resized on the page, all dimensions keep their values.");
     }
 
     // ----- Arrange: align, distribute, flip, rotate ----------------------------------------------------------------
