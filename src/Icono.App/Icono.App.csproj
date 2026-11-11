@@ -13,6 +13,7 @@
   <ItemGroup>
     <Resource Include="Assets\icono.ico" />
     <Resource Include="Assets\icono.png" />
+    <Resource Include="Assets\icono-dark.png" />
     <Resource Include="Assets\Icons\*.ico" />
   </ItemGroup>
 

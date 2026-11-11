@@ -31,6 +31,11 @@ public partial class SplashWindow : Window
         // letter-spaced name; the colours follow the theme the user chose (opaque, also for the glass themes)
         NameText.Text = string.Join(' ', "ICONO".AsEnumerable());
         var dark = ThemeManager.Current == ThemeMode.Dark;
+        if (dark)
+        {
+            LogoPicture.Source = new System.Windows.Media.Imaging.BitmapImage(new Uri("/Assets/icono-dark.png", UriKind.Relative)); // a brighter blue for the dark card
+        }
+
         ShadowHost.Background = Brush(dark ? 0x101114 : 0xE9ECF0);
         Card.Background = Glass(dark ? "F01A1C21" : "F4FBFCFD", dark ? "F2121317" : "F4ECEEF2");
         Card.BorderBrush = Glass(dark ? "66FFFFFF" : "AAFFFFFF", dark ? "12FFFFFF" : "33B7BDC8", diagonal: true);

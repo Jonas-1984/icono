@@ -1,7 +1,8 @@
 <#
 .SYNOPSIS
   Makes the program icon from a logo picture (PNG with a transparent background):
-    src\Icono.App\Assets\icono.png  the wide logo shown in the About and start windows (1200 px wide)
+    src\Icono.App\Assets\icono.png       the wide logo shown in the About and start windows of the light designs (1200 px wide)
+    src\Icono.App\Assets\icono-dark.png  the same with a brighter blue, for the dark designs
     src\Icono.App\Assets\icono.ico  the Windows icon: the brush with the splash on a light plate at 16-64 px, the whole logo at 128 and 256 px.
 .NOTES
   The brush is cut out of the logo with fixed pixel limits that fit the current logo (2172 x 724 px, brush on the left). A logo of another
@@ -144,6 +145,21 @@ public static class Gen
         return o;
     }
 
+    // the blue of the drawing is dark: made brighter for the dark windows (orange stays); the light windows use the logo as it is
+    static Bitmap Brighten(Bitmap b)
+    {
+        Bitmap o = new Bitmap(b);
+        for (int y = 0; y < o.Height; y++)
+            for (int x = 0; x < o.Width; x++)
+            {
+                Color c = o.GetPixel(x, y);
+                if (c.A == 0) continue;
+                if (c.B > c.R + 30 && c.B >= c.G)
+                    o.SetPixel(x, y, Color.FromArgb(c.A, Math.Min(255, (int)(c.R * 1.6 + 40)), Math.Min(255, (int)(c.G * 1.6 + 55)), Math.Min(255, (int)(c.B * 1.35 + 50))));
+            }
+        return o;
+    }
+
     static byte[] Png(Bitmap b)
     {
         using (MemoryStream m = new MemoryStream()) { b.Save(m, ImageFormat.Png); return m.ToArray(); }
@@ -176,6 +192,8 @@ public static class Gen
         // wide logo for the windows (about, splash): 1200 px wide is twice the size it is shown at
         Bitmap wide = Scale(word, 1200, (int)Math.Round(word.Height * 1200.0 / word.Width));
         wide.Save(Path.Combine(assets, "icono.png"), ImageFormat.Png);
+        Bitmap lit = Brighten(word);
+        Scale(lit, 1200, (int)Math.Round(lit.Height * 1200.0 / lit.Width)).Save(Path.Combine(assets, "icono-dark.png"), ImageFormat.Png);
         Console.WriteLine("logo " + wide.Width + "x" + wide.Height + ", brush " + brush.Width + "x" + brush.Height);
 
         // the icon file: the brush at the small sizes, the whole logo at the large ones

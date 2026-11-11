@@ -13,6 +13,12 @@ public partial class AboutDialog : Window
     {
         InitializeComponent();
 
+        // the logo is a blue drawing: the dark designs get a brighter blue so it reads on the dark window
+        if (Icono.App.State.ThemeManager.Current == Icono.App.State.ThemeMode.Dark)
+        {
+            LogoImage.Source = new System.Windows.Media.Imaging.BitmapImage(new Uri("/Assets/icono-dark.png", UriKind.Relative));
+        }
+
         // the full version with its test number (0.1.0-test.2), so a tester can say exactly which build they have
         var assembly = Assembly.GetExecutingAssembly();
         var version = assembly.GetName().Version;

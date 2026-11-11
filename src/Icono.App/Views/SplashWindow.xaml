@@ -88,8 +88,8 @@
             </Canvas>
 
             <StackPanel Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,24,0,0">
-                <!-- the logo is a blueprint drawing: it sits on a light plate (like paper) so it reads on the dark card -->
-                <Border x:Name="LogoImage" Background="#F7F9FD" CornerRadius="18" Padding="22,14" HorizontalAlignment="Center" Opacity="0"
+                <!-- the logo (its blue is bright enough for the dark card) -->
+                <Border x:Name="LogoImage" HorizontalAlignment="Center" Opacity="0"
                         RenderTransformOrigin="0.5,0.5">
                     <Border.Effect>
                         <BlurEffect Radius="32" KernelType="Gaussian" />
@@ -97,7 +97,7 @@
                     <Border.RenderTransform>
                         <ScaleTransform x:Name="LogoScale" ScaleX="0.88" ScaleY="0.88" />
                     </Border.RenderTransform>
-                    <Image Source="/Assets/icono.png" Width="330" Height="142" RenderOptions.BitmapScalingMode="HighQuality"
+                    <Image x:Name="LogoPicture" Source="/Assets/icono.png" Width="330" Height="142" RenderOptions.BitmapScalingMode="HighQuality"
                            AutomationProperties.Name="icono" />
                 </Border>
                 <TextBlock x:Name="NameText" Visibility="Collapsed" HorizontalAlignment="Center" Margin="0,22,0,0" FontSize="36" FontWeight="Light" Opacity="0"

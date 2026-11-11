@@ -17,12 +17,10 @@
                 BorderBrush="{DynamicResource WindowEdgeBrush}"
                 MouseLeftButtonDown="Card_OnMouseLeftButtonDown">
             <StackPanel Margin="28,26,28,24">
-                <!-- App logo: a blueprint drawing on a light plate (like paper), so it reads on dark and light themes -->
-                <Border Background="#F7F9FD" CornerRadius="14" Padding="18,10" HorizontalAlignment="Center">
-                    <Image Source="/Assets/icono.png" Width="240" Height="103" RenderOptions.BitmapScalingMode="HighQuality"
-                           AutomationProperties.Name="icono" />
-                </Border>
-                <TextBlock Text="Icon &amp; Floor Plan Editor" HorizontalAlignment="Center" Margin="0,12,0,0"
+                <!-- App logo (the dark designs use a brighter blue: see the constructor) -->
+                <Image x:Name="LogoImage" Source="/Assets/icono.png" Width="280" Height="120" HorizontalAlignment="Center"
+                       RenderOptions.BitmapScalingMode="HighQuality" AutomationProperties.Name="icono" />
+                <TextBlock Text="Design Made Simple" HorizontalAlignment="Center" Margin="0,8,0,0" FontStyle="Italic"
                            Foreground="{DynamicResource AccentBlueMidBrush}" FontSize="13" />
 
                 <Border Margin="0,18,0,0" CornerRadius="7" Padding="14,10"
