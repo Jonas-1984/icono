@@ -88,22 +88,25 @@
             </Canvas>
 
             <StackPanel Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,24,0,0">
-                <Image x:Name="LogoImage" Source="/Assets/icono.png" Width="128" Height="128" Opacity="0"
-                       RenderOptions.BitmapScalingMode="HighQuality" RenderTransformOrigin="0.5,0.5">
-                    <Image.Effect>
+                <!-- the logo is a blueprint drawing: it sits on a light plate (like paper) so it reads on the dark card -->
+                <Border x:Name="LogoImage" Background="#F7F9FD" CornerRadius="18" Padding="22,14" HorizontalAlignment="Center" Opacity="0"
+                        RenderTransformOrigin="0.5,0.5">
+                    <Border.Effect>
                         <BlurEffect Radius="32" KernelType="Gaussian" />
-                    </Image.Effect>
-                    <Image.RenderTransform>
+                    </Border.Effect>
+                    <Border.RenderTransform>
                         <ScaleTransform x:Name="LogoScale" ScaleX="0.88" ScaleY="0.88" />
-                    </Image.RenderTransform>
-                </Image>
-                <TextBlock x:Name="NameText" HorizontalAlignment="Center" Margin="0,22,0,0" FontSize="36" FontWeight="Light" Opacity="0"
+                    </Border.RenderTransform>
+                    <Image Source="/Assets/icono.png" Width="330" Height="142" RenderOptions.BitmapScalingMode="HighQuality"
+                           AutomationProperties.Name="icono" />
+                </Border>
+                <TextBlock x:Name="NameText" Visibility="Collapsed" HorizontalAlignment="Center" Margin="0,22,0,0" FontSize="36" FontWeight="Light" Opacity="0"
                            AutomationProperties.Name="ICONO">
                     <TextBlock.RenderTransform>
                         <TranslateTransform x:Name="NameShift" Y="10" />
                     </TextBlock.RenderTransform>
                 </TextBlock>
-                <TextBlock x:Name="TaglineText" Text="Design Made Simple" HorizontalAlignment="Center" Margin="0,8,0,0" FontSize="15"
+                <TextBlock x:Name="TaglineText" Text="Design Made Simple" HorizontalAlignment="Center" Margin="0,22,0,0" FontSize="15"
                            FontStyle="Italic" Opacity="0" />
             </StackPanel>
 

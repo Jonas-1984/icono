@@ -35,3 +35,7 @@ The version is set in `Directory.Build.props` and `installer/icono.iss` (keep bo
 ## Licences
 
 Third-party components and their licences: [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt). Copyright (c) 2026 Jonas Shojaei (bitbins.de).
+
+## Program icon
+
+`tools\make-icon.ps1 -Source <logo.png>` makes `src\Icono.App\Assets\icono.ico` and `icono.png` from a logo picture (see the notes in the script).

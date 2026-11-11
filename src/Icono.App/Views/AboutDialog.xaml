@@ -17,13 +17,12 @@
                 BorderBrush="{DynamicResource WindowEdgeBrush}"
                 MouseLeftButtonDown="Card_OnMouseLeftButtonDown">
             <StackPanel Margin="28,26,28,24">
-                <!-- App logo (it already is a rounded neumorphic tile with its own cyan glow) -->
-                <Image Source="/Assets/icono.png" Width="120" Height="120" HorizontalAlignment="Center"
-                       RenderOptions.BitmapScalingMode="HighQuality" />
-
-                <TextBlock Text="icono" HorizontalAlignment="Center" Margin="0,8,0,0"
-                           Foreground="{DynamicResource ForegroundTextBrush}" FontSize="24" FontWeight="SemiBold" />
-                <TextBlock Text="Icon &amp; Floor Plan Editor" HorizontalAlignment="Center" Margin="0,2,0,0"
+                <!-- App logo: a blueprint drawing on a light plate (like paper), so it reads on dark and light themes -->
+                <Border Background="#F7F9FD" CornerRadius="14" Padding="18,10" HorizontalAlignment="Center">
+                    <Image Source="/Assets/icono.png" Width="240" Height="103" RenderOptions.BitmapScalingMode="HighQuality"
+                           AutomationProperties.Name="icono" />
+                </Border>
+                <TextBlock Text="Icon &amp; Floor Plan Editor" HorizontalAlignment="Center" Margin="0,12,0,0"
                            Foreground="{DynamicResource AccentBlueMidBrush}" FontSize="13" />
 
                 <Border Margin="0,18,0,0" CornerRadius="7" Padding="14,10"
