@@ -17,6 +17,9 @@ public sealed class IconLibraryListItem
     /// <see cref="IconLibraryStore.Delete"/> when the user removes it.</summary>
     public string FilePath { get; }
 
+    /// <summary>True for an icon that comes with icono (see <see cref="BuiltInIcons"/>): it has no file and cannot be removed.</summary>
+    public bool IsBuiltIn => FilePath.Length == 0;
+
     public IconLibraryListItem(IconLibraryEntry entry, BitmapImage thumbnail, string filePath)
     {
         Entry = entry;

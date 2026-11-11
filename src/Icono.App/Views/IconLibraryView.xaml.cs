@@ -67,18 +67,19 @@ public partial class IconLibraryView : UserControl
 
     private void RefreshLibrary()
     {
-        var entries = _store.LoadAll();
-        var items = entries
-            .Select(e => new IconLibraryListItem(e.Entry, RenderThumbnail(e.Entry, 52), e.FilePath))
+        var saved = _store.LoadAll();
+        var items = BuiltInIcons.All
+            .Select(entry => new IconLibraryListItem(entry, RenderThumbnail(entry, 52), string.Empty))
+            .Concat(saved.Select(e => new IconLibraryListItem(e.Entry, RenderThumbnail(e.Entry, 52), e.FilePath)))
             .ToList();
 
         LibraryItemsControl.ItemsSource = items;
-        EmptyHint.Visibility = items.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        EmptyHint.Visibility = saved.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void DeleteLibraryItem_OnClick(object sender, RoutedEventArgs e)
     {
-        if (sender is not FrameworkElement { Tag: IconLibraryListItem item })
+        if (sender is not FrameworkElement { Tag: IconLibraryListItem { IsBuiltIn: false } item })
         {
             return;
         }
@@ -376,10 +377,16 @@ public partial class IconLibraryView : UserControl
             return;
         }
 
-        var inserted = new List<Shape>();
-        foreach (var sourceShape in item.Entry.Shapes)
+        var copies = item.Entry.Shapes.Select(CloneShape).ToList();
+        if (item.IsBuiltIn)
         {
-            var shape = CloneShape(sourceShape);
+            // an icon that comes with icono has no place of its own: it lands in the middle of the current page
+            BuiltInIcons.PlaceOnPage(copies, 0, _context.Document.PageTop(_context.CurrentPage), _context.Document.Width, _context.Document.Height);
+        }
+
+        var inserted = new List<Shape>();
+        foreach (var shape in copies)
+        {
             layer.Shapes.Insert(0, shape);
             inserted.Add(shape);
         }

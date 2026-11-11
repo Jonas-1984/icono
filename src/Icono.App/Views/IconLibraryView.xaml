@@ -64,9 +64,13 @@
                                            Foreground="{DynamicResource MutedTextBrush}" HorizontalAlignment="Center" Margin="0,2,0,0" />
                             </StackPanel>
                             <DataTemplate.Triggers>
-                                <Trigger SourceName="ItemRoot" Property="IsMouseOver" Value="True">
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding IsMouseOver, ElementName=ItemRoot}" Value="True" />
+                                        <Condition Binding="{Binding IsBuiltIn}" Value="False" />
+                                    </MultiDataTrigger.Conditions>
                                     <Setter TargetName="DeleteButton" Property="Visibility" Value="Visible" />
-                                </Trigger>
+                                </MultiDataTrigger>
                             </DataTemplate.Triggers>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
