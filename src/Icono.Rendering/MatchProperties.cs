@@ -193,6 +193,7 @@ public static class MatchProperties
         var arrow = own?.ArrowSize ?? source.DimArrowSize;
         var gap = own?.ExtGap ?? source.DimExtGap;
         var overshoot = own?.ExtOvershoot ?? source.DimExtOvershoot;
+        var family = DimensionStyle.For(source, own).FontFamily;
 
         // a free-standing dimension keeps its own place (its offset is where it sits, not a style); walls, doors and windows take the distance
         if (!onlyThatDimension && target.Kind != ShapeKind.Dimension)
@@ -210,7 +211,7 @@ public static class MatchProperties
             {
                 Offset = offset, TextPosition = textPosition, TextShift = textShift,
                 Unit = unit, Precision = precision, ArrowStyle = arrowStyle,
-                FontSize = font, LineWidth = line, ArrowSize = arrow, ExtGap = gap, ExtOvershoot = overshoot,
+                FontSize = font, LineWidth = line, ArrowSize = arrow, ExtGap = gap, ExtOvershoot = overshoot, FontFamily = family,
             };
             if (index >= 0)
             {
@@ -226,6 +227,7 @@ public static class MatchProperties
         }
 
         target.DimFontSize = font;
+        target.TextFontFamily = family;
         target.DimLineWidth = line;
         target.DimArrowSize = arrow;
         target.DimExtGap = gap;

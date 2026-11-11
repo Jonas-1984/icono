@@ -172,3 +172,63 @@ public class MatchWithinOneWallTests
         }
     }
 }
+
+/// <summary>The font of the numbers of dimensions: any installed font, set for one dimension, and carried over only by Match.</summary>
+public class DimensionFontTests
+{
+    private static Shape Wall()
+    {
+        DrawingScale.Denominator = 1;
+        var wall = new Shape
+        {
+            Kind = ShapeKind.Wall, X = 100, Y = 100, WallThickness = 16,
+            Points = [new CorePoint(0, 0), new CorePoint(300, 0), new CorePoint(300, 200)],
+        };
+        PathBoundsCalculator.Recompute(wall);
+        return wall;
+    }
+
+    [Fact]
+    public void AFreeDimension_WritesItsNumberInTheChosenFont()
+    {
+        var dimension = new Shape { Kind = ShapeKind.Dimension, DimKind = DimensionKind.Aligned, TextFontFamily = "Consolas" };
+
+        Assert.Equal("Consolas", DimensionStyle.For(dimension).FontFamily);
+    }
+
+    [Fact]
+    public void AFontSetForOneWallDimension_IsNotUsedByTheOthers()
+    {
+        var wall = Wall();
+        wall.WallDimensionOverrides = [new WallDimensionOverride(0, FontFamily: "Consolas")];
+
+        Assert.Equal("Consolas", WallRenderer.LayoutSegmentDimension(wall, 0)!.Style.FontFamily);
+        Assert.Equal("Segoe UI", WallRenderer.LayoutSegmentDimension(wall, 1)!.Style.FontFamily);
+    }
+
+    [Fact]
+    public void Match_CarriesTheFontOfADimension_ToAnotherDimension()
+    {
+        var wall = Wall();
+        wall.WallDimensionOverrides = [new WallDimensionOverride(1, FontFamily: "Georgia")];
+        var free = new Shape { Kind = ShapeKind.Dimension, DimKind = DimensionKind.Aligned };
+
+        MatchProperties.Copy(wall, free, MatchAspects.Dimension, 1, null);
+        Assert.Equal("Georgia", DimensionStyle.For(free).FontFamily);
+
+        var other = Wall();
+        MatchProperties.Copy(wall, other, MatchAspects.Dimension, 1, 0);
+        Assert.Equal("Georgia", WallRenderer.LayoutSegmentDimension(other, 0)!.Style.FontFamily);
+        Assert.Equal("Segoe UI", WallRenderer.LayoutSegmentDimension(other, 1)!.Style.FontFamily);
+    }
+
+    [Fact]
+    public void ResettingTheLook_DropsTheOwnFont()
+    {
+        var own = new WallDimensionOverride(0, FontFamily: "Georgia", Text: "kitchen");
+
+        Assert.True(own.HasOwnStyle);
+        Assert.Null(own.WithoutStyle().FontFamily);
+        Assert.Equal("kitchen", own.WithoutStyle().Text);
+    }
+}

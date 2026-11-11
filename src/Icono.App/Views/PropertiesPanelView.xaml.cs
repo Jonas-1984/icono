@@ -319,12 +319,14 @@ public partial class PropertiesPanelView : UserControl
 
         // Every font Windows currently has installed — lets the user pick any of their own fonts
         // instead of the app hard-coding a fixed "Segoe UI".
-        TextFontFamilyComboBox.ItemsSource = Fonts.SystemFontFamilies
+        var installedFonts = Fonts.SystemFontFamilies
             .Select(f => f.Source)
             .Distinct()
             .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
             .Select(name => new FontFamilyOption(name))
             .ToList();
+        TextFontFamilyComboBox.ItemsSource = installedFonts;
+        DimensionFontComboBox.ItemsSource = installedFonts;
         BuildTextPositionGrid();
         LayerAccentColorSwatchList.ItemsSource = PresetColors.Select(pc => (Brush)new SolidColorBrush(pc.Color)).ToList();
         FillColorPicker.ColorChanged += FillColorPicker_OnColorChanged;
@@ -1363,8 +1365,6 @@ public partial class PropertiesPanelView : UserControl
             _context.WallSegmentHighlight = isWall && segment >= 0 ? segment : null;
         }
 
-        DimensionTextSection.Visibility = isDimension || (isWall && segment >= 0) ? Visibility.Visible : Visibility.Collapsed;
-        DimensionTextBox.Text = isDimension ? shape.DimText ?? string.Empty : custom?.Text ?? string.Empty;
         DimensionTextPositionTextBox.Text = ((custom?.TextPosition ?? shape.DimTextPosition ?? 0.5) * 100).ToString("0.##", CultureInfo.InvariantCulture);
         DimensionTextShiftTextBox.Text = (custom?.TextShift ?? shape.DimTextShift).ToString("0.##", CultureInfo.InvariantCulture);
 
@@ -1382,6 +1382,7 @@ public partial class PropertiesPanelView : UserControl
         DimensionArrowStyleComboBox.SelectedItem = ArrowStyleOptions.First(o => o.Value == (custom?.ArrowStyle ?? shape.DimArrowStyle));
 
         var style = DimensionStyle.For(shape, custom);
+        DimensionFontComboBox.SelectedItem = ((IEnumerable<FontFamilyOption>)DimensionFontComboBox.ItemsSource).FirstOrDefault(o => o.Label == style.FontFamily);
         DimensionFontSizeTextBox.Text = style.FontSize.ToString("0.##", CultureInfo.InvariantCulture);
         DimensionLineWidthTextBox.Text = style.LineWidth.ToString("0.##", CultureInfo.InvariantCulture);
         DimensionArrowSizeTextBox.Text = style.ArrowSize.ToString("0.##", CultureInfo.InvariantCulture);
@@ -1455,35 +1456,26 @@ public partial class PropertiesPanelView : UserControl
         RefreshControlsFromShape();
     }
 
-    private void DimensionTextBox_OnLostFocus(object sender, RoutedEventArgs e)
+    private void DimensionFontComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_boundShape is null || _isRefreshingControls)
+        if (_isRefreshingControls || _boundShape is null || !HasDimensions(_boundShape) || DimensionFontComboBox.SelectedItem is not FontFamilyOption option)
         {
             return;
         }
 
-        var text = string.IsNullOrWhiteSpace(DimensionTextBox.Text) ? null : DimensionTextBox.Text;
-        if (_boundShape.Kind == ShapeKind.Wall && _dimensionSegment >= 0)
+        if (TryEditPickedWallDimension(c => c with { FontFamily = option.Label }))
         {
-            var segment = _dimensionSegment;
-            if (text != WallRenderer.FindOverride(_boundShape, segment)?.Text)
+            return;
+        }
+
+        ApplyToSelectionWithUndo(s =>
+        {
+            if (HasDimensions(s))
             {
-                EditWallDimension(segment, c => c with { Text = text });
+                s.TextFontFamily = option.Label;
             }
-
-            return;
-        }
-
-        if (_boundShape.Kind == ShapeKind.Dimension && text != _boundShape.DimText)
-        {
-            ApplyToSelectionWithUndo(s =>
-            {
-                if (s.Kind == ShapeKind.Dimension)
-                {
-                    s.DimText = text;
-                }
-            });
-        }
+        });
+        RefreshControlsFromShape();
     }
 
     private static readonly ArrowStyleOption[] ArrowStyleOptions =
@@ -1719,6 +1711,7 @@ public partial class PropertiesPanelView : UserControl
                 s.DimArrowSize = null;
                 s.DimExtGap = null;
                 s.DimExtOvershoot = null;
+                s.TextFontFamily = null;
             }
         });
         RefreshControlsFromShape();

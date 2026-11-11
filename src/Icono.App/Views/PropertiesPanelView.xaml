@@ -684,11 +684,10 @@
                             <TextBox x:Name="DimensionPrecisionTextBox" Margin="6,0,6,6" ToolTip="0 to 6"
                                      LostFocus="DimensionPrecisionTextBox_OnLostFocus" KeyDown="WallTextBox_OnKeyDown" />
 
-                            <StackPanel x:Name="DimensionTextSection">
-                                <TextBlock Text="TEXT" Style="{StaticResource PanelLabelTextStyle}" />
-                                <TextBox x:Name="DimensionTextBox" Margin="6,0,6,6" ToolTip="Your own text. Write &lt;&gt; where the measured value should appear."
-                                         LostFocus="DimensionTextBox_OnLostFocus" KeyDown="WallTextBox_OnKeyDown" />
-                            </StackPanel>
+                            <TextBlock Text="FONT" Style="{StaticResource PanelLabelTextStyle}" />
+                            <ComboBox x:Name="DimensionFontComboBox" Margin="6,0,6,6" DisplayMemberPath="Label"
+                                      ToolTip="Font of the number - any font installed in Windows"
+                                      SelectionChanged="DimensionFontComboBox_OnSelectionChanged" />
 
                             <TextBlock Text="NUMBER POSITION ALONG THE LINE (%)" Style="{StaticResource PanelLabelTextStyle}" />
                             <TextBox x:Name="DimensionTextPositionTextBox" Margin="6,0,6,6"

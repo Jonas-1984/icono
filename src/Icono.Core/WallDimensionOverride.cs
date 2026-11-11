@@ -18,20 +18,21 @@ namespace Icono.Core;
 /// <param name="ArrowSize">Length of the arrowheads in px (null = the wall's setting).</param>
 /// <param name="ExtGap">Space between the measured point and the extension line, in px (null = the wall's setting).</param>
 /// <param name="ExtOvershoot">How far the extension lines run past the dimension line, in px (null = the wall's setting).</param>
+/// <param name="FontFamily">The font of the number, any font installed in Windows (null = the wall's font).</param>
 public sealed record WallDimensionOverride(
     int Segment, bool Hidden = false, double? Offset = null, bool Flip = false,
     double? TextPosition = null, double? TextShift = null, string? Text = null,
     LengthUnit? Unit = null, int? Precision = null, DimensionArrowStyle? ArrowStyle = null,
-    double? FontSize = null, double? LineWidth = null, double? ArrowSize = null, double? ExtGap = null, double? ExtOvershoot = null)
+    double? FontSize = null, double? LineWidth = null, double? ArrowSize = null, double? ExtGap = null, double? ExtOvershoot = null, string? FontFamily = null)
 {
     /// <summary>True when this dimension has its own look (unit, decimals, marks, sizes), as opposed to its place.</summary>
     public bool HasOwnStyle =>
         Unit is not null || Precision is not null || ArrowStyle is not null || FontSize is not null || LineWidth is not null ||
-        ArrowSize is not null || ExtGap is not null || ExtOvershoot is not null;
+        ArrowSize is not null || ExtGap is not null || ExtOvershoot is not null || FontFamily is not null;
 
     /// <summary>The same dimension with no look of its own (its place and text stay).</summary>
     public WallDimensionOverride WithoutStyle() =>
-        this with { Unit = null, Precision = null, ArrowStyle = null, FontSize = null, LineWidth = null, ArrowSize = null, ExtGap = null, ExtOvershoot = null };
+        this with { Unit = null, Precision = null, ArrowStyle = null, FontSize = null, LineWidth = null, ArrowSize = null, ExtGap = null, ExtOvershoot = null, FontFamily = null };
 
     /// <summary>True when nothing differs from the wall's settings (such an entry can be dropped).</summary>
     public bool IsDefault => !Hidden && Offset is null && !Flip && TextPosition is null && TextShift is null && string.IsNullOrEmpty(Text) && !HasOwnStyle;

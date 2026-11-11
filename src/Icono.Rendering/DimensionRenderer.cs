@@ -30,6 +30,7 @@ public readonly record struct DimensionStyle(
             ExtGap = (float)Math.Clamp(own.ExtGap ?? style.ExtGap, 0, 200),
             ExtOvershoot = (float)Math.Clamp(own.ExtOvershoot ?? style.ExtOvershoot, 0, 200),
             ArrowStyle = own.ArrowStyle ?? style.ArrowStyle,
+            FontFamily = string.IsNullOrWhiteSpace(own.FontFamily) ? style.FontFamily : own.FontFamily,
         };
     }
 
