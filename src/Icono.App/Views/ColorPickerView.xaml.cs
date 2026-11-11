@@ -164,17 +164,20 @@ public partial class ColorPickerView : UserControl
         _suppressColorCallback = false;
     }
 
-    private void HexTextBox_OnLostFocus(object sender, RoutedEventArgs e) => ApplyHexInput();
+    private void HexTextBox_OnLostFocus(object sender, RoutedEventArgs e) => ApplyHexInput(force: false);
 
     private void HexTextBox_OnKeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.Enter)
         {
-            ApplyHexInput();
+            ApplyHexInput(force: true);
         }
     }
 
-    private void ApplyHexInput()
+    /// <summary>Takes the typed colour code (RRGGBB, #RRGGBB or a colour name) as the colour: like a pick on the colour field, so everything that
+    /// listens (the selected shapes, the pen, the page) gets it. Enter (<paramref name="force"/>) applies it even when it is the colour that is
+    /// shown already; leaving the field applies it only when it differs.</summary>
+    private void ApplyHexInput(bool force)
     {
         var text = HexTextBox.Text.Trim();
         if (!text.StartsWith('#'))
@@ -182,16 +185,35 @@ public partial class ColorPickerView : UserControl
             text = "#" + text;
         }
 
+        Color parsed;
         try
         {
-            var parsed = (Color)ColorConverter.ConvertFromString(text)!;
-            // Hex input is RGB-only — keep whatever opacity the Alpha slider is currently set to
-            // rather than snapping back to fully opaque.
-            SelectedColor = Color.FromArgb((byte)Math.Clamp(_alpha, 0, 255), parsed.R, parsed.G, parsed.B);
+            parsed = (Color)ColorConverter.ConvertFromString(text)!;
         }
         catch
         {
-            // Invalid input: leave the current color untouched.
+            // Invalid input: leave the current color untouched and show it again.
+            UpdatePreviewAndHex(SelectedColor);
+            return;
+        }
+
+        // Hex input is RGB-only — keep whatever opacity the Alpha slider is currently set to rather than snapping back to fully opaque.
+        var color = Color.FromArgb((byte)Math.Clamp(_alpha, 0, 255), parsed.R, parsed.G, parsed.B);
+        var before = SelectedColor;
+        if (before == color && !force)
+        {
+            UpdatePreviewAndHex(color);
+            return;
+        }
+
+        // the field, the sliders and the preview follow the typed colour; the assignment counts as a pick (listeners are told)
+        SyncFromColor(color);
+        _suppressColorCallback = true;
+        SelectedColor = color;
+        _suppressColorCallback = false;
+        if (before == color)
+        {
+            ColorChanged?.Invoke(this, color);
         }
     }
 }

@@ -87,6 +87,8 @@ public partial class MainWindow : Window
         // A click anywhere outside the text editor (panels, menus, toolbar) keeps what was typed.
         PreviewMouseDown += (_, e) => CanvasHost.CommitTextEditUnlessInside(e.OriginalSource);
         PreviewMouseWheel += MainWindow_OnPreviewMouseWheel;
+        // Enter in any single-line field applies the value at once (also when the field has no Enter handling of its own)
+        AddHandler(Keyboard.KeyDownEvent, new KeyEventHandler(OnEnterAppliesFieldValue), true);
         Loaded += (_, _) =>
         {
             FitPageToWindow();
@@ -285,6 +287,17 @@ public partial class MainWindow : Window
         {
             PasteClipboard();
             e.Handled = true;
+        }
+    }
+
+    /// <summary>Enter in a single-line text field takes the typed value over at once: the field lets go of the keyboard focus, which is when every
+    /// field applies what was typed. Fields that did it themselves (and fields that are gone by now) are left alone.</summary>
+    private void OnEnterAppliesFieldValue(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter && e.OriginalSource is System.Windows.Controls.TextBox { AcceptsReturn: false, IsReadOnly: false, IsKeyboardFocused: true })
+        {
+            Keyboard.ClearFocus();
+            FocusManager.SetFocusedElement(this, this);
         }
     }
 
