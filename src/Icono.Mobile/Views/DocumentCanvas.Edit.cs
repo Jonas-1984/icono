@@ -12,16 +12,16 @@ namespace Icono.Mobile.Views;
 public sealed partial class DocumentCanvas
 {
     /// <summary>Edge length of a square resize handle on screen (DIP) - bigger than on Windows, for a finger.</summary>
-    private const float HandleSize = 13;
+    private const float HandleSize = 10;
 
     /// <summary>Radius of the round handles (turn, points) on screen (DIP).</summary>
-    private const float RoundHandleRadius = 9;
+    private const float RoundHandleRadius = 7;
 
     /// <summary>How far above the top edge the turn handle sits (DIP).</summary>
-    private const double RotateHandleOffset = 34;
+    private const double RotateHandleOffset = 28;
 
     /// <summary>How far from a handle a finger still takes it (DIP).</summary>
-    private const double HandleReach = 26;
+    private const double HandleReach = 20;
 
     /// <summary>A turn closer than this to a multiple of 15 degrees snaps to it.</summary>
     private const double RotationSnap = 4;
@@ -138,6 +138,21 @@ public sealed partial class DocumentCanvas
         return handles;
     }
 
+    /// <summary>How close a finger on the object itself must come to a handle to take it instead of moving the object (DIP).</summary>
+    private const double HandleExactReach = 9;
+
+    /// <summary>True when the finger is on one of the selected objects.</summary>
+    private bool IsOnSelection(Point view)
+    {
+        if (_context is not { } context)
+        {
+            return false;
+        }
+
+        var at = ToDocument(view);
+        return ShapeHitTester.Find(context.Document, at.X, at.Y, _zoom, FingerReach) is { } hit && context.SelectedShapes.Contains(hit.Shape);
+    }
+
     /// <summary>Starts dragging the handle under the finger, if there is one.</summary>
     private bool TryBeginHandleDrag(Point view)
     {
@@ -146,9 +161,14 @@ public sealed partial class DocumentCanvas
             return false;
         }
 
+        // A finger ON a selected object means "move it": then a resize or point handle only counts when it is touched almost exactly, so
+        // small objects (whose handles crowd their inside) can still be dragged. Beside the object the handles have their full reach.
+        var onSelection = IsOnSelection(view);
+        var reach = onSelection ? HandleExactReach : HandleReach;
+
         // the nearest handle within reach; the turn handle wins a tie, it sits on its own
         HandleMark? best = null;
-        var bestDistance = HandleReach;
+        var bestDistance = reach;
         foreach (var handle in SelectionHandles())
         {
             var at = ToView(handle.X, handle.Y);

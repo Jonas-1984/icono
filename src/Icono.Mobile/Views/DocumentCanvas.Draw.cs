@@ -154,7 +154,7 @@ public sealed partial class DocumentCanvas
             }
 
             using var fill = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill, Color = SKColors.White };
-            using var ring = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 2, Color = SelectionColor };
+            using var ring = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 1.5f, Color = SelectionColor };
 
             if (chrome.Stem is { } stem)
             {
@@ -166,8 +166,8 @@ public sealed partial class DocumentCanvas
                 if (kind == HandleKind.Resize)
                 {
                     var rect = SKRect.Create(at.X - HandleSize / 2, at.Y - HandleSize / 2, HandleSize, HandleSize);
-                    canvas.DrawRoundRect(rect, 3, 3, fill);
-                    canvas.DrawRoundRect(rect, 3, 3, ring);
+                    canvas.DrawRoundRect(rect, 2, 2, fill);
+                    canvas.DrawRoundRect(rect, 2, 2, ring);
                 }
                 else
                 {
@@ -176,7 +176,7 @@ public sealed partial class DocumentCanvas
                     if (kind == HandleKind.Rotate)
                     {
                         // a small turning arrow inside the turn handle
-                        canvas.DrawArc(SKRect.Create(at.X - 5, at.Y - 5, 10, 10), -60, 270, false, ring);
+                        canvas.DrawArc(SKRect.Create(at.X - 3.5f, at.Y - 3.5f, 7, 7), -60, 270, false, ring);
                     }
                 }
             }

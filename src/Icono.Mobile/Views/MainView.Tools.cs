@@ -46,37 +46,54 @@ public partial class MainView
 
     private readonly List<(ToolDefinition Tool, Button Button)> _toolButtons = [];
 
+    /// <summary>The library object being placed (chosen in Objects), or null.</summary>
+    private LibraryItem? _libraryItem;
+
+    private Button? _objectsButton;
+
     private void BuildTools()
     {
         foreach (var tool in Tools)
         {
-            var icon = new Avalonia.Controls.Shapes.Path
-            {
-                Data = Geometry.Parse(tool.Icon),
-                StrokeThickness = 1.6,
-                StrokeLineCap = PenLineCap.Round,
-                StrokeJoin = PenLineJoin.Round,
-                Width = 19,
-                Height = 19,
-                Stretch = Stretch.Uniform,
-            };
-            var label = new TextBlock { Text = tool.Name, FontSize = 9.5, HorizontalAlignment = HorizontalAlignment.Center };
-            var button = new Button
-            {
-                Classes = { "palette" },
-                Content = new StackPanel { Spacing = 2, Children = { icon, label } },
-            };
-
-            // the icon takes the text colour of its button: muted, and bright for the active tool
-            icon.Bind(Avalonia.Controls.Shapes.Shape.StrokeProperty, button.GetObservable(TemplatedControl.ForegroundProperty));
+            var button = PaletteButton(tool.Name, tool.Icon);
             button.Click += (_, _) => ChooseTool(tool);
             ToolPanel.Children.Add(button);
             _toolButtons.Add((tool, button));
         }
 
+        // the libraries of the Windows program: rooms, doors, symbols, cabinets, shapes ...
+        _objectsButton = PaletteButton("Objects", "M3,3 H10 V10 H3 Z M14,3 H21 V10 H14 Z M3,14 H10 V21 H3 Z M14,14 H21 V21 H14 Z");
+        _objectsButton.Click += (_, _) => ShowLibrary(!LibraryPane.IsVisible);
+        ToolPanel.Children.Add(_objectsButton);
+        Library.ItemChosen += (_, item) => ChooseLibraryItem(item);
+
         _context.PropertyChanged += OnContextPropertyChanged;
         Canvas.PathDrawingChanged += (_, _) => UpdatePathBar();
         UpdateToolButtons();
+    }
+
+    private static Button PaletteButton(string name, string iconData)
+    {
+        var icon = new Avalonia.Controls.Shapes.Path
+        {
+            Data = Geometry.Parse(iconData),
+            StrokeThickness = 1.6,
+            StrokeLineCap = PenLineCap.Round,
+            StrokeJoin = PenLineJoin.Round,
+            Width = 19,
+            Height = 19,
+            Stretch = Stretch.Uniform,
+        };
+        var label = new TextBlock { Text = name, FontSize = 9.5, HorizontalAlignment = HorizontalAlignment.Center };
+        var button = new Button
+        {
+            Classes = { "palette" },
+            Content = new StackPanel { Spacing = 2, Children = { icon, label } },
+        };
+
+        // the icon takes the text colour of its button: muted, and bright for the active tool
+        icon.Bind(Avalonia.Controls.Shapes.Shape.StrokeProperty, button.GetObservable(TemplatedControl.ForegroundProperty));
+        return button;
     }
 
     private void ChooseTool(ToolDefinition tool)
@@ -87,15 +104,51 @@ public partial class MainView
             Canvas.FinishPath();
         }
 
+        _libraryItem = null;
+        ShowLibrary(false);
         if (tool.Tool != ActiveTool.Select)
         {
             _context.SelectedShapeKind = tool.Kind;
+            _context.PendingUnit = null;
             _context.CurrentDimensionKind = DimensionKind.Aligned;
             _context.SelectedShapes.Clear();
             _context.RequestRedraw();
         }
 
         _context.ActiveTool = tool.Tool;
+        UpdateToolButtons();
+    }
+
+    private void ShowLibrary(bool show)
+    {
+        LibraryPane.IsVisible = show;
+        UpdateToolButtons();
+    }
+
+    /// <summary>An object of the library was tapped: a room goes into the drawing at once (as on Windows), anything else becomes the tool -
+    /// a tap on the drawing places it at its real size, a drag opens it to any size.</summary>
+    private void ChooseLibraryItem(LibraryItem item)
+    {
+        if (Canvas.IsDrawingPath)
+        {
+            Canvas.FinishPath();
+        }
+
+        ShowLibrary(false);
+        if (item.Room is { } room)
+        {
+            _libraryItem = null;
+            _context.InsertRoom(room);
+            StatusText.Text = item.Name + " added - drag its corners to change it.";
+            return;
+        }
+
+        _libraryItem = item;
+        _context.SelectedShapeKind = item.Kind;
+        _context.PendingUnit = item.Unit; // after the kind: choosing a kind other than a catalogue unit clears it
+        _context.SelectedShapes.Clear();
+        _context.ActiveTool = ActiveTool.Shape;
+        _context.RequestRedraw();
         UpdateToolButtons();
     }
 
@@ -107,9 +160,25 @@ public partial class MainView
         }
     }
 
-    /// <summary>The current tool, as in the tool bar.</summary>
-    private ToolDefinition CurrentTool =>
-        Tools.FirstOrDefault(t => t.Tool == _context.ActiveTool && (t.Tool == ActiveTool.Select || t.Kind == _context.SelectedShapeKind)) ?? Tools[0];
+    /// <summary>The current tool of the tool bar; null while an object of the library is being placed.</summary>
+    private ToolDefinition? CurrentTool
+    {
+        get
+        {
+            if (_context.ActiveTool == ActiveTool.Select)
+            {
+                return Tools[0];
+            }
+
+            return _libraryItem is not null && _context.SelectedShapeKind == _libraryItem.Kind
+                ? null
+                : Tools.FirstOrDefault(t => t.Tool == _context.ActiveTool && t.Kind == _context.SelectedShapeKind) ?? Tools[0];
+        }
+    }
+
+    /// <summary>One line of how to use the current tool.</summary>
+    private string ToolHint => CurrentTool?.Hint
+        ?? $"{_libraryItem?.Name}: tap to place it at its real size, or drag it open to any size.";
 
     private void UpdateToolButtons()
     {
@@ -119,6 +188,7 @@ public partial class MainView
             button.Classes.Set("active", ReferenceEquals(tool, current));
         }
 
+        _objectsButton?.Classes.Set("active", LibraryPane.IsVisible || (current is null && _context.ActiveTool != ActiveTool.Select));
         UpdateCommands();
     }
 
@@ -131,7 +201,7 @@ public partial class MainView
         }
 
         var points = Canvas.PathPointCount;
-        PathBarText.Text = $"{CurrentTool.Name}: {points} point{(points == 1 ? "" : "s")}";
+        PathBarText.Text = $"{CurrentTool?.Name}: {points} point{(points == 1 ? "" : "s")}";
         PathUndoButton.IsEnabled = points > 0;
         PathDoneButton.IsEnabled = points >= 2;
     }

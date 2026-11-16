@@ -70,6 +70,15 @@ public sealed partial class DocumentCanvas
             Add("Fit page", FitToView);
         }
 
+        _menu = flyout;
         flyout.ShowAt(this, showAtPointer: true);
+    }
+
+    private MenuFlyout? _menu;
+
+    private void CloseMenu()
+    {
+        _menu?.Hide();
+        _menu = null;
     }
 }

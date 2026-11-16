@@ -48,6 +48,12 @@
                 <!-- the drawing -->
                 <views:DocumentCanvas Grid.Column="1" x:Name="Canvas" ClipToBounds="True" />
 
+                <!-- the object library (Objects in the tool bar) lies over the left of the drawing -->
+                <Border Grid.Column="1" x:Name="LibraryPane" IsVisible="False" Width="300" HorizontalAlignment="Left"
+                        Background="{StaticResource ToolbarBackgroundBrush}" BorderBrush="{StaticResource BorderLineBrush}" BorderThickness="0,0,1,0">
+                    <views:ObjectLibrary x:Name="Library" />
+                </Border>
+
                 <!-- while a wall, polyline or dimension is drawn -->
                 <Border Grid.Column="1" x:Name="PathBar" IsVisible="False" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="10"
                         Background="{StaticResource ToolbarBackgroundBrush}" CornerRadius="12" Padding="10,6"

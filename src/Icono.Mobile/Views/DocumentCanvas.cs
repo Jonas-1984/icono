@@ -32,13 +32,13 @@ public sealed partial class DocumentCanvas : Control
     private const double FitMargin = 24;
 
     /// <summary>How far a finger may wander before a touch counts as a drag instead of a tap (DIP).</summary>
-    private const double DragThreshold = 8;
+    private const double DragThreshold = 6;
 
     /// <summary>How far beside thin objects (dimension lines, walls, doors) a finger still hits them (DIP).</summary>
     private const double FingerReach = 12;
 
     /// <summary>How long a finger has to stay still for the menu.</summary>
-    private static readonly TimeSpan LongPress = TimeSpan.FromMilliseconds(550);
+    private static readonly TimeSpan LongPress = TimeSpan.FromMilliseconds(650);
 
     private EditorContext? _context;
     private double _zoom = 1;
@@ -210,6 +210,19 @@ public sealed partial class DocumentCanvas : Control
         var position = e.GetPosition(this);
         _pointers[e.Pointer.Id] = position;
         e.Handled = true;
+
+        // the menu came up while the finger rested, but the finger goes on: it was a drag after all - the menu goes, the move starts
+        if (_gesture == Gesture.Menu)
+        {
+            var sinceMenu = position - _pressPoint;
+            if (Math.Sqrt(sinceMenu.X * sinceMenu.X + sinceMenu.Y * sinceMenu.Y) < DragThreshold * 2)
+            {
+                return;
+            }
+
+            CloseMenu();
+            _gesture = Gesture.Pending;
+        }
 
         if (_gesture == Gesture.Pending)
         {
