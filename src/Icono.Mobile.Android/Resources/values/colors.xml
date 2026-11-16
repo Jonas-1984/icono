@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- CanvasSurroundBrush of the dark design -->
+  <color name="splash_background">#06070A</color>
+</resources>

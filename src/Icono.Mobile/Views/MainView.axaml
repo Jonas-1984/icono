@@ -1,0 +1,39 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:Icono.Mobile.Views"
+             x:Class="Icono.Mobile.Views.MainView"
+             Background="{StaticResource CanvasSurroundBrush}">
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- top bar -->
+        <Border Grid.Row="0" Background="{StaticResource ToolbarBackgroundBrush}" Padding="12,8"
+                BorderBrush="{StaticResource BorderLineBrush}" BorderThickness="0,0,0,1">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <Image Grid.Column="0" Source="avares://Icono.Mobile/Assets/icono-dark.png" Height="36" Margin="4,0,16,0"
+                       RenderOptions.BitmapInterpolationMode="HighQuality" />
+
+                <TextBlock Grid.Column="1" x:Name="TitleText" VerticalAlignment="Center" FontSize="17"
+                           Foreground="{StaticResource ForegroundTextBrush}" TextTrimming="CharacterEllipsis" Text="Untitled" />
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button Classes="tool" Content="New" Click="OnNew" />
+                    <Button Classes="tool" Content="Open" Click="OnOpen" />
+                    <Button Classes="tool" Content="Fit" Click="OnFit" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- the drawing -->
+        <views:DocumentCanvas Grid.Row="1" x:Name="Canvas" ClipToBounds="True" />
+
+        <!-- status line -->
+        <Border Grid.Row="2" Background="{StaticResource PanelBackgroundBrush}" Padding="16,6">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0" x:Name="StatusText" FontSize="14" Foreground="{StaticResource MutedTextBrush}"
+                           TextTrimming="CharacterEllipsis"
+                           Text="Two fingers: zoom and move · one finger: move · double tap: fit page" />
+                <TextBlock Grid.Column="1" x:Name="ZoomText" FontSize="14" Foreground="{StaticResource ForegroundTextBrush}" Text="100 %" />
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

@@ -176,9 +176,40 @@ public sealed class DocumentFile
             throw new InvalidDataException("The file is too big to be an icono document.");
         }
 
+        return Parse(File.ReadAllText(path));
+    }
+
+    /// <summary>Reads a document from a stream (Android hands picked files over as streams, not paths). Same checks as <see cref="Load(string)"/>.</summary>
+    public static DocumentFile Load(Stream stream)
+    {
+        using var reader = new StreamReader(stream);
+        var buffer = new char[64 * 1024];
+        var text = new System.Text.StringBuilder();
+        int read;
+        while ((read = reader.Read(buffer, 0, buffer.Length)) > 0)
+        {
+            text.Append(buffer, 0, read);
+            if (text.Length > MaxFileBytes)
+            {
+                throw new InvalidDataException("The file is too big to be an icono document.");
+            }
+        }
+
+        return Parse(text.ToString());
+    }
+
+    /// <summary>Writes <paramref name="document"/> to a stream (the stream is left open).</summary>
+    public static void Save(Document document, Stream stream)
+    {
+        using var writer = new StreamWriter(stream, leaveOpen: true);
+        writer.Write(Serialize(document));
+    }
+
+    private static DocumentFile Parse(string json)
+    {
         try
         {
-            var file = JsonSerializer.Deserialize<DocumentFile>(File.ReadAllText(path), Options);
+            var file = JsonSerializer.Deserialize<DocumentFile>(json, Options);
             return file is null || file.Version > CurrentVersion
                 ? throw new InvalidDataException("Unsupported or empty icono file.")
                 : file;

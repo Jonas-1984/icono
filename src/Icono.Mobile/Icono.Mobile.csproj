@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The tablet user interface of icono (Avalonia). It draws with the same Icono.Core / Icono.Rendering / Icono.IO as the Windows
+       program; Icono.Mobile.Android packs it into the Android app. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Avalonia.Skia must accept the SkiaSharp 4 that Icono.Rendering uses (checked on the tablet with 12.1.6). Keep all four in sync. -->
+    <PackageReference Include="Avalonia" Version="12.1.6" />
+    <PackageReference Include="Avalonia.Skia" Version="12.1.6" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.6" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Icono.Rendering\Icono.Rendering.csproj" />
+    <ProjectReference Include="..\Icono.IO\Icono.IO.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="..\Icono.App\Assets\icono-dark.png" Link="Assets\icono-dark.png" />
+  </ItemGroup>
+
+</Project>

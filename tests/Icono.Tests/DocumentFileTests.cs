@@ -66,6 +66,21 @@ public class DocumentFileTests
     }
 
     [Fact]
+    public void SaveAndLoad_ThroughStreams_AsTheTabletAppDoes()
+    {
+        using var stream = new MemoryStream();
+        DocumentFile.Save(BuildSample(), stream);
+        stream.Position = 0;
+
+        var loaded = new Document();
+        DocumentFile.Load(stream).ApplyTo(loaded);
+
+        Assert.Equal(300, loaded.Width);
+        Assert.Equal(3, Assert.Single(loaded.Layers).Shapes.Count);
+        Assert.Throws<InvalidDataException>(() => DocumentFile.Load(new MemoryStream("not json"u8.ToArray())));
+    }
+
+    [Fact]
     public void NewDocumentsUseTheShortExtension_AndFilesWithTheOldOneStillLoad()
     {
         Assert.Equal(".icn", DocumentFile.Extension);
