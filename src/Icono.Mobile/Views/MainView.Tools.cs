@@ -80,11 +80,11 @@ public partial class MainView
             StrokeThickness = 1.6,
             StrokeLineCap = PenLineCap.Round,
             StrokeJoin = PenLineJoin.Round,
-            Width = 19,
-            Height = 19,
+            Width = 17,
+            Height = 17,
             Stretch = Stretch.Uniform,
         };
-        var label = new TextBlock { Text = name, FontSize = 9.5, HorizontalAlignment = HorizontalAlignment.Center };
+        var label = new TextBlock { Text = name, FontSize = 8.5, HorizontalAlignment = HorizontalAlignment.Center };
         var button = new Button
         {
             Classes = { "palette" },

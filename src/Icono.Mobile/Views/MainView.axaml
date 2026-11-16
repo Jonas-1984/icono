@@ -11,7 +11,8 @@
                     BorderBrush="{StaticResource BorderLineBrush}" BorderThickness="0,0,0,1">
                 <Grid ColumnDefinitions="Auto,*,Auto">
                     <!-- the logo on a light plate, like the app icon: its fine blue lines get lost on the dark bar -->
-                    <Border Grid.Column="0" Background="#FFF1F5FB" CornerRadius="8" Padding="8,4" Margin="0,0,12,0" VerticalAlignment="Center">
+                    <Border Grid.Column="0" x:Name="LogoPlate" Background="#FFF1F5FB" CornerRadius="8" Padding="8,4" Margin="0,0,12,0" VerticalAlignment="Center"
+                            Cursor="Hand" ToolTip.Tip="About icono">
                         <Image Source="avares://Icono.Mobile/Assets/icono.png" Height="26" RenderOptions.BitmapInterpolationMode="HighQuality" />
                     </Border>
 
@@ -41,7 +42,7 @@
                 <Border Grid.Column="0" Background="{StaticResource ToolbarBackgroundBrush}" BorderBrush="{StaticResource BorderLineBrush}"
                         BorderThickness="0,0,1,0">
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <StackPanel x:Name="ToolPanel" Margin="5,6" Spacing="2" />
+                        <StackPanel x:Name="ToolPanel" Margin="3,6" Spacing="2" />
                     </ScrollViewer>
                 </Border>
 
@@ -63,7 +64,7 @@
                                    Foreground="{StaticResource ForegroundTextBrush}" />
                         <Button Classes="tool" x:Name="PathUndoButton" Content="Undo point" Click="OnPathUndoPoint" />
                         <Button Classes="tool" Content="Cancel" Click="OnPathCancel" />
-                        <Button Classes="tool accent" x:Name="PathDoneButton" Content="Done" Click="OnPathDone" />
+                        <Button Classes="tool primary" x:Name="PathDoneButton" Content="Done" Click="OnPathDone" />
                     </StackPanel>
                 </Border>
 
@@ -84,6 +85,35 @@
             </Border>
         </Grid>
 
+        <!-- About (tap the logo): version, test terms, privacy, licences (MainView.About.cs) -->
+        <Border x:Name="AboutLayer" IsVisible="False" Background="#99000000">
+            <Border Background="{StaticResource ToolbarBackgroundBrush}" CornerRadius="14" Padding="20,16" Margin="60,40"
+                    BorderBrush="{StaticResource RaisedPressedBrush}" BorderThickness="1">
+                <Grid ColumnDefinitions="220,*" ColumnSpacing="20">
+                    <StackPanel Grid.Column="0" Spacing="10">
+                        <Border Background="#FFF1F5FB" CornerRadius="10" Padding="12,8">
+                            <Image Source="avares://Icono.Mobile/Assets/icono.png" Height="60" RenderOptions.BitmapInterpolationMode="HighQuality" />
+                        </Border>
+                        <TextBlock Text="icono for tablets" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource ForegroundTextBrush}" />
+                        <TextBlock x:Name="AboutVersion" FontSize="12.5" Foreground="{StaticResource MutedTextBrush}" />
+                        <TextBlock Text="© 2026 Jonas Shojaei" FontSize="12.5" Foreground="{StaticResource MutedTextBrush}" />
+                        <TextBlock Text="Test version: results (dimensions, areas, plans) are aids - check them before you build or buy anything."
+                                   FontSize="12" TextWrapping="Wrap" Foreground="{StaticResource MutedTextBrush}" />
+                        <Button Classes="tool" x:Name="AboutTermsButton" Content="Test terms" HorizontalAlignment="Stretch" Click="OnAboutTerms" />
+                        <Button Classes="tool" x:Name="AboutPrivacyButton" Content="Privacy" HorizontalAlignment="Stretch" Click="OnAboutPrivacy" />
+                        <Button Classes="tool" x:Name="AboutNoticesButton" Content="Licences" HorizontalAlignment="Stretch" Click="OnAboutNotices" />
+                        <Button Classes="tool primary" Content="Close" HorizontalAlignment="Stretch" Click="OnAboutClose" />
+                    </StackPanel>
+                    <Border Grid.Column="1" Background="{StaticResource PanelBackgroundBrush}" CornerRadius="10" Padding="14,10">
+                        <ScrollViewer x:Name="AboutScroll">
+                            <SelectableTextBlock x:Name="AboutText" FontFamily="monospace" FontSize="11.5" TextWrapping="Wrap"
+                                                 Foreground="{StaticResource ForegroundTextBrush}" />
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </Border>
+        </Border>
+
         <!-- typing a text (MainView.Text.cs); at the top, so the on-screen keyboard does not cover it -->
         <Border x:Name="TextLayer" IsVisible="False" Background="#66000000">
             <Border Background="{StaticResource ToolbarBackgroundBrush}" CornerRadius="14" Padding="18,14" Width="520"
@@ -95,7 +125,7 @@
                     <TextBlock x:Name="TextNote" FontSize="11.5" TextWrapping="Wrap" Foreground="{StaticResource MutedTextBrush}" />
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button Classes="tool" Content="Cancel" Click="OnTextCancel" />
-                        <Button Classes="tool accent" Content="OK" Click="OnTextOk" />
+                        <Button Classes="tool primary" Content="OK" Click="OnTextOk" />
                     </StackPanel>
                 </StackPanel>
             </Border>
@@ -111,7 +141,7 @@
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button Classes="tool" Content="Cancel" Click="OnQuestionCancel" />
                         <Button Classes="tool" Content="Don't save" Click="OnQuestionDiscard" />
-                        <Button Classes="tool accent" Content="Save" Click="OnQuestionSave" />
+                        <Button Classes="tool primary" Content="Save" Click="OnQuestionSave" />
                     </StackPanel>
                 </StackPanel>
             </Border>

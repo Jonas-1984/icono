@@ -9,12 +9,23 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationId>de.bitbins.icono</ApplicationId>
     <ApplicationTitle>icono</ApplicationTitle>
+    <!-- ApplicationVersion must grow with every APK handed out (Android only installs an update with a higher number) -->
     <ApplicationVersion>1</ApplicationVersion>
-    <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+    <ApplicationDisplayVersion>0.1.0-test.1</ApplicationDisplayVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
     <!-- the app is installed with "adb install"; fast deployment (assemblies pushed separately) does not work on the Xiaomi tablet -->
     <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+  </PropertyGroup>
+
+  <!-- The APK handed to testers (tools\build-android-release.ps1 signs it with the key that lives outside the repository). -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <!-- 64- and 32-bit ARM: every tablet of the last years, and a smaller APK than with the x86 emulator parts -->
+    <RuntimeIdentifiers>android-arm64;android-arm</RuntimeIdentifiers>
+    <!-- drawings are read and written with System.Text.Json by reflection; a trimmed app switches that off unless it is asked for -->
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+    <!-- only the framework is trimmed, never icono's own code (the drawing classes are read by reflection) -->
+    <TrimMode>partial</TrimMode>
   </PropertyGroup>
 
   <ItemGroup>

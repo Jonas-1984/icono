@@ -27,6 +27,15 @@
     <AvaloniaResource Include="..\Icono.App\Assets\icono.png" Link="Assets\icono.png" />
     <!-- Selawik (SIL OFL 1.1): stands in for Segoe UI and other Windows fonts the tablet does not have -->
     <AvaloniaResource Include="Assets\Fonts\*.ttf" />
+    <!-- the licence notices travel with every copy of the app (shown in About: tap the logo) -->
+    <AvaloniaResource Include="..\..\THIRD-PARTY-NOTICES.txt" Link="Assets\Notices\THIRD-PARTY-NOTICES.txt" />
+    <AvaloniaResource Include="..\..\installer\docs\THIRD-PARTY-NOTICES-DOTNET.txt" Link="Assets\Notices\THIRD-PARTY-NOTICES-DOTNET.txt" />
+    <AvaloniaResource Include="Assets\Fonts\Selawik-OFL.txt" Link="Assets\Notices\Selawik-OFL.txt" />
+    <!-- the test terms and the privacy notice of the testers' version (same texts as the Windows installer shows) -->
+    <AvaloniaResource Include="..\..\installer\docs\Terms-EN.txt" Link="Assets\Docs\Terms-EN.txt" />
+    <AvaloniaResource Include="..\..\installer\docs\Testbedingungen-DE.txt" Link="Assets\Docs\Testbedingungen-DE.txt" />
+    <AvaloniaResource Include="..\..\installer\docs\Privacy-EN.txt" Link="Assets\Docs\Privacy-EN.txt" />
+    <AvaloniaResource Include="..\..\installer\docs\Datenschutz-DE.txt" Link="Assets\Docs\Datenschutz-DE.txt" />
   </ItemGroup>
 
 </Project>

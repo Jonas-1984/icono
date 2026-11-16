@@ -49,6 +49,7 @@ public partial class MainView : UserControl
 
         BuildTools();
         SetUpText();
+        SetUpAbout();
         LoadDocument(DocumentFile.From(NewDocument()), null, "Untitled");
         StatusText.Text = Hint;
     }
@@ -281,6 +282,13 @@ public partial class MainView : UserControl
         {
             e.Handled = true;
             CloseText();
+            return;
+        }
+
+        if (AboutLayer.IsVisible)
+        {
+            e.Handled = true;
+            CloseAbout();
             return;
         }
 

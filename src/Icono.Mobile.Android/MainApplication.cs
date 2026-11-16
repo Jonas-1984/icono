@@ -13,5 +13,18 @@ public class MainApplication : AvaloniaAndroidApplication<App>
     {
     }
 
-    protected override AppBuilder CustomizeAppBuilder(AppBuilder builder) => base.CustomizeAppBuilder(builder).WithInterFont();
+    protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
+    {
+        // the version of the package (ApplicationDisplayVersion in the project) for About
+        try
+        {
+            Views.MainView.AppVersion = PackageManager?.GetPackageInfo(PackageName ?? "", 0)?.VersionName ?? "";
+        }
+        catch (Exception)
+        {
+            // About then shows no version - not worth stopping the start
+        }
+
+        return base.CustomizeAppBuilder(builder).WithInterFont();
+    }
 }
