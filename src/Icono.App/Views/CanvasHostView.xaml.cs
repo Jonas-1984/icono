@@ -14,7 +14,6 @@ namespace Icono.App.Views;
 
 public partial class CanvasHostView : UserControl
 {
-    private const double MinShapeSize = 4;
     private const double HandleHitToleranceDip = 6.0;
     private const float HandleScreenSize = 7f;
     private static readonly SKColor AccentColor = new(0x5A, 0xB0, 0xFF);
@@ -1549,35 +1548,10 @@ public partial class CanvasHostView : UserControl
     /// a multi-selection, e.g. the several CombinedPath pieces a multi-element SVG import splits
     /// into. Lets a multi-selection be resized as one unit instead of offering no resize handles
     /// at all (the old behavior — <see cref="DrawResizeHandles"/> only ever ran for a lone shape).</summary>
-    private static (double X, double Y, double W, double H) ComputeGroupBounds(IReadOnlyList<Shape> shapes)
-    {
-        var boxes = shapes.Select(ChromeBox).ToList();
-        var minX = boxes.Min(b => b.X);
-        var minY = boxes.Min(b => b.Y);
-        var maxX = boxes.Max(b => b.X + b.W);
-        var maxY = boxes.Max(b => b.Y + b.H);
-        return (minX, minY, maxX - minX, maxY - minY);
-    }
+    private static (double X, double Y, double W, double H) ComputeGroupBounds(IReadOnlyList<Shape> shapes) => ShapeResizer.GroupBounds(shapes);
 
     private static IEnumerable<(ResizeHandle Handle, double X, double Y)> EnumerateBoundsHandlePositions(
-        (double X, double Y, double W, double H) bounds)
-    {
-        var left = bounds.X;
-        var top = bounds.Y;
-        var right = bounds.X + bounds.W;
-        var bottom = bounds.Y + bounds.H;
-        var midX = bounds.X + bounds.W / 2;
-        var midY = bounds.Y + bounds.H / 2;
-
-        yield return (ResizeHandle.TopLeft, left, top);
-        yield return (ResizeHandle.Top, midX, top);
-        yield return (ResizeHandle.TopRight, right, top);
-        yield return (ResizeHandle.Right, right, midY);
-        yield return (ResizeHandle.BottomRight, right, bottom);
-        yield return (ResizeHandle.Bottom, midX, bottom);
-        yield return (ResizeHandle.BottomLeft, left, bottom);
-        yield return (ResizeHandle.Left, left, midY);
-    }
+        (double X, double Y, double W, double H) bounds) => ShapeResizer.BoxHandles(bounds);
 
     /// <summary>Simplified sibling of <see cref="DrawResizeHandles"/> for a multi-selection — just
     /// the 8 corner/edge handles around the group's bounding box, no rotate or depth handle (those
@@ -1729,48 +1703,8 @@ public partial class CanvasHostView : UserControl
         canvas.DrawRect(screenRect, strokePaint);
     }
 
-    private static IEnumerable<(ResizeHandle Handle, double X, double Y)> EnumerateHandlePositions(Shape shape)
-    {
-        var box = ChromeBox(shape);
-        var left = box.X;
-        var top = box.Y;
-        var right = box.X + box.W;
-        var bottom = box.Y + box.H;
-        var midX = box.X + box.W / 2;
-        var midY = box.Y + box.H / 2;
-        // a rotation turns the shape around the centre of its frame (not of the outline)
-        var pivotX = shape.X + shape.Width / 2;
-        var pivotY = shape.Y + shape.Height / 2;
-
-        (ResizeHandle Handle, double X, double Y)[] points =
-        [
-            (ResizeHandle.TopLeft, left, top),
-            (ResizeHandle.Top, midX, top),
-            (ResizeHandle.TopRight, right, top),
-            (ResizeHandle.Right, right, midY),
-            (ResizeHandle.BottomRight, right, bottom),
-            (ResizeHandle.Bottom, midX, bottom),
-            (ResizeHandle.BottomLeft, left, bottom),
-            (ResizeHandle.Left, left, midY),
-        ];
-
-        if (shape.Rotation == 0)
-        {
-            foreach (var p in points)
-            {
-                yield return p;
-            }
-
-            yield break;
-        }
-
-        var center = new Point(pivotX, pivotY);
-        foreach (var (handle, x, y) in points)
-        {
-            var rotated = RotateAroundCenter(new Point(x, y), center, shape.Rotation);
-            yield return (handle, rotated.X, rotated.Y);
-        }
-    }
+    /// <summary>The eight handles of one shape, on its outline and turned with it (shared with the tablet app).</summary>
+    private static IEnumerable<(ResizeHandle Handle, double X, double Y)> EnumerateHandlePositions(Shape shape) => ShapeResizer.Handles(shape);
 
     /// <summary>Rotates <paramref name="p"/> by <paramref name="degrees"/> clockwise around
     /// <paramref name="center"/>, matching the convention <see cref="SKMatrix.CreateRotationDegrees(float, float, float)"/>
@@ -1787,20 +1721,7 @@ public partial class CanvasHostView : UserControl
     }
 
     /// <summary>Position of the floating rotate handle, offset above the shape's (rotated) top-mid edge.</summary>
-    private static (double X, double Y) ComputeRotateHandlePosition(Shape shape)
-    {
-        const double offset = 20;
-        var box = ChromeBox(shape);
-        var basePoint = new Point(box.X + box.W / 2, box.Y - offset);
-
-        if (shape.Rotation == 0)
-        {
-            return (basePoint.X, basePoint.Y);
-        }
-
-        var rotated = RotateAroundCenter(basePoint, new Point(shape.X + shape.Width / 2, shape.Y + shape.Height / 2), shape.Rotation);
-        return (rotated.X, rotated.Y);
-    }
+    private static (double X, double Y) ComputeRotateHandlePosition(Shape shape) => ShapeResizer.RotateHandle(shape, offset: 20);
 
     private ResizeHandle? HitTestHandle(Point docPoint, Shape shape)
     {
@@ -2420,90 +2341,10 @@ public partial class CanvasHostView : UserControl
     /// multi-shape selection) resizes as one coherent unit instead of each piece drifting apart.
     /// No rotation compensation (unlike the single-shape <see cref="ApplyResize"/>) — a reasonable
     /// simplification since the group bounds themselves are always axis-aligned.</summary>
-    private void ApplyGroupResize(Point point)
-    {
-        var dx = point.X - _groupResizeStartPoint.X;
-        var dy = point.Y - _groupResizeStartPoint.Y;
-        var (startX, startY, startW, startH) = _groupResizeStartBounds;
-
-        double newX = startX, newY = startY, newW = startW, newH = startH;
-
-        var affectsLeft = _groupResizeHandle is ResizeHandle.TopLeft or ResizeHandle.Left or ResizeHandle.BottomLeft;
-        var affectsRight = _groupResizeHandle is ResizeHandle.TopRight or ResizeHandle.Right or ResizeHandle.BottomRight;
-        var affectsTop = _groupResizeHandle is ResizeHandle.TopLeft or ResizeHandle.Top or ResizeHandle.TopRight;
-        var affectsBottom = _groupResizeHandle is ResizeHandle.BottomLeft or ResizeHandle.Bottom or ResizeHandle.BottomRight;
-
-        if (affectsLeft)
-        {
-            newW = Math.Max(MinShapeSize, startW - dx);
-            newX = startX + (startW - newW);
-        }
-        else if (affectsRight)
-        {
-            newW = Math.Max(MinShapeSize, startW + dx);
-        }
-
-        if (affectsTop)
-        {
-            newH = Math.Max(MinShapeSize, startH - dy);
-            newY = startY + (startH - newH);
-        }
-        else if (affectsBottom)
-        {
-            newH = Math.Max(MinShapeSize, startH + dy);
-        }
-
-        // Dragging a CORNER keeps the proportions (no deformation) and scales both sides together, anchored at the
-        // opposite corner. Hold Shift to stretch freely; the edge handles always stretch one side only.
-        var keepProportions = KeepProportions(_groupResizeHandle) && startW > 0.0001 && startH > 0.0001;
-        if (keepProportions)
-        {
-            var scale = Math.Max(newW / startW, newH / startH);
-            scale = Math.Max(scale, Math.Max(MinShapeSize / startW, MinShapeSize / startH));
-
-            newW = startW * scale;
-            if (SnapIfEnabled(newW) is var snappedW && Math.Abs(snappedW - newW) > 0.0001 && snappedW >= MinShapeSize)
-            {
-                newW = snappedW;
-                scale = newW / startW;
-            }
-
-            newH = startH * scale;
-            newX = affectsLeft ? startX + startW - newW : startX;
-            newY = affectsTop ? startY + startH - newH : startY;
-        }
-
-        if (!keepProportions)
-        {
-            newX = SnapIfEnabled(newX);
-            newY = SnapIfEnabled(newY);
-            newW = SnapIfEnabled(newW);
-            newH = SnapIfEnabled(newH);
-        }
-
-        var safeStartW = startW > 0.0001 ? startW : 0.0001;
-        var safeStartH = startH > 0.0001 ? startH : 0.0001;
-
-        // Ratios MUST come from each shape's FROZEN starting rect, not its current (already
-        // mutated-this-gesture) X/Y/Width/Height — reading live state here re-derives the ratios
-        // from an already-resized rect on every subsequent mouse-move frame, compounding a drift
-        // that made the shape visibly jump around while dragging.
-        for (var i = 0; i < _groupResizeShapes.Count; i++)
-        {
-            var shape = _groupResizeShapes[i];
-            var (shapeStartX, shapeStartY, shapeStartW, shapeStartH) = _groupResizeStartRects[i];
-
-            var relX = (shapeStartX - startX) / safeStartW;
-            var relY = (shapeStartY - startY) / safeStartH;
-            var relW = shapeStartW / safeStartW;
-            var relH = shapeStartH / safeStartH;
-
-            shape.X = newX + relX * newW;
-            shape.Y = newY + relY * newH;
-            shape.Width = relW * newW;
-            shape.Height = relH * newH;
-        }
-    }
+    private void ApplyGroupResize(Point point) =>
+        ShapeResizer.ResizeGroup(
+            _groupResizeShapes, _groupResizeStartRects, _groupResizeHandle, _groupResizeStartBounds,
+            (_groupResizeStartPoint.X, _groupResizeStartPoint.Y), (point.X, point.Y), KeepProportions(_groupResizeHandle), SnapIfEnabled);
 
     private void BeginRotate(Shape shape)
     {
@@ -3548,8 +3389,7 @@ public partial class CanvasHostView : UserControl
     /// <summary>Corner handles keep the aspect ratio (so imported SVGs, images and every other shape are never
     /// deformed by a corner drag); Shift lifts that and stretches freely.</summary>
     private static bool KeepProportions(ResizeHandle handle) =>
-        handle is ResizeHandle.TopLeft or ResizeHandle.TopRight or ResizeHandle.BottomLeft or ResizeHandle.BottomRight
-        && !Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
+        ShapeResizer.IsCorner(handle) && !Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
 
     private void ApplyResize(Point point)
     {
@@ -3558,87 +3398,14 @@ public partial class CanvasHostView : UserControl
             return;
         }
 
-        // Rotate both points into the shape's local (unrotated) frame, using the rotation/center
-        // frozen at gesture-start, so the left/right/top/bottom math below stays axis-aligned
-        // regardless of the shape's on-screen rotation.
-        var localPoint = point;
-        var localStartPoint = _resizeStartPoint;
-        if (_resizeRotation != 0)
-        {
-            localPoint = RotateAroundCenter(point, _resizeCenter, -_resizeRotation);
-            localStartPoint = RotateAroundCenter(_resizeStartPoint, _resizeCenter, -_resizeRotation);
-        }
-
-        var dx = localPoint.X - localStartPoint.X;
-        var dy = localPoint.Y - localStartPoint.Y;
-        var (startX, startY, startW, startH) = _resizeStartRect;
-
-        double newX = startX, newY = startY, newW = startW, newH = startH;
-
-        var affectsLeft = _resizeHandle is ResizeHandle.TopLeft or ResizeHandle.Left or ResizeHandle.BottomLeft;
-        var affectsRight = _resizeHandle is ResizeHandle.TopRight or ResizeHandle.Right or ResizeHandle.BottomRight;
-        var affectsTop = _resizeHandle is ResizeHandle.TopLeft or ResizeHandle.Top or ResizeHandle.TopRight;
-        var affectsBottom = _resizeHandle is ResizeHandle.BottomLeft or ResizeHandle.Bottom or ResizeHandle.BottomRight;
-
-        if (affectsLeft)
-        {
-            newW = Math.Max(MinShapeSize, startW - dx);
-            newX = startX + (startW - newW);
-        }
-        else if (affectsRight)
-        {
-            newW = Math.Max(MinShapeSize, startW + dx);
-        }
-
-        if (affectsTop)
-        {
-            newH = Math.Max(MinShapeSize, startH - dy);
-            newY = startY + (startH - newH);
-        }
-        else if (affectsBottom)
-        {
-            newH = Math.Max(MinShapeSize, startH + dy);
-        }
-
-        // Dragging a CORNER keeps the proportions (no deformation) and scales both sides together, anchored at the
-        // opposite corner. Hold Shift to stretch freely; the edge handles always stretch one side only.
-        var keepProportions = KeepProportions(_resizeHandle) && startW > 0.0001 && startH > 0.0001;
-        if (keepProportions)
-        {
-            var scale = Math.Max(newW / startW, newH / startH);
-            scale = Math.Max(scale, Math.Max(MinShapeSize / startW, MinShapeSize / startH));
-
-            newW = startW * scale;
-            if (SnapIfEnabled(newW) is var snappedW && Math.Abs(snappedW - newW) > 0.0001 && snappedW >= MinShapeSize)
-            {
-                newW = snappedW;
-                scale = newW / startW;
-            }
-
-            newH = startH * scale;
-            newX = affectsLeft ? startX + startW - newW : startX;
-            newY = affectsTop ? startY + startH - newH : startY;
-        }
-
-        // Proportional corner drags were already snapped as a whole above (snapping X/Y/H separately would break the ratio).
-        var outlineX = keepProportions ? newX : SnapIfEnabled(newX);
-        var outlineY = keepProportions ? newY : SnapIfEnabled(newY);
-        var outlineW = keepProportions ? newW : SnapIfEnabled(newW);
-        var outlineH = keepProportions ? newH : SnapIfEnabled(newH);
-
-        // The handles sit on the drawn outline, which is inset in the shape's X/Y/Width/Height frame by a fixed fraction;
-        // turn the dragged outline back into that frame.
-        var (frameX, frameY, frameW, frameH) = _resizeFrameStart;
-        var ratioW = frameW > 0.0001 ? Math.Max(0.0001, startW / frameW) : 1;
-        var ratioH = frameH > 0.0001 ? Math.Max(0.0001, startH / frameH) : 1;
-        var insetX = frameW > 0.0001 ? (startX - frameX) / frameW : 0;
-        var insetY = frameH > 0.0001 ? (startY - frameY) / frameH : 0;
-        var newFrameW = outlineW / ratioW;
-        var newFrameH = outlineH / ratioH;
-        _resizeShape.X = outlineX - insetX * newFrameW;
-        _resizeShape.Y = outlineY - insetY * newFrameH;
-        _resizeShape.Width = newFrameW;
-        _resizeShape.Height = newFrameH;
+        // the resize itself is shared with the tablet app
+        var (x, y, w, h) = ShapeResizer.ResizeFrame(
+            _resizeHandle, _resizeStartRect, _resizeFrameStart, (_resizeStartPoint.X, _resizeStartPoint.Y), (point.X, point.Y),
+            _resizeRotation, (_resizeCenter.X, _resizeCenter.Y), KeepProportions(_resizeHandle), SnapIfEnabled);
+        _resizeShape.X = x;
+        _resizeShape.Y = y;
+        _resizeShape.Width = w;
+        _resizeShape.Height = h;
     }
 
     private SKRect BuildMarqueeDocRect()
