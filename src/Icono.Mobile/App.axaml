@@ -38,6 +38,12 @@
             <Setter Property="Background" Value="{StaticResource ToolbarBackgroundBrush}" />
             <Setter Property="Foreground" Value="#FF4A5263" />
         </Style>
+        <!-- a toolbar button that switches something on (Properties) -->
+        <Style Selector="Button.tool.on">
+            <Setter Property="Background" Value="#335AB0FF" />
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
         <Style Selector="Button.accent">
             <Setter Property="Background" Value="{StaticResource AccentBrush}" />
             <Setter Property="Foreground" Value="#FF06070A" />

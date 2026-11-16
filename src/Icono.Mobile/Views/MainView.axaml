@@ -31,11 +31,12 @@
                         <Button Classes="tool" x:Name="DeleteButton" Content="Delete" Click="OnDelete" />
                         <Border Classes="separator" />
                         <Button Classes="tool" Content="Fit" Click="OnFit" />
+                        <Button Classes="tool on" x:Name="PropertiesButton" Content="Properties" Click="OnToggleProperties" />
                     </StackPanel>
                 </Grid>
             </Border>
 
-            <Grid Grid.Row="1" ColumnDefinitions="Auto,*">
+            <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto">
                 <!-- the tools (filled in MainView.Tools.cs) -->
                 <Border Grid.Column="0" Background="{StaticResource ToolbarBackgroundBrush}" BorderBrush="{StaticResource BorderLineBrush}"
                         BorderThickness="0,0,1,0">
@@ -58,6 +59,12 @@
                         <Button Classes="tool" Content="Cancel" Click="OnPathCancel" />
                         <Button Classes="tool accent" x:Name="PathDoneButton" Content="Done" Click="OnPathDone" />
                     </StackPanel>
+                </Border>
+
+                <!-- the properties of the selection (Properties in the top bar shows / hides it) -->
+                <Border Grid.Column="2" x:Name="PropertiesPane" Width="250" Background="{StaticResource ToolbarBackgroundBrush}"
+                        BorderBrush="{StaticResource BorderLineBrush}" BorderThickness="1,0,0,0">
+                    <views:PropertiesPanel x:Name="Properties" />
                 </Border>
             </Grid>
 

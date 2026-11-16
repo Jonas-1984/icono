@@ -42,6 +42,7 @@ public partial class MainView : UserControl
         InitializeComponent();
 
         Canvas.Context = _context;
+        Properties.Context = _context;
         Canvas.ZoomChanged += (_, _) => ZoomText.Text = $"{Canvas.Zoom * 100:0} %";
         _context.UndoManager.PropertyChanged += OnHistoryChanged;
         _context.SelectedShapes.CollectionChanged += (_, _) => UpdateCommands();
@@ -263,6 +264,12 @@ public partial class MainView : UserControl
     private void OnDelete(object? sender, RoutedEventArgs e) => _context.DeleteSelection();
 
     private void OnFit(object? sender, RoutedEventArgs e) => Canvas.FitToView();
+
+    private void OnToggleProperties(object? sender, RoutedEventArgs e)
+    {
+        PropertiesPane.IsVisible = !PropertiesPane.IsVisible;
+        PropertiesButton.Classes.Set("on", PropertiesPane.IsVisible);
+    }
 
     // ---------------------------------------------------------------- unsaved changes
 

@@ -655,6 +655,24 @@ public sealed class EditorContext : ObservableObject
         return true;
     }
 
+    /// <summary>Changes a property of every selected (unlocked) shape that <paramref name="applies"/> accepts (all when null), as ONE undo
+    /// step - for the property panels. False when no shape changed.</summary>
+    public bool SetOnSelection(Action<Shape> apply, Func<Shape, bool>? applies = null) => EditSelection(shapes =>
+    {
+        var changed = new List<Shape>();
+        foreach (var shape in shapes.Where(s => applies?.Invoke(s) ?? true))
+        {
+            var before = ShapeSnapshot.Capture(shape);
+            apply(shape);
+            if (!ShapeSnapshot.Capture(shape).Equals(before))
+            {
+                changed.Add(shape);
+            }
+        }
+
+        return changed;
+    });
+
     /// <summary>Aligns the selection to a common edge or centre line; a single shape aligns to the page.</summary>
     public void AlignSelection(AlignKind kind) =>
         EditSelection(shapes => ShapeArranger.Align(
