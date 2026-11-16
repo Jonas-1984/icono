@@ -9,6 +9,8 @@
             <StackPanel>
                 <RadioButton x:Name="PngRadio" GroupName="ExportFormat" Content="PNG image" IsChecked="True" Margin="0,0,0,8"
                              Foreground="{DynamicResource ForegroundTextBrush}" Checked="FormatRadio_OnChecked" />
+                <RadioButton x:Name="PdfRadio" GroupName="ExportFormat" Content="PDF document (.pdf, real paper size)" Margin="0,0,0,8"
+                             Foreground="{DynamicResource ForegroundTextBrush}" Checked="FormatRadio_OnChecked" />
                 <RadioButton x:Name="SvgRadio" GroupName="ExportFormat" Content="SVG vector graphic (.svg)" Margin="0,0,0,8"
                              Foreground="{DynamicResource ForegroundTextBrush}" Checked="FormatRadio_OnChecked" />
                 <RadioButton x:Name="IcoRadio" GroupName="ExportFormat" Content="Windows icon (.ico, 16 - 256 px)" Margin="0,0,0,8"
@@ -21,7 +23,7 @@
                 <TextBlock Text="PAGES" Style="{StaticResource PanelLabelTextStyle}" Margin="0,16,0,4" />
                 <ComboBox x:Name="PageComboBox" Height="32" SelectionChanged="PageComboBox_OnSelectionChanged" />
                 <TextBox x:Name="PageRangeTextBox" Height="32" Margin="0,6,0,0" Visibility="Collapsed" Text="1"
-                         ToolTip="The pages to export, for example 1,3-5 (every page becomes its own file)" />
+                         ToolTip="The pages to export, for example 1,3-5 (every page becomes its own file; in a PDF they stay in one file)" />
             </StackPanel>
 
             <StackPanel x:Name="SizePanel">

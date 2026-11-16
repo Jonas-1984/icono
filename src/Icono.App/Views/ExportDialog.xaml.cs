@@ -6,12 +6,13 @@ namespace Icono.App.Views;
 public enum ExportFormat
 {
     Png,
+    Pdf,
     Ico,
     PngSet,
     Svg,
 }
 
-/// <summary>"File > Export": choose PNG / icon / PNG set, the size and whether the page background is exported.</summary>
+/// <summary>"File > Export": choose PNG / PDF / SVG / icon / PNG set, the size and whether the page background is exported.</summary>
 public partial class ExportDialog : ThemedDialogWindow
 {
     private sealed record SizeChoice(string Label, int LongSide);
@@ -98,6 +99,7 @@ public partial class ExportDialog : ThemedDialogWindow
             return;
         }
 
+        // a PDF has the size of the paper and vectors: no pixel size to choose
         SizePanel.Visibility = PngRadio.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
         UpdateInfo();
     }
@@ -109,7 +111,9 @@ public partial class ExportDialog : ThemedDialogWindow
             return;
         }
 
-        InfoText.Text = SvgRadio.IsChecked == true
+        InfoText.Text = PdfRadio.IsChecked == true
+            ? "One PDF page per page of the drawing, as big as the paper (A4 = 210 x 297 mm) and in vectors. Print it at 100 % (not \"fit to page\") and the drawing keeps its scale 1:N."
+            : SvgRadio.IsChecked == true
             ? "A vector graphic: it stays sharp at any size and opens in Inkscape, Illustrator, a browser ... Text becomes outlines."
             : IcoRadio.IsChecked == true
             ? "The page is fitted into square frames of 16, 24, 32, 48, 64, 128 and 256 px."
@@ -120,7 +124,8 @@ public partial class ExportDialog : ThemedDialogWindow
 
     private void ExportButton_OnClick(object sender, RoutedEventArgs e)
     {
-        Format = SvgRadio.IsChecked == true ? ExportFormat.Svg
+        Format = PdfRadio.IsChecked == true ? ExportFormat.Pdf
+            : SvgRadio.IsChecked == true ? ExportFormat.Svg
             : IcoRadio.IsChecked == true ? ExportFormat.Ico
             : SetRadio.IsChecked == true ? ExportFormat.PngSet
             : ExportFormat.Png;

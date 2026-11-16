@@ -301,6 +301,17 @@ public partial class MainWindow
             var pages = dialog.PageList;
             switch (dialog.Format)
             {
+                case ExportFormat.Pdf:
+                    if (AskExportPath("PDF document (*.pdf)|*.pdf", ".pdf") is { } pdfPath)
+                    {
+                        // one PDF with the chosen pages (typed list, one page, or all), each as big as the paper
+                        IReadOnlyList<int>? pdfPages = pages ?? (dialog.Page is { } single ? [single] : null);
+                        File.WriteAllBytes(pdfPath, DocumentExporter.RenderPdf(document, dialog.IncludeBackground, pdfPages));
+                        ShowStatus($"Exported {Path.GetFileName(pdfPath)}");
+                    }
+
+                    break;
+
                 case ExportFormat.Svg:
                     if (AskExportPath("SVG vector graphic (*.svg)|*.svg", ".svg") is { } svgPath)
                     {
