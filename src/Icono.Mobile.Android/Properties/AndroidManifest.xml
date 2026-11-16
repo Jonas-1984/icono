@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- No permissions: icono works offline and only reads/writes the files the user picks. -->
+<!-- No permissions: icono works offline and only reads/writes the files the user picks. An exported file is handed to the app the user
+     chooses in the share sheet through the FileProvider below (read access to that one file only). -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" android:installLocation="auto">
-	<application android:label="icono" android:icon="@drawable/icon" />
+	<application android:label="icono" android:icon="@drawable/icon">
+		<provider android:name="androidx.core.content.FileProvider"
+		          android:authorities="de.bitbins.icono.fileprovider"
+		          android:exported="false"
+		          android:grantUriPermissions="true">
+			<meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
+		</provider>
+	</application>
 </manifest>

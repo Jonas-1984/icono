@@ -3,7 +3,7 @@ using SkiaSharp;
 
 namespace Icono.Rendering;
 
-/// <summary>Renders a <see cref="Document"/> to image files: PNG at any size, and multi-size Windows .ico files.</summary>
+/// <summary>Renders a <see cref="Document"/> to files: PNG at any size, SVG, PDF at the real paper size, and multi-size Windows .ico files.</summary>
 public static class DocumentExporter
 {
     /// <summary>Standard sizes of a Windows icon, smallest first.</summary>
@@ -38,6 +38,40 @@ public static class DocumentExporter
             }
 
             DocumentRenderer.Render(canvas, document, document.Width, document.Height, null, forExport: true, includeBackground);
+        }
+
+        return stream.ToArray();
+    }
+
+    /// <summary>The drawing as a PDF: one PDF page per page of the drawing (<paramref name="pages"/>, or all), each exactly as big as the paper
+    /// (96 drawing units = 1 inch = 72 pt, so an A4 page is 210 x 297 mm) and in vectors - printed at 100 % it keeps the drawing scale.</summary>
+    public static byte[] RenderPdf(Document document, bool includeBackground, IReadOnlyList<int>? pages = null)
+    {
+        const float PointsPerUnit = 72f / 96f;
+        var chosen = (pages is { Count: > 0 } ? pages : Enumerable.Range(0, document.PageCount))
+            .Where(p => p >= 0 && p < document.PageCount)
+            .Distinct()
+            .ToList();
+        if (chosen.Count == 0)
+        {
+            chosen.Add(0);
+        }
+
+        using var stream = new MemoryStream();
+        using (var pdf = SKDocument.CreatePdf(stream, new SKDocumentPdfMetadata { Creator = "icono", Producer = "icono" }))
+        {
+            foreach (var index in chosen)
+            {
+                var canvas = pdf.BeginPage(document.Width * PointsPerUnit, document.Height * PointsPerUnit);
+                canvas.Scale(PointsPerUnit);
+                canvas.Translate(0, -document.PageTop(index));
+                // only this page is written, not the drawing of the other pages
+                canvas.ClipRect(SKRect.Create(0, document.PageTop(index), document.Width, document.Height));
+                DocumentRenderer.Render(canvas, document, document.Width, document.Height, null, forExport: true, includeBackground);
+                pdf.EndPage();
+            }
+
+            pdf.Close();
         }
 
         return stream.ToArray();

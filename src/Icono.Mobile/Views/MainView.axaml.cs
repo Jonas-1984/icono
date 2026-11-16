@@ -150,23 +150,17 @@ public partial class MainView : UserControl
 
     private async void OnOpen(object? sender, RoutedEventArgs e)
     {
-        if (!await ConfirmLosingChangesAsync() || Storage() is not { } storage)
+        if (!await ConfirmLosingChangesAsync())
         {
             return;
         }
 
-        var files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            Title = "Open an icono drawing",
-            AllowMultiple = false,
-            FileTypeFilter = [IconoFiles],
-        });
-        if (files.Count == 0)
+        // icono's own file window (with Cancel); the Android one only for "Other location..."
+        if (await AskOpenFileAsync() is not { } picked)
         {
             return;
         }
 
-        var picked = files[0];
         try
         {
             StatusText.Text = "Opening " + picked.Name + " ...";
@@ -197,20 +191,13 @@ public partial class MainView : UserControl
         var target = saveAs ? null : _file;
         if (target is null)
         {
-            if (Storage() is not { } storage)
-            {
-                return false;
-            }
-
+            // icono's own file window (with Cancel); the Android one only for "Other location..."
             var suggested = Path.GetFileNameWithoutExtension(_name);
-            target = await storage.SaveFilePickerAsync(new FilePickerSaveOptions
-            {
-                Title = "Save the icono drawing",
-                SuggestedFileName = (string.IsNullOrWhiteSpace(suggested) ? "Untitled" : suggested) + DocumentFile.Extension,
-                DefaultExtension = DocumentFile.Extension.TrimStart('.'),
-                FileTypeChoices = [new FilePickerFileType("icono drawing") { Patterns = ["*.icn"], MimeTypes = ["application/octet-stream"] }],
-                ShowOverwritePrompt = true,
-            });
+            target = await AskSaveFileAsync(
+                saveAs ? "Save the drawing as" : "Save the drawing",
+                string.IsNullOrWhiteSpace(suggested) ? "Untitled" : suggested,
+                DocumentFile.Extension,
+                new FilePickerFileType("icono drawing") { Patterns = ["*.icn"], MimeTypes = ["application/octet-stream"] });
             if (target is null)
             {
                 return false;
@@ -289,6 +276,20 @@ public partial class MainView : UserControl
         {
             e.Handled = true;
             CloseAbout();
+            return;
+        }
+
+        if (ExportLayer.IsVisible)
+        {
+            e.Handled = true;
+            ExportLayer.IsVisible = false;
+            return;
+        }
+
+        if (IsFilesOpen)
+        {
+            e.Handled = true;
+            CloseFiles(null);
             return;
         }
 

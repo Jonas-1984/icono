@@ -1,0 +1,174 @@
+using Avalonia.Controls;
+using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
+using Icono.Rendering;
+
+namespace Icono.Mobile.Views;
+
+/// <summary>Export: the drawing as a PDF (every page at its real paper size, in vectors - printed at 100 % it keeps the drawing scale) or as a
+/// PNG picture (one page, or all pages below each other), saved to a file or shared with another app. The files are made by the shared
+/// <see cref="DocumentExporter"/>.</summary>
+public partial class MainView
+{
+    /// <summary>The longest side a PNG may have (a picture of all pages at 300 dpi would need hundreds of megabytes).</summary>
+    private const int MaxPngSide = 12000;
+
+    private bool _exportPdf = true;
+    private bool _exportAllPages;
+    private int _exportDpi = 150;
+
+    private void OnExport(object? sender, RoutedEventArgs e)
+    {
+        _exportAllPages = _context.Document.PageCount > 1 && _exportAllPages;
+        ExportShareButton.IsVisible = Sharing.ShareFile is not null;
+        UpdateExport();
+        ExportLayer.IsVisible = true;
+    }
+
+    private void UpdateExport()
+    {
+        var document = _context.Document;
+        var page = _context.CurrentPage;
+        var several = document.PageCount > 1;
+        if (!several)
+        {
+            _exportAllPages = false;
+        }
+
+        ExportPdfButton.Classes.Set("on", _exportPdf);
+        ExportPngButton.Classes.Set("on", !_exportPdf);
+        ExportCurrentButton.Content = several ? $"Page {page + 1}" : "The page";
+        ExportAllButton.Content = $"All {document.PageCount} pages";
+        ExportAllButton.IsVisible = several;
+        ExportCurrentButton.Classes.Set("on", !_exportAllPages);
+        ExportAllButton.Classes.Set("on", _exportAllPages);
+        ExportResolutionPanel.IsVisible = !_exportPdf;
+        ExportDpi96.Classes.Set("on", _exportDpi == 96);
+        ExportDpi150.Classes.Set("on", _exportDpi == 150);
+        ExportDpi300.Classes.Set("on", _exportDpi == 300);
+
+        var mm = (Width: document.Width / 96.0 * 25.4, Height: document.Height / 96.0 * 25.4);
+        if (_exportPdf)
+        {
+            var pages = _exportAllPages ? document.PageCount : 1;
+            ExportInfo.Text = $"{pages} PDF page(s) of {mm.Width:0} x {mm.Height:0} mm. Printed at 100 % (no \"fit to page\") the drawing keeps " +
+                              $"its scale 1:{document.ScaleDenominator:0.##}.";
+        }
+        else
+        {
+            var (width, height) = PngSize();
+            ExportInfo.Text = $"A picture of {width} x {height} pixels" +
+                              (_exportAllPages ? " with all pages below each other." : ".") +
+                              (Math.Max(width, height) >= MaxPngSide ? " (limited - choose a lower resolution or one page for a sharper picture)" : "");
+        }
+    }
+
+    private (int Width, int Height) PngSize()
+    {
+        var (width, height) = DocumentExporter.Extent(_context.Document, _exportAllPages ? null : _context.CurrentPage);
+        var scale = Math.Min(_exportDpi / 96.0, MaxPngSide / (double)Math.Max(width, height));
+        return ((int)Math.Round(width * scale), (int)Math.Round(height * scale));
+    }
+
+    private void OnExportPdf(object? sender, RoutedEventArgs e) => SetExport(() => _exportPdf = true);
+
+    private void OnExportPng(object? sender, RoutedEventArgs e) => SetExport(() => _exportPdf = false);
+
+    private void OnExportCurrentPage(object? sender, RoutedEventArgs e) => SetExport(() => _exportAllPages = false);
+
+    private void OnExportAllPages(object? sender, RoutedEventArgs e) => SetExport(() => _exportAllPages = true);
+
+    private void OnExportDpi(object? sender, RoutedEventArgs e) =>
+        SetExport(() => _exportDpi = sender is Button { Tag: string tag } && int.TryParse(tag, out var dpi) ? dpi : 150);
+
+    private void SetExport(Action change)
+    {
+        change();
+        UpdateExport();
+    }
+
+    private void OnExportCancel(object? sender, RoutedEventArgs e) => ExportLayer.IsVisible = false;
+
+    /// <summary>The file to write: its name, MIME type and content (made off the UI thread).</summary>
+    private async Task<(string Name, string Mime, byte[] Content)> MakeExportAsync()
+    {
+        var document = _context.Document;
+        var background = ExportBackground.IsChecked == true;
+        var page = _context.CurrentPage;
+        var allPages = _exportAllPages;
+        var baseName = Path.GetFileNameWithoutExtension(_name);
+        if (string.IsNullOrWhiteSpace(baseName))
+        {
+            baseName = "Drawing";
+        }
+
+        var pageSuffix = allPages || document.PageCount == 1 ? "" : $"-page{page + 1}";
+        if (_exportPdf)
+        {
+            var pdf = await Task.Run(() => DocumentExporter.RenderPdf(document, background, allPages ? null : [page]));
+            return (baseName + pageSuffix + ".pdf", "application/pdf", pdf);
+        }
+
+        var (width, height) = PngSize();
+        var png = await Task.Run(() => DocumentExporter.RenderPng(document, Math.Max(width, height), background, allPages ? null : page));
+        return (baseName + pageSuffix + ".png", "image/png", png);
+    }
+
+    private async void OnExportSave(object? sender, RoutedEventArgs e)
+    {
+        ExportLayer.IsVisible = false;
+        StatusText.Text = "Exporting ...";
+        try
+        {
+            var (name, mime, content) = await MakeExportAsync();
+
+            // icono's own file window (with Cancel); the Android one only for "Other location..."
+            var target = await AskSaveFileAsync(
+                _exportPdf ? "Save the PDF" : "Save the picture",
+                Path.GetFileNameWithoutExtension(name),
+                Path.GetExtension(name),
+                new FilePickerFileType(_exportPdf ? "PDF document" : "PNG picture") { Patterns = ["*" + Path.GetExtension(name)], MimeTypes = [mime] });
+            if (target is null)
+            {
+                StatusText.Text = "Export cancelled.";
+                return;
+            }
+
+            await using (var stream = await target.OpenWriteAsync())
+            {
+                if (stream.CanSeek)
+                {
+                    stream.SetLength(0);
+                }
+
+                await stream.WriteAsync(content);
+            }
+
+            StatusText.Text = $"Exported: {target.Name} ({content.Length / 1024.0:0} KB)";
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            StatusText.Text = "The export could not be saved: " + ex.Message;
+        }
+    }
+
+    private async void OnExportShare(object? sender, RoutedEventArgs e)
+    {
+        if (Sharing.ShareFile is not { } share)
+        {
+            return;
+        }
+
+        ExportLayer.IsVisible = false;
+        StatusText.Text = "Exporting ...";
+        try
+        {
+            var (name, mime, content) = await MakeExportAsync();
+            StatusText.Text = await share(name, mime, content) ? $"Shared: {name}" : "Sharing is not possible on this device - use Save.";
+        }
+        catch (Exception ex) when (ex is IOException or InvalidOperationException)
+        {
+            StatusText.Text = "The export could not be made: " + ex.Message;
+        }
+    }
+}

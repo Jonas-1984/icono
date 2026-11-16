@@ -24,6 +24,7 @@
                         <Button Classes="tool" Content="Open" Click="OnOpen" />
                         <Button Classes="tool" Content="Save" Click="OnSave" />
                         <Button Classes="tool" Content="Save as" Click="OnSaveAs" />
+                        <Button Classes="tool" Content="Export" Click="OnExport" />
                         <Border Classes="separator" />
                         <Button Classes="tool" x:Name="UndoButton" Content="Undo" Click="OnUndo" />
                         <Button Classes="tool" x:Name="RedoButton" Content="Redo" Click="OnRedo" />
@@ -84,6 +85,83 @@
                 </Grid>
             </Border>
         </Grid>
+
+        <!-- icono's own file window (MainView.Files.cs): the drawings of the chosen folder, a name to save under, and always a Cancel -->
+        <Border x:Name="FilesLayer" IsVisible="False" Background="#99000000">
+            <Border Background="{StaticResource ToolbarBackgroundBrush}" CornerRadius="14" Padding="20,16" Width="640" Margin="0,40"
+                    HorizontalAlignment="Center" VerticalAlignment="Top" BorderBrush="{StaticResource RaisedPressedBrush}" BorderThickness="1">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Spacing="8">
+                        <TextBlock x:Name="FilesTitle" FontSize="17" FontWeight="SemiBold" Foreground="{StaticResource ForegroundTextBrush}" />
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock x:Name="FilesFolderText" VerticalAlignment="Center" FontSize="12.5" TextTrimming="CharacterEllipsis"
+                                       Foreground="{StaticResource MutedTextBrush}" />
+                            <Button Grid.Column="1" Classes="tool" x:Name="FilesFolderButton" Content="Choose folder..." Click="OnFilesChooseFolder" />
+                        </Grid>
+                        <Grid x:Name="FilesNameRow" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                            <TextBlock Text="Name" VerticalAlignment="Center" FontSize="13" Foreground="{StaticResource ForegroundTextBrush}" />
+                            <TextBox Grid.Column="1" x:Name="FilesNameBox" FontSize="14" MinHeight="36" />
+                            <TextBlock Grid.Column="2" x:Name="FilesExtensionText" VerticalAlignment="Center" FontSize="13"
+                                       Foreground="{StaticResource MutedTextBrush}" />
+                        </Grid>
+                        <TextBlock x:Name="FilesNote" FontSize="12" TextWrapping="Wrap" Foreground="{StaticResource MutedTextBrush}" />
+                    </StackPanel>
+
+                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                        <Button Classes="tool" Content="Other location..." Click="OnFilesOtherLocation" />
+                        <Button Classes="tool" Content="Cancel" Click="OnFilesCancel" />
+                        <Button Classes="tool primary" x:Name="FilesActionButton" Content="Save" Click="OnFilesAction" />
+                    </StackPanel>
+
+                    <Border Background="{StaticResource PanelBackgroundBrush}" CornerRadius="10" Margin="0,8,0,0" MaxHeight="420">
+                        <ScrollViewer>
+                            <StackPanel x:Name="FilesList" Margin="6" Spacing="2" />
+                        </ScrollViewer>
+                    </Border>
+                </DockPanel>
+            </Border>
+        </Border>
+
+        <!-- Export as PDF or PNG, saved or shared (MainView.Export.cs) -->
+        <Border x:Name="ExportLayer" IsVisible="False" Background="#99000000">
+            <Border Background="{StaticResource ToolbarBackgroundBrush}" CornerRadius="14" Padding="22,18" Width="460"
+                    HorizontalAlignment="Center" VerticalAlignment="Center" BorderBrush="{StaticResource RaisedPressedBrush}" BorderThickness="1">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Export" FontSize="17" FontWeight="SemiBold" Foreground="{StaticResource ForegroundTextBrush}" />
+
+                    <TextBlock Text="FORMAT" FontSize="10.5" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}" />
+                    <UniformGrid Columns="2">
+                        <Button Classes="tool" x:Name="ExportPdfButton" Content="PDF (real size, vectors)" HorizontalAlignment="Stretch" Click="OnExportPdf" />
+                        <Button Classes="tool" x:Name="ExportPngButton" Content="PNG (image)" HorizontalAlignment="Stretch" Click="OnExportPng" />
+                    </UniformGrid>
+
+                    <TextBlock Text="PAGES" FontSize="10.5" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}" />
+                    <UniformGrid Columns="2">
+                        <Button Classes="tool" x:Name="ExportCurrentButton" HorizontalAlignment="Stretch" Click="OnExportCurrentPage" />
+                        <Button Classes="tool" x:Name="ExportAllButton" HorizontalAlignment="Stretch" Click="OnExportAllPages" />
+                    </UniformGrid>
+
+                    <StackPanel x:Name="ExportResolutionPanel" Spacing="10">
+                        <TextBlock Text="RESOLUTION" FontSize="10.5" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}" />
+                        <UniformGrid Columns="3">
+                            <Button Classes="tool" x:Name="ExportDpi96" Content="96 dpi" HorizontalAlignment="Stretch" Click="OnExportDpi" Tag="96" />
+                            <Button Classes="tool" x:Name="ExportDpi150" Content="150 dpi" HorizontalAlignment="Stretch" Click="OnExportDpi" Tag="150" />
+                            <Button Classes="tool" x:Name="ExportDpi300" Content="300 dpi" HorizontalAlignment="Stretch" Click="OnExportDpi" Tag="300" />
+                        </UniformGrid>
+                    </StackPanel>
+
+                    <CheckBox x:Name="ExportBackground" Content="With the page background" IsChecked="True" FontSize="13"
+                              Foreground="{StaticResource ForegroundTextBrush}" />
+                    <TextBlock x:Name="ExportInfo" FontSize="12" TextWrapping="Wrap" Foreground="{StaticResource MutedTextBrush}" />
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,6,0,0">
+                        <Button Classes="tool" Content="Cancel" Click="OnExportCancel" />
+                        <Button Classes="tool" x:Name="ExportSaveButton" Content="Save..." Click="OnExportSave" />
+                        <Button Classes="tool primary" x:Name="ExportShareButton" Content="Share..." Click="OnExportShare" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Border>
 
         <!-- About (tap the logo): version, test terms, privacy, licences (MainView.About.cs) -->
         <Border x:Name="AboutLayer" IsVisible="False" Background="#99000000">

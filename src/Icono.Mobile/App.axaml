@@ -14,6 +14,15 @@
         <SolidColorBrush x:Key="AccentBrush" Color="#FF5AB0FF" />
         <SolidColorBrush x:Key="RaisedBrush" Color="#FF1C2029" />
         <SolidColorBrush x:Key="RaisedPressedBrush" Color="#FF262B36" />
+
+        <!-- the accent of check boxes, sliders, focus marks ...: icono blue, not the device's accent colour (red on Xiaomi) -->
+        <Color x:Key="SystemAccentColor">#FF5AB0FF</Color>
+        <Color x:Key="SystemAccentColorDark1">#FF4A9BE6</Color>
+        <Color x:Key="SystemAccentColorDark2">#FF3B86CC</Color>
+        <Color x:Key="SystemAccentColorDark3">#FF2C6CB0</Color>
+        <Color x:Key="SystemAccentColorLight1">#FF7BC0FF</Color>
+        <Color x:Key="SystemAccentColorLight2">#FF9ED2FF</Color>
+        <Color x:Key="SystemAccentColorLight3">#FFC2E2FF</Color>
     </Application.Resources>
 
     <Application.Styles>
