@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
 using Icono.Core;
 
-namespace Icono.App.State.Undo;
+namespace Icono.Editor.Undo;
 
 /// <summary>
 /// One flexible <see cref="IUndoableAction"/> driven by Undo/Redo delegates, plus static

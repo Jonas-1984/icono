@@ -20,6 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Icono.Rendering\Icono.Rendering.csproj" />
     <ProjectReference Include="..\Icono.IO\Icono.IO.csproj" />
+    <ProjectReference Include="..\Icono.Editor\Icono.Editor.csproj" />
   </ItemGroup>
 
   <ItemGroup>

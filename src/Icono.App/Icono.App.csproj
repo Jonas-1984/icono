@@ -4,6 +4,13 @@
     <ProjectReference Include="..\Icono.Rendering\Icono.Rendering.csproj" />
     <ProjectReference Include="..\Icono.Core\Icono.Core.csproj" />
     <ProjectReference Include="..\Icono.IO\Icono.IO.csproj" />
+    <ProjectReference Include="..\Icono.Editor\Icono.Editor.csproj" />
+  </ItemGroup>
+
+  <!-- EditorContext, PageUnit and the undo classes live in Icono.Editor (shared with the tablet app) -->
+  <ItemGroup>
+    <Using Include="Icono.Editor" />
+    <Using Include="Icono.Editor.Undo" />
   </ItemGroup>
 
   <ItemGroup>

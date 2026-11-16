@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace Icono.App.State;
+namespace Icono.Editor;
 
 /// <summary>The unit the page is measured in (CANVAS SIZE card): the page size and the main grid are shown and typed in it. Values stay stored in px.</summary>
 public enum PageUnit

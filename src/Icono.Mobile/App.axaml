@@ -34,5 +34,20 @@
         <Style Selector="Button.tool:pressed /template/ ContentPresenter">
             <Setter Property="Background" Value="{StaticResource RaisedPressedBrush}" />
         </Style>
+        <Style Selector="Button.tool:disabled /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource ToolbarBackgroundBrush}" />
+            <Setter Property="Foreground" Value="#FF4A5263" />
+        </Style>
+        <Style Selector="Button.accent">
+            <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+            <Setter Property="Foreground" Value="#FF06070A" />
+        </Style>
+
+        <!-- thin line between groups of toolbar buttons -->
+        <Style Selector="Border.separator">
+            <Setter Property="Width" Value="1" />
+            <Setter Property="Margin" Value="8,6" />
+            <Setter Property="Background" Value="{StaticResource RaisedPressedBrush}" />
+        </Style>
     </Application.Styles>
 </Application>

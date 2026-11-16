@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The editing state shared by the Windows program (Icono.App) and the tablet app (Icono.Mobile): the document, the selection,
+       undo / redo and the editing commands (delete, duplicate, group, align, walls ...). No user-interface code in here. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Icono.Core\Icono.Core.csproj" />
+    <ProjectReference Include="..\Icono.Rendering\Icono.Rendering.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -5,7 +5,7 @@ using System.Windows.Input;
 namespace Icono.App.Views;
 
 /// <summary>Modal dialog prompting for the signed offset distance used by
-/// <see cref="Icono.App.State.EditorContext.OffsetSelection"/> — see <see cref="Icono.Rendering.PathOffsetter"/>
+/// <see cref="Icono.Editor.EditorContext.OffsetSelection"/> — see <see cref="Icono.Rendering.PathOffsetter"/>
 /// for the actual geometry.</summary>
 public partial class OffsetDialog : ThemedDialogWindow
 {

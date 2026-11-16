@@ -1,4 +1,4 @@
-namespace Icono.App.State.Undo;
+namespace Icono.Editor.Undo;
 
 /// <summary>One user gesture that can be reverted and reapplied.</summary>
 public interface IUndoableAction

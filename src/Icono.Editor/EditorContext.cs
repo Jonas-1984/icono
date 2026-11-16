@@ -1,9 +1,9 @@
 using System.Collections.ObjectModel;
-using Icono.App.State.Undo;
+using Icono.Editor.Undo;
 using Icono.Core;
 using Icono.Rendering;
 
-namespace Icono.App.State;
+namespace Icono.Editor;
 
 public enum ActiveTool
 {

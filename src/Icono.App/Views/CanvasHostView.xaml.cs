@@ -4,7 +4,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using Icono.App.State;
-using Icono.App.State.Undo;
+using Icono.Editor.Undo;
 using Icono.Core;
 using Icono.Rendering;
 using SkiaSharp;
@@ -2136,93 +2136,9 @@ public partial class CanvasHostView : UserControl
         return layer?.Locked ?? false;
     }
 
-    private (Shape Shape, Layer Layer)? HitTestShape(Point point)
-    {
-        if (_context is null)
-        {
-            return null;
-        }
-
-        // Front-to-back: index 0 = front-most, in both layer and shape lists.
-        foreach (var layer in _context.Document.Layers)
-        {
-            if (!layer.Visible)
-            {
-                continue;
-            }
-
-            foreach (var shape in layer.Shapes)
-            {
-                if (shape.Kind == ShapeKind.DesignGrid)
-                {
-                    // The cell lookup undoes rotation and flips, so a rotated grid is hit exactly where it is drawn.
-                    if (DesignGridMath.TryGetCell(shape, point.X, point.Y, out _, out _))
-                    {
-                        return (shape, layer);
-                    }
-
-                    continue;
-                }
-
-                if (shape.Kind == ShapeKind.Dimension)
-                {
-                    // Only its lines, arrowheads and the written value count - not the empty area between them.
-                    if (DimensionRenderer.HitTest(shape, point.X, point.Y, 4 / Zoom))
-                    {
-                        return (shape, layer);
-                    }
-
-                    continue;
-                }
-
-                if (shape.Freehand)
-                {
-                    // a stroke written by hand is picked where it is drawn, not anywhere in its frame
-                    if (FreehandBuilder.HitTest(shape, point.X, point.Y, 5 / Zoom))
-                    {
-                        return (shape, layer);
-                    }
-
-                    continue;
-                }
-
-                if (shape.Kind == ShapeKind.Wall)
-                {
-                    // A wall is hit on its band (not on the empty inside of a room or the corner of its bounding box).
-                    var spot = WallEditor.Nearest(shape, point.X, point.Y, 0);
-                    if (spot is { } onWall && onWall.Distance <= shape.WallThickness / 2 + 3 / Zoom)
-                    {
-                        return (shape, layer);
-                    }
-
-                    continue;
-                }
-
-                if (ArchitecturalSymbols.IsSymbol(shape.Kind))
-                {
-                    // a door or window is thin and often turned: it is hit where it is drawn, a few pixels around it included
-                    if (ArchitecturalSymbols.HitTest(shape, point.X, point.Y, 5 / Zoom))
-                    {
-                        return (shape, layer);
-                    }
-
-                    continue;
-                }
-
-                // a turned shape is hit in its own (unturned) frame
-                var local = shape.Rotation == 0 ? point : RotateAroundCenter(point, new Point(shape.X + shape.Width / 2, shape.Y + shape.Height / 2), -shape.Rotation);
-                if (local.X < shape.X || local.X > shape.X + shape.Width ||
-                    local.Y < shape.Y || local.Y > shape.Y + shape.Height)
-                {
-                    continue;
-                }
-
-                return (shape, layer);
-            }
-        }
-
-        return null;
-    }
+    /// <summary>The front-most object under a document point (rules shared with the tablet app: <see cref="ShapeHitTester"/>).</summary>
+    private (Shape Shape, Layer Layer)? HitTestShape(Point point) =>
+        _context is null ? null : ShapeHitTester.Find(_context.Document, point.X, point.Y, Zoom);
 
     // ----- Design Grid painting (bucket tool) ----------------------------------------------------
 

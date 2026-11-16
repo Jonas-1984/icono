@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace Icono.App.State.Undo;
+namespace Icono.Editor.Undo;
 
 /// <summary>Owns the undo/redo stacks for the active document. One instance per <see cref="EditorContext"/>.</summary>
 public sealed class UndoManager : INotifyPropertyChanged

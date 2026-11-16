@@ -6,7 +6,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using Icono.App.State;
-using Icono.App.State.Undo;
+using Icono.Editor.Undo;
 using Icono.App.Views;
 using Icono.Core;
 

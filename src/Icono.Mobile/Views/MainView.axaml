@@ -3,39 +3,65 @@
              xmlns:views="using:Icono.Mobile.Views"
              x:Class="Icono.Mobile.Views.MainView"
              Background="{StaticResource CanvasSurroundBrush}">
-    <Grid RowDefinitions="Auto,*,Auto">
+    <Grid>
+        <Grid RowDefinitions="Auto,*,Auto">
 
-        <!-- top bar -->
-        <Border Grid.Row="0" Background="{StaticResource ToolbarBackgroundBrush}" Padding="12,8"
-                BorderBrush="{StaticResource BorderLineBrush}" BorderThickness="0,0,0,1">
-            <Grid ColumnDefinitions="Auto,*,Auto">
-                <!-- the logo on a light plate, like the app icon: its fine blue lines get lost on the dark bar -->
-                <Border Grid.Column="0" Background="#FFF1F5FB" CornerRadius="10" Padding="10,5" Margin="0,0,16,0" VerticalAlignment="Center">
-                    <Image Source="avares://Icono.Mobile/Assets/icono.png" Height="34" RenderOptions.BitmapInterpolationMode="HighQuality" />
-                </Border>
+            <!-- top bar -->
+            <Border Grid.Row="0" Background="{StaticResource ToolbarBackgroundBrush}" Padding="12,8"
+                    BorderBrush="{StaticResource BorderLineBrush}" BorderThickness="0,0,0,1">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <!-- the logo on a light plate, like the app icon: its fine blue lines get lost on the dark bar -->
+                    <Border Grid.Column="0" Background="#FFF1F5FB" CornerRadius="10" Padding="10,5" Margin="0,0,16,0" VerticalAlignment="Center">
+                        <Image Source="avares://Icono.Mobile/Assets/icono.png" Height="34" RenderOptions.BitmapInterpolationMode="HighQuality" />
+                    </Border>
 
-                <TextBlock Grid.Column="1" x:Name="TitleText" VerticalAlignment="Center" FontSize="17"
-                           Foreground="{StaticResource ForegroundTextBrush}" TextTrimming="CharacterEllipsis" Text="Untitled" />
+                    <TextBlock Grid.Column="1" x:Name="TitleText" VerticalAlignment="Center" FontSize="17"
+                               Foreground="{StaticResource ForegroundTextBrush}" TextTrimming="CharacterEllipsis" Text="Untitled" />
 
-                <StackPanel Grid.Column="2" Orientation="Horizontal">
-                    <Button Classes="tool" Content="New" Click="OnNew" />
-                    <Button Classes="tool" Content="Open" Click="OnOpen" />
-                    <Button Classes="tool" Content="Fit" Click="OnFit" />
+                    <StackPanel Grid.Column="2" Orientation="Horizontal">
+                        <Button Classes="tool" Content="New" Click="OnNew" />
+                        <Button Classes="tool" Content="Open" Click="OnOpen" />
+                        <Button Classes="tool" Content="Save" Click="OnSave" />
+                        <Button Classes="tool" Content="Save as" Click="OnSaveAs" />
+                        <Border Classes="separator" />
+                        <Button Classes="tool" x:Name="UndoButton" Content="Undo" Click="OnUndo" />
+                        <Button Classes="tool" x:Name="RedoButton" Content="Redo" Click="OnRedo" />
+                        <Border Classes="separator" />
+                        <Button Classes="tool" x:Name="DuplicateButton" Content="Duplicate" Click="OnDuplicate" />
+                        <Button Classes="tool" x:Name="DeleteButton" Content="Delete" Click="OnDelete" />
+                        <Border Classes="separator" />
+                        <Button Classes="tool" Content="Fit" Click="OnFit" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- the drawing -->
+            <views:DocumentCanvas Grid.Row="1" x:Name="Canvas" ClipToBounds="True" />
+
+            <!-- status line -->
+            <Border Grid.Row="2" Background="{StaticResource PanelBackgroundBrush}" Padding="16,6">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0" x:Name="StatusText" FontSize="14" Foreground="{StaticResource MutedTextBrush}"
+                               TextTrimming="CharacterEllipsis" />
+                    <TextBlock Grid.Column="1" x:Name="ZoomText" FontSize="14" Foreground="{StaticResource ForegroundTextBrush}" Text="100 %" />
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- question in front of everything (unsaved changes) -->
+        <Border x:Name="QuestionLayer" IsVisible="False" Background="#99000000">
+            <Border Background="{StaticResource ToolbarBackgroundBrush}" CornerRadius="16" Padding="28,24" MaxWidth="560"
+                    HorizontalAlignment="Center" VerticalAlignment="Center" BorderBrush="{StaticResource RaisedPressedBrush}" BorderThickness="1">
+                <StackPanel Spacing="20">
+                    <TextBlock x:Name="QuestionTitle" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource ForegroundTextBrush}" />
+                    <TextBlock x:Name="QuestionText" FontSize="16" TextWrapping="Wrap" Foreground="{StaticResource MutedTextBrush}" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Classes="tool" Content="Cancel" Click="OnQuestionCancel" />
+                        <Button Classes="tool" Content="Don't save" Click="OnQuestionDiscard" />
+                        <Button Classes="tool accent" Content="Save" Click="OnQuestionSave" />
+                    </StackPanel>
                 </StackPanel>
-            </Grid>
-        </Border>
-
-        <!-- the drawing -->
-        <views:DocumentCanvas Grid.Row="1" x:Name="Canvas" ClipToBounds="True" />
-
-        <!-- status line -->
-        <Border Grid.Row="2" Background="{StaticResource PanelBackgroundBrush}" Padding="16,6">
-            <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Grid.Column="0" x:Name="StatusText" FontSize="14" Foreground="{StaticResource MutedTextBrush}"
-                           TextTrimming="CharacterEllipsis"
-                           Text="Two fingers: zoom and move · one finger: move · double tap: fit page" />
-                <TextBlock Grid.Column="1" x:Name="ZoomText" FontSize="14" Foreground="{StaticResource ForegroundTextBrush}" Text="100 %" />
-            </Grid>
+            </Border>
         </Border>
     </Grid>
 </UserControl>
