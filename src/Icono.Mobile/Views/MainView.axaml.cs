@@ -278,7 +278,7 @@ public partial class MainView : UserControl
     /// <summary>The Android back button closes the app: with unsaved changes it asks first.</summary>
     private async void OnBackRequested(object? sender, RoutedEventArgs e)
     {
-        if (_textRequest is not null)
+        if (IsTextOpen)
         {
             e.Handled = true;
             CloseText();

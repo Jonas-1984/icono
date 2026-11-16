@@ -71,6 +71,11 @@
             <Setter Property="Foreground" Value="{StaticResource ForegroundTextBrush}" />
         </Style>
 
+        <!-- small icon buttons (layer list): no grey box when they cannot be used, they only fade -->
+        <Style Selector="Button.icon:disabled /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+
         <!-- thin line between groups of toolbar buttons -->
         <Style Selector="Border.separator">
             <Setter Property="Width" Value="1" />

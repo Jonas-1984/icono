@@ -3087,10 +3087,7 @@ public partial class PropertiesPanelView : UserControl
             return;
         }
 
-        var layer = new Layer { Name = $"Layer {_context.Document.Layers.Count + 1}" };
-        _context.Document.Layers.Insert(0, layer);
-        _context.UndoManager.Push(UndoableAction.ForLayerInsert(_context.Document.Layers, layer, 0));
-        _context.SelectedLayer = layer;
+        _context.AddLayer(); // shared with the tablet app
         LayerList.SelectedIndex = 0;
     }
 
@@ -3136,26 +3133,10 @@ public partial class PropertiesPanelView : UserControl
 
     private void MoveLayer(object sender, int delta)
     {
-        if (_context is null || sender is not Button { Tag: Layer layer })
+        if (_context is not null && sender is Button { Tag: Layer layer })
         {
-            return;
+            _context.MoveLayer(layer, delta); // shared with the tablet app
         }
-
-        var index = _context.Document.Layers.IndexOf(layer);
-        if (index < 0)
-        {
-            return;
-        }
-
-        var newIndex = Math.Clamp(index + delta, 0, _context.Document.Layers.Count - 1);
-        if (newIndex == index)
-        {
-            return;
-        }
-
-        _context.Document.Layers.Move(index, newIndex);
-        _context.UndoManager.Push(UndoableAction.ForMove(_context.Document.Layers, index, newIndex));
-        _context.RequestRedraw();
     }
 
     private void ShapeForward_OnClick(object sender, RoutedEventArgs e) => MoveShape(sender, -1);

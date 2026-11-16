@@ -29,7 +29,7 @@ public enum ActiveTool
 /// canvas, and Design panel. Plain object, no DI/MVVM framework: matches this project's
 /// existing non-MVVM code-behind style.
 /// </summary>
-public sealed class EditorContext : ObservableObject
+public sealed partial class EditorContext : ObservableObject
 {
     private ActiveTool _activeTool = ActiveTool.Select;
     private ShapeKind _selectedShapeKind = ShapeKind.Rectangle;

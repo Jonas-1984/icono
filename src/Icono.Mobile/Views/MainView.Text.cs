@@ -10,34 +10,55 @@ namespace Icono.Mobile.Views;
 /// (<see cref="TextEditing"/>): an empty text object is removed, an empty shape text taken away.</summary>
 public partial class MainView
 {
-    private TextRequest? _textRequest;
+    /// <summary>What OK does with the typed text (null while the text box is closed).</summary>
+    private Action<string?>? _textCommit;
+
+    private bool IsTextOpen => _textCommit is not null;
 
     private void SetUpText()
     {
         Canvas.TextRequested += (_, request) => OpenText(request);
         Properties.EditTextRequested += (_, shape) =>
             OpenText(new TextRequest(shape, _context.Document.Layers.FirstOrDefault(l => l.Shapes.Contains(shape)), shape.X, shape.Y));
+        Properties.RenameLayerRequested += (_, layer) =>
+            OpenTextBox("Layer name", "", layer.Name, multiline: false, name => _context.RenameLayer(layer, name));
         TextEntry.KeyDown += OnTextKeyDown;
     }
 
     private void OpenText(TextRequest request)
     {
-        _textRequest = request;
         var isLabel = request.Shape is { Kind: not ShapeKind.Text };
-
-        TextTitle.Text = request.Shape switch
+        var title = request.Shape switch
         {
             null => "New text",
             { Kind: ShapeKind.Text } => "Text",
             _ => "Text in the shape",
         };
-        TextNote.Text = isLabel
-            ? "A new line with Enter. Leave it empty to take the text away."
-            : "Leave it empty to remove the text.";
+        var note = isLabel ? "A new line with Enter. Leave it empty to take the text away." : "Leave it empty to remove the text.";
 
         // a text object is one line (as on Windows), the text in a shape may have several
-        TextEntry.AcceptsReturn = isLabel;
-        TextEntry.Text = request.Shape?.TextContent ?? string.Empty;
+        OpenTextBox(title, note, request.Shape?.TextContent ?? string.Empty, multiline: isLabel, text =>
+        {
+            if (request.Shape is { Kind: not ShapeKind.Text } shape)
+            {
+                TextEditing.CommitLabel(_context, shape, text);
+            }
+            else
+            {
+                TextEditing.CommitTextObject(_context, request.Shape, request.Layer, request.X, request.Y, text);
+            }
+        });
+    }
+
+    /// <summary>Asks for a text at the top of the screen (the keyboard comes up); OK hands it to <paramref name="commit"/>.</summary>
+    private void OpenTextBox(string title, string note, string text, bool multiline, Action<string?> commit)
+    {
+        _textCommit = commit;
+        TextTitle.Text = title;
+        TextNote.Text = note;
+        TextNote.IsVisible = note.Length > 0;
+        TextEntry.AcceptsReturn = multiline;
+        TextEntry.Text = text;
         TextLayer.IsVisible = true;
 
         // focus after the layer is shown, so Android brings up the keyboard
@@ -50,29 +71,21 @@ public partial class MainView
 
     private void CloseText()
     {
-        _textRequest = null;
+        _textCommit = null;
         TextLayer.IsVisible = false;
         Canvas.Focus();
     }
 
     private void OnTextOk(object? sender, RoutedEventArgs e)
     {
-        if (_textRequest is not { } request)
+        if (_textCommit is not { } commit)
         {
             return;
         }
 
         var text = TextEntry.Text;
         CloseText();
-
-        if (request.Shape is { Kind: not ShapeKind.Text } shape)
-        {
-            TextEditing.CommitLabel(_context, shape, text);
-        }
-        else
-        {
-            TextEditing.CommitTextObject(_context, request.Shape, request.Layer, request.X, request.Y, text);
-        }
+        commit(text);
     }
 
     private void OnTextCancel(object? sender, RoutedEventArgs e) => CloseText();

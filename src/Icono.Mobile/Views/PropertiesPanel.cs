@@ -16,7 +16,7 @@ namespace Icono.Mobile.Views;
 /// scale; shapes - fill, line colour and width; walls - thickness, hatch, dimensions; doors and windows - width; dimensions - unit and
 /// decimals; always turn and flip. Every change is one undo step (<see cref="EditorContext.SetOnSelection"/>). Lengths are shown as in reality
 /// (at the drawing scale), line widths as on the paper.</summary>
-public sealed class PropertiesPanel : UserControl
+public sealed partial class PropertiesPanel : UserControl
 {
     private const double PxPerCm = 96 / 2.54;
 
@@ -34,9 +34,26 @@ public sealed class PropertiesPanel : UserControl
     private EditorContext? _context;
     private bool _rebuildQueued;
 
+    /// <summary>Which of the two tabs is shown: the properties of the selection, or the pages and layers of the drawing.</summary>
+    private bool _showLayers;
+
+    private readonly Button _propertiesTab;
+    private readonly Button _layersTab;
+
     public PropertiesPanel()
     {
-        Content = new ScrollViewer { Content = _content, VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto };
+        _propertiesTab = TabButton("Properties", () => ShowTab(layers: false));
+        _layersTab = TabButton("Pages & layers", () => ShowTab(layers: true));
+        var tabs = new UniformGrid { Columns = 2, Margin = new Thickness(8, 8, 8, 0) };
+        tabs.Children.Add(_propertiesTab);
+        tabs.Children.Add(_layersTab);
+
+        var layout = new DockPanel();
+        DockPanel.SetDock(tabs, Dock.Top);
+        layout.Children.Add(tabs);
+        layout.Children.Add(new ScrollViewer { Content = _content, VerticalScrollBarVisibility = ScrollBarVisibility.Auto });
+        Content = layout;
+        ShowTab(layers: false);
     }
 
     public EditorContext? Context
@@ -48,6 +65,9 @@ public sealed class PropertiesPanel : UserControl
             {
                 _context.SelectedShapes.CollectionChanged -= OnChanged;
                 _context.UndoManager.PropertyChanged -= OnChanged;
+                _context.LayersChanged -= OnChanged;
+                _context.PagesChanged -= OnChanged;
+                _context.CurrentPageChanged -= OnChanged;
             }
 
             _context = value;
@@ -55,10 +75,34 @@ public sealed class PropertiesPanel : UserControl
             {
                 _context.SelectedShapes.CollectionChanged += OnChanged;
                 _context.UndoManager.PropertyChanged += OnChanged;
+                _context.LayersChanged += OnChanged;
+                _context.PagesChanged += OnChanged;
+                _context.CurrentPageChanged += OnChanged;
             }
 
             Rebuild();
         }
+    }
+
+    private void OnChanged() => OnChanged(null, EventArgs.Empty);
+
+    private void ShowTab(bool layers)
+    {
+        _showLayers = layers;
+        _propertiesTab.Classes.Set("on", !layers);
+        _layersTab.Classes.Set("on", layers);
+        Rebuild();
+    }
+
+    private Button TabButton(string text, Action click)
+    {
+        var button = new Button
+        {
+            Content = text, FontSize = 12, MinHeight = 32, Margin = new Thickness(2), HorizontalAlignment = HorizontalAlignment.Stretch,
+            HorizontalContentAlignment = HorizontalAlignment.Center, CornerRadius = new CornerRadius(8), Classes = { "tool" },
+        };
+        button.Click += (_, _) => click();
+        return button;
     }
 
     private double Scale => _context?.Document.ScaleDenominator is > 0 and var s ? s : 1;
@@ -91,6 +135,12 @@ public sealed class PropertiesPanel : UserControl
         _content.Children.Clear();
         if (_context is not { } context)
         {
+            return;
+        }
+
+        if (_showLayers)
+        {
+            BuildPagesAndLayers(context);
             return;
         }
 

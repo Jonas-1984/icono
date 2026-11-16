@@ -20,7 +20,17 @@ $sdk = if ($env:ANDROID_HOME) { $env:ANDROID_HOME } else { Join-Path $env:LOCALA
 $adb = Join-Path $sdk 'platform-tools\adb.exe'
 $appId = 'de.bitbins.icono'
 
-dotnet build $project -c $Configuration "-p:AndroidSdkDirectory=$sdk"
+# Sign with the release key when this PC has it, so a development build installs over the test APK (and the other way round) without
+# uninstalling. Without the key the build is signed with the usual debug key.
+$signing = Join-Path $env:USERPROFILE '.icono-signing'
+$keyArgs = @()
+if ((Test-Path (Join-Path $signing 'icono-release.keystore')) -and (Test-Path (Join-Path $signing 'icono-release.pass'))) {
+    $pass = Join-Path $signing 'icono-release.pass'
+    $keyArgs = @('-p:AndroidKeyStore=true', "-p:AndroidSigningKeyStore=$(Join-Path $signing 'icono-release.keystore')",
+        '-p:AndroidSigningKeyAlias=icono', "-p:AndroidSigningStorePass=file:$pass", "-p:AndroidSigningKeyPass=file:$pass")
+}
+
+dotnet build $project -c $Configuration "-p:AndroidSdkDirectory=$sdk" @keyArgs
 if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
 
 $apk = Get-ChildItem (Join-Path $root "src\Icono.Mobile.Android\bin\$Configuration") -Recurse -Filter "$appId-Signed.apk" |

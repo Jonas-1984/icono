@@ -85,12 +85,14 @@ public sealed partial class DocumentCanvas : Control
             if (_context is not null)
             {
                 _context.Invalidated -= OnContextInvalidated;
+                _context.ShowPageRequested -= ShowPage;
             }
 
             _context = value;
             if (_context is not null)
             {
                 _context.Invalidated += OnContextInvalidated;
+                _context.ShowPageRequested += ShowPage;
             }
 
             FitToView();
@@ -99,8 +101,11 @@ public sealed partial class DocumentCanvas : Control
 
     private Document? Document => _context?.Document;
 
-    /// <summary>Zooms so that the whole first page is visible and centres it.</summary>
-    public void FitToView()
+    /// <summary>Zooms so that the whole current page is visible and centres it.</summary>
+    public void FitToView() => ShowPage(_context?.CurrentPage ?? 0);
+
+    /// <summary>Zooms so that the whole page <paramref name="index"/> is visible and centres it.</summary>
+    public void ShowPage(int index)
     {
         var document = Document;
         if (document is null || Bounds.Width <= 0 || Bounds.Height <= 0)
@@ -110,12 +115,13 @@ public sealed partial class DocumentCanvas : Control
         }
 
         _fitPending = false;
+        var top = document.PageTop(Math.Clamp(index, 0, document.PageCount - 1));
         var availableWidth = Math.Max(1, Bounds.Width - 2 * FitMargin);
         var availableHeight = Math.Max(1, Bounds.Height - 2 * FitMargin);
         var zoom = Math.Min(availableWidth / document.Width, availableHeight / document.Height);
         SetView(zoom, new Vector(
             (Bounds.Width - document.Width * zoom) / 2,
-            Math.Max(FitMargin, (Bounds.Height - document.Height * zoom) / 2)));
+            Math.Max(FitMargin, (Bounds.Height - document.Height * zoom) / 2) - top * zoom));
     }
 
     /// <summary>The drawing point under a point of this control.</summary>
@@ -141,6 +147,12 @@ public sealed partial class DocumentCanvas : Control
         _zoom = zoom;
         _offset = offset;
         InvalidateVisual();
+
+        // the page in the middle of the view is the one new objects (rooms, pasted ones) go to
+        if (_context is { } context && Bounds.Height > 0)
+        {
+            context.CurrentPage = context.Document.PageIndexAt(ToDocument(new Point(Bounds.Width / 2, Bounds.Height / 2)).Y);
+        }
         if (changed)
         {
             ZoomChanged?.Invoke(this, EventArgs.Empty);
