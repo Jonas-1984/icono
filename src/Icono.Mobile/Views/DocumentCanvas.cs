@@ -9,6 +9,10 @@ using Icono.Rendering;
 
 namespace Icono.Mobile.Views;
 
+/// <summary>Text to type: <see cref="Shape"/> is null for a new text object at (<see cref="X"/>, <see cref="Y"/>), else the text object or the
+/// shape whose inner text is edited.</summary>
+public sealed record TextRequest(Shape? Shape, Layer? Layer, double X, double Y);
+
 /// <summary>Shows and edits the document of an <see cref="EditorContext"/> with the same renderer as the Windows program.
 /// <list type="bullet">
 /// <item>tap an object: select it (a group as a whole); tap empty paper: select nothing</item>
@@ -41,7 +45,7 @@ public sealed partial class DocumentCanvas : Control
     private Vector _offset;
     private bool _fitPending = true;
 
-    private enum Gesture { None, Pending, Menu, MoveShapes, Resize, GroupResize, Rotate, DragPoint, Place, PathPoint, View }
+    private enum Gesture { None, Pending, Menu, MoveShapes, Resize, GroupResize, Rotate, DragPoint, Place, PathPoint, TextTap, View }
 
     private Gesture _gesture;
 
@@ -263,15 +267,36 @@ public sealed partial class DocumentCanvas : Control
         e.Handled = true;
     }
 
+    /// <summary>Double tap: on a text or a shape that can carry text - type its text (as a double click on Windows); on empty paper - fit the page.</summary>
     private void OnDoubleTapped(object? sender, TappedEventArgs e)
     {
         var document = Document;
+        if (document is null || ToolIsActive)
+        {
+            return;
+        }
+
         var at = ToDocument(e.GetPosition(this));
-        if (document is not null && !ToolIsActive && ShapeHitTester.Find(document, at.X, at.Y, _zoom, FingerReach) is null)
+        if (ShapeHitTester.Find(document, at.X, at.Y, _zoom, FingerReach) is not { } hit)
         {
             FitToView();
+            return;
+        }
+
+        if (!IsLocked(hit.Shape, hit.Layer) && CanEditText(hit.Shape))
+        {
+            Select(hit.Shape, hit.Layer);
+            RequestText(hit.Shape, hit.Layer, hit.Shape.X, hit.Shape.Y);
         }
     }
+
+    /// <summary>True for a text object and for every shape that can carry text inside it.</summary>
+    public static bool CanEditText(Shape shape) => shape.Kind == ShapeKind.Text || ShapeLabel.CanHaveLabel(shape);
+
+    /// <summary>Raised when text should be typed: for a new text object (no shape), a text object or the text inside a shape.</summary>
+    public event EventHandler<TextRequest>? TextRequested;
+
+    private void RequestText(Shape? shape, Layer? layer, double x, double y) => TextRequested?.Invoke(this, new TextRequest(shape, layer, x, y));
 
     private void OnLongPress(object? sender, EventArgs e)
     {
@@ -304,6 +329,11 @@ public sealed partial class DocumentCanvas : Control
             if (_gesture == Gesture.Pending)
             {
                 Tap();
+            }
+            else if (_gesture == Gesture.TextTap)
+            {
+                var at = ToDocument(_pressPoint);
+                RequestText(null, _context?.SelectedLayer ?? Document?.Layers.FirstOrDefault(), at.X, at.Y);
             }
             else if (_gesture is Gesture.Place or Gesture.PathPoint)
             {

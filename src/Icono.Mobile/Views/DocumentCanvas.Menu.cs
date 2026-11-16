@@ -33,6 +33,13 @@ public sealed partial class DocumentCanvas
         if (any)
         {
             var locked = selected.All(s => s.Locked);
+            if (selected.Count == 1 && CanEditText(selected[0]))
+            {
+                var shape = selected[0];
+                Add("Edit text", () => RequestText(shape, LayerOf(shape), shape.X, shape.Y), !locked);
+                Line();
+            }
+
             Add("Cut", context.CutSelection, !locked);
             Add("Copy", context.CopySelection);
             Add("Paste", context.PasteClipboard, context.Clipboard.Count > 0);

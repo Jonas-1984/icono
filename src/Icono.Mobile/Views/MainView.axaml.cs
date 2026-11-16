@@ -48,6 +48,7 @@ public partial class MainView : UserControl
         _context.SelectedShapes.CollectionChanged += (_, _) => UpdateCommands();
 
         BuildTools();
+        SetUpText();
         LoadDocument(DocumentFile.From(NewDocument()), null, "Untitled");
         StatusText.Text = Hint;
     }
@@ -276,6 +277,13 @@ public partial class MainView : UserControl
     /// <summary>The Android back button closes the app: with unsaved changes it asks first.</summary>
     private async void OnBackRequested(object? sender, RoutedEventArgs e)
     {
+        if (_textRequest is not null)
+        {
+            e.Handled = true;
+            CloseText();
+            return;
+        }
+
         if (_question is not null)
         {
             e.Handled = true;

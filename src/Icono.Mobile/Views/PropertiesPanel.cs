@@ -113,7 +113,9 @@ public sealed class PropertiesPanel : UserControl
         var symbols = shapes.Where(s => ArchitecturalSymbols.IsSymbol(s.Kind)).ToList();
         var dimensions = shapes.Where(s => s.Kind == ShapeKind.Dimension).ToList();
         var filled = shapes.Where(HasFill).ToList();
-        var outlined = shapes.Where(s => s.Kind is not (ShapeKind.Dimension or ShapeKind.Wall)).ToList();
+        var outlined = shapes.Where(s => s.Kind is not (ShapeKind.Dimension or ShapeKind.Wall or ShapeKind.Text)).ToList();
+
+        BuildText(context, shapes);
 
         if (walls.Count > 0)
         {
@@ -158,6 +160,54 @@ public sealed class PropertiesPanel : UserControl
             ("Turn 90°", () => context.RotateSelection(90)),
             ("Flip ↔", () => context.FlipSelection(horizontally: true)),
             ("Flip ↕", () => context.FlipSelection(horizontally: false)));
+    }
+
+    /// <summary>Raised by "Edit text": the window opens the text to type for this shape.</summary>
+    public event EventHandler<Shape>? EditTextRequested;
+
+    /// <summary>Text objects and the text inside shapes: edit, size (pt on the paper), bold, italic, colour.</summary>
+    private void BuildText(EditorContext context, IReadOnlyList<Shape> shapes)
+    {
+        var withText = shapes.Where(s => s.Kind == ShapeKind.Text || ShapeLabel.HasLabel(s)).ToList();
+        var single = shapes.Count == 1 && DocumentCanvas.CanEditText(shapes[0]) ? shapes[0] : null;
+        if (withText.Count == 0 && single is null)
+        {
+            return;
+        }
+
+        Heading("TEXT");
+        if (single is not null)
+        {
+            ButtonRow((string.IsNullOrEmpty(single.TextContent) ? "Add text" : "Edit text", () => EditTextRequested?.Invoke(this, single)));
+        }
+
+        if (withText.Count == 0)
+        {
+            return;
+        }
+
+        bool HasText(Shape s) => s.Kind == ShapeKind.Text || ShapeLabel.HasLabel(s);
+        var sample = withText[0];
+
+        // page pixels (96 per inch) as points (72 per inch)
+        NumberRow("Size", sample.TextFontSize * 0.75, "pt", 1, 4, 400, "0.#",
+            pt => context.SetOnSelection(s => s.TextFontSize = pt / 0.75, HasText));
+        Toggle("Bold", sample.TextBold, on => context.SetOnSelection(s => s.TextBold = on, HasText));
+        Toggle("Italic", sample.TextItalic, on => context.SetOnSelection(s => s.TextItalic = on, HasText));
+
+        // a text object is drawn in its fill colour, the text in a shape in its own text colour
+        var color = sample.Kind == ShapeKind.Text ? sample.FillColor : ShapeLabel.EffectiveColor(sample);
+        ColorRow(color, c => context.SetOnSelection(s =>
+        {
+            if (s.Kind == ShapeKind.Text)
+            {
+                s.FillColor = c;
+            }
+            else
+            {
+                s.TextColor = c;
+            }
+        }, HasText));
     }
 
     private void BuildDrawing(EditorContext context)

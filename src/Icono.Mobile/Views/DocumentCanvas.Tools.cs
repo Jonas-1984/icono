@@ -48,6 +48,13 @@ public sealed partial class DocumentCanvas
         }
 
         var at = ToDocument(view);
+        if (context.ActiveTool == ActiveTool.Shape && context.SelectedShapeKind == ShapeKind.Text)
+        {
+            // the text is typed once the finger lifts (DocumentCanvas.EndPointer)
+            _gesture = Gesture.TextTap;
+            return;
+        }
+
         if (context.ActiveTool == ActiveTool.Shape)
         {
             var kind = context.SelectedShapeKind;

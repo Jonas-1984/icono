@@ -78,6 +78,23 @@
             </Border>
         </Grid>
 
+        <!-- typing a text (MainView.Text.cs); at the top, so the on-screen keyboard does not cover it -->
+        <Border x:Name="TextLayer" IsVisible="False" Background="#66000000">
+            <Border Background="{StaticResource ToolbarBackgroundBrush}" CornerRadius="14" Padding="18,14" Width="520"
+                    HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,70,0,0"
+                    BorderBrush="{StaticResource RaisedPressedBrush}" BorderThickness="1">
+                <StackPanel Spacing="12">
+                    <TextBlock x:Name="TextTitle" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource ForegroundTextBrush}" />
+                    <TextBox x:Name="TextEntry" FontSize="15" MinHeight="40" TextWrapping="Wrap" />
+                    <TextBlock x:Name="TextNote" FontSize="11.5" TextWrapping="Wrap" Foreground="{StaticResource MutedTextBrush}" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Classes="tool" Content="Cancel" Click="OnTextCancel" />
+                        <Button Classes="tool accent" Content="OK" Click="OnTextOk" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Border>
+
         <!-- question in front of everything (unsaved changes) -->
         <Border x:Name="QuestionLayer" IsVisible="False" Background="#99000000">
             <Border Background="{StaticResource ToolbarBackgroundBrush}" CornerRadius="14" Padding="22,18" MaxWidth="480"

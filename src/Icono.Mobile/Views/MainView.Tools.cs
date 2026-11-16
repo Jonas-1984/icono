@@ -27,6 +27,8 @@ public partial class MainView
             "Line: drag from the start to the end - the ends snap to the points of other objects."),
         new("Arrow", ActiveTool.Shape, ShapeKind.Arrow, "M3,12 L18,12 M13,6 L19,12 L13,18",
             "Arrow: drag from the start to the tip - the ends snap to the points of other objects."),
+        new("Text", ActiveTool.Shape, ShapeKind.Text, "M12 4v16 M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2 M9 20h6",
+            "Text: tap where the text should go and type it. Double tap a text or a shape later to change its text."),
         new("Polyline", ActiveTool.PathDraw, ShapeKind.Polyline, "M3,19 L8,9 L14,15 L21,5",
             "Polyline: finger down, slide to the point, lift to place it. Done ends."),
         new("Wall", ActiveTool.PathDraw, ShapeKind.Wall, "M3,21 L3,3 L21,3 M8,21 L8,8 L21,8 M3,21 L8,21",

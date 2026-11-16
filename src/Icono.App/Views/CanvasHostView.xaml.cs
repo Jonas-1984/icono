@@ -2754,24 +2754,9 @@ public partial class CanvasHostView : UserControl
             return;
         }
 
-        var text = _textEditBox.Text.TrimEnd();
+        var text = _textEditBox.Text;
         RemoveTextEditBox();
-
-        var before = ShapeSnapshot.Capture(shape);
-        var hadText = !string.IsNullOrEmpty(shape.TextContent);
-        shape.TextContent = string.IsNullOrWhiteSpace(text) ? null : text;
-        if (!hadText && shape.TextContent is not null)
-        {
-            shape.TextFontSize = ShapeLabel.SuggestedFontSize(shape);
-        }
-
-        var after = ShapeSnapshot.Capture(shape);
-        if (!after.Equals(before))
-        {
-            _context.UndoManager.Push(UndoableAction.ForPropertyEdit([shape], [before], [after]));
-        }
-
-        _context.RequestRedraw();
+        TextEditing.CommitLabel(_context, shape, text); // shared with the tablet app
     }
 
     private void TextEditBox_OnKeyDown(object sender, KeyEventArgs e)
@@ -2849,72 +2834,8 @@ public partial class CanvasHostView : UserControl
 
         RemoveTextEditBox();
 
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            if (existingShape is not null && layer is not null)
-            {
-                var index = layer.Shapes.IndexOf(existingShape);
-                if (index >= 0)
-                {
-                    layer.Shapes.RemoveAt(index);
-                    _context.UndoManager.Push(UndoableAction.ForRemove([(layer.Shapes, existingShape, index)]));
-                    _context.SelectedShapes.Remove(existingShape);
-                }
-            }
-
-            _context.RequestRedraw();
-            return;
-        }
-
-        if (layer is null)
-        {
-            return;
-        }
-
-        var bold = existingShape?.TextBold ?? false;
-        var italic = existingShape?.TextItalic ?? false;
-        var fontSize = existingShape?.TextFontSize ?? 24;
-
-        using var font = new SKFont(FontCache.Get("Segoe UI", bold, italic), (float)fontSize);
-        using var measurePaint = new SKPaint();
-        font.MeasureText(text, out var bounds, measurePaint);
-        var width = Math.Max(20, bounds.Width + 8);
-        var height = Math.Max(20, bounds.Height + 8);
-
-        if (existingShape is not null)
-        {
-            var before = ShapeSnapshot.Capture(existingShape);
-            existingShape.TextContent = text;
-            existingShape.Width = width;
-            existingShape.Height = height;
-            var after = ShapeSnapshot.Capture(existingShape);
-            _context.UndoManager.Push(UndoableAction.ForPropertyEdit([existingShape], [before], [after]));
-        }
-        else
-        {
-            var shape = new Shape
-            {
-                Kind = ShapeKind.Text,
-                X = origin.X,
-                Y = origin.Y,
-                Width = width,
-                Height = height,
-                FillColor = _context.CurrentFillColor,
-                // Text has no outline until the user adds one in the BORDER card.
-                BorderThickness = 0,
-                TextContent = text,
-            };
-
-            layer.Shapes.Insert(0, shape);
-            _context.UndoManager.Push(UndoableAction.ForInsert(layer.Shapes, shape, 0));
-            _context.SelectedShape = shape;
-            _context.SelectedLayer = layer;
-            // Same rule as shape placement: after creating new text, drop back to Select so a
-            // second text shape requires deliberately choosing the Text tool again.
-            _context.ActiveTool = ActiveTool.Select;
-        }
-
-        _context.RequestRedraw();
+        // create / change / remove the text object (shared with the tablet app)
+        TextEditing.CommitTextObject(_context, existingShape, layer, origin.X, origin.Y, text);
     }
 
     /// <summary>Discards the in-progress edit (Escape, or starting a new gesture elsewhere)
