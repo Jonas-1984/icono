@@ -135,6 +135,15 @@ release that is shipped).
 --------
 The user interface uses the Segoe UI system font of Windows. It is part of Windows and is not distributed with icono.
 
+The tablet app (Android) contains the Selawik font (Regular and Bold), Microsoft's open source replacement for Segoe UI, and uses it
+where a drawing asks for a font the tablet does not have.
+Source: https://github.com/microsoft/Selawik
+Copyright 2015, Microsoft Corporation (www.microsoft.com), with Reserved Font Name Selawik. All Rights Reserved.
+Licensed under the SIL Open Font License, Version 1.1 (full text: src/Icono.Mobile/Assets/Fonts/Selawik-OFL.txt and
+https://openfontlicense.org). The tablet app also uses the Inter font through Avalonia (SIL Open Font License, Version 1.1,
+Copyright the Inter Project Authors, https://github.com/rsms/inter) and the Avalonia UI framework (MIT License,
+Copyright (c) AvaloniaUI OÜ, https://github.com/AvaloniaUI/Avalonia).
+
 
 5. OpenTK and OpenTK.GLWpfControl
 ---------------------------------

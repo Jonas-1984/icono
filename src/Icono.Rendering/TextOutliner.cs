@@ -35,6 +35,12 @@ public static class TextOutliner
         return (x, y);
     }
 
+    /// <summary>The shared typeface of a text shape (from <see cref="FontCache"/>: never disposed here).</summary>
+    private static SKTypeface Typeface(Shape textShape) => FontCache.Get(
+        string.IsNullOrWhiteSpace(textShape.TextFontFamily) ? "Segoe UI" : textShape.TextFontFamily,
+        textShape.TextBold,
+        textShape.TextItalic);
+
     /// <summary>The live text of a <see cref="ShapeKind.Text"/> shape as ONE outline path in document space, with the
     /// shape's flips and rotation baked in (underline included). The renderer feeds it through the same fill / border /
     /// shadow / blur / fade / design-style pipeline as every other shape, so all of those settings work on text too.
@@ -46,11 +52,7 @@ public static class TextOutliner
             return null;
         }
 
-        var weight = textShape.TextBold ? SKFontStyleWeight.Bold : SKFontStyleWeight.Normal;
-        var slant = textShape.TextItalic ? SKFontStyleSlant.Italic : SKFontStyleSlant.Upright;
-        var fontFamily = string.IsNullOrWhiteSpace(textShape.TextFontFamily) ? "Segoe UI" : textShape.TextFontFamily;
-        using var typeface = SKTypeface.FromFamilyName(fontFamily, weight, SKFontStyleWidth.Normal, slant);
-        using var font = new SKFont(typeface, (float)textShape.TextFontSize);
+        using var font = new SKFont(Typeface(textShape), (float)textShape.TextFontSize);
         using var measurePaint = new SKPaint();
 
         font.MeasureText(textShape.TextContent, out var textBounds, measurePaint);
@@ -92,11 +94,7 @@ public static class TextOutliner
             return null;
         }
 
-        var weight = textShape.TextBold ? SKFontStyleWeight.Bold : SKFontStyleWeight.Normal;
-        var slant = textShape.TextItalic ? SKFontStyleSlant.Italic : SKFontStyleSlant.Upright;
-        var fontFamily = string.IsNullOrWhiteSpace(textShape.TextFontFamily) ? "Segoe UI" : textShape.TextFontFamily;
-        using var typeface = SKTypeface.FromFamilyName(fontFamily, weight, SKFontStyleWidth.Normal, slant);
-        using var font = new SKFont(typeface, (float)textShape.TextFontSize);
+        using var font = new SKFont(Typeface(textShape), (float)textShape.TextFontSize);
         using var measurePaint = new SKPaint();
 
         // Same centering math DrawTextShape uses, so the outline lands exactly where the live

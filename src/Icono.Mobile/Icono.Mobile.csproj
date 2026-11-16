@@ -23,7 +23,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AvaloniaResource Include="..\Icono.App\Assets\icono-dark.png" Link="Assets\icono-dark.png" />
+    <AvaloniaResource Include="..\Icono.App\Assets\icono.png" Link="Assets\icono.png" />
+    <!-- Selawik (SIL OFL 1.1): stands in for Segoe UI and other Windows fonts the tablet does not have -->
+    <AvaloniaResource Include="Assets\Fonts\*.ttf" />
   </ItemGroup>
 
 </Project>

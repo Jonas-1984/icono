@@ -10,13 +10,31 @@ public static class FontCache
 {
     private static readonly ConcurrentDictionary<(string Family, bool Bold, bool Italic), SKTypeface> Typefaces = new();
 
+    /// <summary>Optional: gives the typeface to use when a drawing asks for a family the device does not have (a Windows font such as
+    /// "Segoe UI" on Android). Without it (the Windows program) Skia's own choice is kept, as before. Set it once at start-up.</summary>
+    public static Func<bool, bool, SKTypeface?>? MissingFamilySubstitute { get; set; }
+
     public static SKTypeface Get(string family, bool bold = false, bool italic = false)
     {
         var name = string.IsNullOrWhiteSpace(family) ? "Segoe UI" : family;
-        return Typefaces.GetOrAdd((name, bold, italic), key => SKTypeface.FromFamilyName(
-            key.Family,
-            key.Bold ? SKFontStyleWeight.Bold : SKFontStyleWeight.Normal,
+        return Typefaces.GetOrAdd((name, bold, italic), key => Resolve(key.Family, key.Bold, key.Italic));
+    }
+
+    private static SKTypeface Resolve(string family, bool bold, bool italic)
+    {
+        var typeface = SKTypeface.FromFamilyName(
+            family,
+            bold ? SKFontStyleWeight.Bold : SKFontStyleWeight.Normal,
             SKFontStyleWidth.Normal,
-            key.Italic ? SKFontStyleSlant.Italic : SKFontStyleSlant.Upright));
+            italic ? SKFontStyleSlant.Italic : SKFontStyleSlant.Upright);
+
+        var missing = typeface is null || !string.Equals(typeface.FamilyName, family, StringComparison.OrdinalIgnoreCase);
+        if (missing && MissingFamilySubstitute?.Invoke(bold, italic) is { } substitute)
+        {
+            typeface?.Dispose();
+            return substitute;
+        }
+
+        return typeface ?? SKTypeface.Default;
     }
 }

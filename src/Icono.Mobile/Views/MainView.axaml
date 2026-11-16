@@ -9,8 +9,10 @@
         <Border Grid.Row="0" Background="{StaticResource ToolbarBackgroundBrush}" Padding="12,8"
                 BorderBrush="{StaticResource BorderLineBrush}" BorderThickness="0,0,0,1">
             <Grid ColumnDefinitions="Auto,*,Auto">
-                <Image Grid.Column="0" Source="avares://Icono.Mobile/Assets/icono-dark.png" Height="36" Margin="4,0,16,0"
-                       RenderOptions.BitmapInterpolationMode="HighQuality" />
+                <!-- the logo on a light plate, like the app icon: its fine blue lines get lost on the dark bar -->
+                <Border Grid.Column="0" Background="#FFF1F5FB" CornerRadius="10" Padding="10,5" Margin="0,0,16,0" VerticalAlignment="Center">
+                    <Image Source="avares://Icono.Mobile/Assets/icono.png" Height="34" RenderOptions.BitmapInterpolationMode="HighQuality" />
+                </Border>
 
                 <TextBlock Grid.Column="1" x:Name="TitleText" VerticalAlignment="Center" FontSize="17"
                            Foreground="{StaticResource ForegroundTextBrush}" TextTrimming="CharacterEllipsis" Text="Untitled" />
