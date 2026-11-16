@@ -85,7 +85,7 @@ public partial class CanvasHostView : UserControl
     private Layer? _textEditLayer;
     private Point _textEditOrigin;
 
-    private static readonly HashSet<ShapeKind> TwoPointLineKinds = [ShapeKind.Line, ShapeKind.Arrow, ShapeKind.DoubleArrow];
+    private static IReadOnlySet<ShapeKind> TwoPointLineKinds => ShapeTemplates.TwoPointLineKinds;
 
     public double Zoom
     {
@@ -407,12 +407,7 @@ public partial class CanvasHostView : UserControl
     // ----- Dimensions ---------------------------------------------------------------------------------------
 
     /// <summary>How many clicks a dimension of this kind needs: its points, the last one fixing where the dimension line runs.</summary>
-    private static int DimensionPointsNeeded(DimensionKind kind) => kind switch
-    {
-        DimensionKind.Angular => 4,
-        DimensionKind.Radius or DimensionKind.Diameter or DimensionKind.Length => 2,
-        _ => 3,
-    };
+    private static int DimensionPointsNeeded(DimensionKind kind) => ShapeTemplates.DimensionPointsNeeded(kind);
 
     // ----- Snapping to walls and objects ------------------------------------------------------------------------
 
@@ -2240,71 +2235,10 @@ public partial class CanvasHostView : UserControl
         _isPlacing = true;
         _placeStart = point;
 
-        if (TwoPointLineKinds.Contains(_context.SelectedShapeKind))
-        {
-            var kind = _context.SelectedShapeKind;
-            _pendingShape = new Shape
-            {
-                Kind = kind,
-                X = point.X,
-                Y = point.Y,
-                Width = 1,
-                Height = 1,
-                FillColor = _context.CurrentFillColor,
-                Points = [new CorePoint(0, 0), new CorePoint(0, 0)],
-                // The Arrow/Double Arrow tools' historical look — a plain open V head — is now just
-                // the default for their LineStartHead/LineEndHead, freely reconfigurable afterwards
-                // in the Properties panel (any Line-family shape can carry any head style).
-                LineEndHead = kind is ShapeKind.Arrow or ShapeKind.DoubleArrow ? ArrowHeadKind.Open : ArrowHeadKind.None,
-                LineStartHead = kind == ShapeKind.DoubleArrow ? ArrowHeadKind.Open : ArrowHeadKind.None,
-            };
-        }
-        else
-        {
-            _pendingShape = new Shape
-            {
-                Kind = _context.SelectedShapeKind,
-                X = point.X,
-                Y = point.Y,
-                Width = 0,
-                Height = 0,
-                FillColor = _context.CurrentFillColor,
-                CornerRadius = _context.SelectedShapeKind == ShapeKind.RoundedRectangle ? 12 : 0,
-            };
-
-            if (ArchitecturalSymbols.IsSymbol(_pendingShape.Kind))
-            {
-                ArchitecturalSymbols.ApplyDefaults(_pendingShape);
-            }
-
-            if (PlanSymbols.IsPlanSymbol(_pendingShape.Kind))
-            {
-                PlanSymbols.ApplyDefaults(_pendingShape);
-            }
-
-            if (ShapeGeometryFactory.IsLoopArrow(_pendingShape.Kind))
-            {
-                // the circular arrows start with an open head at the end, like an Arrow; the line ends can be changed afterwards
-                _pendingShape.LineEndHead = ArrowHeadKind.Open;
-            }
-
-            if (_pendingShape.Kind == ShapeKind.CombinedPath && _context.PendingUnit is { } unit)
-            {
-                // a cabinet or unit of the catalogue: white body, thin dark line, as drawn in the catalogue
-                _pendingShape.CustomPathData = unit.PathData;
-                _pendingShape.CustomPathStrokeOnly = true;
-                _pendingShape.FillColor = ArgbColor.FromRgb(0xFF, 0xFF, 0xFF);
-                _pendingShape.BorderColor = ArgbColor.FromRgb(0x23, 0x29, 0x33);
-                _pendingShape.BorderThickness = 1;
-            }
-
-            if (_pendingShape.Kind == ShapeKind.DesignGrid)
-            {
-                // Fine, light hairlines so the coloured squares stay the star of the grid.
-                _pendingShape.BorderColor = ArgbColor.FromRgb(0xB4, 0xBA, 0xC4);
-                _pendingShape.BorderThickness = 0.5;
-            }
-        }
+        // the defaults of new objects are shared with the tablet app
+        _pendingShape = TwoPointLineKinds.Contains(_context.SelectedShapeKind)
+            ? ShapeTemplates.NewTwoPointLine(_context.SelectedShapeKind, point.X, point.Y, _context.CurrentFillColor)
+            : ShapeTemplates.NewBox(_context.SelectedShapeKind, point.X, point.Y, _context.CurrentFillColor, _context.PendingUnit);
 
         CaptureMouse();
     }
@@ -2391,29 +2325,9 @@ public partial class CanvasHostView : UserControl
             }
 
             _isPathDrawing = true;
-            _pendingPathShape = new Shape
-            {
-                Kind = _context.SelectedShapeKind,
-                X = point.X,
-                Y = point.Y,
-                Width = 1,
-                Height = 1,
-                FillColor = _context.CurrentFillColor,
-                Points = [new CorePoint(0, 0), new CorePoint(0, 0)],
-            };
-
-            if (_pendingPathShape.Kind == ShapeKind.Dimension)
-            {
-                DimensionBuilder.ApplyStyle(_pendingPathShape);
-                _pendingPathShape.DimKind = _context.CurrentDimensionKind;
-                _pendingPathShape.DimUnit = _context.DimensionUnit;
-            }
-
-            if (_pendingPathShape.Kind == ShapeKind.Wall)
-            {
-                WallEditor.ApplyDrawingDefaults(_pendingPathShape, _context.Document.ScaleDenominator);
-            }
-
+            _pendingPathShape = ShapeTemplates.NewPath(
+                _context.SelectedShapeKind, point.X, point.Y, _context.CurrentFillColor, _context.CurrentDimensionKind, _context.DimensionUnit,
+                _context.Document.ScaleDenominator);
             _context.RequestRedraw();
             return;
         }
@@ -3708,54 +3622,13 @@ public partial class CanvasHostView : UserControl
 
         var shape = _pendingShape;
 
-        if (shape is { Kind: ShapeKind.DesignGrid })
+        // a tap (no real drag) gives a grid, door, window, symbol or unit its real size (shared with the tablet app)
+        if (shape is not null && _context is not null)
         {
-            // A grid always consists of whole squares; a plain click (no real drag) drops a 24 x 24 grid.
-            var cell = shape.GridCellSize;
-            var clickOnly = shape.Width < cell * 2 && shape.Height < cell * 2;
-            shape.Width = (clickOnly ? 24 : Math.Max(1, Math.Round(shape.Width / cell))) * cell;
-            shape.Height = (clickOnly ? 24 : Math.Max(1, Math.Round(shape.Height / cell))) * cell;
+            ShapeTemplates.ApplyClickSize(shape, _context.Document, _context.PendingUnit);
         }
 
-        if (shape is not null && ArchitecturalSymbols.IsSymbol(shape.Kind) && _context is not null && (shape.Width < 6 && (shape.Height < 6 || ArchitecturalSymbols.IsDoor(shape.Kind))))
-        {
-            // a click, not a drag (a door's height follows from its width, so only the width tells): the real-world size of that door or window at the drawing scale
-            var size = ArchitecturalSymbols.DefaultSize(shape.Kind, shape.WallThickness, _context.Document.ScaleDenominator, _context.Document.Width);
-            var outline = ShapeOutline.FrameForBox(shape, shape.X, shape.Y, size.Width, size.Height);
-            shape.X = outline.X;
-            shape.Y = outline.Y;
-            shape.Width = outline.W;
-            shape.Height = outline.H;
-        }
-
-        if (shape is not null && PlanSymbols.IsPlanSymbol(shape.Kind) && _context is not null && shape.Width < 6 && shape.Height < 6)
-        {
-            // a click, not a drag: the real-world size of the symbol at the drawing scale
-            var size = PlanSymbols.DefaultSize(shape.Kind, _context.Document.ScaleDenominator, _context.Document.Width);
-            var outline = ShapeOutline.FrameForBox(shape, shape.X, shape.Y, size.Width, size.Height);
-            shape.X = outline.X;
-            shape.Y = outline.Y;
-            shape.Width = outline.W;
-            shape.Height = outline.H;
-        }
-
-        if (shape is { Kind: ShapeKind.CombinedPath } && _context?.PendingUnit is { } clickedUnit && shape.CustomPathData == clickedUnit.PathData && shape.Width < 6 && shape.Height < 6)
-        {
-            // a click, not a drag: the real size of the unit at the drawing scale
-            var size = UnitCatalog.DefaultSize(clickedUnit, _context.Document.ScaleDenominator);
-            var outline = ShapeOutline.FrameForBox(shape, shape.X, shape.Y, size.Width, size.Height);
-            shape.X = outline.X;
-            shape.Y = outline.Y;
-            shape.Width = outline.W;
-            shape.Height = outline.H;
-        }
-
-        var isValidBox = shape is { Width: >= 2, Height: >= 2 };
-        // A 2-point line only needs ONE dimension to span >=2 (a perfectly horizontal/vertical
-        // line has the other dimension clamped to a minimum of 1 by PathBoundsCalculator).
-        var isValidLine = shape?.Points is { Count: >= 2 } && (shape.Width >= 2 || shape.Height >= 2);
-
-        if (shape is not null && (isValidBox || isValidLine) && _context is not null)
+        if (shape is not null && ShapeTemplates.IsBigEnough(shape) && _context is not null)
         {
             var layer = _context.SelectedLayer ?? _context.Document.Layers.FirstOrDefault();
             if (layer is not null)

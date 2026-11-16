@@ -19,15 +19,15 @@
     <Application.Styles>
         <FluentTheme />
 
-        <!-- Toolbar buttons: big enough for a finger (48 dp high). -->
+        <!-- Toolbar buttons: still easy to hit with a finger (38 dp high). -->
         <Style Selector="Button.tool">
-            <Setter Property="MinHeight" Value="48" />
-            <Setter Property="MinWidth" Value="48" />
-            <Setter Property="Padding" Value="16,0" />
-            <Setter Property="Margin" Value="4,0" />
+            <Setter Property="MinHeight" Value="38" />
+            <Setter Property="MinWidth" Value="38" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="Margin" Value="3,0" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="FontSize" Value="16" />
-            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="CornerRadius" Value="8" />
             <Setter Property="Foreground" Value="{StaticResource ForegroundTextBrush}" />
             <Setter Property="Background" Value="{StaticResource RaisedBrush}" />
         </Style>
@@ -43,10 +43,32 @@
             <Setter Property="Foreground" Value="#FF06070A" />
         </Style>
 
+        <!-- the tool bar on the left: big square buttons with icon and name; the active tool is lit -->
+        <Style Selector="Button.palette">
+            <Setter Property="Width" Value="54" />
+            <Setter Property="MinHeight" Value="46" />
+            <Setter Property="Padding" Value="2,4" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}" />
+        </Style>
+        <Style Selector="Button.palette:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource RaisedPressedBrush}" />
+        </Style>
+        <Style Selector="Button.palette.active /template/ ContentPresenter">
+            <Setter Property="Background" Value="#335AB0FF" />
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+            <Setter Property="BorderThickness" Value="1.5" />
+        </Style>
+        <Style Selector="Button.palette.active">
+            <Setter Property="Foreground" Value="{StaticResource ForegroundTextBrush}" />
+        </Style>
+
         <!-- thin line between groups of toolbar buttons -->
         <Style Selector="Border.separator">
             <Setter Property="Width" Value="1" />
-            <Setter Property="Margin" Value="8,6" />
+            <Setter Property="Margin" Value="6,6" />
             <Setter Property="Background" Value="{StaticResource RaisedPressedBrush}" />
         </Style>
     </Application.Styles>

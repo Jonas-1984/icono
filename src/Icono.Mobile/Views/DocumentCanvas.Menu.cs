@@ -19,7 +19,7 @@ public sealed partial class DocumentCanvas
 
         void Add(string header, Action action, bool enabled = true)
         {
-            var item = new MenuItem { Header = header, IsEnabled = enabled, MinHeight = 44, FontSize = 16 };
+            var item = new MenuItem { Header = header, IsEnabled = enabled, MinHeight = 36, FontSize = 14 };
             item.Click += (_, _) =>
             {
                 action();

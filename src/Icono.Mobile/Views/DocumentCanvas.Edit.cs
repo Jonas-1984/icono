@@ -12,13 +12,13 @@ namespace Icono.Mobile.Views;
 public sealed partial class DocumentCanvas
 {
     /// <summary>Edge length of a square resize handle on screen (DIP) - bigger than on Windows, for a finger.</summary>
-    private const float HandleSize = 16;
+    private const float HandleSize = 13;
 
     /// <summary>Radius of the round handles (turn, points) on screen (DIP).</summary>
-    private const float RoundHandleRadius = 11;
+    private const float RoundHandleRadius = 9;
 
     /// <summary>How far above the top edge the turn handle sits (DIP).</summary>
-    private const double RotateHandleOffset = 40;
+    private const double RotateHandleOffset = 34;
 
     /// <summary>How far from a handle a finger still takes it (DIP).</summary>
     private const double HandleReach = 26;

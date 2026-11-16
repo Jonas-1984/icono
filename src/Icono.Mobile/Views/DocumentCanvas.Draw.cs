@@ -15,6 +15,7 @@ public sealed partial class DocumentCanvas
 {
     private static readonly SKColor SelectionColor = new(0x5A, 0xB0, 0xFF);
     private static readonly SKColor LockedColor = new(0x90, 0x90, 0x90);
+    private static readonly SKColor SnapColor = new(0xFF, 0x9F, 0x1C);
 
     public override void Render(DrawingContext context)
     {
@@ -37,8 +38,11 @@ public sealed partial class DocumentCanvas
             stem = (ToScreen((top.X, top.Y)), rotate.Item2);
         }
 
-        var chrome = new Chrome(frames, handles, stem, _rotationLabel);
-        context.Custom(new DrawOperation(new Rect(Bounds.Size), _context.Document, _zoom, _offset, chrome));
+        var pathMarks = PathPointMarks().Select(ToScreen).ToList();
+        (SKPoint At, string Label)? snap = _snapMark is { } mark ? (ToScreen((mark.X, mark.Y)), mark.Label) : null;
+
+        var chrome = new Chrome(frames, handles, stem, _rotationLabel, pathMarks, snap);
+        context.Custom(new DrawOperation(new Rect(Bounds.Size), _context.Document, PendingForRender(), _zoom, _offset, chrome));
     }
 
     private SKPoint ToScreen((double X, double Y) p) => new((float)(p.X * _zoom + _offset.X), (float)(p.Y * _zoom + _offset.Y));
@@ -49,7 +53,9 @@ public sealed partial class DocumentCanvas
         IReadOnlyList<SelectionFrame> Frames,
         IReadOnlyList<(HandleKind Kind, SKPoint At)> Handles,
         (SKPoint From, SKPoint To)? Stem,
-        string? Label);
+        string? Label,
+        IReadOnlyList<SKPoint> PathMarks,
+        (SKPoint At, string Label)? Snap);
 
     /// <summary>The corners of the frame round a shape in drawing units (turned with it), as the Windows program draws it.</summary>
     private static (double X, double Y)[] FrameCorners(Shape shape)
@@ -72,7 +78,8 @@ public sealed partial class DocumentCanvas
     }
 
     /// <summary>Draws on the render thread with Avalonia's own Skia canvas.</summary>
-    private sealed class DrawOperation(Rect bounds, Document document, double zoom, Vector offset, Chrome chrome) : ICustomDrawOperation
+    private sealed class DrawOperation(Rect bounds, Document document, Shape? pending, double zoom, Vector offset, Chrome chrome)
+        : ICustomDrawOperation
     {
         private static readonly SKColor PageShadow = new(0, 0, 0, 140);
 
@@ -115,7 +122,7 @@ public sealed partial class DocumentCanvas
                 }
             }
 
-            DocumentRenderer.Render(canvas, document, document.Width, document.Height);
+            DocumentRenderer.Render(canvas, document, document.Width, document.Height, pending);
             canvas.Restore();
 
             // frames and handles in screen units, so they keep their size at every zoom
@@ -125,6 +132,8 @@ public sealed partial class DocumentCanvas
 
         private void DrawChrome(SKCanvas canvas)
         {
+            DrawDrawingMarks(canvas);
+
             using var frame = new SKPaint
             {
                 IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 2, PathEffect = SKPathEffect.CreateDash([6, 4], 0),
@@ -174,14 +183,42 @@ public sealed partial class DocumentCanvas
 
             if (chrome.Label is { } label && chrome.Handles.FirstOrDefault(h => h.Kind == HandleKind.Rotate) is { Kind: HandleKind.Rotate } turn)
             {
-                using var font = new SKFont(SKTypeface.Default, 15);
-                using var text = new SKPaint { IsAntialias = true, Color = SKColors.White };
-                using var back = new SKPaint { IsAntialias = true, Color = new SKColor(0x14, 0x17, 0x1E, 0xE6) };
-                var width = font.MeasureText(label);
-                var box = SKRect.Create(turn.At.X + RoundHandleRadius + 8, turn.At.Y - 13, width + 16, 26);
-                canvas.DrawRoundRect(box, 8, 8, back);
-                canvas.DrawText(label, box.Left + 8, box.Top + 18, SKTextAlign.Left, font, text);
+                DrawLabel(canvas, label, new SKPoint(turn.At.X + RoundHandleRadius + 8, turn.At.Y - 13));
             }
+        }
+
+        /// <summary>The placed points of a wall / polyline / dimension under way, and where the point under the finger snapped (with what to:
+        /// the label sits above the finger, where it can be read).</summary>
+        private void DrawDrawingMarks(SKCanvas canvas)
+        {
+            using var dot = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill, Color = SelectionColor };
+            using var ring = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 2, Color = SKColors.White };
+            foreach (var mark in chrome.PathMarks)
+            {
+                canvas.DrawCircle(mark, 5, dot);
+                canvas.DrawCircle(mark, 5, ring);
+            }
+
+            if (chrome.Snap is { } snap)
+            {
+                using var snapRing = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 2.5f, Color = SnapColor };
+                canvas.DrawCircle(snap.At, 9, snapRing);
+                if (!string.IsNullOrEmpty(snap.Label))
+                {
+                    DrawLabel(canvas, snap.Label, new SKPoint(snap.At.X + 14, snap.At.Y - 70));
+                }
+            }
+        }
+
+        private static void DrawLabel(SKCanvas canvas, string label, SKPoint topLeft)
+        {
+            using var font = new SKFont(SKTypeface.Default, 13);
+            using var text = new SKPaint { IsAntialias = true, Color = SKColors.White };
+            using var back = new SKPaint { IsAntialias = true, Color = new SKColor(0x14, 0x17, 0x1E, 0xE6) };
+            var width = font.MeasureText(label);
+            var box = SKRect.Create(topLeft.X, topLeft.Y, width + 14, 22);
+            canvas.DrawRoundRect(box, 8, 8, back);
+            canvas.DrawText(label, box.Left + 8, box.Top + 16, SKTextAlign.Left, font, text);
         }
     }
 }

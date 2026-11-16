@@ -7,15 +7,15 @@
         <Grid RowDefinitions="Auto,*,Auto">
 
             <!-- top bar -->
-            <Border Grid.Row="0" Background="{StaticResource ToolbarBackgroundBrush}" Padding="12,8"
+            <Border Grid.Row="0" Background="{StaticResource ToolbarBackgroundBrush}" Padding="10,6"
                     BorderBrush="{StaticResource BorderLineBrush}" BorderThickness="0,0,0,1">
                 <Grid ColumnDefinitions="Auto,*,Auto">
                     <!-- the logo on a light plate, like the app icon: its fine blue lines get lost on the dark bar -->
-                    <Border Grid.Column="0" Background="#FFF1F5FB" CornerRadius="10" Padding="10,5" Margin="0,0,16,0" VerticalAlignment="Center">
-                        <Image Source="avares://Icono.Mobile/Assets/icono.png" Height="34" RenderOptions.BitmapInterpolationMode="HighQuality" />
+                    <Border Grid.Column="0" Background="#FFF1F5FB" CornerRadius="8" Padding="8,4" Margin="0,0,12,0" VerticalAlignment="Center">
+                        <Image Source="avares://Icono.Mobile/Assets/icono.png" Height="26" RenderOptions.BitmapInterpolationMode="HighQuality" />
                     </Border>
 
-                    <TextBlock Grid.Column="1" x:Name="TitleText" VerticalAlignment="Center" FontSize="17"
+                    <TextBlock Grid.Column="1" x:Name="TitleText" VerticalAlignment="Center" FontSize="14"
                                Foreground="{StaticResource ForegroundTextBrush}" TextTrimming="CharacterEllipsis" Text="Untitled" />
 
                     <StackPanel Grid.Column="2" Orientation="Horizontal">
@@ -35,26 +35,49 @@
                 </Grid>
             </Border>
 
-            <!-- the drawing -->
-            <views:DocumentCanvas Grid.Row="1" x:Name="Canvas" ClipToBounds="True" />
+            <Grid Grid.Row="1" ColumnDefinitions="Auto,*">
+                <!-- the tools (filled in MainView.Tools.cs) -->
+                <Border Grid.Column="0" Background="{StaticResource ToolbarBackgroundBrush}" BorderBrush="{StaticResource BorderLineBrush}"
+                        BorderThickness="0,0,1,0">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="ToolPanel" Margin="5,6" Spacing="2" />
+                    </ScrollViewer>
+                </Border>
+
+                <!-- the drawing -->
+                <views:DocumentCanvas Grid.Column="1" x:Name="Canvas" ClipToBounds="True" />
+
+                <!-- while a wall, polyline or dimension is drawn -->
+                <Border Grid.Column="1" x:Name="PathBar" IsVisible="False" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="10"
+                        Background="{StaticResource ToolbarBackgroundBrush}" CornerRadius="12" Padding="10,6"
+                        BorderBrush="{StaticResource RaisedPressedBrush}" BorderThickness="1">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock x:Name="PathBarText" VerticalAlignment="Center" FontSize="13" Margin="4,0,10,0"
+                                   Foreground="{StaticResource ForegroundTextBrush}" />
+                        <Button Classes="tool" x:Name="PathUndoButton" Content="Undo point" Click="OnPathUndoPoint" />
+                        <Button Classes="tool" Content="Cancel" Click="OnPathCancel" />
+                        <Button Classes="tool accent" x:Name="PathDoneButton" Content="Done" Click="OnPathDone" />
+                    </StackPanel>
+                </Border>
+            </Grid>
 
             <!-- status line -->
-            <Border Grid.Row="2" Background="{StaticResource PanelBackgroundBrush}" Padding="16,6">
+            <Border Grid.Row="2" Background="{StaticResource PanelBackgroundBrush}" Padding="12,4">
                 <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock Grid.Column="0" x:Name="StatusText" FontSize="14" Foreground="{StaticResource MutedTextBrush}"
+                    <TextBlock Grid.Column="0" x:Name="StatusText" FontSize="12" Foreground="{StaticResource MutedTextBrush}"
                                TextTrimming="CharacterEllipsis" />
-                    <TextBlock Grid.Column="1" x:Name="ZoomText" FontSize="14" Foreground="{StaticResource ForegroundTextBrush}" Text="100 %" />
+                    <TextBlock Grid.Column="1" x:Name="ZoomText" FontSize="12" Foreground="{StaticResource ForegroundTextBrush}" Text="100 %" />
                 </Grid>
             </Border>
         </Grid>
 
         <!-- question in front of everything (unsaved changes) -->
         <Border x:Name="QuestionLayer" IsVisible="False" Background="#99000000">
-            <Border Background="{StaticResource ToolbarBackgroundBrush}" CornerRadius="16" Padding="28,24" MaxWidth="560"
+            <Border Background="{StaticResource ToolbarBackgroundBrush}" CornerRadius="14" Padding="22,18" MaxWidth="480"
                     HorizontalAlignment="Center" VerticalAlignment="Center" BorderBrush="{StaticResource RaisedPressedBrush}" BorderThickness="1">
-                <StackPanel Spacing="20">
-                    <TextBlock x:Name="QuestionTitle" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource ForegroundTextBrush}" />
-                    <TextBlock x:Name="QuestionText" FontSize="16" TextWrapping="Wrap" Foreground="{StaticResource MutedTextBrush}" />
+                <StackPanel Spacing="16">
+                    <TextBlock x:Name="QuestionTitle" FontSize="17" FontWeight="SemiBold" Foreground="{StaticResource ForegroundTextBrush}" />
+                    <TextBlock x:Name="QuestionText" FontSize="14" TextWrapping="Wrap" Foreground="{StaticResource MutedTextBrush}" />
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button Classes="tool" Content="Cancel" Click="OnQuestionCancel" />
                         <Button Classes="tool" Content="Don't save" Click="OnQuestionDiscard" />

@@ -41,7 +41,7 @@ public sealed partial class DocumentCanvas : Control
     private Vector _offset;
     private bool _fitPending = true;
 
-    private enum Gesture { None, Pending, Menu, MoveShapes, Resize, GroupResize, Rotate, DragPoint, View }
+    private enum Gesture { None, Pending, Menu, MoveShapes, Resize, GroupResize, Rotate, DragPoint, Place, PathPoint, View }
 
     private Gesture _gesture;
 
@@ -157,6 +157,13 @@ public sealed partial class DocumentCanvas : Control
         {
             _pressPoint = position;
 
+            // a drawing tool draws (DocumentCanvas.Tools.cs)
+            if (ToolIsActive)
+            {
+                BeginToolPress(position);
+                return;
+            }
+
             // a handle of the selection starts its drag at once
             if (TryBeginHandleDrag(position))
             {
@@ -173,9 +180,17 @@ public sealed partial class DocumentCanvas : Control
             return;
         }
 
-        // a second finger: zoom / move the view; an edit that was under way is taken back
+        // a second finger: zoom / move the view; an edit or drawing step that was under way is taken back
         _longPressTimer.Stop();
-        CancelEdit();
+        if (_gesture is Gesture.Place or Gesture.PathPoint)
+        {
+            CancelToolPress();
+        }
+        else
+        {
+            CancelEdit();
+        }
+
         _gesture = Gesture.View;
         BeginViewGesture();
     }
@@ -212,13 +227,17 @@ public sealed partial class DocumentCanvas : Control
             }
         }
 
-        if (_gesture == Gesture.View)
+        switch (_gesture)
         {
-            UpdateViewGesture();
-        }
-        else
-        {
-            UpdateEdit(position);
+            case Gesture.View:
+                UpdateViewGesture();
+                break;
+            case Gesture.Place or Gesture.PathPoint:
+                UpdateTool(position);
+                break;
+            default:
+                UpdateEdit(position);
+                break;
         }
     }
 
@@ -248,7 +267,7 @@ public sealed partial class DocumentCanvas : Control
     {
         var document = Document;
         var at = ToDocument(e.GetPosition(this));
-        if (document is not null && ShapeHitTester.Find(document, at.X, at.Y, _zoom, FingerReach) is null)
+        if (document is not null && !ToolIsActive && ShapeHitTester.Find(document, at.X, at.Y, _zoom, FingerReach) is null)
         {
             FitToView();
         }
@@ -285,6 +304,10 @@ public sealed partial class DocumentCanvas : Control
             if (_gesture == Gesture.Pending)
             {
                 Tap();
+            }
+            else if (_gesture is Gesture.Place or Gesture.PathPoint)
+            {
+                FinishToolPress();
             }
             else if (_gesture is not (Gesture.View or Gesture.Menu or Gesture.None))
             {
