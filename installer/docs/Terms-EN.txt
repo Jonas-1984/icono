@@ -1,17 +1,17 @@
-﻿icono - Test terms (test version 0.1.0-test.6)
-==============================================
+﻿icono - Test terms
+==================
 
-Please read these terms. By installing and using icono you agree to them.
+Please read these terms. By installing and using icono (the Windows program or the Android tablet app) you agree to them.
 
 1. What you receive
-   icono is a drawing program for icons and floor plans (Windows). You receive an unfinished TEST VERSION that is meant for trying out the
-   program and finding errors. It can contain errors, can behave differently from the later release and can create files that later
+   icono is a drawing program for icons and floor plans, for Windows computers and for Android tablets. You receive an unfinished TEST VERSION
+   that is meant for trying out the program and finding errors. It can contain errors, can behave differently from the later release and can create files that later
    versions can no longer read. Please do not rely on it for important work and back up your files regularly in a second place.
    Results of the program (dimensions, areas, plans) are aids and not a building document: check them before you build, buy or install anything.
 
 2. Right of use
    You may install icono on your own devices free of charge and use it for testing. The right is non-exclusive, non-transferable and can be
-   withdrawn by me. Please do not pass the installer or the installed files on to third parties, and do not publish screenshots or reports
+   withdrawn by me. Please do not pass the installer, the app file (APK) or the installed files on to third parties, and do not publish screenshots or reports
    about the test version without my consent. The software must not be sold, rented or passed on in changed form. Rights that the law gives
    you without the possibility of exclusion remain unaffected.
 
@@ -25,8 +25,9 @@ Please read these terms. By installing and using icono you agree to them.
    files or information that you are not allowed to share, and keep in mind that drawings can contain personal details.
 
 5. Software of others
-   icono contains software and design elements of third parties (for example .NET, SkiaSharp and the Lucide icons). Their licences are in the file
-   THIRD-PARTY-NOTICES.txt in the installation folder (also reachable in the "About icono" window).
+   icono contains software, fonts and design elements of third parties (for example .NET, SkiaSharp, Avalonia, the Lucide icons and the fonts
+   Selawik and Inter). Their licences are in the file THIRD-PARTY-NOTICES.txt in the installation folder (also reachable in the "About icono"
+   window); in the tablet app they are under "Licences" in the About window (tap the icono logo).
 
 6. Liability
    The test version is provided free of charge. I am liable without limit for intent and gross negligence, for injury to life, body and health
@@ -35,15 +36,16 @@ Please read these terms. By installing and using icono you agree to them.
    effort of restoring it from the backup. Statutory rights that cannot be excluded remain unaffected.
 
 7. Duration and end
-   The test version can be uninstalled at any time (Windows Settings > Apps, or the "Uninstall icono" shortcut). I can withdraw the right of
-   use, for example when a new version is released. Please then uninstall the test version.
+   The test version can be uninstalled at any time (Windows Settings > Apps, or the "Uninstall icono" shortcut; on an Android tablet: Settings >
+   Apps > icono > Uninstall). I can withdraw the right of use, for example when a new version is released. Please then uninstall the test version.
 
 8. Privacy
-   Information is in the file Privacy.txt. In short: icono does not send any data and does not connect to the internet.
+   Information is in the file Privacy.txt (in the tablet app: About > Privacy). In short: icono does not send any data and does not connect to
+   the internet. The only way a file leaves your device is when you yourself pass it on, for example with "Share" in the tablet app.
 
 9. Miscellaneous
    German law applies, unless mandatory consumer protection rules of your country of residence stand against it. If a provision is invalid,
    the others remain valid.
 
 Contact: Jonas Shojaei, www.bitbins.de, info@bitbins.de
-Version of these terms: November 2026
+Version of these terms: 17 November 2026 (now also for the Android tablet app)

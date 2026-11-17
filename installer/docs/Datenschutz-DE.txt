@@ -1,7 +1,9 @@
 ﻿icono - Datenschutzhinweis
 ==========================
 
-Kurz gesagt: icono sammelt, sendet und teilt keine Daten über Sie. Das Programm stellt von sich aus keine Verbindung zum Internet her.
+Kurz gesagt: icono sammelt, sendet und teilt keine Daten über Sie. Das Programm stellt von sich aus keine Verbindung zum Internet her (die
+Android-Tablet-App hat nicht einmal die Berechtigung, das Internet zu nutzen). Dieser Hinweis gilt für das Windows-Programm und die
+Android-Tablet-App.
 
 1. Verantwortlicher
    Jonas Shojaei, www.bitbins.de, E-Mail: info@bitbins.de
@@ -13,7 +15,7 @@ Kurz gesagt: icono sammelt, sendet und teilt keine Daten über Sie. Das Programm
    - keine Kamera-, Mikrofon- oder Standortzugriffe
 
 3. Was auf Ihrem Gerät gespeichert wird (nur lokal)
-   Ordner: %LocalAppData%\Icono  (im Explorer: Windows-Taste + R, dann %LocalAppData%\Icono eingeben)
+   Windows-Programm - Ordner: %LocalAppData%\Icono  (im Explorer: Windows-Taste + R, dann %LocalAppData%\Icono eingeben)
    - theme.txt        Ihr gewähltes Farbdesign (nur ein Wort)
    - recent.txt       die Liste der zuletzt geöffneten Dateien (Dateipfade, damit "Open Recent" funktioniert)
    - Library\         Ihre eigene Icon-Bibliothek, wenn Sie Icons dort ablegen
@@ -22,15 +24,30 @@ Kurz gesagt: icono sammelt, sendet und teilt keine Daten über Sie. Das Programm
    Diese Daten verlassen Ihr Gerät nicht. Ich erhalte sie nur, wenn Sie mir das Fehlerprotokoll freiwillig schicken (zum Beispiel per E-Mail).
    Ihre Zeichnungen speichert icono nur dort, wo Sie es wählen (Datei > Save / Export).
 
+   Android-Tablet-App - im privaten Speicher der App, den andere Apps nicht lesen können:
+   - icono-folder.txt ein Verweis auf den Ordner, den Sie für Ihre Zeichnungen gewählt haben (damit Sie ihn nicht erneut wählen müssen)
+   - exports\         eine vorübergehende Kopie Ihres letzten Exports (PDF oder PNG), nur damit sie an die App übergeben werden kann, die Sie
+                      bei "Share" wählen; der nächste Export ersetzt sie
+   Die Tablet-App speichert kein Farbdesign, keine Liste zuletzt geöffneter Dateien, keine eigene Bibliothek und kein Fehlerprotokoll. Sie
+   verlangt keine Berechtigungen. Android gibt icono nur Zugriff auf den Ordner, den Sie gewählt haben, und auf Dateien, die Sie selbst
+   auswählen. Die App ist so eingestellt, dass Android ihre Daten nicht in die automatische Geräte-Sicherung (Cloud-Backup) aufnimmt. Ihre
+   Zeichnungen speichert die App nur dort, wo Sie es wählen (Save as, Export > Save...).
+   Tippen Sie auf "Share...", öffnet Android sein Teilen-Menü: Die Datei geht nur an die App, die Sie dort wählen; für sie gelten deren
+   Datenschutzbestimmungen.
+
 4. Löschen
-   Beim Deinstallieren fragt das Installationsprogramm, ob diese lokalen Daten mit gelöscht werden sollen. Sie können den Ordner jederzeit
-   selbst löschen, ohne dass icono beschädigt wird.
+   Windows: Beim Deinstallieren fragt das Installationsprogramm, ob diese lokalen Daten mit gelöscht werden sollen. Sie können den Ordner
+   jederzeit selbst löschen, ohne dass icono beschädigt wird.
+   Android-Tablet: Mit dem Deinstallieren der App (Einstellungen > Apps > icono > Deinstallieren) werden ihre Daten gelöscht, oder über
+   Einstellungen > Apps > icono > Speicher > Daten löschen / Cache leeren. Ihre Zeichnungen in Ihrem eigenen Ordner bleiben, bis Sie sie
+   löschen.
 
 5. Links im Menü Help
-   Die Einträge "Check for Updates", "Website" und "Contact" öffnen auf Ihren Klick hin Ihren Browser oder Ihr
+   Die Einträge "Check for Updates", "Website" und "Contact" des Windows-Programms öffnen auf Ihren Klick hin Ihren Browser oder Ihr
    E-Mail-Programm. Erst dann findet eine Verbindung statt, und zwar durch diese Programme. Für sie gelten deren Datenschutzbestimmungen und
    die der besuchten Seite.
    Das Benutzerhandbuch (Help > User Manual) und die Hinweise im Fenster "About icono" öffnen sich lokal aus dem Installationsordner, ohne Internet.
+   Die Tablet-App hat solche Links nicht; ihr Fenster "About" (auf das icono-Logo tippen) zeigt Bedingungen, diesen Hinweis und die Lizenzen lokal.
 
 6. Wenn Sie mir schreiben
    Schreiben Sie mir (info@bitbins.de), verarbeite ich Ihre E-Mail-Adresse und Ihre Nachricht, um Ihnen zu antworten und den gemeldeten Fehler zu
@@ -41,4 +58,4 @@ Kurz gesagt: icono sammelt, sendet und teilt keine Daten über Sie. Das Programm
    Sie haben das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch sowie das Recht
    auf Beschwerde bei einer Datenschutz-Aufsichtsbehörde. Schreiben Sie dazu an info@bitbins.de.
 
-Stand: November 2026. Ändert sich das Verhalten des Programms (zum Beispiel durch eine Update-Prüfung), wird dieser Hinweis vorher angepasst.
+Stand: 17. November 2026 (jetzt auch für die Android-Tablet-App). Ändert sich das Verhalten des Programms (zum Beispiel durch eine Update-Prüfung), wird dieser Hinweis vorher angepasst.

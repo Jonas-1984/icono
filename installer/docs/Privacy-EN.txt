@@ -1,7 +1,8 @@
 ﻿icono - Privacy notice
 ======================
 
-In short: icono does not collect, send or share any data about you. The program does not connect to the internet on its own.
+In short: icono does not collect, send or share any data about you. The program does not connect to the internet on its own (the Android
+tablet app does not even have the permission to use the internet). This notice covers the Windows program and the Android tablet app.
 
 1. Controller
    Jonas Shojaei, www.bitbins.de, e-mail: info@bitbins.de
@@ -13,7 +14,7 @@ In short: icono does not collect, send or share any data about you. The program 
    - no camera, microphone or location access
 
 3. What is stored on your device (locally only)
-   Folder: %LocalAppData%\Icono  (in Explorer: Windows key + R, then type %LocalAppData%\Icono)
+   Windows program - folder: %LocalAppData%\Icono  (in Explorer: Windows key + R, then type %LocalAppData%\Icono)
    - theme.txt        your chosen colour theme (one word)
    - recent.txt       the list of recently opened files (file paths, so that "Open Recent" works)
    - Library\         your own icon library, if you put icons there
@@ -22,14 +23,26 @@ In short: icono does not collect, send or share any data about you. The program 
    This data does not leave your device. I only receive it if you send me the error log voluntarily (for example by e-mail).
    icono saves your drawings only where you choose (File > Save / Export).
 
+   Android tablet app - in the private storage of the app, which other apps cannot read:
+   - icono-folder.txt a reference to the folder you chose for your drawings (so that you need not choose it again)
+   - exports\         a temporary copy of your last export (PDF or PNG), only so that it can be handed to the app you pick in "Share";
+                      the next export replaces it
+   The tablet app keeps no theme, no list of recent files, no own library and no error log. It asks for no permissions. Android gives icono
+   access only to the folder you chose and to files you pick yourself. The app is set so that Android does not include its data in the
+   automatic device backup (cloud backup). Your drawings are saved only where you choose (Save as, Export > Save...).
+   When you tap "Share...", Android opens its share sheet: the file goes only to the app you pick there, and that app's privacy terms apply.
+
 4. Deleting
-   When you uninstall, the installer asks whether this local data should be deleted as well. You can delete the folder yourself at any time
-   without damaging icono.
+   Windows: when you uninstall, the installer asks whether this local data should be deleted as well. You can delete the folder yourself at
+   any time without damaging icono.
+   Android tablet: uninstalling the app (Settings > Apps > icono > Uninstall) removes its data, or use Settings > Apps > icono > Storage >
+   Clear data / Clear cache. Your drawings in your own folder stay until you delete them.
 
 5. Links in the Help menu
-   The entries "Check for Updates", "Website" and "Contact" open your browser or e-mail program when you click them. Only then
-   a connection is made, by those programs. Their privacy terms and those of the visited site apply.
+   The entries "Check for Updates", "Website" and "Contact" of the Windows program open your browser or e-mail program when you click them.
+   Only then a connection is made, by those programs. Their privacy terms and those of the visited site apply.
    The user manual (Help > User Manual) and the notes in the "About icono" window open locally from the installation folder, without internet.
+   The tablet app has no such links; its About window (tap the icono logo) shows the terms, this notice and the licences locally.
 
 6. If you write to me
    If you write to me (info@bitbins.de) I process your e-mail address and your message to answer you and to fix the reported problem (Art. 6(1)(b)
@@ -40,4 +53,4 @@ In short: icono does not collect, send or share any data about you. The program 
    You have the right of access, rectification, erasure, restriction of processing, data portability and objection, and the right to lodge
    a complaint with a data protection supervisory authority. Write to info@bitbins.de.
 
-Version: November 2026. If the behaviour of the program changes (for example an update check), this notice will be adjusted beforehand.
+Version: 17 November 2026 (now also for the Android tablet app). If the behaviour of the program changes (for example an update check), this notice will be adjusted beforehand.

@@ -2,7 +2,8 @@
 <!-- No permissions: icono works offline and only reads/writes the files the user picks. An exported file is handed to the app the user
      chooses in the share sheet through the FileProvider below (read access to that one file only). -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" android:installLocation="auto">
-	<application android:label="icono" android:icon="@drawable/icon">
+	<!-- allowBackup=false: Android does not put the app's data (the reference to the drawings folder) into the automatic cloud backup -->
+	<application android:label="icono" android:icon="@drawable/icon" android:allowBackup="false">
 		<provider android:name="androidx.core.content.FileProvider"
 		          android:authorities="de.bitbins.icono.fileprovider"
 		          android:exported="false"
