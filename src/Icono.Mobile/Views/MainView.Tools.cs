@@ -32,6 +32,8 @@ public partial class MainView
         new("Pen", ActiveTool.Freehand, ShapeKind.Polyline,
             "M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7 M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z",
             "Pen: write or draw with the pen or a finger - every stroke is one object. Colour and width: Properties. Two fingers move and zoom."),
+        new("Curve", ActiveTool.CornerCurve, ShapeKind.Rectangle, "M4,20 V12 A8,8 0 0 1 12,4 H20",
+            "Curve: tap one side of a corner, then the side next to it, and type the size - only that corner is rounded (0 makes it sharp)."),
         new("Polyline", ActiveTool.PathDraw, ShapeKind.Polyline, "M3,19 L8,9 L14,15 L21,5",
             "Polyline: finger down, slide to the point, lift to place it. Done ends."),
         new("Wall", ActiveTool.PathDraw, ShapeKind.Wall, "M3,21 L3,3 L21,3 M8,21 L8,8 L21,8 M3,21 L8,21",
@@ -119,6 +121,7 @@ public partial class MainView
 
         _libraryItem = null;
         Canvas.AreaMode = false;
+        Canvas.CancelCurve();
         ShowLibrary(false);
         if (tool.Tool != ActiveTool.Select)
         {

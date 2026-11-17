@@ -45,7 +45,7 @@ public sealed partial class DocumentCanvas
         var grid = _context.ShowGrid && _context.GridSize > 0 ? _context.GridSize : 0;
         var chrome = new Chrome(
             frames, handles, stem, _rotationLabel, pathMarks, snap, MarqueeForRender(), EraserForRender(), DimensionGuideForRender(),
-            ObjectGuidesForRender(), grid);
+            ObjectGuidesForRender(), grid, CurvePicksForRender());
         context.Custom(new DrawOperation(new Rect(Bounds.Size), _context.Document, PendingForRender(), _zoom, _offset, chrome));
     }
 
@@ -64,7 +64,8 @@ public sealed partial class DocumentCanvas
         (SKPoint At, float Radius)? Eraser,
         (SKPoint From, SKPoint To)? DimensionGuide,
         IReadOnlyList<(SKPoint From, SKPoint To)> ObjectGuides,
-        double GridSize);
+        double GridSize,
+        (IReadOnlyList<(SKPoint From, SKPoint To)> Sides, SKPoint? Corner) CurvePicks);
 
     /// <summary>The corners of the frame round a shape in drawing units (turned with it), as the Windows program draws it.</summary>
     private static (double X, double Y)[] FrameCorners(Shape shape)
@@ -172,6 +173,19 @@ public sealed partial class DocumentCanvas
         private void DrawChrome(SKCanvas canvas)
         {
             DrawDrawingMarks(canvas);
+
+            // the Curve tool: the sides that were tapped and the corner between them
+            foreach (var (from, to) in chrome.CurvePicks.Sides)
+            {
+                using var side = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 4, StrokeCap = SKStrokeCap.Round, Color = SnapColor };
+                canvas.DrawLine(from, to, side);
+            }
+
+            if (chrome.CurvePicks.Corner is { } curveCorner)
+            {
+                using var mark = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 2.5f, Color = SnapColor };
+                canvas.DrawCircle(curveCorner, 11, mark);
+            }
 
             // the edges and faces the moved selection lined up on
             foreach (var (from, to) in chrome.ObjectGuides)

@@ -36,7 +36,7 @@ public sealed partial class DocumentCanvas
     /// <summary>How many points the wall / polyline / dimension being drawn has placed.</summary>
     public int PathPointCount => _pendingPath?.Points is { } points ? Math.Max(0, points.Count - 1) : 0;
 
-    private bool ToolIsActive => _context is { ActiveTool: ActiveTool.Shape or ActiveTool.PathDraw or ActiveTool.Freehand };
+    private bool ToolIsActive => _context is { ActiveTool: ActiveTool.Shape or ActiveTool.PathDraw or ActiveTool.Freehand or ActiveTool.CornerCurve };
 
     // ---------------------------------------------------------------- finger down / moves / up
 
@@ -48,6 +48,13 @@ public sealed partial class DocumentCanvas
         }
 
         var at = ToDocument(view);
+        if (context.ActiveTool == ActiveTool.CornerCurve)
+        {
+            // the sides of a corner are tapped (DocumentCanvas.Curve.cs), when the finger lifts
+            _gesture = Gesture.CurveTap;
+            return;
+        }
+
         if (context.ActiveTool == ActiveTool.Freehand)
         {
             // handwriting: every stroke is one object (DocumentCanvas.Ink.cs)

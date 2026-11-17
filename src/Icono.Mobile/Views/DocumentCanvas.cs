@@ -45,7 +45,7 @@ public sealed partial class DocumentCanvas : Control
     private Vector _offset;
     private bool _fitPending = true;
 
-    private enum Gesture { None, Pending, Menu, MoveShapes, Resize, GroupResize, Rotate, DragPoint, Place, PathPoint, TextTap, Marquee, Ink, DimensionLine, View }
+    private enum Gesture { None, Pending, Menu, MoveShapes, Resize, GroupResize, Rotate, DragPoint, Place, PathPoint, TextTap, CurveTap, Marquee, Ink, DimensionLine, View }
 
     private Gesture _gesture;
 
@@ -409,6 +409,10 @@ public sealed partial class DocumentCanvas : Control
             {
                 var at = ToDocument(_pressPoint);
                 RequestText(null, _context?.SelectedLayer ?? Document?.Layers.FirstOrDefault(), at.X, at.Y);
+            }
+            else if (_gesture == Gesture.CurveTap)
+            {
+                CurveTapped(_pressPoint);
             }
             else if (_gesture == Gesture.Marquee)
             {

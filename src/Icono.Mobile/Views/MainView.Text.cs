@@ -22,6 +22,7 @@ public partial class MainView
             OpenText(new TextRequest(shape, _context.Document.Layers.FirstOrDefault(l => l.Shapes.Contains(shape)), shape.X, shape.Y));
         Properties.RenameLayerRequested += (_, layer) =>
             OpenTextBox("Layer name", "", layer.Name, multiline: false, name => _context.RenameLayer(layer, name));
+        Properties.TextBoxRequested += (_, request) => OpenTextBox(request.Title, request.Note, request.Text, multiline: false, request.Commit);
         TextEntry.KeyDown += OnTextKeyDown;
 
         // tap the number of a wall's dimension (or of a door / window): type the length
