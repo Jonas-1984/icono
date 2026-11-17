@@ -234,8 +234,10 @@ public partial class MainView
     private void UpdatePathBar()
     {
         PathBar.IsVisible = Canvas.IsDrawingPath;
+        PathLengthButton.IsVisible = Canvas.CanTypeLength;
         if (!Canvas.IsDrawingPath)
         {
+            LengthLayer.IsVisible = false; // the wall is finished (e.g. a typed room was closed)
             return;
         }
 

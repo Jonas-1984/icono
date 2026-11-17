@@ -63,6 +63,7 @@
                     <StackPanel Orientation="Horizontal" Spacing="4">
                         <TextBlock x:Name="PathBarText" VerticalAlignment="Center" FontSize="13" Margin="4,0,10,0"
                                    Foreground="{StaticResource ForegroundTextBrush}" />
+                        <Button Classes="tool" x:Name="PathLengthButton" Content="Length..." Click="OnPathLength" IsVisible="False" />
                         <Button Classes="tool" x:Name="PathUndoButton" Content="Undo point" Click="OnPathUndoPoint" />
                         <Button Classes="tool" Content="Cancel" Click="OnPathCancel" />
                         <Button Classes="tool primary" x:Name="PathDoneButton" Content="Done" Click="OnPathDone" />
@@ -158,6 +159,30 @@
                         <Button Classes="tool" Content="Cancel" Click="OnExportCancel" />
                         <Button Classes="tool" x:Name="ExportSaveButton" Content="Save..." Click="OnExportSave" />
                         <Button Classes="tool primary" x:Name="ExportShareButton" Content="Share..." Click="OnExportShare" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Border>
+
+        <!-- the length of the next wall and the way it goes (MainView.TypedWall.cs); at the top, so the on-screen keyboard does not cover it -->
+        <Border x:Name="LengthLayer" IsVisible="False" Background="#66000000">
+            <Border Background="{StaticResource ToolbarBackgroundBrush}" CornerRadius="14" Padding="18,14" Width="460"
+                    HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,50,0,0"
+                    BorderBrush="{StaticResource RaisedPressedBrush}" BorderThickness="1">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Next wall" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource ForegroundTextBrush}" />
+                    <TextBox x:Name="LengthEntry" FontSize="15" MinHeight="40" PlaceholderText="Length, e.g. 250 or 2.5 m" />
+                    <TextBlock x:Name="LengthNote" FontSize="11.5" TextWrapping="Wrap" Foreground="{StaticResource MutedTextBrush}"
+                               Text="Type the length (inside length, like the number on the wall), then tap the way the wall goes." />
+                    <!-- the four ways a wall can go: the corner is placed there -->
+                    <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,*,*" HorizontalAlignment="Center" Width="270">
+                        <Button Grid.Row="0" Grid.Column="1" Classes="tool" Content="Up" HorizontalAlignment="Stretch" Tag="u" Click="OnLengthDirection" />
+                        <Button Grid.Row="1" Grid.Column="0" Classes="tool" Content="Left" HorizontalAlignment="Stretch" Tag="l" Click="OnLengthDirection" />
+                        <Button Grid.Row="1" Grid.Column="2" Classes="tool" Content="Right" HorizontalAlignment="Stretch" Tag="r" Click="OnLengthDirection" />
+                        <Button Grid.Row="2" Grid.Column="1" Classes="tool" Content="Down" HorizontalAlignment="Stretch" Tag="d" Click="OnLengthDirection" />
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Classes="tool" Content="Cancel" Click="OnLengthCancel" />
                     </StackPanel>
                 </StackPanel>
             </Border>

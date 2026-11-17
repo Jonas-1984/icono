@@ -280,6 +280,13 @@ public partial class MainView : UserControl
             return;
         }
 
+        if (IsLengthOpen)
+        {
+            e.Handled = true;
+            CloseLength();
+            return;
+        }
+
         if (ExportLayer.IsVisible)
         {
             e.Handled = true;

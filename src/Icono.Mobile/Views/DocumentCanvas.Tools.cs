@@ -298,6 +298,20 @@ public sealed partial class DocumentCanvas
         }
 
         PathBoundsCalculator.Recompute(shape);
+
+        // a wall that ends free gives back what was added for a corner that never came (typed lengths, see DocumentCanvas.TypedWall.cs)
+        if (shape.Kind == ShapeKind.Wall)
+        {
+            if (shape.WallClosed)
+            {
+                WallTyping?.Forget();
+            }
+            else
+            {
+                WallTyping?.FitLast(shape);
+            }
+        }
+
         Insert(shape);
         ConnectionRouter.AttachEnds(context.Document, shape);
         if (shape.Kind == ShapeKind.Dimension)
@@ -316,6 +330,8 @@ public sealed partial class DocumentCanvas
         _pendingPath = null;
         _placingFirstPoint = false;
         _snapMark = null;
+        WallTyping?.Clear();
+        WallTyping?.Forget();
         PathDrawingChanged?.Invoke(this, EventArgs.Empty);
         _context?.RequestRedraw();
     }
@@ -339,6 +355,7 @@ public sealed partial class DocumentCanvas
         list[^1] = list[^2]; // the ghost waits on the point before
         path.Points = list;
         PathBoundsCalculator.Recompute(path);
+        WallTyping?.Forget(); // the typed numbers belong to corners that are not all there any more
         PathDrawingChanged?.Invoke(this, EventArgs.Empty);
         _context?.RequestRedraw();
     }

@@ -1126,7 +1126,7 @@ public partial class CanvasHostView : UserControl
 
         var px = snap.Point.X * scaleX;
         var py = snap.Point.Y * scaleY;
-        if (snap.Label.Length > 0 && _wallTyped.Length == 0)
+        if (snap.Label.Length > 0 && WallTyping is not { IsTyping: true })
         {
             DrawPill(canvas, snap.Label, px + 14, py - 34);
         }
