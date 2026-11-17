@@ -156,22 +156,123 @@ public static class FreehandBuilder
     public static SKPath Smooth(IReadOnlyList<SKPoint> points)
     {
         var path = new SKPath();
-        if (points.Count == 0)
+        AppendSmooth(path, points, startNew: true);
+        return path;
+    }
+
+    /// <summary>Turns at which the stroke is a SHARP CORNER and not a curve - the tip of an arrow, the corner of a Z or an N. Returns the indices of
+    /// those points of <paramref name="points"/> (never the first or the last). A corner is where the direction changes by 60 degrees or more
+    /// within <paramref name="window"/> (a page distance) on either side AND that turn happens at the point itself: half the window already shows
+    /// most of it. A round curve spreads its turn along the stroke (half the window shows about half of it), so a small "o" is no corner however
+    /// tight it is.</summary>
+    public static List<int> DetectCorners(IReadOnlyList<SKPoint> points, float window)
+    {
+        var corners = new List<int>();
+        var count = points.Count;
+        if (window <= 0 || count < 3)
         {
-            return path;
+            return corners;
         }
 
-        path.MoveTo(points[0]);
+        // the length along the stroke at every point
+        var along = new float[count];
+        for (var i = 1; i < count; i++)
+        {
+            along[i] = along[i - 1] + Geo.Distance(points[i - 1], points[i]);
+        }
+
+        var total = along[^1];
+        if (total < 2 * window)
+        {
+            return corners;
+        }
+
+        SKPoint At(float length)
+        {
+            var index = Array.BinarySearch(along, length);
+            if (index >= 0)
+            {
+                return points[index];
+            }
+
+            var after = ~index; // first point beyond the length
+            var span = along[after] - along[after - 1];
+            var t = span > 0 ? (length - along[after - 1]) / span : 0;
+            return new SKPoint(
+                points[after - 1].X + (points[after].X - points[after - 1].X) * t,
+                points[after - 1].Y + (points[after].Y - points[after - 1].Y) * t);
+        }
+
+        // how far the direction turns at point i when looking <reach> back and forward along the stroke (radians, 0 = straight on)
+        float Turn(int i, float reach)
+        {
+            if (along[i] - reach < 0 || along[i] + reach > total)
+            {
+                return 0;
+            }
+
+            var back = At(along[i] - reach);
+            var ahead = At(along[i] + reach);
+            float inX = points[i].X - back.X, inY = points[i].Y - back.Y;
+            float outX = ahead.X - points[i].X, outY = ahead.Y - points[i].Y;
+            return MathF.Atan2(MathF.Abs(inX * outY - inY * outX), inX * outX + inY * outY);
+        }
+
+        const float MinimumTurn = 60 * MathF.PI / 180;
+        const float AtThePoint = 0.7f;
+        const float AtLeastHalfWay = 45 * MathF.PI / 180;
+
+        var candidates = new List<(int Index, float Turn)>();
+        for (var i = 1; i < count - 1; i++)
+        {
+            var wide = Turn(i, window);
+            if (wide >= MinimumTurn)
+            {
+                var near = Turn(i, window / 2);
+                if (near >= AtLeastHalfWay && near >= wide * AtThePoint)
+                {
+                    candidates.Add((i, wide));
+                }
+            }
+        }
+
+        // of several candidates close together (the pen lingers at a tip) only the sharpest one is a corner
+        foreach (var candidate in candidates.OrderByDescending(c => c.Turn))
+        {
+            if (corners.All(c => MathF.Abs(along[c] - along[candidate.Index]) > window))
+            {
+                corners.Add(candidate.Index);
+            }
+        }
+
+        corners.Sort();
+        return corners;
+    }
+
+    /// <summary>The smooth stroke through the points (<see cref="Smooth"/>) added to <paramref name="path"/>: with <paramref name="startNew"/> it begins
+    /// there, otherwise it goes on from where the path is (the first point is where the path ends).</summary>
+    private static void AppendSmooth(SKPath path, IReadOnlyList<SKPoint> points, bool startNew)
+    {
+        if (points.Count == 0)
+        {
+            return;
+        }
+
+        if (startNew)
+        {
+            path.MoveTo(points[0]);
+        }
+
         if (points.Count == 1)
         {
             path.LineTo(points[0].X + 0.1f, points[0].Y); // a dot (the round cap makes it a dot)
-            return path;
+            return;
         }
 
         if (points.Count == 2)
         {
             path.LineTo(points[1]);
-            return path;
+            return;
         }
 
         var last = points.Count - 1;
@@ -196,13 +297,40 @@ public static class FreehandBuilder
                 to.X - directions[i + 1].X * reach, to.Y - directions[i + 1].Y * reach,
                 to.X, to.Y);
         }
+    }
+
+    /// <summary>The path of a stroke: smoothed everywhere except at its sharp corners (<see cref="DetectCorners"/>). The stroke is cut at every corner and
+    /// each piece is stabilised and smoothed on its own - a piece keeps its two ends exactly where they are - so a corner stays a corner: the tip of an
+    /// arrow is a point and not a rounded bend. <paramref name="keepCorners"/> false smooths everything, corners included.</summary>
+    public static SKPath BuildPath(IReadOnlyList<SKPoint> raw, float tolerance, float smoothing, bool keepCorners = true)
+    {
+        var path = new SKPath();
+        if (raw.Count == 0)
+        {
+            return path;
+        }
+
+        // the corner window follows the same screen-based sizes as the tolerance and the smoothing: about ten screen pixels
+        var corners = keepCorners ? DetectCorners(raw, Math.Max(tolerance * 12, smoothing * 3)) : [];
+        var from = 0;
+        foreach (var corner in corners.Append(raw.Count - 1))
+        {
+            var piece = new List<SKPoint>(corner - from + 1);
+            for (var i = from; i <= corner; i++)
+            {
+                piece.Add(raw[i]);
+            }
+
+            AppendSmooth(path, Simplify(Stabilize(piece, smoothing), tolerance), startNew: from == 0);
+            from = corner;
+        }
 
         return path;
     }
 
     /// <summary>Makes the shape of a finished stroke, or null when there is no stroke (no points). <paramref name="tolerance"/> is the page distance a point
     /// may be off the simplified stroke; <paramref name="smoothing"/> is the page distance over which the tremor of the hand is averaged out
-    /// (see <see cref="Stabilize"/>, 0 = the stroke as the pen drew it).</summary>
+    /// (see <see cref="Stabilize"/>, 0 = the stroke as the pen drew it); sharp corners stay sharp (see <see cref="BuildPath"/>).</summary>
     public static Shape? CreateShape(IReadOnlyList<SKPoint> raw, ArgbColor color, double width, float tolerance, float smoothing = 0)
     {
         if (raw.Count == 0)
@@ -210,7 +338,7 @@ public static class FreehandBuilder
             return null;
         }
 
-        using var smooth = Smooth(Simplify(Stabilize(raw, smoothing), tolerance));
+        using var smooth = BuildPath(raw, tolerance, smoothing);
         var bounds = smooth.TightBounds;
         var frameWidth = Math.Max(1f, bounds.Width);
         var frameHeight = Math.Max(1f, bounds.Height);

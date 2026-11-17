@@ -4,14 +4,20 @@ using Icono.Rendering;
 
 namespace Icono.Tests;
 
-public class LengthEditingTests
+// Editing a drawing sets the GLOBAL drawing scale (EditorContext.RequestRedraw); these tests use 1:50, so they run with the other tests that change
+// it (one after the other) and put it back to 1 when they are done - else a later test would read a scale that is not its own.
+[Collection("Scale")]
+public class LengthEditingTests : IDisposable
 {
-    private static (EditorContext Context, Shape Wall, List<string> Messages) RoomAtOneToFifty()
+    public void Dispose() => DrawingScale.Denominator = 1;
+
+    private static (EditorContext Context, Shape Wall, List<string> Messages) SampleRoom()
     {
         var context = new EditorContext();
         context.Document.Width = 800;
         context.Document.Height = 800;
         context.Document.ScaleDenominator = 50;
+        DrawingScale.Denominator = 50; // in the program every redraw sets it; here nothing is drawn
         var layer = new Layer { Name = "Layer 1" };
         context.Document.Layers.Add(layer);
         context.SelectedLayer = layer;
@@ -30,7 +36,7 @@ public class LengthEditingTests
     [Fact]
     public void TypingALength_MakesTheWallThatLong_AndUndoTakesItBack()
     {
-        var (context, wall, messages) = RoomAtOneToFifty();
+        var (context, wall, messages) = SampleRoom();
         var before = WallGeometry.MeasuredLength(wall, 0);
 
         Assert.True(LengthEditing.CommitWall(context, wall, 0, "250"));
@@ -45,7 +51,7 @@ public class LengthEditingTests
     [Fact]
     public void ATextThatIsNoLength_ChangesNothing_AndSaysSo()
     {
-        var (context, wall, messages) = RoomAtOneToFifty();
+        var (context, wall, messages) = SampleRoom();
         var before = WallGeometry.MeasuredLength(wall, 0);
 
         Assert.False(LengthEditing.CommitWall(context, wall, 0, "abc"));
@@ -58,7 +64,7 @@ public class LengthEditingTests
     [Fact]
     public void TheCurrentLength_IsWrittenAsTheDimensionWritesIt()
     {
-        var (_, wall, _) = RoomAtOneToFifty();
+        var (_, wall, _) = SampleRoom();
 
         var text = LengthEditing.WallText(wall, 0);
 
@@ -70,7 +76,7 @@ public class LengthEditingTests
     [Fact]
     public void ADoorWidthThatIsNoLength_IsRefused()
     {
-        var (context, _, messages) = RoomAtOneToFifty();
+        var (context, _, messages) = SampleRoom();
         var door = new Shape { Kind = ShapeKind.DoorSingle, Width = 40, Height = 40 };
 
         Assert.False(LengthEditing.CommitSymbol(context, door, SymbolDimensionPart.Width, "wide"));
