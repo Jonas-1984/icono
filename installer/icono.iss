@@ -3,7 +3,7 @@
 
 #define AppName "icono"
 #define AppVersion "0.1.0"
-#define AppVersionText "0.1.0-test.9"
+#define AppVersionText "0.1.0-test.10"
 #define Publisher "Jonas Shojaei (bitbins.de)"
 #define PublishDir "publish"
 #ifndef Suffix
