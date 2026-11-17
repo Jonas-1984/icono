@@ -67,7 +67,7 @@ public sealed partial class DocumentCanvas
         {
             var kind = context.SelectedShapeKind;
             var isLine = ShapeTemplates.TwoPointLineKinds.Contains(kind);
-            var start = SnapToObjectPoints(at, exclude: []) ?? at;
+            var start = SnapToObjectPoints(at, exclude: []) ?? GridPoint(at);
             _placeStart = start;
             _pendingShape = isLine
                 ? ShapeTemplates.NewTwoPointLine(kind, start.X, start.Y, context.CurrentFillColor)
@@ -104,7 +104,7 @@ public sealed partial class DocumentCanvas
             if (shape.Points is not null)
             {
                 var start = new SKPoint((float)_placeStart.X, (float)_placeStart.Y);
-                var end = SnapToObjectPoints(at, exclude: [], reference: start) ?? at;
+                var end = SnapToObjectPoints(at, exclude: [], reference: start) ?? GridPoint(at);
 
                 // re-anchored to the fixed start every time, so the bounds recomputation never drifts
                 shape.X = _placeStart.X;
@@ -114,7 +114,7 @@ public sealed partial class DocumentCanvas
             }
             else
             {
-                var corner = SnapToObjectPoints(at, exclude: []) ?? at;
+                var corner = SnapToObjectPoints(at, exclude: []) ?? GridPoint(at);
                 var outline = ShapeOutline.FrameForBox(
                     shape,
                     Math.Min(_placeStart.X, corner.X),
@@ -447,7 +447,7 @@ public sealed partial class DocumentCanvas
             }
         }
 
-        return at;
+        return GridPoint(at);
     }
 
     /// <summary>The marks of the drawing under way, in drawing units: the placed points of a path and where the current point snapped.</summary>

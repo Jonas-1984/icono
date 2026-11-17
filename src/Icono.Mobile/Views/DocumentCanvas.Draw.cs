@@ -42,7 +42,10 @@ public sealed partial class DocumentCanvas
         var pathMarks = PathPointMarks().Select(ToScreen).ToList();
         (SKPoint At, string Label)? snap = _snapMark is { } mark ? (ToScreen((mark.X, mark.Y)), mark.Label) : null;
 
-        var chrome = new Chrome(frames, handles, stem, _rotationLabel, pathMarks, snap, MarqueeForRender(), EraserForRender(), DimensionGuideForRender());
+        var grid = _context.ShowGrid && _context.GridSize > 0 ? _context.GridSize : 0;
+        var chrome = new Chrome(
+            frames, handles, stem, _rotationLabel, pathMarks, snap, MarqueeForRender(), EraserForRender(), DimensionGuideForRender(),
+            ObjectGuidesForRender(), grid);
         context.Custom(new DrawOperation(new Rect(Bounds.Size), _context.Document, PendingForRender(), _zoom, _offset, chrome));
     }
 
@@ -59,7 +62,9 @@ public sealed partial class DocumentCanvas
         (SKPoint At, string Label)? Snap,
         (SKRect Area, bool Crossing)? Marquee,
         (SKPoint At, float Radius)? Eraser,
-        (SKPoint From, SKPoint To)? DimensionGuide);
+        (SKPoint From, SKPoint To)? DimensionGuide,
+        IReadOnlyList<(SKPoint From, SKPoint To)> ObjectGuides,
+        double GridSize);
 
     /// <summary>The corners of the frame round a shape in drawing units (turned with it), as the Windows program draws it.</summary>
     private static (double X, double Y)[] FrameCorners(Shape shape)
@@ -127,6 +132,7 @@ public sealed partial class DocumentCanvas
             }
 
             DocumentRenderer.Render(canvas, document, document.Width, document.Height, pending);
+            DrawGrid(canvas);
             canvas.Restore();
 
             // frames and handles in screen units, so they keep their size at every zoom
@@ -134,9 +140,48 @@ public sealed partial class DocumentCanvas
             canvas.Restore();
         }
 
+        /// <summary>The grid of every page, in drawing units (the canvas is already scaled): a hair line at each step, left out where the lines
+        /// would be closer than a few pixels on the screen.</summary>
+        private void DrawGrid(SKCanvas canvas)
+        {
+            var step = (float)chrome.GridSize;
+            if (step <= 0 || step * zoom < 6)
+            {
+                return;
+            }
+
+            using var line = new SKPaint
+            {
+                IsAntialias = false, Style = SKPaintStyle.Stroke, StrokeWidth = (float)(1 / zoom), Color = new SKColor(0x80, 0x80, 0x80, 90),
+            };
+            for (var page = 0; page < document.PageCount; page++)
+            {
+                var top = (float)document.PageTop(page);
+                for (var x = step; x < document.Width; x += step)
+                {
+                    canvas.DrawLine(x, top, x, top + (float)document.Height, line);
+                }
+
+                for (var y = step; y < document.Height; y += step)
+                {
+                    canvas.DrawLine(0, top + y, (float)document.Width, top + y, line);
+                }
+            }
+        }
+
         private void DrawChrome(SKCanvas canvas)
         {
             DrawDrawingMarks(canvas);
+
+            // the edges and faces the moved selection lined up on
+            foreach (var (from, to) in chrome.ObjectGuides)
+            {
+                using var edge = new SKPaint
+                {
+                    IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 1.5f, Color = SnapColor, PathEffect = SKPathEffect.CreateDash([7, 5], 0),
+                };
+                canvas.DrawLine(from, to, edge);
+            }
 
             // the dimension line the dragged one has lined up with (so two dimensions stand in one row, flush)
             if (chrome.DimensionGuide is { } guide)

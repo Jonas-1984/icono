@@ -278,6 +278,7 @@ public sealed partial class DocumentCanvas
                     _editShapes[i].Y = _moveStart[i].Y + at.Y - _moveStartDocument.Y;
                 }
 
+                SnapMovedSelection();
                 break;
 
             case Gesture.Resize:
@@ -285,12 +286,12 @@ public sealed partial class DocumentCanvas
                 var shape = _editShapes[0];
                 (shape.X, shape.Y, shape.Width, shape.Height) = ShapeResizer.ResizeFrame(
                     _resizeHandle, _resizeStartOutline, _resizeStartFrame, _resizeStartPoint, (at.X, at.Y),
-                    _resizeRotation, _resizePivot, keepProportions: true);
+                    _resizeRotation, _resizePivot, keepProportions: true, snap: GridRounding);
                 break;
 
             case Gesture.GroupResize:
                 ShapeResizer.ResizeGroup(
-                    _editShapes, _groupStartRects, _resizeHandle, _resizeStartOutline, _resizeStartPoint, (at.X, at.Y), keepProportions: true);
+                    _editShapes, _groupStartRects, _resizeHandle, _resizeStartOutline, _resizeStartPoint, (at.X, at.Y), keepProportions: true, snap: GridRounding);
                 break;
 
             case Gesture.Rotate:
@@ -321,14 +322,22 @@ public sealed partial class DocumentCanvas
             return;
         }
 
-        // a corner of a wall snaps onto the line between its neighbours (two walls become straight) and lines up with other corners
+        // a corner of a wall snaps onto the line between its neighbours (two walls become straight) and lines up with other corners;
+        // failing that the point goes onto the grid (when the grid snaps)
+        var snapped = false;
         if (shape.Kind == ShapeKind.Wall && _context.WallSnap.Enabled)
         {
             var snap = WallStraightener.Snap(_context.Document, shape, _pointIndex, new SKPoint((float)at.X, (float)at.Y), FingerReach / _zoom);
             if (snap.Snapped)
             {
                 at = new Point(snap.Point.X, snap.Point.Y);
+                snapped = true;
             }
+        }
+
+        if (!snapped)
+        {
+            at = GridPoint(at);
         }
 
         var list = points.ToList();
@@ -401,5 +410,6 @@ public sealed partial class DocumentCanvas
         _editBefore = [];
         _moveStart = [];
         _groupStartRects = [];
+        _objectGuides = [];
     }
 }

@@ -318,6 +318,7 @@ public sealed partial class PropertiesPanel : UserControl
         Heading("PAGE");
         Note($"{doc.Width / PxPerCm * 10:0} x {doc.Height / PxPerCm * 10:0} mm, {doc.PageCount} page(s), " +
              $"{doc.Layers.Sum(l => l.Shapes.Count)} object(s)");
+        BuildSnapping(context);
         Note("Tap an object to see its properties here.");
     }
 
