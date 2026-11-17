@@ -219,6 +219,23 @@ public sealed partial class PropertiesPanel : UserControl
             ("Turn 90°", () => context.RotateSelection(90)),
             ("Flip ↔", () => context.FlipSelection(horizontally: true)),
             ("Flip ↕", () => context.FlipSelection(horizontally: false)));
+
+        // one object aligns to the page, several to each other; three or more can also be spread evenly
+        Heading(shapes.Count == 1 ? "ALIGN TO PAGE" : "ALIGN");
+        ButtonRow(
+            ("Left", () => context.AlignSelection(AlignKind.Left)),
+            ("Centre", () => context.AlignSelection(AlignKind.CenterHorizontally)),
+            ("Right", () => context.AlignSelection(AlignKind.Right)));
+        ButtonRow(
+            ("Top", () => context.AlignSelection(AlignKind.Top)),
+            ("Middle", () => context.AlignSelection(AlignKind.CenterVertically)),
+            ("Bottom", () => context.AlignSelection(AlignKind.Bottom)));
+        if (shapes.Count >= 3)
+        {
+            ButtonRow(
+                ("Spread ↔", () => context.DistributeSelection(horizontally: true)),
+                ("Spread ↕", () => context.DistributeSelection(horizontally: false)));
+        }
     }
 
     /// <summary>Raised by "Edit text": the window opens the text to type for this shape.</summary>
