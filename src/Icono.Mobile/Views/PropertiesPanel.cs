@@ -68,6 +68,7 @@ public sealed partial class PropertiesPanel : UserControl
                 _context.LayersChanged -= OnChanged;
                 _context.PagesChanged -= OnChanged;
                 _context.CurrentPageChanged -= OnChanged;
+                _context.PropertyChanged -= OnChanged;
             }
 
             _context = value;
@@ -78,6 +79,7 @@ public sealed partial class PropertiesPanel : UserControl
                 _context.LayersChanged += OnChanged;
                 _context.PagesChanged += OnChanged;
                 _context.CurrentPageChanged += OnChanged;
+                _context.PropertyChanged += OnChanged; // the tool (the Pen shows its settings), the pen colour and width ...
             }
 
             Rebuild();
@@ -141,6 +143,13 @@ public sealed partial class PropertiesPanel : UserControl
         if (_showLayers)
         {
             BuildPagesAndLayers(context);
+            return;
+        }
+
+        // while the Pen is the tool its settings are shown (colour, width, smoothing)
+        if (context.ActiveTool == ActiveTool.Freehand)
+        {
+            BuildPen(context);
             return;
         }
 

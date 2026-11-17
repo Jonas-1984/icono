@@ -36,7 +36,7 @@ public sealed partial class DocumentCanvas
     /// <summary>How many points the wall / polyline / dimension being drawn has placed.</summary>
     public int PathPointCount => _pendingPath?.Points is { } points ? Math.Max(0, points.Count - 1) : 0;
 
-    private bool ToolIsActive => _context is { ActiveTool: ActiveTool.Shape or ActiveTool.PathDraw };
+    private bool ToolIsActive => _context is { ActiveTool: ActiveTool.Shape or ActiveTool.PathDraw or ActiveTool.Freehand };
 
     // ---------------------------------------------------------------- finger down / moves / up
 
@@ -48,6 +48,14 @@ public sealed partial class DocumentCanvas
         }
 
         var at = ToDocument(view);
+        if (context.ActiveTool == ActiveTool.Freehand)
+        {
+            // handwriting: every stroke is one object (DocumentCanvas.Ink.cs)
+            BeginInk(at);
+            _gesture = Gesture.Ink;
+            return;
+        }
+
         if (context.ActiveTool == ActiveTool.Shape && context.SelectedShapeKind == ShapeKind.Text)
         {
             // the text is typed once the finger lifts (DocumentCanvas.EndPointer)
@@ -439,5 +447,5 @@ public sealed partial class DocumentCanvas
 
     /// <summary>What to hand the renderer as the object under way (a path only once it has some length).</summary>
     private Shape? PendingForRender() =>
-        _pendingShape ?? (_pendingPath is { Points.Count: >= 2 } path && !_placingFirstPoint ? path : null);
+        _inkShape ?? _pendingShape ?? (_pendingPath is { Points.Count: >= 2 } path && !_placingFirstPoint ? path : null);
 }

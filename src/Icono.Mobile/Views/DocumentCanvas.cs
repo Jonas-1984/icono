@@ -45,12 +45,15 @@ public sealed partial class DocumentCanvas : Control
     private Vector _offset;
     private bool _fitPending = true;
 
-    private enum Gesture { None, Pending, Menu, MoveShapes, Resize, GroupResize, Rotate, DragPoint, Place, PathPoint, TextTap, Marquee, View }
+    private enum Gesture { None, Pending, Menu, MoveShapes, Resize, GroupResize, Rotate, DragPoint, Place, PathPoint, TextTap, Marquee, Ink, View }
 
     private Gesture _gesture;
 
     // the fingers (or the mouse) on the canvas
     private readonly Dictionary<int, Point> _pointers = new();
+
+    // what each of them is (finger, pen, mouse): a pen writing ignores the palm
+    private readonly Dictionary<int, PointerType> _pointerTypes = new();
 
     // view gesture: the view when it started
     private double _startZoom;
@@ -164,8 +167,16 @@ public sealed partial class DocumentCanvas : Control
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
         base.OnPointerPressed(e);
+        // a hand resting on the screen while a pen writes is ignored
+        if (PalmShouldBeIgnored(e))
+        {
+            e.Handled = true;
+            return;
+        }
+
         var position = e.GetPosition(this);
         _pointers[e.Pointer.Id] = position;
+        _pointerTypes[e.Pointer.Id] = e.Pointer.Type;
         e.Pointer.Capture(this);
         e.Handled = true;
 
@@ -210,6 +221,10 @@ public sealed partial class DocumentCanvas : Control
         else if (_gesture == Gesture.Marquee)
         {
             CancelMarquee();
+        }
+        else if (_gesture == Gesture.Ink)
+        {
+            CancelInk();
         }
         else
         {
@@ -281,6 +296,9 @@ public sealed partial class DocumentCanvas : Control
                 break;
             case Gesture.Marquee:
                 UpdateMarquee(position);
+                break;
+            case Gesture.Ink:
+                ContinueInk(e);
                 break;
             default:
                 UpdateEdit(position);
@@ -368,6 +386,7 @@ public sealed partial class DocumentCanvas : Control
 
         if (_pointers.Count == 0)
         {
+            _pointerTypes.Clear();
             _longPressTimer.Stop();
             if (_gesture == Gesture.Pending)
             {
@@ -381,6 +400,10 @@ public sealed partial class DocumentCanvas : Control
             else if (_gesture == Gesture.Marquee)
             {
                 FinishMarquee();
+            }
+            else if (_gesture == Gesture.Ink)
+            {
+                FinishInk();
             }
             else if (_gesture is Gesture.Place or Gesture.PathPoint)
             {

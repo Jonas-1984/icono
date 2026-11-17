@@ -29,6 +29,9 @@ public partial class MainView
             "Arrow: drag from the start to the tip - the ends snap to the points of other objects."),
         new("Text", ActiveTool.Shape, ShapeKind.Text, "M12 4v16 M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2 M9 20h6",
             "Text: tap where the text should go and type it. Double tap a text or a shape later to change its text."),
+        new("Pen", ActiveTool.Freehand, ShapeKind.Polyline,
+            "M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7 M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z",
+            "Pen: write or draw with the pen or a finger - every stroke is one object. Colour and width: Properties. Two fingers move and zoom."),
         new("Polyline", ActiveTool.PathDraw, ShapeKind.Polyline, "M3,19 L8,9 L14,15 L21,5",
             "Polyline: finger down, slide to the point, lift to place it. Done ends."),
         new("Wall", ActiveTool.PathDraw, ShapeKind.Wall, "M3,21 L3,3 L21,3 M8,21 L8,8 L21,8 M3,21 L8,21",
@@ -204,7 +207,7 @@ public partial class MainView
 
             return _libraryItem is not null && _context.SelectedShapeKind == _libraryItem.Kind
                 ? null
-                : Tools.FirstOrDefault(t => t.Tool == _context.ActiveTool && t.Kind == _context.SelectedShapeKind) ?? Tools[0];
+                : Tools.FirstOrDefault(t => t.Tool == _context.ActiveTool && (t.Tool == ActiveTool.Freehand || t.Kind == _context.SelectedShapeKind)) ?? Tools[0];
         }
     }
 

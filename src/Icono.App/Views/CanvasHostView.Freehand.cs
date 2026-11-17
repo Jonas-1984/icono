@@ -71,8 +71,6 @@ public partial class CanvasHostView
     }
 
     /// <summary>The page distance the tremor is averaged over: the hand shakes by screen pixels, so the distance follows the zoom.</summary>
-    private float SmoothingDistance() => _context is null ? 0 : (float)(_context.PenSmoothing * 0.75 / Zoom);
-
     private void UpdateFreehandPreview()
     {
         if (_context is null || _freehandPoints is null)
@@ -80,7 +78,7 @@ public partial class CanvasHostView
             return;
         }
 
-        _freehandShape = FreehandBuilder.CreateShape(_freehandPoints, _context.PenColor, _context.PenWidth, (float)(0.5 / Zoom), SmoothingDistance());
+        _freehandShape = InkEditing.Preview(_context, _freehandPoints, Zoom); // shared with the tablet app
         _context.RequestRedraw();
     }
 
@@ -95,20 +93,7 @@ public partial class CanvasHostView
         var points = _freehandPoints;
         ResetFreehand();
 
-        var layer = _context.SelectedLayer is { Locked: false } selected ? selected : _context.Document.Layers.FirstOrDefault(l => !l.Locked);
-        if (layer is null)
-        {
-            _context.Notify("All layers are locked.");
-            return;
-        }
-
-        var shape = FreehandBuilder.CreateShape(points, _context.PenColor, _context.PenWidth, (float)Math.Max(0.2, 0.8 / Zoom), SmoothingDistance());
-        if (shape is not null)
-        {
-            layer.Shapes.Insert(0, shape);
-            _context.UndoManager.Push(UndoableAction.ForInsert(layer.Shapes, shape, 0));
-        }
-
+        InkEditing.Commit(_context, points, Zoom); // shared with the tablet app
         _context.RequestRedraw();
     }
 
