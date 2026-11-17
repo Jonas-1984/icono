@@ -45,7 +45,7 @@ public sealed partial class DocumentCanvas : Control
     private Vector _offset;
     private bool _fitPending = true;
 
-    private enum Gesture { None, Pending, Menu, MoveShapes, Resize, GroupResize, Rotate, DragPoint, Place, PathPoint, TextTap, View }
+    private enum Gesture { None, Pending, Menu, MoveShapes, Resize, GroupResize, Rotate, DragPoint, Place, PathPoint, TextTap, Marquee, View }
 
     private Gesture _gesture;
 
@@ -180,8 +180,8 @@ public sealed partial class DocumentCanvas : Control
                 return;
             }
 
-            // a handle of the selection starts its drag at once
-            if (TryBeginHandleDrag(position))
+            // a handle of the selection starts its drag at once (not in the area mode: there every drag draws the area)
+            if (!AreaMode && TryBeginHandleDrag(position))
             {
                 return;
             }
@@ -192,7 +192,11 @@ public sealed partial class DocumentCanvas : Control
             var at = ToDocument(position);
             _pressHit = document is null ? null : ShapeHitTester.Find(document, at.X, at.Y, _zoom, FingerReach);
             _longPressTimer.Stop();
-            _longPressTimer.Start();
+            if (!AreaMode)
+            {
+                _longPressTimer.Start();
+            }
+
             return;
         }
 
@@ -201,6 +205,10 @@ public sealed partial class DocumentCanvas : Control
         if (_gesture is Gesture.Place or Gesture.PathPoint)
         {
             CancelToolPress();
+        }
+        else if (_gesture == Gesture.Marquee)
+        {
+            CancelMarquee();
         }
         else
         {
@@ -245,7 +253,13 @@ public sealed partial class DocumentCanvas : Control
             }
 
             _longPressTimer.Stop();
-            if (_pressHit is { } hit && !IsLocked(hit.Shape, hit.Layer) && BeginMove(hit.Shape, hit.Layer))
+            if (AreaMode)
+            {
+                // in the area mode a drag draws the area, wherever it starts
+                BeginMarquee(_pressPoint);
+                _gesture = Gesture.Marquee;
+            }
+            else if (_pressHit is { } hit && !IsLocked(hit.Shape, hit.Layer) && BeginMove(hit.Shape, hit.Layer))
             {
                 _gesture = Gesture.MoveShapes;
             }
@@ -263,6 +277,9 @@ public sealed partial class DocumentCanvas : Control
                 break;
             case Gesture.Place or Gesture.PathPoint:
                 UpdateTool(position);
+                break;
+            case Gesture.Marquee:
+                UpdateMarquee(position);
                 break;
             default:
                 UpdateEdit(position);
@@ -296,7 +313,7 @@ public sealed partial class DocumentCanvas : Control
     private void OnDoubleTapped(object? sender, TappedEventArgs e)
     {
         var document = Document;
-        if (document is null || ToolIsActive)
+        if (document is null || ToolIsActive || AreaMode)
         {
             return;
         }
@@ -359,6 +376,10 @@ public sealed partial class DocumentCanvas : Control
             {
                 var at = ToDocument(_pressPoint);
                 RequestText(null, _context?.SelectedLayer ?? Document?.Layers.FirstOrDefault(), at.X, at.Y);
+            }
+            else if (_gesture == Gesture.Marquee)
+            {
+                FinishMarquee();
             }
             else if (_gesture is Gesture.Place or Gesture.PathPoint)
             {

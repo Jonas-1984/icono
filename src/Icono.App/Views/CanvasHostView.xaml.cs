@@ -3453,19 +3453,12 @@ public partial class CanvasHostView : UserControl
         var rect = BuildMarqueeDocRect();
         var crossing = MarqueeIsCrossing;
 
-        foreach (var layer in _context.Document.Layers)
+        // the rule (window / crossing) is shared with the tablet app: SelectionArea
+        foreach (var shape in SelectionArea.Find(_context.Document, rect, crossing))
         {
-            if (!layer.Visible)
+            if (!_context.SelectedShapes.Contains(shape))
             {
-                continue;
-            }
-
-            foreach (var shape in layer.Shapes)
-            {
-                if (!_context.SelectedShapes.Contains(shape) && InMarquee(shape, rect, crossing))
-                {
-                    _context.SelectedShapes.Add(shape);
-                }
+                _context.SelectedShapes.Add(shape);
             }
         }
 
@@ -3474,37 +3467,9 @@ public partial class CanvasHostView : UserControl
 
     /// <summary>The area was dragged from right to left (AutoCAD "crossing"): everything it touches is chosen. From left to right it is a
     /// window and only what lies completely inside is chosen.</summary>
-    private bool MarqueeIsCrossing => _marqueeCurrent.X < _marqueeStart.X;
+    private bool MarqueeIsCrossing => SelectionArea.IsCrossing(_marqueeStart.X, _marqueeCurrent.X);
 
     private static readonly SKColor CrossingColor = new(0x4C, 0xD1, 0x7A);
-
-    private static bool InMarquee(Shape shape, SKRect area, bool crossing)
-    {
-        var bounds = SelectionBounds(shape);
-        return crossing
-            ? bounds.Left <= area.Right && bounds.Right >= area.Left && bounds.Top <= area.Bottom && bounds.Bottom >= area.Top
-            : bounds.Left >= area.Left && bounds.Right <= area.Right && bounds.Top >= area.Top && bounds.Bottom <= area.Bottom;
-    }
-
-    /// <summary>Where the shape really is on the page (its drawn outline, rotation included), falling back to its frame.</summary>
-    private static SKRect SelectionBounds(Shape shape)
-    {
-        try
-        {
-            using var path = ShapeGeometryFactory.Build(shape);
-            var bounds = path.TightBounds;
-            if (bounds.Width > 0 || bounds.Height > 0)
-            {
-                return bounds;
-            }
-        }
-        catch (Exception)
-        {
-            // a shape without drawable geometry: use its frame below
-        }
-
-        return SKRect.Create((float)shape.X, (float)shape.Y, (float)shape.Width, (float)shape.Height);
-    }
 
     private void OnMouseLeave(object sender, MouseEventArgs e)
     {

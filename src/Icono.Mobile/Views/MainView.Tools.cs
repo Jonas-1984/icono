@@ -50,6 +50,7 @@ public partial class MainView
     private LibraryItem? _libraryItem;
 
     private Button? _objectsButton;
+    private Button? _areaButton;
 
     private void BuildTools()
     {
@@ -59,6 +60,14 @@ public partial class MainView
             button.Click += (_, _) => ChooseTool(tool);
             ToolPanel.Children.Add(button);
             _toolButtons.Add((tool, button));
+
+            if (tool.Tool == ActiveTool.Select)
+            {
+                // choosing several objects: a dashed frame (the Area mode, DocumentCanvas.Area.cs)
+                _areaButton = PaletteButton("Area", "M5,3 H8 M11,3 H14 M17,3 H19 A2,2 0 0 1 21,5 V8 M21,11 V14 M21,17 V19 A2,2 0 0 1 19,21 H17 M14,21 H11 M8,21 H5 A2,2 0 0 1 3,19 V17 M3,14 V11 M3,8 V5 A2,2 0 0 1 5,3");
+                _areaButton.Click += (_, _) => ToggleAreaMode();
+                ToolPanel.Children.Add(_areaButton);
+            }
         }
 
         // the libraries of the Windows program: rooms, doors, symbols, cabinets, shapes ...
@@ -69,6 +78,7 @@ public partial class MainView
 
         _context.PropertyChanged += OnContextPropertyChanged;
         Canvas.PathDrawingChanged += (_, _) => UpdatePathBar();
+        Canvas.AreaModeChanged += (_, _) => UpdateToolButtons();
         UpdateToolButtons();
     }
 
@@ -105,6 +115,7 @@ public partial class MainView
         }
 
         _libraryItem = null;
+        Canvas.AreaMode = false;
         ShowLibrary(false);
         if (tool.Tool != ActiveTool.Select)
         {
@@ -116,6 +127,26 @@ public partial class MainView
         }
 
         _context.ActiveTool = tool.Tool;
+        UpdateToolButtons();
+    }
+
+    /// <summary>The Area button: switches the mode for choosing several objects on or off.</summary>
+    private void ToggleAreaMode()
+    {
+        if (Canvas.IsDrawingPath)
+        {
+            Canvas.FinishPath();
+        }
+
+        var on = !Canvas.AreaMode;
+        _libraryItem = null;
+        ShowLibrary(false);
+        if (on)
+        {
+            _context.ActiveTool = ActiveTool.Select;
+        }
+
+        Canvas.AreaMode = on;
         UpdateToolButtons();
     }
 
@@ -134,6 +165,7 @@ public partial class MainView
             Canvas.FinishPath();
         }
 
+        Canvas.AreaMode = false;
         ShowLibrary(false);
         if (item.Room is { } room)
         {
@@ -177,7 +209,9 @@ public partial class MainView
     }
 
     /// <summary>One line of how to use the current tool.</summary>
-    private string ToolHint => CurrentTool?.Hint
+    private string ToolHint => Canvas.AreaMode
+        ? "Area: drag a frame - to the right: what is completely inside; to the left (green): everything it touches. A tap adds or removes an object."
+        : CurrentTool?.Hint
         ?? $"{_libraryItem?.Name}: tap to place it at its real size, or drag it open to any size.";
 
     private void UpdateToolButtons()
@@ -185,8 +219,10 @@ public partial class MainView
         var current = CurrentTool;
         foreach (var (tool, button) in _toolButtons)
         {
-            button.Classes.Set("active", ReferenceEquals(tool, current));
+            button.Classes.Set("active", ReferenceEquals(tool, current) && !Canvas.AreaMode);
         }
+
+        _areaButton?.Classes.Set("active", Canvas.AreaMode);
 
         _objectsButton?.Classes.Set("active", LibraryPane.IsVisible || (current is null && _context.ActiveTool != ActiveTool.Select));
         UpdateCommands();

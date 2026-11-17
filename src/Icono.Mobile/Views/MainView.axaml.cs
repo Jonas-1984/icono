@@ -123,7 +123,7 @@ public partial class MainView : UserControl
         DeleteButton.IsEnabled = anything;
 
         var selected = _context.SelectedShapes;
-        StatusText.Text = _context.ActiveTool != ActiveTool.Select ? ToolHint : selected.Count switch
+        StatusText.Text = _context.ActiveTool != ActiveTool.Select || Canvas.AreaMode ? ToolHint : selected.Count switch
         {
             0 => Hint,
             1 => "Selected: " + Describe(selected[0]) + (selected[0].Locked ? " (locked)" : ""),

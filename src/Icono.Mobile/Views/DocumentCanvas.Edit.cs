@@ -70,7 +70,19 @@ public sealed partial class DocumentCanvas
             return;
         }
 
-        if (_pressHit is { } hit)
+        if (AreaMode)
+        {
+            // in the area mode a tap adds an object to the selection or takes it out again
+            if (_pressHit is { } picked)
+            {
+                ToggleSelected(picked.Shape, picked.Layer);
+            }
+            else
+            {
+                _context.SelectedShapes.Clear();
+            }
+        }
+        else if (_pressHit is { } hit)
         {
             Select(hit.Shape, hit.Layer);
         }

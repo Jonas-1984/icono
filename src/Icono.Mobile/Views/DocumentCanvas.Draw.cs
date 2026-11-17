@@ -16,6 +16,7 @@ public sealed partial class DocumentCanvas
     private static readonly SKColor SelectionColor = new(0x5A, 0xB0, 0xFF);
     private static readonly SKColor LockedColor = new(0x90, 0x90, 0x90);
     private static readonly SKColor SnapColor = new(0xFF, 0x9F, 0x1C);
+    private static readonly SKColor CrossingColor = new(0x4C, 0xD1, 0x7A);
 
     public override void Render(DrawingContext context)
     {
@@ -41,7 +42,7 @@ public sealed partial class DocumentCanvas
         var pathMarks = PathPointMarks().Select(ToScreen).ToList();
         (SKPoint At, string Label)? snap = _snapMark is { } mark ? (ToScreen((mark.X, mark.Y)), mark.Label) : null;
 
-        var chrome = new Chrome(frames, handles, stem, _rotationLabel, pathMarks, snap);
+        var chrome = new Chrome(frames, handles, stem, _rotationLabel, pathMarks, snap, MarqueeForRender());
         context.Custom(new DrawOperation(new Rect(Bounds.Size), _context.Document, PendingForRender(), _zoom, _offset, chrome));
     }
 
@@ -55,7 +56,8 @@ public sealed partial class DocumentCanvas
         (SKPoint From, SKPoint To)? Stem,
         string? Label,
         IReadOnlyList<SKPoint> PathMarks,
-        (SKPoint At, string Label)? Snap);
+        (SKPoint At, string Label)? Snap,
+        (SKRect Area, bool Crossing)? Marquee);
 
     /// <summary>The corners of the frame round a shape in drawing units (turned with it), as the Windows program draws it.</summary>
     private static (double X, double Y)[] FrameCorners(Shape shape)
@@ -133,6 +135,20 @@ public sealed partial class DocumentCanvas
         private void DrawChrome(SKCanvas canvas)
         {
             DrawDrawingMarks(canvas);
+
+            // the area being drawn: blue and solid = window (what is completely inside), green and dashed = crossing (what it touches)
+            if (chrome.Marquee is { } marquee)
+            {
+                var color = marquee.Crossing ? CrossingColor : SelectionColor;
+                using var areaFill = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill, Color = color.WithAlpha(45) };
+                using var edge = new SKPaint
+                {
+                    IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 2, Color = color,
+                    PathEffect = marquee.Crossing ? SKPathEffect.CreateDash([6, 4], 0) : null,
+                };
+                canvas.DrawRect(marquee.Area, areaFill);
+                canvas.DrawRect(marquee.Area, edge);
+            }
 
             using var frame = new SKPaint
             {
