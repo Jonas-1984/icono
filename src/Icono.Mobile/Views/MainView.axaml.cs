@@ -14,7 +14,8 @@ public partial class MainView : UserControl
     /// <summary>The scale a new drawing starts with (same as the Windows program, MainWindow.DefaultScale).</summary>
     private const double DefaultScale = 40;
 
-    private const string Hint = "Tap: select · drag an object: move it · drag the paper or two fingers: move and zoom · double tap: fit page";
+    private const string Hint = "Tap: select · tap a dimension number of a wall or door: type its length · drag an object: move it · " +
+                                "drag the paper or two fingers: move and zoom · double tap: fit page";
 
     private static readonly FilePickerFileType IconoFiles = new("icono drawing")
     {

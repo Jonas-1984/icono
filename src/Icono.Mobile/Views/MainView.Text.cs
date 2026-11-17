@@ -23,6 +23,12 @@ public partial class MainView
         Properties.RenameLayerRequested += (_, layer) =>
             OpenTextBox("Layer name", "", layer.Name, multiline: false, name => _context.RenameLayer(layer, name));
         TextEntry.KeyDown += OnTextKeyDown;
+
+        // tap the number of a wall's dimension (or of a door / window): type the length
+        Canvas.LengthRequested += (_, request) => OpenTextBox(request.Title, request.Note, request.Text, multiline: false, request.Commit);
+
+        // what the shared editor code says (a length that cannot be read, a room that closed, a page that was added ...)
+        _context.StatusMessage += message => StatusText.Text = message;
     }
 
     private void OpenText(TextRequest request)

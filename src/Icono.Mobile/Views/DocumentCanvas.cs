@@ -191,6 +191,7 @@ public sealed partial class DocumentCanvas : Control
             var document = Document;
             var at = ToDocument(position);
             _pressHit = document is null ? null : ShapeHitTester.Find(document, at.X, at.Y, _zoom, FingerReach);
+            _pressNumber = AreaMode ? null : FindDimensionNumber(at);
             _longPressTimer.Stop();
             if (!AreaMode)
             {

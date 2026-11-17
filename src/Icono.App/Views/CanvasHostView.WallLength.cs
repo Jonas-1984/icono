@@ -175,16 +175,8 @@ public partial class CanvasHostView
         var segment = _lengthSegment;
         RemoveLengthBox();
 
-        if (!WallGeometry.TryParseLength(text, WallRenderer.SegmentUnit(wall, segment), _context.Document.ScaleDenominator, out var px))
-        {
-            _context.Notify("That is not a length. Type for example 250, 2.5 m or 2500 mm.");
-            return;
-        }
-
-        if (_context.SetWallSegmentLength(wall, segment, px))
-        {
-            _context.Notify($"Wall set to {DimensionRenderer.Format(px, WallRenderer.SegmentUnit(wall, segment), WallRenderer.SegmentPrecision(wall, segment), _context.Document.ScaleDenominator)}.");
-        }
+        // parsing and applying the typed length is shared with the tablet app
+        LengthEditing.CommitWall(_context, wall, segment, text);
     }
 
     private void CommitSymbolDimension(Shape symbol)
@@ -197,30 +189,8 @@ public partial class CanvasHostView
             return;
         }
 
-        // 0 is a fine distance (the symbol against the corner); a width has to be positive
-        double px;
-        var zero = part != SymbolDimensionPart.Width && text is "0" or "0.0" or "0,0";
-        if (zero)
-        {
-            px = 0;
-        }
-        else if (!WallGeometry.TryParseLength(text, symbol.DimUnit, _context.Document.ScaleDenominator, out px))
-        {
-            _context.Notify("That is not a length. Type for example 90, 1.2 m or 900 mm.");
-            return;
-        }
-
-        var changed = part == SymbolDimensionPart.Width
-            ? _context.SetSymbolWidth(symbol, px)
-            : _context.SetSymbolGap(symbol, part, px);
-        if (changed)
-        {
-            _context.Notify(part == SymbolDimensionPart.Width ? "Opening width set." : "Distance to the wall corner set.");
-        }
-        else if (part != SymbolDimensionPart.Width)
-        {
-            _context.Notify("The distance could not be set: the symbol has to lie in a wall.");
-        }
+        // parsing and applying the typed value is shared with the tablet app
+        LengthEditing.CommitSymbol(_context, symbol, part, text);
     }
 
     /// <summary>A click outside the length editor keeps what was typed; a click inside it changes nothing.</summary>

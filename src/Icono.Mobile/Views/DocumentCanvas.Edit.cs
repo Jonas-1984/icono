@@ -82,6 +82,12 @@ public sealed partial class DocumentCanvas
                 _context.SelectedShapes.Clear();
             }
         }
+        else if (_pressNumber is { } number)
+        {
+            // a tap on the number of a dimension: type the length (DocumentCanvas.Length.cs)
+            TapNumber(number);
+            return;
+        }
         else if (_pressHit is { } hit)
         {
             Select(hit.Shape, hit.Layer);
