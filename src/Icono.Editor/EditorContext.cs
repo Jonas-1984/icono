@@ -190,6 +190,12 @@ public sealed partial class EditorContext : ObservableObject
     /// screen pixels, so it looks the same at every zoom.</summary>
     public double PenSmoothing { get => _penSmoothing; set => SetField(ref _penSmoothing, Math.Clamp(value, 0, 10)); }
 
+    private bool _penEraser;
+
+    /// <summary>True when the pen erases instead of writing: touching a handwriting stroke deletes it (<see cref="InkEditing.EraseAt"/>); nothing
+    /// else is ever erased.</summary>
+    public bool PenEraser { get => _penEraser; set => SetField(ref _penEraser, value); }
+
     private double _curveSizeCm = 1;
 
     /// <summary>The radius the Curve tool gives to corners, in cm on the page (like the corner radius of a line).</summary>

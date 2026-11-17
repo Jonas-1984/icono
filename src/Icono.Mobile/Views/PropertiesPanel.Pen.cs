@@ -11,6 +11,12 @@ public sealed partial class PropertiesPanel
         Note("Write or draw with the pen or a finger. Every stroke is one object you can move, recolour, delete or undo. " +
              "Two fingers move and zoom the page.");
 
+        Heading("ERASER");
+        Toggle("Erase strokes (drag over them)", context.PenEraser, on => context.PenEraser = on);
+        Note(context.PenEraser
+            ? "Touching a stroke deletes it. Only handwriting is erased - never walls, furniture or text. Undo brings a stroke back."
+            : "Off: the pen writes. A pen with an eraser end erases with that end.");
+
         Heading("COLOUR");
         ColorRow(context.PenColor, color => context.PenColor = color);
 

@@ -42,7 +42,7 @@ public sealed partial class DocumentCanvas
         var pathMarks = PathPointMarks().Select(ToScreen).ToList();
         (SKPoint At, string Label)? snap = _snapMark is { } mark ? (ToScreen((mark.X, mark.Y)), mark.Label) : null;
 
-        var chrome = new Chrome(frames, handles, stem, _rotationLabel, pathMarks, snap, MarqueeForRender());
+        var chrome = new Chrome(frames, handles, stem, _rotationLabel, pathMarks, snap, MarqueeForRender(), EraserForRender());
         context.Custom(new DrawOperation(new Rect(Bounds.Size), _context.Document, PendingForRender(), _zoom, _offset, chrome));
     }
 
@@ -57,7 +57,8 @@ public sealed partial class DocumentCanvas
         string? Label,
         IReadOnlyList<SKPoint> PathMarks,
         (SKPoint At, string Label)? Snap,
-        (SKRect Area, bool Crossing)? Marquee);
+        (SKRect Area, bool Crossing)? Marquee,
+        (SKPoint At, float Radius)? Eraser);
 
     /// <summary>The corners of the frame round a shape in drawing units (turned with it), as the Windows program draws it.</summary>
     private static (double X, double Y)[] FrameCorners(Shape shape)
@@ -135,6 +136,15 @@ public sealed partial class DocumentCanvas
         private void DrawChrome(SKCanvas canvas)
         {
             DrawDrawingMarks(canvas);
+
+            // the eraser: a ring of the size it reaches
+            if (chrome.Eraser is { } eraser)
+            {
+                using var eraserRing = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 2, Color = new SKColor(0xE5, 0x48, 0x4D) };
+                using var tint = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill, Color = new SKColor(0xE5, 0x48, 0x4D, 40) };
+                canvas.DrawCircle(eraser.At, eraser.Radius, tint);
+                canvas.DrawCircle(eraser.At, eraser.Radius, eraserRing);
+            }
 
             // the area being drawn: blue and solid = window (what is completely inside), green and dashed = crossing (what it touches)
             if (chrome.Marquee is { } marquee)

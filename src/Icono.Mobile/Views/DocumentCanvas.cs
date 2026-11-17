@@ -177,6 +177,7 @@ public sealed partial class DocumentCanvas : Control
         var position = e.GetPosition(this);
         _pointers[e.Pointer.Id] = position;
         _pointerTypes[e.Pointer.Id] = e.Pointer.Type;
+        _pointerIsEraserEnd = e.Pointer.Type == PointerType.Pen && e.GetCurrentPoint(this).Properties.IsEraser; // the rubber end of a pen
         e.Pointer.Capture(this);
         e.Handled = true;
 

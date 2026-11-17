@@ -38,4 +38,64 @@ public static class InkEditing
         context.RequestRedraw();
         return true;
     }
+
+    /// <summary>The eraser reaches this far (screen pixels) beside the middle of a stroke.</summary>
+    public const double EraserReachPx = 10;
+
+    /// <summary>Deletes the handwriting strokes the eraser touches at (<paramref name="x"/>, <paramref name="y"/>) and remembers them in
+    /// <paramref name="erased"/> (shape, its layer and place in it). ONLY strokes of the pen are touched - never walls, furniture, texts or
+    /// dimensions - and not those on locked layers or locked themselves. Returns how many were deleted by this touch.</summary>
+    public static int EraseAt(EditorContext context, double x, double y, double zoom, List<(Layer Layer, Shape Shape, int Index)> erased)
+    {
+        var reach = EraserReachPx / Math.Max(zoom, 1e-6);
+        var removed = 0;
+        foreach (var layer in context.Document.Layers.Where(l => l.Visible && !l.Locked))
+        {
+            for (var i = 0; i < layer.Shapes.Count; i++)
+            {
+                var shape = layer.Shapes[i];
+                if (shape.Freehand && !shape.Locked && FreehandBuilder.HitTest(shape, x, y, reach))
+                {
+                    layer.Shapes.RemoveAt(i);
+                    context.SelectedShapes.Remove(shape);
+                    erased.Add((layer, shape, i));
+                    removed++;
+                    i--;
+                }
+            }
+        }
+
+        if (removed > 0)
+        {
+            context.RequestRedraw();
+        }
+
+        return removed;
+    }
+
+    /// <summary>Keeps what the eraser deleted as ONE undo step (the strokes are already gone from the drawing).</summary>
+    public static void CommitErase(EditorContext context, IReadOnlyList<(Layer Layer, Shape Shape, int Index)> erased)
+    {
+        if (erased.Count == 0)
+        {
+            return;
+        }
+
+        // each place was noted at the moment its stroke was removed, so undo has to put them back in the opposite order
+        context.UndoManager.Push(UndoableAction.ForRemove(erased.Reverse().Select(e => (e.Layer.Shapes, e.Shape, e.Index)).ToList()));
+        context.RequestRedraw();
+    }
+
+    /// <summary>Puts back what the eraser deleted (the touch was only a second finger that wanted to zoom).</summary>
+    public static void RestoreErased(EditorContext context, IReadOnlyList<(Layer Layer, Shape Shape, int Index)> erased)
+    {
+        // back to front, so every stroke returns to the place it had
+        for (var i = erased.Count - 1; i >= 0; i--)
+        {
+            var (layer, shape, index) = erased[i];
+            layer.Shapes.Insert(Math.Min(index, layer.Shapes.Count), shape);
+        }
+
+        context.RequestRedraw();
+    }
 }
