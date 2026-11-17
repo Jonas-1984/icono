@@ -18,7 +18,20 @@ public partial class MainView
     private static readonly string FolderSetting =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "icono-folder.txt");
 
+    /// <summary>Where the bookmark of the folder with pictures is kept (a different folder than the one of the drawings).</summary>
+    private static readonly string PictureFolderSetting =
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "icono-picture-folder.txt");
+
     private IStorageFolder? _folder;
+
+    /// <summary>True while the file window is for pictures: it has its own folder (<see cref="_folder"/> is the one of the kind shown).</summary>
+    private bool _filesForPictures;
+
+    private bool _folderIsForPictures;
+
+    private string FolderSettingPath => _filesForPictures ? PictureFolderSetting : FolderSetting;
+
+    private string FilesNoun => _filesForPictures ? "picture" : "drawing";
     private FilesMode _filesMode;
     private string[] _filesExtensions = [];
     private string _filesExtension = "";
@@ -35,15 +48,21 @@ public partial class MainView
     private Task<IStorageFile?> AskOpenFileAsync() =>
         ShowFiles(FilesMode.Open, "Open a drawing", "", [".icn", ".icono"], IconoFiles);
 
+    /// <summary>Asks for a picture or an SVG to put into the drawing (its own folder); null when cancelled.</summary>
+    private Task<IStorageFile?> AskPictureFileAsync() =>
+        ShowFiles(FilesMode.Open, "Insert a picture", "", PictureExtensions, PictureFiles, pictures: true);
+
     /// <summary>Asks where to save (a name in the chosen folder, or another place); null when cancelled.</summary>
     private Task<IStorageFile?> AskSaveFileAsync(string title, string baseName, string extension, FilePickerFileType type) =>
         ShowFiles(FilesMode.Save, title, baseName, [extension], type);
 
-    private async Task<IStorageFile?> ShowFiles(FilesMode mode, string title, string baseName, string[] extensions, FilePickerFileType type)
+    private async Task<IStorageFile?> ShowFiles(
+        FilesMode mode, string title, string baseName, string[] extensions, FilePickerFileType type, bool pictures = false)
     {
         _filesResult?.TrySetResult(null);
         _filesResult = new TaskCompletionSource<IStorageFile?>();
         _filesMode = mode;
+        _filesForPictures = pictures;
         _filesExtensions = extensions;
         _filesExtension = extensions[0];
         _filesType = type;
@@ -73,11 +92,17 @@ public partial class MainView
 
     private async Task LoadFolderAsync()
     {
-        if (_folder is null && Storage() is { } storage && File.Exists(FolderSetting))
+        if (_folderIsForPictures != _filesForPictures)
+        {
+            _folder = null; // the other kind has its own folder
+            _folderIsForPictures = _filesForPictures;
+        }
+
+        if (_folder is null && Storage() is { } storage && File.Exists(FolderSettingPath))
         {
             try
             {
-                _folder = await storage.OpenFolderBookmarkAsync((await File.ReadAllTextAsync(FolderSetting)).Trim());
+                _folder = await storage.OpenFolderBookmarkAsync((await File.ReadAllTextAsync(FolderSettingPath)).Trim());
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException)
             {
@@ -88,9 +113,9 @@ public partial class MainView
         FilesFolderText.Text = _folder is null ? "No folder chosen yet" : "Folder: " + _folder.Name;
         FilesFolderButton.Content = _folder is null ? "Choose folder..." : "Change folder...";
         FilesNote.Text = _folder is null
-            ? "Choose once the folder for your drawings (for example Documents/icono - create it in the Android window if needed, then tap " +
+            ? $"Choose once the folder for your {FilesNoun}s (for example {(_filesForPictures ? "Pictures" : "Documents/icono - create it in the Android window if needed")}, then tap " +
               "\"Use this folder\"). In the Android window, Back (‹) returns here without choosing."
-            : _filesMode == FilesMode.Open ? "Tap a drawing to open it." : "Type a name and tap Save - or tap a file to use its name.";
+            : _filesMode == FilesMode.Open ? $"Tap a {FilesNoun} to open it." : "Type a name and tap Save - or tap a file to use its name.";
         await ListFilesAsync();
     }
 
@@ -129,7 +154,7 @@ public partial class MainView
         {
             FilesList.Children.Add(new TextBlock
             {
-                Text = _filesMode == FilesMode.Open ? "No drawings in this folder yet." : "No files of this kind in this folder yet.",
+                Text = _filesMode == FilesMode.Open ? $"No {FilesNoun}s in this folder yet." : "No files of this kind in this folder yet.",
                 Margin = new Thickness(8), FontSize = 12.5, Foreground = Brush("MutedTextBrush"),
             });
             return;
@@ -180,7 +205,7 @@ public partial class MainView
             return;
         }
 
-        var folders = await storage.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = "The folder for your icono drawings" });
+        var folders = await storage.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = _filesForPictures ? "The folder with your pictures" : "The folder for your icono drawings" });
         if (folders.Count == 0)
         {
             return; // Back in the Android window: nothing changes
@@ -191,7 +216,7 @@ public partial class MainView
         {
             if (await _folder.SaveBookmarkAsync() is { } bookmark)
             {
-                await File.WriteAllTextAsync(FolderSetting, bookmark);
+                await File.WriteAllTextAsync(FolderSettingPath, bookmark);
             }
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)

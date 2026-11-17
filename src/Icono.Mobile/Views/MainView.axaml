@@ -25,6 +25,7 @@
                         <Button Classes="tool" Content="Save" Click="OnSave" />
                         <Button Classes="tool" Content="Save as" Click="OnSaveAs" />
                         <Button Classes="tool" Content="Export" Click="OnExport" />
+                        <Button Classes="tool" Content="Picture" Click="OnInsertPicture" />
                         <Border Classes="separator" />
                         <Button Classes="tool" x:Name="UndoButton" Content="Undo" Click="OnUndo" />
                         <Button Classes="tool" x:Name="RedoButton" Content="Redo" Click="OnRedo" />

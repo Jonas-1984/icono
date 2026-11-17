@@ -171,64 +171,13 @@ public partial class IconLibraryView : UserControl
             return false;
         }
 
-        var layer = _context.SelectedLayer ?? _context.Document.Layers.FirstOrDefault();
-        var elements = SvgImporter.ExtractElements(svgMarkup);
-
-        if (layer is null || elements.Count == 0)
+        var imported = ImageImport.ImportSvg(_context, svgMarkup, out var error);
+        if (imported is null)
         {
-            ThemedMessageBox.Show(Window.GetWindow(this), "No valid SVG path was found in the pasted code.",
+            ThemedMessageBox.Show(Window.GetWindow(this), error ?? "The SVG code does not contain a valid path.",
                 "Import SVG", MessageBoxButton.OK, MessageBoxImage.Warning);
             return false;
         }
-
-        // Size the placement box to the source's OWN aspect ratio (capped so the larger side is
-        // placeSize) instead of always forcing a fixed 80x80 square — BuildShapes stretches its
-        // normalized geometry non-uniformly to fill whatever box it's given, so a square box used
-        // to squash/stretch every non-square icon into a distorted square on import.
-        const double placeSize = 80;
-        var placeWidth = placeSize;
-        var placeHeight = placeSize;
-        if (SvgImporter.MeasureBounds(elements.Select(el => el.PathData).ToList()) is { } measured)
-        {
-            var scale = placeSize / Math.Max(measured.Width, measured.Height);
-            placeWidth = measured.Width * scale;
-            placeHeight = measured.Height * scale;
-        }
-
-        var placeX = Math.Max(0, (_context.Document.Width - placeWidth) / 2);
-        var placeY = _context.Document.PageTop(_context.CurrentPage) + Math.Max(0, (_context.Document.Height - placeHeight) / 2);
-
-        var strokeOnly = SvgImporter.IsStrokeStyleSvg(svgMarkup);
-        var borderThickness = strokeOnly ? 2 : 0;
-
-        var imported = SvgImporter.BuildShapes(
-            elements, _context.CurrentFillColor, _context.CurrentFillColor, borderThickness,
-            placeX, placeY, placeWidth, placeHeight, strokeOnly);
-
-        if (imported.Count == 0)
-        {
-            ThemedMessageBox.Show(Window.GetWindow(this), "The SVG code does not contain a valid path.",
-                "Import SVG", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return false;
-        }
-
-        var undoActions = new List<UndoableAction>();
-        foreach (var shape in imported)
-        {
-            layer.Shapes.Insert(0, shape);
-            undoActions.Add(UndoableAction.ForInsert(layer.Shapes, shape, 0));
-        }
-
-        _context.UndoManager.Push(UndoableAction.Combine(undoActions));
-
-        _context.SelectedShapes.Clear();
-        foreach (var shape in imported)
-        {
-            _context.SelectedShapes.Add(shape);
-        }
-
-        _context.SelectedLayer = layer;
-        _context.RequestRedraw();
 
         var entry = new IconLibraryEntry
         {
@@ -324,36 +273,11 @@ public partial class IconLibraryView : UserControl
             return;
         }
 
-        var layer = _context.SelectedLayer ?? _context.Document.Layers.FirstOrDefault();
-        if (layer is null)
+        var shape = ImageImport.InsertPicture(_context, pngBytes, pixelWidth, pixelHeight, out _);
+        if (shape is null)
         {
             return;
         }
-
-        const double maxPlaceSize = 160;
-        var scale = Math.Min(1.0, maxPlaceSize / Math.Max(pixelWidth, pixelHeight));
-        var placeWidth = Math.Max(1, pixelWidth * scale);
-        var placeHeight = Math.Max(1, pixelHeight * scale);
-        var placeX = Math.Max(0, (_context.Document.Width - placeWidth) / 2);
-        var placeY = _context.Document.PageTop(_context.CurrentPage) + Math.Max(0, (_context.Document.Height - placeHeight) / 2);
-
-        var shape = new Shape
-        {
-            Kind = ShapeKind.RasterImage,
-            X = placeX,
-            Y = placeY,
-            Width = placeWidth,
-            Height = placeHeight,
-            ImageBytes = pngBytes,
-        };
-
-        layer.Shapes.Insert(0, shape);
-        _context.UndoManager.Push(UndoableAction.ForInsert(layer.Shapes, shape, 0));
-
-        _context.SelectedShapes.Clear();
-        _context.SelectedShapes.Add(shape);
-        _context.SelectedLayer = layer;
-        _context.RequestRedraw();
 
         var entry = new IconLibraryEntry
         {
