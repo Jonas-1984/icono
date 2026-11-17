@@ -1,7 +1,9 @@
 using Avalonia;
 using Icono.Core;
 using Icono.Editor;
+using Icono.Editor.Undo;
 using Icono.Rendering;
+using SkiaSharp;
 
 namespace Icono.Mobile.Views;
 
@@ -55,6 +57,86 @@ public sealed partial class DocumentCanvas
 
         return null;
     }
+
+    // ---------------------------------------------------------------- drag the number: move the dimension line
+
+    private (Shape Shape, int Segment, ShapeSnapshot Before, SKPoint? Direction)? _dimensionDrag;
+
+    /// <summary>The dashed line along the dimension line the dragged one has lined up with (drawing units), or null.</summary>
+    private (SKPoint From, SKPoint To)? _dimensionGuide;
+
+    /// <summary>A drag that started on a dimension number: the dimension line follows the finger (on either side of the wall, at any distance) and
+    /// lines up with the dimension lines of other dimensions that run the same way. True when it began.</summary>
+    private bool BeginDimensionDrag()
+    {
+        if (_pressNumber is not { } number || _context is not { } context)
+        {
+            return false;
+        }
+
+        Select(number.Shape, number.Layer);
+        if (number.Symbol is null)
+        {
+            context.PickedDimensionSegment = number.Segment; // the DIMENSION settings of the wall show this one
+        }
+
+        _dimensionDrag = (number.Shape, number.Segment, ShapeSnapshot.Capture(number.Shape),
+            DimensionLineEditing.Direction(number.Shape, number.Segment, number.Symbol));
+        context.RequestRedraw();
+        return true;
+    }
+
+    private void UpdateDimensionDrag(Point view)
+    {
+        if (_dimensionDrag is not { } drag || _context is not { } context)
+        {
+            return;
+        }
+
+        var at = ToDocument(view);
+        var pointer = DimensionLineEditing.Snapped(
+            context.Document, drag.Shape, drag.Segment, new SKPoint((float)at.X, (float)at.Y), drag.Direction, (float)(8 / _zoom), out var snap);
+        _dimensionGuide = snap is null ? null : (snap.From, snap.To);
+        DimensionLineEditing.Place(context.Document, drag.Shape, drag.Segment, pointer);
+        context.RequestRedraw();
+    }
+
+    /// <summary>The finger lifted: the line stays where it is (one undo step).</summary>
+    private void FinishDimensionDrag()
+    {
+        var drag = _dimensionDrag;
+        _dimensionDrag = null;
+        _dimensionGuide = null;
+        if (drag is not { } done || _context is not { } context)
+        {
+            return;
+        }
+
+        var after = ShapeSnapshot.Capture(done.Shape);
+        if (!after.Equals(done.Before))
+        {
+            context.UndoManager.Push(UndoableAction.ForPropertyEdit([done.Shape], [done.Before], [after]));
+        }
+
+        context.RequestRedraw();
+    }
+
+    /// <summary>A second finger came down: the line jumps back to where it was.</summary>
+    private void CancelDimensionDrag()
+    {
+        if (_dimensionDrag is { } drag)
+        {
+            drag.Before.ApplyTo(drag.Shape);
+        }
+
+        _dimensionDrag = null;
+        _dimensionGuide = null;
+        _context?.RequestRedraw();
+    }
+
+    /// <summary>The guide line in screen units for the render thread, or null.</summary>
+    private (SKPoint From, SKPoint To)? DimensionGuideForRender() =>
+        _dimensionGuide is { } guide ? (ToScreen((guide.From.X, guide.From.Y)), ToScreen((guide.To.X, guide.To.Y))) : null;
 
     /// <summary>The finger lifted on a dimension number: select its object and ask for the length.</summary>
     private void TapNumber((Shape Shape, Layer Layer, int Segment, SymbolDimension? Symbol) number)

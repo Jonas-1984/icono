@@ -45,7 +45,7 @@ public sealed partial class DocumentCanvas : Control
     private Vector _offset;
     private bool _fitPending = true;
 
-    private enum Gesture { None, Pending, Menu, MoveShapes, Resize, GroupResize, Rotate, DragPoint, Place, PathPoint, TextTap, Marquee, Ink, View }
+    private enum Gesture { None, Pending, Menu, MoveShapes, Resize, GroupResize, Rotate, DragPoint, Place, PathPoint, TextTap, Marquee, Ink, DimensionLine, View }
 
     private Gesture _gesture;
 
@@ -227,6 +227,10 @@ public sealed partial class DocumentCanvas : Control
         {
             CancelInk();
         }
+        else if (_gesture == Gesture.DimensionLine)
+        {
+            CancelDimensionDrag();
+        }
         else
         {
             CancelEdit();
@@ -276,6 +280,11 @@ public sealed partial class DocumentCanvas : Control
                 BeginMarquee(_pressPoint);
                 _gesture = Gesture.Marquee;
             }
+            else if (_pressNumber is not null && BeginDimensionDrag())
+            {
+                // a drag that starts on a dimension number moves its dimension line (DocumentCanvas.Length.cs)
+                _gesture = Gesture.DimensionLine;
+            }
             else if (_pressHit is { } hit && !IsLocked(hit.Shape, hit.Layer) && BeginMove(hit.Shape, hit.Layer))
             {
                 _gesture = Gesture.MoveShapes;
@@ -300,6 +309,9 @@ public sealed partial class DocumentCanvas : Control
                 break;
             case Gesture.Ink:
                 ContinueInk(e);
+                break;
+            case Gesture.DimensionLine:
+                UpdateDimensionDrag(position);
                 break;
             default:
                 UpdateEdit(position);
@@ -405,6 +417,10 @@ public sealed partial class DocumentCanvas : Control
             else if (_gesture == Gesture.Ink)
             {
                 FinishInk();
+            }
+            else if (_gesture == Gesture.DimensionLine)
+            {
+                FinishDimensionDrag();
             }
             else if (_gesture is Gesture.Place or Gesture.PathPoint)
             {

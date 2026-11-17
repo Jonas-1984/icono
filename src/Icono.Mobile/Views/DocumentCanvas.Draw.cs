@@ -42,7 +42,7 @@ public sealed partial class DocumentCanvas
         var pathMarks = PathPointMarks().Select(ToScreen).ToList();
         (SKPoint At, string Label)? snap = _snapMark is { } mark ? (ToScreen((mark.X, mark.Y)), mark.Label) : null;
 
-        var chrome = new Chrome(frames, handles, stem, _rotationLabel, pathMarks, snap, MarqueeForRender(), EraserForRender());
+        var chrome = new Chrome(frames, handles, stem, _rotationLabel, pathMarks, snap, MarqueeForRender(), EraserForRender(), DimensionGuideForRender());
         context.Custom(new DrawOperation(new Rect(Bounds.Size), _context.Document, PendingForRender(), _zoom, _offset, chrome));
     }
 
@@ -58,7 +58,8 @@ public sealed partial class DocumentCanvas
         IReadOnlyList<SKPoint> PathMarks,
         (SKPoint At, string Label)? Snap,
         (SKRect Area, bool Crossing)? Marquee,
-        (SKPoint At, float Radius)? Eraser);
+        (SKPoint At, float Radius)? Eraser,
+        (SKPoint From, SKPoint To)? DimensionGuide);
 
     /// <summary>The corners of the frame round a shape in drawing units (turned with it), as the Windows program draws it.</summary>
     private static (double X, double Y)[] FrameCorners(Shape shape)
@@ -136,6 +137,16 @@ public sealed partial class DocumentCanvas
         private void DrawChrome(SKCanvas canvas)
         {
             DrawDrawingMarks(canvas);
+
+            // the dimension line the dragged one has lined up with (so two dimensions stand in one row, flush)
+            if (chrome.DimensionGuide is { } guide)
+            {
+                using var guideLine = new SKPaint
+                {
+                    IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 2, Color = SnapColor, PathEffect = SKPathEffect.CreateDash([7, 5], 0),
+                };
+                canvas.DrawLine(guide.From, guide.To, guideLine);
+            }
 
             // the eraser: a ring of the size it reaches
             if (chrome.Eraser is { } eraser)

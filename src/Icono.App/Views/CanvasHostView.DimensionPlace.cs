@@ -86,18 +86,7 @@ public partial class CanvasHostView
 
         var at = SnapDimensionPointer(ToDocumentSpace(e.GetPosition(SkiaCanvas)), shape);
         var point = new SKPoint((float)at.X, (float)at.Y);
-        if (shape.Kind == ShapeKind.Wall)
-        {
-            if (WallRenderer.DimensionLineThrough(shape, _dimensionSegment, point) is { } line)
-            {
-                SetWallDimensionLine(shape, _dimensionSegment, line.Offset, line.Flip);
-            }
-        }
-        else
-        {
-            SymbolMeasurements.PlaceDimensionLine(_context.Document, shape, point);
-        }
-
+        DimensionLineEditing.Place(_context.Document, shape, _dimensionSegment, point); // shared with the tablet app
         _context.RequestRedraw();
     }
 
@@ -256,12 +245,6 @@ public partial class CanvasHostView
     }
 
     /// <summary>Gives the dimension of one wall segment its own distance and side (the same entry the DIMENSION card edits).</summary>
-    private static void SetWallDimensionLine(Shape wall, int segment, double offset, bool flip)
-    {
-        var list = (wall.WallDimensionOverrides ?? []).ToList();
-        var current = list.FirstOrDefault(o => o.Segment == segment) ?? new WallDimensionOverride(segment);
-        list.RemoveAll(o => o.Segment == segment);
-        list.Add(current with { Offset = offset, Flip = flip });
-        wall.WallDimensionOverrides = list.OrderBy(o => o.Segment).ToList();
-    }
+    private static void SetWallDimensionLine(Shape wall, int segment, double offset, bool flip) =>
+        DimensionLineEditing.SetWallLine(wall, segment, offset, flip); // shared with the tablet app
 }
