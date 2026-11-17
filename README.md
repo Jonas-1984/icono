@@ -3,7 +3,7 @@
 Icon and floor plan editor for Windows (WPF, .NET 8, SkiaSharp). Draw walls with typed lengths, place doors, windows and kitchen objects from the
 OBJECTS catalogue, add dimensions, export to SVG / PNG / ICO.
 
-*Status: test version `0.1.0-test.4` - not final, expect errors.*
+*Status: test version `0.1.0-test.9` - not final, expect errors.*
 
 ## Privacy
 
