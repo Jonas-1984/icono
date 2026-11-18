@@ -1,14 +1,17 @@
 ﻿icono - Privacy notice
 ======================
 
-In short: icono does not collect, send or share any data about you. The program does not connect to the internet on its own (the Android
-tablet app does not even have the permission to use the internet). This notice covers the Windows program and the Android tablet app.
+In short: icono does not collect, send or share any data about you. The Windows program does not connect to the internet on its own. The Android
+tablet app uses the internet in one case only: the first time you use "Convert to text" (handwriting to text) it loads the handwriting model of
+your language once (about 20 MB, from Google, see 3). Your drawings and your handwriting are never sent. This notice covers the Windows program and
+the Android tablet app.
 
 1. Controller
    Jonas Shojaei, www.bitbins.de, e-mail: info@bitbins.de
 
 2. What icono does NOT do
-   - no internet connection, no transfer to me or to third parties
+   - no transfer of your drawings or your handwriting to me or to third parties; no internet connection (Windows), and on the tablet only the
+     one-time loading of the handwriting model
    - no usage statistics, no telemetry, no trackers, no advertising
    - no user account, no cloud, no sign-in
    - no camera, microphone or location access
@@ -27,7 +30,11 @@ tablet app does not even have the permission to use the internet). This notice c
    - icono-folder.txt a reference to the folder you chose for your drawings (so that you need not choose it again)
    - exports\         a temporary copy of your last export (PDF or PNG), only so that it can be handed to the app you pick in "Share";
                       the next export replaces it
-   The tablet app keeps no theme, no list of recent files, no own library and no error log. It asks for no permissions. Android gives icono
+   The tablet app keeps no theme, no list of recent files, no own library and no error log. It keeps the language of your handwriting (icono-handwriting.txt)
+   and, once you have used "Convert to text", the handwriting model of that language (loaded by Google ML Kit, kept by Android in the app's private storage).
+   The only permission it asks for is the internet, and only for loading that model: your tablet then contacts Google's servers (your IP address is visible
+   to them, as with any download; Google's terms apply). After that "Convert to text" works without internet; the writing is recognized on the tablet.
+   Android gives icono
    access only to the folder you chose and to files you pick yourself. The app is set so that Android does not include its data in the
    automatic device backup (cloud backup). Your drawings are saved only where you choose (Save as, Export > Save...).
    When you tap "Share...", Android opens its share sheet: the file goes only to the app you pick there, and that app's privacy terms apply.

@@ -366,6 +366,17 @@ public static class FreehandBuilder
 
     /// <summary>True when the point lies on the drawn stroke (within half its width and <paramref name="tolerance"/>): a stroke is picked where it is,
     /// not anywhere in its frame, so notes written over a plan do not catch the clicks meant for the plan.</summary>
-    public static bool HitTest(Shape shape, double x, double y, double tolerance) =>
-        OutlineGeometry.NearestOnOutline(shape, new SKPoint((float)x, (float)y)) is { } near && near.Distance <= shape.BorderThickness / 2 + tolerance;
+    public static bool HitTest(Shape shape, double x, double y, double tolerance)
+    {
+        if (OutlineGeometry.NearestOnOutline(shape, new SKPoint((float)x, (float)y)) is { } near)
+        {
+            return near.Distance <= shape.BorderThickness / 2 + tolerance;
+        }
+
+        // a dot (the pen only touched the page) has no outline to measure to: it is a round dot where its frame is
+        var reach = Math.Max(shape.Width, shape.Height) / 2 + shape.BorderThickness / 2 + tolerance;
+        var dx = x - (shape.X + shape.Width / 2);
+        var dy = y - (shape.Y + shape.Height / 2);
+        return dx * dx + dy * dy <= reach * reach;
+    }
 }

@@ -1,15 +1,17 @@
 ﻿icono - Datenschutzhinweis
 ==========================
 
-Kurz gesagt: icono sammelt, sendet und teilt keine Daten über Sie. Das Programm stellt von sich aus keine Verbindung zum Internet her (die
-Android-Tablet-App hat nicht einmal die Berechtigung, das Internet zu nutzen). Dieser Hinweis gilt für das Windows-Programm und die
-Android-Tablet-App.
+Kurz gesagt: icono sammelt, sendet und teilt keine Daten über Sie. Das Windows-Programm stellt von sich aus keine Verbindung zum Internet her. Die
+Android-Tablet-App nutzt das Internet nur in einem Fall: Beim ersten Mal "Convert to text" (Handschrift zu Text) lädt sie einmal das
+Handschrift-Modell Ihrer Sprache (etwa 20 MB, von Google, siehe 3). Ihre Zeichnungen und Ihre Handschrift werden nie gesendet. Dieser Hinweis gilt
+für das Windows-Programm und die Android-Tablet-App.
 
 1. Verantwortlicher
    Jonas Shojaei, www.bitbins.de, E-Mail: info@bitbins.de
 
 2. Was icono NICHT tut
-   - keine Verbindung zum Internet, keine Übertragung an mich oder Dritte
+   - keine Übertragung Ihrer Zeichnungen oder Ihrer Handschrift an mich oder Dritte; keine Verbindung zum Internet (Windows), auf dem Tablet nur
+     das einmalige Laden des Handschrift-Modells
    - keine Nutzungsstatistik, keine Telemetrie, keine Tracker, keine Werbung
    - kein Benutzerkonto, keine Cloud, keine Anmeldung
    - keine Kamera-, Mikrofon- oder Standortzugriffe
@@ -29,7 +31,11 @@ Android-Tablet-App.
    - exports\         eine vorübergehende Kopie Ihres letzten Exports (PDF oder PNG), nur damit sie an die App übergeben werden kann, die Sie
                       bei "Share" wählen; der nächste Export ersetzt sie
    Die Tablet-App speichert kein Farbdesign, keine Liste zuletzt geöffneter Dateien, keine eigene Bibliothek und kein Fehlerprotokoll. Sie
-   verlangt keine Berechtigungen. Android gibt icono nur Zugriff auf den Ordner, den Sie gewählt haben, und auf Dateien, die Sie selbst
+   merkt sich die Sprache Ihrer Handschrift (icono-handwriting.txt) und, sobald Sie "Convert to text" benutzt haben, das Handschrift-Modell dieser
+   Sprache (von Google ML Kit geladen, von Android im privaten Speicher der App gehalten). Die einzige Berechtigung, die sie verlangt, ist das Internet,
+   und nur zum Laden dieses Modells: Ihr Tablet verbindet sich dann mit Servern von Google (Ihre IP-Adresse ist für sie sichtbar, wie bei jedem Download;
+   es gelten die Bedingungen von Google). Danach funktioniert "Convert to text" ohne Internet; die Schrift wird auf dem Tablet erkannt.
+   Android gibt icono nur Zugriff auf den Ordner, den Sie gewählt haben, und auf Dateien, die Sie selbst
    auswählen. Die App ist so eingestellt, dass Android ihre Daten nicht in die automatische Geräte-Sicherung (Cloud-Backup) aufnimmt. Ihre
    Zeichnungen speichert die App nur dort, wo Sie es wählen (Save as, Export > Save...).
    Tippen Sie auf "Share...", öffnet Android sein Teilen-Menü: Die Datei geht nur an die App, die Sie dort wählen; für sie gelten deren

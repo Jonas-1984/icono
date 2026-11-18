@@ -46,8 +46,8 @@ sich damit einverstanden.
    erscheint. Dann deinstallieren Sie die Testversion bitte.
 
 8. Datenschutz
-   Informationen dazu stehen in der Datei Datenschutz.txt (in der Tablet-App: About > Datenschutz). In Kürze: icono sendet keine Daten und
-   stellt keine Verbindung zum Internet her. Eine Datei verlässt Ihr Gerät nur, wenn Sie sie selbst weitergeben, zum Beispiel mit "Share" in der
+   Informationen dazu stehen in der Datei Datenschutz.txt (in der Tablet-App: About > Datenschutz). In Kürze: icono sendet keine Daten (die Tablet-App nutzt das
+   Internet nur, um einmal das Handschrift-Modell zu laden). Eine Datei verlässt Ihr Gerät nur, wenn Sie sie selbst weitergeben, zum Beispiel mit "Share" in der
    Tablet-App.
 
 9. Sonstiges

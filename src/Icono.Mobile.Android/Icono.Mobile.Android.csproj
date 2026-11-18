@@ -31,6 +31,8 @@
   <ItemGroup>
     <PackageReference Include="Avalonia.Android" Version="12.1.6" />
     <PackageReference Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.15" />
+    <!-- handwriting to text: recognizes on the tablet; the language model (about 20 MB) is loaded once -->
+    <PackageReference Include="Xamarin.Google.MLKit.DigitalInk.Recognition" Version="119.0.0.4" />
   </ItemGroup>
 
   <ItemGroup>

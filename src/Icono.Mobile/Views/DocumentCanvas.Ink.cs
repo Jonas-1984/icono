@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Input;
+using Avalonia.Threading;
 using Icono.Core;
 using Icono.Editor;
 using SkiaSharp;
@@ -17,6 +18,13 @@ public sealed partial class DocumentCanvas
     private List<SKPoint>? _inkPoints;
     private Shape? _inkShape;
     private bool _inkWithPen;
+
+    // draw and hold: a stroke held still at its end becomes the clean shape (StrokeShapeRecognizer)
+    private const int HoldMilliseconds = 600;
+    private const double HoldRadius = 5;
+    private DispatcherTimer? _holdTimer;
+    private Point _holdAnchor;
+    private RecognizedStroke? _inkSnap;
 
     // erasing
     private bool _inkErasing;
@@ -41,6 +49,39 @@ public sealed partial class DocumentCanvas
 
         _inkPoints = [new SKPoint((float)document.X, (float)document.Y)];
         UpdateInkPreview();
+        RestartHold(ToScreen((document.X, document.Y)) is var s ? new Point(s.X, s.Y) : default);
+    }
+
+    /// <summary>The pen stays: after a moment the stroke so far is looked at; when it is a rough circle, line, rectangle or triangle, the clean shape is
+    /// shown instead. Moving on takes it back and the stroke continues as drawn.</summary>
+    private void RestartHold(Point screen)
+    {
+        _holdAnchor = screen;
+        _holdTimer ??= new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(HoldMilliseconds) };
+        _holdTimer.Tick -= OnHold;
+        _holdTimer.Tick += OnHold;
+        _holdTimer.Stop();
+        if (_context?.PenSnapShapes == true)
+        {
+            _holdTimer.Start();
+        }
+    }
+
+    private void OnHold(object? sender, EventArgs e)
+    {
+        _holdTimer?.Stop();
+        if (_context is not { } context || _inkPoints is not { Count: >= 6 } points || _inkErasing || _inkSnap is not null)
+        {
+            return;
+        }
+
+        if (StrokeShapeRecognizer.Recognize(points) is { } recognized)
+        {
+            _inkSnap = recognized;
+            _inkShape = StrokeShapes.Preview(context, recognized);
+            context.Notify("Shape corrected - lift to keep it, or move on to draw freehand again.");
+            context.RequestRedraw();
+        }
     }
 
     /// <summary>Adds every point the pen went through since the last event (a fast stroke delivers several at once).</summary>
@@ -59,6 +100,18 @@ public sealed partial class DocumentCanvas
         if (_inkPoints is not { Count: > 0 } points)
         {
             return;
+        }
+
+        var here = e.GetPosition(this);
+        if (Math.Abs(here.X - _holdAnchor.X) > HoldRadius || Math.Abs(here.Y - _holdAnchor.Y) > HoldRadius)
+        {
+            // the pen moved on: a clean shape that was shown is taken back, the stroke goes on as drawn
+            _inkSnap = null;
+            RestartHold(here);
+        }
+        else if (_inkSnap is not null)
+        {
+            return; // held still: the clean shape stays
         }
 
         var minimum = 1.2 / _zoom;
@@ -101,6 +154,7 @@ public sealed partial class DocumentCanvas
         var points = _inkPoints;
         var erased = _erased;
         var erasing = _inkErasing;
+        var snapped = _inkSnap;
         ResetInk();
         if (_context is not { } context)
         {
@@ -110,6 +164,10 @@ public sealed partial class DocumentCanvas
         if (erasing)
         {
             InkEditing.CommitErase(context, erased);
+        }
+        else if (snapped is not null)
+        {
+            StrokeShapes.Commit(context, snapped);
         }
         else if (points is not null)
         {
@@ -133,6 +191,8 @@ public sealed partial class DocumentCanvas
 
     private void ResetInk()
     {
+        _holdTimer?.Stop();
+        _inkSnap = null;
         _inkPoints = null;
         _inkShape = null;
         _inkWithPen = false;

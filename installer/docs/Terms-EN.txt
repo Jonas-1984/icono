@@ -40,8 +40,8 @@ Please read these terms. By installing and using icono (the Windows program or t
    Apps > icono > Uninstall). I can withdraw the right of use, for example when a new version is released. Please then uninstall the test version.
 
 8. Privacy
-   Information is in the file Privacy.txt (in the tablet app: About > Privacy). In short: icono does not send any data and does not connect to
-   the internet. The only way a file leaves your device is when you yourself pass it on, for example with "Share" in the tablet app.
+   Information is in the file Privacy.txt (in the tablet app: About > Privacy). In short: icono does not send any data (the tablet app uses the internet
+   only to load the handwriting model once). The only way a file leaves your device is when you yourself pass it on, for example with "Share" in the tablet app.
 
 9. Miscellaneous
    German law applies, unless mandatory consumer protection rules of your country of residence stand against it. If a provision is invalid,

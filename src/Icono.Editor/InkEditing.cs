@@ -35,6 +35,7 @@ public static class InkEditing
 
         layer.Shapes.Insert(0, shape);
         context.UndoManager.Push(UndoableAction.ForInsert(layer.Shapes, shape, 0));
+        context.NoteInk(shape);
         context.RequestRedraw();
         return true;
     }

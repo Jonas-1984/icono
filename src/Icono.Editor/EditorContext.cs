@@ -196,6 +196,12 @@ public sealed partial class EditorContext : ObservableObject
     /// else is ever erased.</summary>
     public bool PenEraser { get => _penEraser; set => SetField(ref _penEraser, value); }
 
+    private bool _penSnapShapes = true;
+
+    /// <summary>True when a stroke that is held still at its end (the pen or finger stays) becomes the clean shape it was meant to be: a circle, a line,
+    /// a rectangle, a triangle (<see cref="StrokeShapeRecognizer"/>).</summary>
+    public bool PenSnapShapes { get => _penSnapShapes; set => SetField(ref _penSnapShapes, value); }
+
     private double _curveSizeCm = 1;
 
     /// <summary>The radius the Curve tool gives to corners, in cm on the page (like the corner radius of a line).</summary>

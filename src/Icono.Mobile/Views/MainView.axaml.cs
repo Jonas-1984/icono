@@ -49,6 +49,7 @@ public partial class MainView : UserControl
             ZoomText.Text = $"{Canvas.Zoom * 100:0} %";
             UpdateStatusPills();
         };
+        _context.RecentInkChanged += UpdateInkBar;
         _context.PagesChanged += UpdateStatusPills;
         _context.CurrentPageChanged += UpdateStatusPills;
         _context.UndoManager.PropertyChanged += OnHistoryChanged;
@@ -135,6 +136,7 @@ public partial class MainView : UserControl
     private void UpdateCommands()
     {
         UpdateStatusPills();
+        UpdateInkBar();
         UndoButton.IsEnabled = _context.UndoManager.CanUndo;
         RedoButton.IsEnabled = _context.UndoManager.CanRedo;
         var anything = _context.SelectedShapes.Count > 0;

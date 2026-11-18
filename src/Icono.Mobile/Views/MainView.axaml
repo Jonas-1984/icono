@@ -148,6 +148,17 @@
                     </StackPanel>
                 </Border>
 
+
+                <!-- handwriting to text: offered while there is writing of the pen (MainView.Ink.cs) -->
+                <Border Grid.Column="1" x:Name="InkBar" Classes="dialog" IsVisible="False" HorizontalAlignment="Center" VerticalAlignment="Top"
+                        Margin="0,34,0,0" Padding="10,6" CornerRadius="14">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock x:Name="InkText" VerticalAlignment="Center" FontSize="13" Margin="4,0,8,0" Foreground="{StaticResource ForegroundTextBrush}" />
+                        <Button Classes="tool" x:Name="InkLanguageButton" Click="OnInkLanguage" ToolTip.Tip="The language of the writing" />
+                        <Button Classes="tool primary" x:Name="InkConvertButton" Content="Convert to text" Click="OnInkConvert" />
+                    </StackPanel>
+                </Border>
+
                 <!-- the properties of the selection (Properties in the top bar shows / hides it) -->
                 <Border Grid.Column="2" x:Name="PropertiesPane" Width="250" Background="{StaticResource ToolbarBackgroundBrush}"
                         BorderBrush="{StaticResource BorderLineBrush}" BorderThickness="1,0,0,0">
