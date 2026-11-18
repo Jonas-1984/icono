@@ -45,7 +45,8 @@ public sealed partial class DocumentCanvas
         var grid = _context.ShowGrid && _context.GridSize > 0 ? _context.GridSize : 0;
         var chrome = new Chrome(
             frames, handles, stem, _rotationLabel, pathMarks, snap, MarqueeForRender(), EraserForRender(), DimensionGuideForRender(),
-            ObjectGuidesForRender(), grid, CurvePicksForRender(), RulerForRender(), HighlightsForRender());
+            ObjectGuidesForRender(), grid, CurvePicksForRender(), RulerForRender(), HighlightsForRender(),
+            _context.ShowRulers ? (_context.DimensionUnit, _fingerAt) : null);
         context.Custom(new DrawOperation(new Rect(Bounds.Size), _context.Document, PendingForRender(), _zoom, _offset, chrome));
     }
 
@@ -67,7 +68,8 @@ public sealed partial class DocumentCanvas
         double GridSize,
         (IReadOnlyList<(SKPoint From, SKPoint To)> Sides, SKPoint? Corner) CurvePicks,
         (SKPoint From, SKPoint To, string Label)? Ruler,
-        IReadOnlyList<Shape> Highlights);
+        IReadOnlyList<Shape> Highlights,
+        (LengthUnit Unit, Point? Cursor)? Rulers);
 
     /// <summary>The corners of the frame round a shape in drawing units (turned with it), as the Windows program draws it.</summary>
     private static (double X, double Y)[] FrameCorners(Shape shape)
@@ -140,6 +142,11 @@ public sealed partial class DocumentCanvas
 
             // frames and handles in screen units, so they keep their size at every zoom
             DrawChrome(canvas);
+            if (chrome.Rulers is { } rulers)
+            {
+                RulerPainter.Draw(canvas, (float)bounds.Width, (float)bounds.Height, document, zoom, offset, rulers.Unit, rulers.Cursor);
+            }
+
             canvas.Restore();
         }
 

@@ -64,9 +64,9 @@ public sealed partial class PropertiesPanel
              "Explode: a combined object (a sink, a cabinet) falls apart into its pieces.");
 
         Heading("MOVE");
-        NumberRow("Right", _moveX, "cm", 5, -100000, 100000, "0.#", cm => _moveX = cm);
-        NumberRow("Down", _moveY, "cm", 5, -100000, 100000, "0.#", cm => _moveY = cm);
-        ButtonRow(("Move", () => context.NudgeSelection(FromRealCm(_moveX), FromRealCm(_moveY))));
+        NumberRow("Right", _moveX, UnitName, 5 * UnitFactor, -100000, 100000, "0.##", v => _moveX = v);
+        NumberRow("Down", _moveY, UnitName, 5 * UnitFactor, -100000, 100000, "0.##", v => _moveY = v);
+        ButtonRow(("Move", () => context.NudgeSelection(FromReal(_moveX), FromReal(_moveY))));
 
         // one object aligns to the page, several to each other; three or more can also be spread evenly
         Heading(shapes.Count == 1 ? "ALIGN TO PAGE" : "ALIGN");

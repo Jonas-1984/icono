@@ -50,6 +50,9 @@ public sealed partial class DocumentCanvas : Control
     private Gesture _gesture;
 
     // the fingers (or the mouse) on the canvas
+    /// <summary>Where the finger is (the rulers show a mark there); null while no finger is down.</summary>
+    private Point? _fingerAt;
+
     private readonly Dictionary<int, Point> _pointers = new();
 
     // what each of them is (finger, pen, mouse): a pen writing ignores the palm
@@ -176,6 +179,7 @@ public sealed partial class DocumentCanvas : Control
 
         var position = e.GetPosition(this);
         _pointers[e.Pointer.Id] = position;
+        _fingerAt = position;
         _pointerTypes[e.Pointer.Id] = e.Pointer.Type;
         _pointerIsEraserEnd = e.Pointer.Type == PointerType.Pen && e.GetCurrentPoint(this).Properties.IsEraser; // the rubber end of a pen
         e.Pointer.Capture(this);
@@ -254,6 +258,7 @@ public sealed partial class DocumentCanvas : Control
 
         var position = e.GetPosition(this);
         _pointers[e.Pointer.Id] = position;
+        _fingerAt = position;
         e.Handled = true;
 
         // the menu came up while the finger rested, but the finger goes on: it was a drag after all - the menu goes, the move starts
@@ -410,6 +415,8 @@ public sealed partial class DocumentCanvas : Control
         if (_pointers.Count == 0)
         {
             _pointerTypes.Clear();
+            _fingerAt = null;
+            InvalidateVisual();
             _longPressTimer.Stop();
             if (_gesture == Gesture.Pending)
             {

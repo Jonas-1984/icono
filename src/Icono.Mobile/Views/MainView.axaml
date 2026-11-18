@@ -6,35 +6,105 @@
     <Grid>
         <Grid RowDefinitions="Auto,*,Auto">
 
-            <!-- top bar -->
-            <Border Grid.Row="0" Background="{StaticResource ToolbarBackgroundBrush}" Padding="10,6"
-                    BorderBrush="{StaticResource BorderLineBrush}" BorderThickness="0,0,0,1">
+            <!-- top bar: thin, in three groups; icon (and name) on every key -->
+            <Border Grid.Row="0" Padding="10,4" BorderBrush="{StaticResource BorderLineBrush}" BorderThickness="0,0,0,1">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0" Color="#FF1B202B" />
+                        <GradientStop Offset="1" Color="#FF12151C" />
+                    </LinearGradientBrush>
+                </Border.Background>
                 <Grid ColumnDefinitions="Auto,*,Auto">
                     <!-- the logo on a light plate, like the app icon: its fine blue lines get lost on the dark bar -->
-                    <Border Grid.Column="0" x:Name="LogoPlate" Background="#FFF1F5FB" CornerRadius="8" Padding="8,4" Margin="0,0,12,0" VerticalAlignment="Center"
+                    <Border Grid.Column="0" x:Name="LogoPlate" Background="#FFF1F5FB" CornerRadius="8" Padding="7,2" Margin="0,0,12,0" VerticalAlignment="Center"
                             Cursor="Hand" ToolTip.Tip="About icono">
-                        <Image Source="avares://Icono.Mobile/Assets/icono.png" Height="26" RenderOptions.BitmapInterpolationMode="HighQuality" />
+                        <Image Source="avares://Icono.Mobile/Assets/icono.png" Height="22" RenderOptions.BitmapInterpolationMode="HighQuality" />
                     </Border>
 
-                    <TextBlock Grid.Column="1" x:Name="TitleText" VerticalAlignment="Center" FontSize="14"
+                    <TextBlock Grid.Column="1" x:Name="TitleText" VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold" Margin="0,0,10,0"
                                Foreground="{StaticResource ForegroundTextBrush}" TextTrimming="CharacterEllipsis" Text="Untitled" />
 
-                    <StackPanel Grid.Column="2" Orientation="Horizontal">
-                        <Button Classes="tool" Content="New" Click="OnNew" />
-                        <Button Classes="tool" Content="Open" Click="OnOpen" />
-                        <Button Classes="tool" Content="Save" Click="OnSave" />
-                        <Button Classes="tool" Content="Save as" Click="OnSaveAs" />
-                        <Button Classes="tool" Content="Export" Click="OnExport" />
-                        <Button Classes="tool" Content="Picture" Click="OnInsertPicture" />
-                        <Border Classes="separator" />
-                        <Button Classes="tool" x:Name="UndoButton" Content="Undo" Click="OnUndo" />
-                        <Button Classes="tool" x:Name="RedoButton" Content="Redo" Click="OnRedo" />
-                        <Border Classes="separator" />
-                        <Button Classes="tool" x:Name="DuplicateButton" Content="Duplicate" Click="OnDuplicate" />
-                        <Button Classes="tool" x:Name="DeleteButton" Content="Delete" Click="OnDelete" />
-                        <Border Classes="separator" />
-                        <Button Classes="tool" Content="Fit" Click="OnFit" />
-                        <Button Classes="tool on" x:Name="PropertiesButton" Content="Properties" Click="OnToggleProperties" />
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                        <!-- the file -->
+                        <Border Classes="barGroup">
+                            <StackPanel Orientation="Horizontal">
+                                <Button Classes="bar" Click="OnNew" ToolTip.Tip="New drawing">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <Path Classes="barIcon" Data="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M12 18v-6 M9 15h6" />
+                                        <TextBlock Text="New" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Classes="bar" Click="OnOpen" ToolTip.Tip="Open a drawing">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <Path Classes="barIcon" Data="M6 14l1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2" />
+                                        <TextBlock Text="Open" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Classes="bar" Click="OnSave" ToolTip.Tip="Save">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <Path Classes="barIcon" Data="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7 M7 3v4a1 1 0 0 0 1 1h7" />
+                                        <TextBlock Text="Save" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Classes="bar" Click="OnSaveAs" ToolTip.Tip="Save under another name">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <Path Classes="barIcon" Data="M4 4h13l3 3v13H4z M8 4v5h8 M8 20v-6h8v6" />
+                                        <TextBlock Text="Save as" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Classes="bar" Click="OnExport" ToolTip.Tip="Export as PDF or PNG">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <Path Classes="barIcon" Data="M12 15V3 M7 8l5-5 5 5 M5 21h14" />
+                                        <TextBlock Text="Export" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Classes="bar" Click="OnInsertPicture" ToolTip.Tip="Insert a picture or an SVG">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <Path Classes="barIcon" Data="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z M8.5 8.5h.01 M21 15l-5-5L5 21" />
+                                        <TextBlock Text="Picture" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- editing: icons only -->
+                        <Border Classes="barGroup">
+                            <StackPanel Orientation="Horizontal">
+                                <Button Classes="bar icon" x:Name="UndoButton" Click="OnUndo" ToolTip.Tip="Undo">
+                                    <Path Classes="barIcon" Data="M9 14L4 9l5-5 M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
+                                </Button>
+                                <Button Classes="bar icon" x:Name="RedoButton" Click="OnRedo" ToolTip.Tip="Redo">
+                                    <Path Classes="barIcon" Data="M15 14l5-5-5-5 M20 9H9.5a5.5 5.5 0 0 0 0 11H13" />
+                                </Button>
+                                <Button Classes="bar icon" x:Name="DuplicateButton" Click="OnDuplicate" ToolTip.Tip="Duplicate">
+                                    <Path Classes="barIcon" Data="M9 9h11a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V10a1 1 0 0 1 1-1z M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" />
+                                </Button>
+                                <Button Classes="bar icon" x:Name="DeleteButton" Click="OnDelete" ToolTip.Tip="Delete">
+                                    <Path Classes="barIcon" Data="M3 6h18 M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6 M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2 M10 11v6 M14 11v6" />
+                                </Button>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- the view and the settings -->
+                        <Border Classes="barGroup">
+                            <StackPanel Orientation="Horizontal">
+                                <Button Classes="bar icon" Click="OnFit" ToolTip.Tip="Fit the page to the screen">
+                                    <Path Classes="barIcon" Data="M8 3H5a2 2 0 0 0-2 2v3 M21 8V5a2 2 0 0 0-2-2h-3 M3 16v3a2 2 0 0 0 2 2h3 M16 21h3a2 2 0 0 0 2-2v-3" />
+                                </Button>
+                                <Button Classes="bar" Click="OnPageSettings" ToolTip.Tip="Page size, unit, scale, rulers, sheet, background">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <Path Classes="barIcon" Data="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.4 2.4 0 0 1 0-3.4l2.6-2.6a2.4 2.4 0 0 1 3.4 0z M14.5 12.5l2-2 M11.5 9.5l2-2 M8.5 6.5l2-2 M17.5 15.5l2-2" />
+                                        <TextBlock Text="Page" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Classes="bar on" x:Name="PropertiesButton" Click="OnToggleProperties" ToolTip.Tip="Show or hide the properties">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <Path Classes="barIcon" Data="M4 21v-7 M4 10V3 M12 21v-9 M12 8V3 M20 21v-5 M20 12V3 M1 14h6 M9 8h6 M17 16h6" />
+                                        <TextBlock Text="Properties" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </Grid>
             </Border>

@@ -14,18 +14,18 @@ public sealed partial class PropertiesPanel
     {
         TextBoxRequested?.Invoke(this, new LengthRequest(
             "Offset",
-            "Distance in cm (real size) of the parallel copy. Positive makes it bigger, negative smaller.",
-            "10",
+            $"Distance in {UnitName} (real size) of the parallel copy. Positive makes it bigger, negative smaller.",
+            UnitFactor >= 1 ? (10 * UnitFactor).ToString("0.##", CultureInfo.InvariantCulture) : (10 * UnitFactor).ToString("0.###", CultureInfo.InvariantCulture),
             text =>
             {
                 if (text is null || !double.TryParse(text.Trim().Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out var cm) || cm == 0)
                 {
-                    context.Notify("That is not a distance. Type a number in cm, for example 10 or -10.");
+                    context.Notify("That is not a distance. Type a number, for example 10 or -10.");
                     return;
                 }
 
                 var first = context.SelectedShapes.FirstOrDefault();
-                context.OffsetSelection(FromRealCm(cm));
+                context.OffsetSelection(FromReal(cm));
                 if (ReferenceEquals(first, context.SelectedShapes.FirstOrDefault()))
                 {
                     context.Notify("Nothing to offset: unlock the objects and their layer.");

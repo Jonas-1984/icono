@@ -21,8 +21,8 @@ public sealed partial class PropertiesPanel
 
     private const string LockIcon = "M5,11 H19 A2,2 0 0 1 21,13 V20 A2,2 0 0 1 19,22 H5 A2,2 0 0 1 3,20 V13 A2,2 0 0 1 5,11 Z M7 11V7a5 5 0 0 1 10 0v4";
     private const string UnlockIcon = "M5,11 H19 A2,2 0 0 1 21,13 V20 A2,2 0 0 1 19,22 H5 A2,2 0 0 1 3,20 V13 A2,2 0 0 1 5,11 Z M7 11V7a5 5 0 0 1 9.9 -1";
-    private const string UpIcon = "M4,13 L10,7 L16,13";
-    private const string DownIcon = "M4,7 L10,13 L16,7";
+    private const string UpIcon = "M5,12.5 L10,7.5 L15,12.5";
+    private const string DownIcon = "M5,7.5 L10,12.5 L15,7.5";
 
     /// <summary>A removal that takes objects with it asks for a second tap: what is waiting for it.</summary>
     private object? _confirm;
@@ -146,14 +146,16 @@ public sealed partial class PropertiesPanel
         {
             Content = new TextBlock
             {
-                Text = $"{layer.Name}  ({layer.Shapes.Count})", FontSize = 12.5, TextTrimming = TextTrimming.CharacterEllipsis,
+                Text = $"{layer.Name}   {layer.Shapes.Count}", FontSize = 12, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center,
                 Foreground = Brush(layer.Visible ? "ForegroundTextBrush" : "MutedTextBrush"),
             },
             Background = Brushes.Transparent,
             HorizontalAlignment = HorizontalAlignment.Stretch,
             HorizontalContentAlignment = HorizontalAlignment.Left,
-            Padding = new Thickness(6, 4),
-            MinHeight = 32,
+            VerticalContentAlignment = VerticalAlignment.Center,
+            Padding = new Thickness(6, 0),
+            MinHeight = 24,
+            Height = 24,
         };
         name.Click += (_, _) =>
         {
@@ -163,7 +165,7 @@ public sealed partial class PropertiesPanel
         };
 
         var open = _openLayers.Contains(layer);
-        var row = new Grid { ColumnDefinitions = new ColumnDefinitions("30,*,30,30,26,26") };
+        var row = new Grid { ColumnDefinitions = new ColumnDefinitions("26,*,26,26,26,26"), MinHeight = 26 };
         AddAt(row, 0, IconButton(open ? DownIcon : "M7,4 L13,10 L7,16", open ? "Hide the objects of the layer" : "Show the objects of the layer", () =>
         {
             if (!_openLayers.Remove(layer))
@@ -265,11 +267,11 @@ public sealed partial class PropertiesPanel
         {
             Data = Geometry.Parse(data),
             Stroke = Brush(enabled ? "ForegroundTextBrush" : "MutedTextBrush"),
-            StrokeThickness = 1.6,
+            StrokeThickness = 1.9,
             StrokeLineCap = PenLineCap.Round,
             StrokeJoin = PenLineJoin.Round,
-            Width = 15,
-            Height = 15,
+            Width = 12,
+            Height = 12,
             Stretch = Stretch.Uniform,
             RenderTransform = rotate == 0 ? null : new RotateTransform(rotate),
         };
@@ -279,9 +281,12 @@ public sealed partial class PropertiesPanel
             Content = path,
             IsEnabled = enabled,
             Opacity = enabled ? 1 : 0.35,
-            Background = Brushes.Transparent,
+            Background = new SolidColorBrush(Color.FromArgb(enabled ? (byte)0x1C : (byte)0x08, 0xFF, 0xFF, 0xFF)),
+            CornerRadius = new CornerRadius(7),
+            Margin = new Thickness(1, 0),
             Padding = new Thickness(0),
-            MinHeight = 32,
+            MinHeight = 24,
+            Height = 24,
             HorizontalAlignment = HorizontalAlignment.Stretch,
             HorizontalContentAlignment = HorizontalAlignment.Center,
             VerticalContentAlignment = VerticalAlignment.Center,

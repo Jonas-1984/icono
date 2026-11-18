@@ -35,17 +35,22 @@ public sealed partial class PropertiesPanel : UserControl
     private bool _rebuildQueued;
 
     /// <summary>Which of the two tabs is shown: the properties of the selection, or the pages and layers of the drawing.</summary>
-    private bool _showLayers;
+    private enum Tab { Properties, Page, Layers }
+
+    private Tab _tab = Tab.Properties;
 
     private readonly Button _propertiesTab;
+    private readonly Button _pageTab;
     private readonly Button _layersTab;
 
     public PropertiesPanel()
     {
-        _propertiesTab = TabButton("Properties", () => ShowTab(layers: false));
-        _layersTab = TabButton("Pages & layers", () => ShowTab(layers: true));
-        var tabs = new UniformGrid { Columns = 2, Margin = new Thickness(8, 8, 8, 0) };
+        _propertiesTab = TabButton("Properties", () => ShowTab(Tab.Properties));
+        _pageTab = TabButton("Page", () => ShowTab(Tab.Page));
+        _layersTab = TabButton("Layers", () => ShowTab(Tab.Layers));
+        var tabs = new UniformGrid { Columns = 3, Margin = new Thickness(8, 8, 8, 0) };
         tabs.Children.Add(_propertiesTab);
+        tabs.Children.Add(_pageTab);
         tabs.Children.Add(_layersTab);
 
         var layout = new DockPanel();
@@ -53,7 +58,7 @@ public sealed partial class PropertiesPanel : UserControl
         layout.Children.Add(tabs);
         layout.Children.Add(new ScrollViewer { Content = _content, VerticalScrollBarVisibility = ScrollBarVisibility.Auto });
         Content = layout;
-        ShowTab(layers: false);
+        ShowTab(Tab.Properties);
     }
 
     public EditorContext? Context
@@ -88,13 +93,17 @@ public sealed partial class PropertiesPanel : UserControl
 
     private void OnChanged() => OnChanged(null, EventArgs.Empty);
 
-    private void ShowTab(bool layers)
+    private void ShowTab(Tab tab)
     {
-        _showLayers = layers;
-        _propertiesTab.Classes.Set("on", !layers);
-        _layersTab.Classes.Set("on", layers);
+        _tab = tab;
+        _propertiesTab.Classes.Set("on", tab == Tab.Properties);
+        _pageTab.Classes.Set("on", tab == Tab.Page);
+        _layersTab.Classes.Set("on", tab == Tab.Layers);
         Rebuild();
     }
+
+    /// <summary>Shows the PAGE tab (the page size, the sheet, the background ...).</summary>
+    public void ShowPageSettings() => ShowTab(Tab.Page);
 
     private Button TabButton(string text, Action click)
     {
@@ -113,6 +122,20 @@ public sealed partial class PropertiesPanel : UserControl
     private double ToRealCm(double px) => px / PxPerCm * Scale;
 
     private double FromRealCm(double cm) => cm * PxPerCm / Scale;
+
+    /// <summary>The unit the sizes are shown in: the unit of the canvas (CANVAS SIZE: mm, cm or inch), as in the Windows program.</summary>
+    private double UnitFactor => _context?.DimensionUnit switch { LengthUnit.Millimeter => 10, LengthUnit.Inch => 1 / 2.54, LengthUnit.Meter => 0.01, _ => 1 };
+
+    private string UnitName => _context?.DimensionUnit switch { LengthUnit.Millimeter => "mm", LengthUnit.Inch => "in", LengthUnit.Meter => "m", _ => "cm" };
+
+    private double ToReal(double px) => ToRealCm(px) * UnitFactor;
+
+    private double FromReal(double value) => FromRealCm(value / UnitFactor);
+
+    /// <summary>A length of the drawing (page pixels) as a number box in the unit of the canvas at the drawing scale. The step and the limits are
+    /// given in cm.</summary>
+    private void RealRow(string label, double px, double stepCm, double minCm, double maxCm, Action<double> setPx, string format = "0.##") =>
+        NumberRow(label, ToReal(px), UnitName, stepCm * UnitFactor, minCm * UnitFactor, maxCm * UnitFactor, format, v => setPx(FromReal(v)));
 
     private void OnChanged(object? sender, EventArgs e)
     {
@@ -142,9 +165,15 @@ public sealed partial class PropertiesPanel : UserControl
         }
 
         context.WallSegmentHighlight = null; // BuildDimension sets it again for a wall whose dimension is being edited
-        if (_showLayers)
+        if (_tab == Tab.Layers)
         {
             BuildPagesAndLayers(context);
+            return;
+        }
+
+        if (_tab == Tab.Page)
+        {
+            BuildPage(context);
             return;
         }
 
@@ -278,9 +307,10 @@ public sealed partial class PropertiesPanel : UserControl
         }
     }
 
-    private void BuildDrawing(EditorContext context)
+    /// <summary>The page and its settings (the PAGE tab): scale, canvas size and unit, rulers, sheet, background, grid and snapping.</summary>
+    private void BuildPage(EditorContext context)
     {
-        Title("Drawing");
+        Title("Page");
         Heading("SCALE");
         var presets = Document.ScalePresets.ToList();
         if (!presets.Contains(context.Document.ScaleDenominator))
@@ -311,12 +341,17 @@ public sealed partial class PropertiesPanel : UserControl
         Note($"{doc.Width / PxPerCm * 10:0} x {doc.Height / PxPerCm * 10:0} mm, {doc.PageCount} page(s), " +
              $"{doc.Layers.Sum(l => l.Shapes.Count)} object(s)");
         BuildCanvasSize(context);
+        Toggle("Show the rulers", context.ShowRulers, on =>
+        {
+            context.ShowRulers = on;
+            context.RequestRedraw();
+        });
         BuildSheet(context);
         BuildBackground(context);
-        Heading("SELECTION");
-        ButtonRow(("Select all", context.SelectAll));
+
+
         BuildSnapping(context);
-        Note("Tap an object to see its properties here.");
+
     }
 
     private static bool HasFill(Shape shape) =>

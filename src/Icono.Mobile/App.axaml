@@ -100,5 +100,57 @@
             <Setter Property="MinWidth" Value="0" />
             <Setter Property="CornerRadius" Value="22" />
         </Style>
+
+        <!-- the thin top bar: groups of flat keys with an icon (and a name) -->
+        <Style Selector="Border.barGroup">
+            <Setter Property="Background" Value="#FF1E2430" />
+            <Setter Property="CornerRadius" Value="11" />
+            <Setter Property="Padding" Value="2" />
+            <Setter Property="BorderBrush" Value="#22FFFFFF" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.bar">
+            <Setter Property="MinHeight" Value="30" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="Margin" Value="1,0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="CornerRadius" Value="9" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="#FFD3DCEB" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.bar.icon">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Width" Value="34" />
+        </Style>
+        <Style Selector="Button.bar:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="#33FFFFFF" />
+        </Style>
+        <Style Selector="Button.bar:disabled">
+            <Setter Property="Foreground" Value="#FF485063" />
+        </Style>
+        <Style Selector="Button.bar:disabled /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.bar.on /template/ ContentPresenter">
+            <Setter Property="Background" Value="#335AB0FF" />
+        </Style>
+        <Style Selector="Button.bar.on">
+            <Setter Property="Foreground" Value="#FF8CCBFF" />
+        </Style>
+        <Style Selector="Path.barIcon">
+            <Setter Property="Width" Value="15" />
+            <Setter Property="Height" Value="15" />
+            <Setter Property="Stretch" Value="Uniform" />
+            <Setter Property="StrokeThickness" Value="1.7" />
+            <Setter Property="StrokeLineCap" Value="Round" />
+            <Setter Property="StrokeJoin" Value="Round" />
+            <Setter Property="Stroke" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+        </Style>
     </Application.Styles>
 </Application>

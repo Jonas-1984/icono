@@ -263,6 +263,14 @@ public partial class MainView : UserControl
         PropertiesButton.Classes.Set("on", PropertiesPane.IsVisible);
     }
 
+    /// <summary>"Page": the settings of the page (size, unit, scale, rulers, sheet, background ...) in the Properties.</summary>
+    private void OnPageSettings(object? sender, RoutedEventArgs e)
+    {
+        PropertiesPane.IsVisible = true;
+        PropertiesButton.Classes.Set("on", true);
+        Properties.ShowPageSettings();
+    }
+
     // ---------------------------------------------------------------- unsaved changes
 
     /// <summary>The Android back button closes the app: with unsaved changes it asks first.</summary>

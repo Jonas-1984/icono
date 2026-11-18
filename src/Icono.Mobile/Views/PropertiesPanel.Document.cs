@@ -17,6 +17,19 @@ public sealed partial class PropertiesPanel
     /// <summary>Raised when the background picture is to be chosen (the window shows its file window and hands the picture back).</summary>
     public event EventHandler? BackgroundImageRequested;
 
+    /// <summary>Nothing is selected: a short note on what is there and where the page settings are.</summary>
+    private void BuildDrawing(EditorContext context)
+    {
+        var document = context.Document;
+        Title("Nothing selected");
+        Note("Tap an object to see and change its properties here.");
+        Heading("THE PAGE");
+        Note($"{PageUnits.FromPx(document.Width, PageUnit.Mm):0} x {PageUnits.FromPx(document.Height, PageUnit.Mm):0} mm, {document.PageCount} page(s), " +
+             $"{document.Layers.Sum(l => l.Shapes.Count)} object(s), scale 1:{document.ScaleDenominator:0.##}");
+        ButtonRow(("Page settings...", ShowPageSettings), ("Select all", context.SelectAll));
+        Note("Page size (A5, A4, A3, own size), unit (mm, cm, inch), scale, rulers, sheet, background, grid and snapping are in the Page tab.");
+    }
+
     // ---------------------------------------------------------------- CANVAS SIZE
 
     private static readonly (string Name, double WidthMm, double HeightMm)[] Papers =

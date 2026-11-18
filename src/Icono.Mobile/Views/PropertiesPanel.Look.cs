@@ -61,10 +61,10 @@ public sealed partial class PropertiesPanel
                     ShapeOutline.SetBox(s, b.X, b.Y, Math.Max(1, b.W), Math.Max(1, b.H));
                 }, s => ReferenceEquals(s, shape));
 
-            NumberRow("X", ToRealCm(box.X), "cm", 1, -100000, 100000, "0.#", cm => Set(b => (FromRealCm(cm), b.Y, b.W, b.H)));
-            NumberRow("Y", ToRealCm(box.Y), "cm", 1, -100000, 100000, "0.#", cm => Set(b => (b.X, FromRealCm(cm), b.W, b.H)));
-            NumberRow("Width", ToRealCm(box.W), "cm", 1, 0.1, 100000, "0.#", cm => Set(b => (b.X, b.Y, FromRealCm(cm), b.H)));
-            NumberRow("Height", ToRealCm(box.H), "cm", 1, 0.1, 100000, "0.#", cm => Set(b => (b.X, b.Y, b.W, FromRealCm(cm))));
+            RealRow("X", box.X, 1, -100000, 100000, px => Set(b => (px, b.Y, b.W, b.H)));
+            RealRow("Y", box.Y, 1, -100000, 100000, px => Set(b => (b.X, px, b.W, b.H)));
+            RealRow("Width", box.W, 1, 0.1, 100000, px => Set(b => (b.X, b.Y, px, b.H)));
+            RealRow("Height", box.H, 1, 0.1, 100000, px => Set(b => (b.X, b.Y, b.W, px)));
         }
 
         NumberRow("Turn", shape.Rotation, "°", 15, 0, 360, "0.#", angle => context.SetOnSelection(s => s.Rotation = ((angle % 360) + 360) % 360));

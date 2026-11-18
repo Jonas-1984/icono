@@ -27,9 +27,9 @@ public sealed partial class PropertiesPanel
             context.RequestRedraw();
         });
         Toggle("Snap to grid", context.SnapToGrid, on => context.SnapToGrid = on);
-        NumberRow("Square", ToRealCm(context.GridSize), "cm", 5, 1, 1000, "0.#", cm =>
+        RealRow("Square", context.GridSize, 5, 1, 1000, px =>
         {
-            context.GridSize = Math.Max(1, FromRealCm(cm));
+            context.GridSize = Math.Max(1, px);
             context.RequestRedraw();
         });
         Note("Real size on the drawing (the scale is applied).");

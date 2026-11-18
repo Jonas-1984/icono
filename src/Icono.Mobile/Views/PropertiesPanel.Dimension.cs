@@ -196,15 +196,15 @@ public sealed partial class PropertiesPanel
         Note(isDoor
             ? "Lay the door over a wall: it cuts the wall open. Its width is the opening, the strip at the bottom is the wall."
             : "Lay it over a wall: it cuts the wall open. Its height is the wall thickness.");
-        NumberRow("Width", ToRealCm(symbol.Width), "cm", 5, 10, 1000, "0.#", cm => context.SetSymbolWidth(symbol, FromRealCm(cm)));
+        RealRow("Width", symbol.Width, 5, 10, 1000, px => context.SetSymbolWidth(symbol, px));
         Toggle("Show the width", symbol.SymbolShowDimension,
             on => context.SetOnSelection(s => s.SymbolShowDimension = on, s => ArchitecturalSymbols.IsSymbol(s.Kind)));
         Toggle("Show the gaps to the wall", symbol.SymbolShowGaps,
             on => context.SetOnSelection(s => s.SymbolShowGaps = on, s => ArchitecturalSymbols.IsSymbol(s.Kind)));
         if (isDoor)
         {
-            NumberRow("Wall thickness", ToRealCm(symbol.WallThickness), "cm", 1, 1, 500, "0.#",
-                cm => context.SetOnSelection(s => s.WallThickness = Math.Max(1, FromRealCm(cm)), s => ArchitecturalSymbols.IsDoor(s.Kind)));
+            RealRow("Wall thickness", symbol.WallThickness, 1, 1, 500,
+                px => context.SetOnSelection(s => s.WallThickness = Math.Max(1, px), s => ArchitecturalSymbols.IsDoor(s.Kind)));
             NumberRow("Opens by", symbol.DoorOpenAngle, "°", 15, 0, 120, "0", angle => context.SetOnSelection(s => s.DoorOpenAngle = angle, s => ArchitecturalSymbols.IsDoor(s.Kind)));
             ButtonRow(
                 ("Closed 0°", () => context.SetOnSelection(s => s.DoorOpenAngle = 0, s => ArchitecturalSymbols.IsDoor(s.Kind))),
@@ -219,7 +219,7 @@ public sealed partial class PropertiesPanel
     {
         bool IsWall(Shape s) => s.Kind == ShapeKind.Wall;
         Heading("WALL");
-        NumberRow("Thickness", ToRealCm(wall.WallThickness), "cm", 1, 1, 500, "0.#", cm => context.SetOnSelection(s => s.WallThickness = Math.Max(0.5, FromRealCm(cm)), IsWall));
+        RealRow("Thickness", wall.WallThickness, 1, 1, 500, px => context.SetOnSelection(s => s.WallThickness = Math.Max(0.5, px), IsWall));
         if (wall.Points is { Count: >= 3 })
         {
             Toggle("Closed (a room)", wall.WallClosed, on => context.SetOnSelection(s =>
