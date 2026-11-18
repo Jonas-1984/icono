@@ -141,7 +141,7 @@ public partial class MainView
         var icon = new Avalonia.Controls.Shapes.Path
         {
             Data = Geometry.Parse(iconData),
-            StrokeThickness = 1.5,
+            StrokeThickness = 1.2,
             StrokeLineCap = PenLineCap.Round,
             StrokeJoin = PenLineJoin.Round,
             Width = 19,

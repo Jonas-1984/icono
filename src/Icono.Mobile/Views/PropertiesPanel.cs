@@ -460,7 +460,7 @@ public sealed partial class PropertiesPanel : UserControl
         // any colour: type it as #RRGGBB (the box shows the current one)
         var box = new TextBox
         {
-            Text = $"#{current.R:X2}{current.G:X2}{current.B:X2}", FontSize = 13, MinHeight = 34, Padding = new Thickness(6, 4), Classes = { "field" },
+            Text = $"#{current.R:X2}{current.G:X2}{current.B:X2}", FontSize = 13, MinHeight = 28, Padding = new Thickness(6, 0), Classes = { "field" },
             HorizontalContentAlignment = HorizontalAlignment.Center, VerticalContentAlignment = VerticalAlignment.Center,
         };
 
@@ -530,7 +530,7 @@ public sealed partial class PropertiesPanel : UserControl
         // the box shows the number; a tap opens a number pad of frosted glass (not the keyboard of the tablet)
         var box = new TextBox
         {
-            Text = Show(value), FontSize = 13, MinHeight = 34, Padding = new Thickness(6, 4), HorizontalContentAlignment = HorizontalAlignment.Center,
+            Text = Show(value), FontSize = 13, MinHeight = 28, Padding = new Thickness(6, 0), HorizontalContentAlignment = HorizontalAlignment.Center,
             VerticalContentAlignment = VerticalAlignment.Center, IsReadOnly = true, Focusable = false, Classes = { "field" },
         };
 
@@ -606,7 +606,7 @@ public sealed partial class PropertiesPanel : UserControl
             SelectedIndex = Math.Max(0, options.ToList().FindIndex(o => EqualityComparer<T>.Default.Equals(o.Value, current))),
             HorizontalAlignment = HorizontalAlignment.Stretch,
             FontSize = 13,
-            MinHeight = 34,
+            MinHeight = 28, Padding = new Thickness(8, 0), VerticalContentAlignment = VerticalAlignment.Center,
             Classes = { "field" },
         };
         combo.SelectionChanged += (_, _) =>
@@ -634,7 +634,7 @@ public sealed partial class PropertiesPanel : UserControl
                 set(value);
             }
         };
-        var row = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), MinHeight = 30 };
+        var row = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), MinHeight = 26 };
         var text = Label(label);
         text.TextWrapping = TextWrapping.Wrap;
         row.Children.Add(text);
@@ -658,7 +658,7 @@ public sealed partial class PropertiesPanel : UserControl
         {
             var button = new Button
             {
-                Content = text, MinHeight = 34, Margin = new Thickness(2), HorizontalAlignment = HorizontalAlignment.Stretch,
+                Content = text, MinHeight = 28, Margin = new Thickness(2), HorizontalAlignment = HorizontalAlignment.Stretch,
                 HorizontalContentAlignment = HorizontalAlignment.Center, Classes = { "soft" },
             };
             button.Click += (_, _) => action();
@@ -670,7 +670,7 @@ public sealed partial class PropertiesPanel : UserControl
 
     private Button StepButton(string text) => new()
     {
-        Content = text, FontSize = 16, Width = 32, MinHeight = 34, Padding = new Thickness(0), HorizontalContentAlignment = HorizontalAlignment.Center,
+        Content = text, FontSize = 16, Width = 30, MinHeight = 28, Padding = new Thickness(0), HorizontalContentAlignment = HorizontalAlignment.Center,
         VerticalContentAlignment = VerticalAlignment.Center, Classes = { "soft" },
     };
 

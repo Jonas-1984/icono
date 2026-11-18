@@ -232,7 +232,7 @@ public sealed partial class PropertiesPanel
             var name = new Button
             {
                 Content = new StackPanel { Orientation = Orientation.Horizontal, Children = { dot, text } }, Background = Brushes.Transparent,
-                HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Padding = new Thickness(6, 3), MinHeight = 30,
+                HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Padding = new Thickness(6, 0), MinHeight = 26,
             };
             name.Click += (_, _) =>
             {
