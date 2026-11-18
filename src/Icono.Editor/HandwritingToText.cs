@@ -38,7 +38,14 @@ public static class HandwritingToText
         var result = new List<IReadOnlyList<SKPoint>>();
         foreach (var stroke in strokes)
         {
-            using var path = ShapeGeometryFactory.Build(stroke);
+            // a stroke written with pressure is an outline: the writing is read from the line down its middle (same frame, same turns)
+            using var path = ShapeGeometryFactory.Build(stroke.InkCenterline is { } middle
+                ? new Shape
+                {
+                    Kind = ShapeKind.CombinedPath, X = stroke.X, Y = stroke.Y, Width = stroke.Width, Height = stroke.Height, Rotation = stroke.Rotation,
+                    FlipHorizontal = stroke.FlipHorizontal, FlipVertical = stroke.FlipVertical, CustomPathData = middle, CustomPathStrokeOnly = true,
+                }
+                : stroke);
             using var measure = new SKPathMeasure(path, false);
             do
             {

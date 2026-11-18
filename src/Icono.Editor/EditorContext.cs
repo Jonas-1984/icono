@@ -196,6 +196,11 @@ public sealed partial class EditorContext : ObservableObject
     /// else is ever erased.</summary>
     public bool PenEraser { get => _penEraser; set => SetField(ref _penEraser, value); }
 
+    private bool _penPressure = true;
+
+    /// <summary>True when a pen that reports pressure writes thinner and thicker as it is pressed less and harder (<see cref="InkEditing.UsesPressure"/>).</summary>
+    public bool PenPressure { get => _penPressure; set => SetField(ref _penPressure, value); }
+
     private bool _penSnapShapes = true;
 
     /// <summary>True when a stroke that is held still at its end (the pen or finger stays) becomes the clean shape it was meant to be: a circle, a line,

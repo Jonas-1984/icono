@@ -16,6 +16,7 @@ namespace Icono.Mobile.Views;
 public sealed partial class DocumentCanvas
 {
     private List<SKPoint>? _inkPoints;
+    private List<float>? _inkPressures;
     private Shape? _inkShape;
     private bool _inkWithPen;
 
@@ -48,6 +49,7 @@ public sealed partial class DocumentCanvas
         }
 
         _inkPoints = [new SKPoint((float)document.X, (float)document.Y)];
+        _inkPressures = [0.5f];
         UpdateInkPreview();
         RestartHold(ToScreen((document.X, document.Y)) is var s ? new Point(s.X, s.Y) : default);
     }
@@ -115,13 +117,22 @@ public sealed partial class DocumentCanvas
         }
 
         var minimum = 1.2 / _zoom;
+        var pen = e.Pointer.Type == PointerType.Pen;
         foreach (var sample in e.GetIntermediatePoints(this))
         {
             var at = ToDocument(sample.Position);
             var last = points[^1];
             if (Math.Abs(at.X - last.X) >= minimum || Math.Abs(at.Y - last.Y) >= minimum)
             {
+                // only a pen has pressure to tell; a finger or a mouse writes at half pressure all the time
+                var pressure = pen ? Math.Clamp(sample.Properties.Pressure, 0f, 1f) : 0.5f;
+                if (points.Count == 1 && _inkPressures is { Count: 1 })
+                {
+                    _inkPressures[0] = pressure; // the first reading of the pen belongs to the first point too
+                }
+
                 points.Add(new SKPoint((float)at.X, (float)at.Y));
+                _inkPressures?.Add(pressure);
             }
         }
 
@@ -143,7 +154,7 @@ public sealed partial class DocumentCanvas
     {
         if (_context is { } context && _inkPoints is { } points)
         {
-            _inkShape = InkEditing.Preview(context, points, _zoom);
+            _inkShape = InkEditing.Preview(context, points, _zoom, _inkPressures);
             context.RequestRedraw();
         }
     }
@@ -152,6 +163,7 @@ public sealed partial class DocumentCanvas
     private void FinishInk()
     {
         var points = _inkPoints;
+        var pressures = _inkPressures;
         var erased = _erased;
         var erasing = _inkErasing;
         var snapped = _inkSnap;
@@ -171,7 +183,7 @@ public sealed partial class DocumentCanvas
         }
         else if (points is not null)
         {
-            InkEditing.Commit(context, points, _zoom);
+            InkEditing.Commit(context, points, _zoom, pressures);
         }
 
         context.RequestRedraw();
@@ -194,6 +206,7 @@ public sealed partial class DocumentCanvas
         _holdTimer?.Stop();
         _inkSnap = null;
         _inkPoints = null;
+        _inkPressures = null;
         _inkShape = null;
         _inkWithPen = false;
         _inkErasing = false;

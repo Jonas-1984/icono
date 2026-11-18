@@ -13,11 +13,18 @@ public static class InkEditing
     public static float SmoothingDistance(EditorContext context, double zoom) => (float)(context.PenSmoothing * 0.75 / Math.Max(zoom, 1e-6));
 
     /// <summary>The stroke as it looks while it is being drawn (coarser than the final one, so that it stays fast), or null for too few points.</summary>
-    public static Shape? Preview(EditorContext context, IReadOnlyList<SKPoint> points, double zoom) =>
-        FreehandBuilder.CreateShape(points, context.PenColor, context.PenWidth, (float)(0.5 / Math.Max(zoom, 1e-6)), SmoothingDistance(context, zoom));
+    public static Shape? Preview(EditorContext context, IReadOnlyList<SKPoint> points, double zoom, IReadOnlyList<float>? pressures = null) =>
+        UsesPressure(context, pressures)
+            ? FreehandBuilder.CreatePressureShape(points, pressures!, context.PenColor, context.PenWidth, (float)(0.5 / Math.Max(zoom, 1e-6)), SmoothingDistance(context, zoom))
+            : FreehandBuilder.CreateShape(points, context.PenColor, context.PenWidth, (float)(0.5 / Math.Max(zoom, 1e-6)), SmoothingDistance(context, zoom));
+
+    /// <summary>True when the stroke is written with pen pressure: the setting is on and the pen really reported different pressures (a mouse, a finger
+    /// or a pen without pressure gives the same value all the time - that stroke keeps one width).</summary>
+    public static bool UsesPressure(EditorContext context, IReadOnlyList<float>? pressures) =>
+        context.PenPressure && pressures is { Count: > 0 } && pressures.Max() - pressures.Min() > 0.03f;
 
     /// <summary>The stroke becomes an object at the front of the active (or first unlocked) layer. False when nothing was added.</summary>
-    public static bool Commit(EditorContext context, IReadOnlyList<SKPoint> points, double zoom)
+    public static bool Commit(EditorContext context, IReadOnlyList<SKPoint> points, double zoom, IReadOnlyList<float>? pressures = null)
     {
         var layer = context.SelectedLayer is { Locked: false } selected ? selected : context.Document.Layers.FirstOrDefault(l => !l.Locked);
         if (layer is null)
@@ -26,8 +33,10 @@ public static class InkEditing
             return false;
         }
 
-        var shape = FreehandBuilder.CreateShape(
-            points, context.PenColor, context.PenWidth, (float)Math.Max(0.2, 0.8 / Math.Max(zoom, 1e-6)), SmoothingDistance(context, zoom));
+        var tolerance = (float)Math.Max(0.2, 0.8 / Math.Max(zoom, 1e-6));
+        var shape = UsesPressure(context, pressures)
+            ? FreehandBuilder.CreatePressureShape(points, pressures!, context.PenColor, context.PenWidth, tolerance, SmoothingDistance(context, zoom))
+            : FreehandBuilder.CreateShape(points, context.PenColor, context.PenWidth, tolerance, SmoothingDistance(context, zoom));
         if (shape is null)
         {
             return false;

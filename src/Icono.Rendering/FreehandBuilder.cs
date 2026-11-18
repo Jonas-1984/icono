@@ -364,10 +364,200 @@ public static class FreehandBuilder
         };
     }
 
+    /// <summary>How thick a stroke is at a pen pressure (0 - 1) compared to the pen width: the width is that of the pen at half pressure (a touch with
+    /// no pressure information is half pressure), a light touch is a hairline and a hard one reaches 1.7 times.</summary>
+    public static double PressureFactor(double pressure) => 0.3 + 1.4 * Math.Clamp(pressure, 0, 1);
+
+    /// <summary>A stroke written with pen pressure: a filled outline whose width follows the pressure at every point, with round ends (<see cref="Shape.CustomPathData"/>,
+    /// filled) - and the line down its middle (<see cref="Shape.InkCenterline"/>), which is what the writing is read from. <paramref name="pressure"/> has one value
+    /// (0 - 1) for every one of <paramref name="raw"/>; <paramref name="width"/> is the pen width at half pressure.</summary>
+    public static Shape? CreatePressureShape(
+        IReadOnlyList<SKPoint> raw, IReadOnlyList<float> pressure, ArgbColor color, double width, float tolerance, float smoothing = 0)
+    {
+        if (raw.Count == 0)
+        {
+            return null;
+        }
+
+        using var centre = BuildPath(raw, tolerance, smoothing);
+        using var measure = new SKPathMeasure(centre, false);
+        var length = measure.Length;
+
+        // the pressure along the stroke, by the distance the pen had gone (the smoothed stroke is shorter than the raw points but about as long)
+        var cumulative = new float[raw.Count];
+        for (var k = 1; k < raw.Count; k++)
+        {
+            cumulative[k] = cumulative[k - 1] + Geo.Distance(raw[k - 1], raw[k]);
+        }
+
+        float PressureAt(float fraction)
+        {
+            if (cumulative[^1] < 1e-3f || pressure.Count < raw.Count)
+            {
+                return pressure.Count > 0 ? pressure[0] : 0.5f;
+            }
+
+            var target = fraction * cumulative[^1];
+            var index = Array.BinarySearch(cumulative, target);
+            if (index < 0)
+            {
+                index = ~index;
+            }
+
+            index = Math.Clamp(index, 1, raw.Count - 1);
+            var span = cumulative[index] - cumulative[index - 1];
+            var t = span < 1e-6f ? 0f : (target - cumulative[index - 1]) / span;
+            return pressure[index - 1] + (pressure[index] - pressure[index - 1]) * Math.Clamp(t, 0f, 1f);
+        }
+
+        using var outline = new SKPath();
+        if (length < 0.5f)
+        {
+            // a dot: a round dot as thick as the pressure says
+            var dot = (float)(width * PressureFactor(pressure.Count > 0 ? pressure.Average() : 0.5)) / 2;
+            outline.AddCircle(raw[0].X, raw[0].Y, Math.Max(0.4f, dot));
+            return OutlineShape(outline, null, color);
+        }
+
+        var count = Math.Max(2, (int)Math.Ceiling(length / 1.5f));
+        var centres = new SKPoint[count + 1];
+        var normals = new SKPoint[count + 1];
+        var tangents = new SKPoint[count + 1];
+        var widths = new float[count + 1];
+        for (var k = 0; k <= count; k++)
+        {
+            measure.GetPositionAndTangent(length * k / count, out var p, out var t);
+            centres[k] = p;
+            tangents[k] = t;
+            normals[k] = new SKPoint(-t.Y, t.X);
+            widths[k] = (float)(width * PressureFactor(PressureAt((float)k / count)));
+        }
+
+        // the width changes smoothly: a light average, twice
+        for (var pass = 0; pass < 2; pass++)
+        {
+            var copy = (float[])widths.Clone();
+            for (var k = 0; k <= count; k++)
+            {
+                float sum = 0;
+                var n = 0;
+                for (var d = -3; d <= 3; d++)
+                {
+                    var j = k + d;
+                    if (j >= 0 && j <= count)
+                    {
+                        sum += copy[j];
+                        n++;
+                    }
+                }
+
+                widths[k] = sum / n;
+            }
+        }
+
+        var left = new List<SKPoint>(count + 1);
+        var rightSide = new List<SKPoint>(count + 1);
+        for (var k = 0; k <= count; k++)
+        {
+            var half = Math.Max(0.2f, widths[k] / 2);
+            left.Add(new SKPoint(centres[k].X + normals[k].X * half, centres[k].Y + normals[k].Y * half));
+            rightSide.Add(new SKPoint(centres[k].X - normals[k].X * half, centres[k].Y - normals[k].Y * half));
+        }
+
+        // fewer points along the long sides; the ends are round
+        left = Simplify(left, 0.12f);
+        rightSide = Simplify(rightSide, 0.12f);
+        var first = 0;
+        var last = count;
+        var endRadius = Math.Max(0.2f, widths[last] / 2);
+        var startRadius = Math.Max(0.2f, widths[first] / 2);
+
+        outline.MoveTo(left[0]);
+        foreach (var p in left.Skip(1))
+        {
+            outline.LineTo(p);
+        }
+
+        for (var step = 1; step < 10; step++)
+        {
+            var angle = Math.PI * step / 10;
+            var c = (float)Math.Cos(angle);
+            var sn = (float)Math.Sin(angle);
+            outline.LineTo(
+                centres[last].X + (normals[last].X * c + tangents[last].X * sn) * endRadius,
+                centres[last].Y + (normals[last].Y * c + tangents[last].Y * sn) * endRadius);
+        }
+
+        for (var k = rightSide.Count - 1; k >= 0; k--)
+        {
+            outline.LineTo(rightSide[k]);
+        }
+
+        for (var step = 1; step < 10; step++)
+        {
+            var angle = Math.PI * step / 10;
+            var c = (float)Math.Cos(angle);
+            var sn = (float)Math.Sin(angle);
+            outline.LineTo(
+                centres[first].X + (-normals[first].X * c - tangents[first].X * sn) * startRadius,
+                centres[first].Y + (-normals[first].Y * c - tangents[first].Y * sn) * startRadius);
+        }
+
+        outline.Close();
+        return OutlineShape(outline, centre, color);
+    }
+
+    /// <summary>The shape of a stroke outline (and the line down its middle) in the 24 x 24 space every path shape is scaled from.</summary>
+    private static Shape OutlineShape(SKPath outline, SKPath? centre, ArgbColor color)
+    {
+        var bounds = outline.TightBounds;
+        var frameWidth = Math.Max(1f, bounds.Width);
+        var frameHeight = Math.Max(1f, bounds.Height);
+        var matrix = SKMatrix.CreateScaleTranslation(24f / frameWidth, 24f / frameHeight, -bounds.Left * 24f / frameWidth, -bounds.Top * 24f / frameHeight);
+        using var local = new SKPath(outline);
+        local.Transform(matrix);
+
+        string? centreData = null;
+        if (centre is not null)
+        {
+            using var localCentre = new SKPath(centre);
+            localCentre.Transform(matrix);
+            centreData = localCentre.ToSvgPathData();
+        }
+
+        return new Shape
+        {
+            Kind = ShapeKind.CombinedPath,
+            Name = "Handwriting",
+            X = bounds.Left,
+            Y = bounds.Top,
+            Width = frameWidth,
+            Height = frameHeight,
+            CustomPathData = local.ToSvgPathData(),
+            CustomPathStrokeOnly = false,
+            FillEnabled = true,
+            FillColor = color,
+            BorderColor = color,
+            BorderThickness = 0,
+            Freehand = true,
+            InkCenterline = centreData,
+        };
+    }
+
     /// <summary>True when the point lies on the drawn stroke (within half its width and <paramref name="tolerance"/>): a stroke is picked where it is,
     /// not anywhere in its frame, so notes written over a plan do not catch the clicks meant for the plan.</summary>
     public static bool HitTest(Shape shape, double x, double y, double tolerance)
     {
+        if (!shape.CustomPathStrokeOnly && shape.Kind == ShapeKind.CombinedPath)
+        {
+            // a stroke written with pressure is a filled shape: touching it anywhere inside is a hit
+            using var area = ShapeGeometryFactory.Build(shape);
+            if (area.Contains((float)x, (float)y))
+            {
+                return true;
+            }
+        }
+
         if (OutlineGeometry.NearestOnOutline(shape, new SKPoint((float)x, (float)y)) is { } near)
         {
             return near.Distance <= shape.BorderThickness / 2 + tolerance;

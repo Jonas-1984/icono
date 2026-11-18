@@ -58,6 +58,7 @@ public sealed class Shape : ObservableObject
     private double? _lineHeadSize;
     private bool _sketch;
     private bool _freehand;
+    private string? _inkCenterline;
     private ArgbColor? _textColor;
     private double _wallThickness = 16;
     private bool _wallClosed;
@@ -225,6 +226,10 @@ public sealed class Shape : ObservableObject
     /// <summary>A stroke drawn by hand with the Handwriting tool (a path in <see cref="CustomPathData"/>): it is picked where the stroke is, not anywhere in its frame,
     /// and it takes no part in the point snapping.</summary>
     public bool Freehand { get => _freehand; set => SetField(ref _freehand, value); }
+
+    /// <summary>A handwriting stroke written with pen pressure is a filled outline of varying width in <see cref="CustomPathData"/>; this is the line down its middle
+    /// (path data in the same 24 x 24 space), which is what the stroke was drawn along - kept so the writing can be read as text. Null for a stroke of one width.</summary>
+    public string? InkCenterline { get => _inkCenterline; set => SetField(ref _inkCenterline, value); }
 
     /// <summary>Dashed stroke, only meaningful for <see cref="Points"/>-based kinds.</summary>
     public bool Dashed { get => _dashed; set => SetField(ref _dashed, value); }

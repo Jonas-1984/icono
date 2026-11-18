@@ -95,7 +95,8 @@ public readonly record struct ShapeSnapshot(
     double? LoopSweep = null,
     double? LineHeadSize = null,
     bool Sketch = false,
-    bool Freehand = false)
+    bool Freehand = false,
+    string? InkCenterline = null)
 {
     public static ShapeSnapshot Capture(Shape shape) => new(
         shape.X,
@@ -187,7 +188,8 @@ public readonly record struct ShapeSnapshot(
         shape.LoopSweep,
         shape.LineHeadSize,
         shape.Sketch,
-        shape.Freehand);
+        shape.Freehand,
+        shape.InkCenterline);
 
     public void ApplyTo(Shape shape)
     {
@@ -281,5 +283,6 @@ public readonly record struct ShapeSnapshot(
         shape.LineHeadSize = LineHeadSize;
         shape.Sketch = Sketch;
         shape.Freehand = Freehand;
+        shape.InkCenterline = InkCenterline;
     }
 }

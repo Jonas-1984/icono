@@ -11,6 +11,10 @@ public sealed partial class PropertiesPanel
         Note("Write or draw with the pen or a finger. Every stroke is one object you can move, recolour, delete or undo. " +
              "Two fingers move and zoom the page.");
 
+        Heading("PRESSURE");
+        Toggle("Pen pressure", context.PenPressure, on => context.PenPressure = on);
+        Note("With a pen that senses pressure the line gets thinner when you press lightly and thicker when you press hard. The Width below is the line at half pressure. A finger writes one width.");
+
         Heading("SHAPE CORRECTION");
         Toggle("Hold to make shapes clean", context.PenSnapShapes, on => context.PenSnapShapes = on);
         Note("Draw a circle, line, rectangle or triangle and keep the pen or finger still for a moment: it becomes the clean shape. Lift to keep it, or move on to go on drawing freehand.");
