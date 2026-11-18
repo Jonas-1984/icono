@@ -41,6 +41,48 @@
         <Style Selector="Button.listRow:pressed /template/ ContentPresenter">
             <Setter Property="Background" Value="#335AB0FF" />
         </Style>
+        <!-- the keys of the number pad (NumberPad.cs): frosted glass with a fine rim; OK is blue -->
+        <Style Selector="Button.padKey">
+            <Setter Property="CornerRadius" Value="13" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderBrush" Value="#33FFFFFF" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Background">
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                    <GradientStop Offset="0" Color="#3CFFFFFF" />
+                    <GradientStop Offset="1" Color="#22FFFFFF" />
+                </LinearGradientBrush>
+            </Setter>
+        </Style>
+        <Style Selector="Button.padKey.soft">
+            <Setter Property="Background">
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                    <GradientStop Offset="0" Color="#26FFFFFF" />
+                    <GradientStop Offset="1" Color="#12FFFFFF" />
+                </LinearGradientBrush>
+            </Setter>
+        </Style>
+        <Style Selector="Button.padKey.ok">
+            <Setter Property="Foreground" Value="#FF06101C" />
+            <Setter Property="BorderBrush" Value="#88D6EBFF" />
+            <Setter Property="Background">
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                    <GradientStop Offset="0" Color="#F086C6FF" />
+                    <GradientStop Offset="1" Color="#F03F93E8" />
+                </LinearGradientBrush>
+            </Setter>
+        </Style>
+        <Style Selector="Button.padKey:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="#66FFFFFF" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="Button.padKey.ok:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="#FF3B86CC" />
+            <Setter Property="Foreground" Value="#FF06101C" />
+        </Style>
+        <Style Selector="Button.padKey:pointerover /template/ ContentPresenter">
+            <Setter Property="BorderBrush" Value="#99FFFFFF" />
+        </Style>
         <Style Selector="Border.dialog">
             <Setter Property="CornerRadius" Value="18" />
             <Setter Property="BorderBrush" Value="#2AFFFFFF" />

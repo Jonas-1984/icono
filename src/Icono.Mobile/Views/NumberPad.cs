@@ -28,12 +28,13 @@ public sealed class NumberPad : UserControl
 
         var heading = new TextBlock
         {
-            Text = title, FontSize = 13, FontWeight = FontWeight.SemiBold, Foreground = new SolidColorBrush(Color.FromArgb(0xCC, 0xFF, 0xFF, 0xFF)),
+            Text = title, FontSize = 12.5, FontWeight = FontWeight.SemiBold, LetterSpacing = 0.6, Foreground = new SolidColorBrush(Color.FromArgb(0xCC, 0xFF, 0xFF, 0xFF)),
             VerticalAlignment = VerticalAlignment.Center,
         };
-        var close = Key("✕", () => Cancelled?.Invoke(), 14, 0x22);
-        close.Width = 34;
-        close.Height = 34;
+        var close = Key("✕", () => Cancelled?.Invoke(), 13, "padKey soft");
+        close.Width = 30;
+        close.Height = 30;
+        close.CornerRadius = new CornerRadius(15);
         close.MinHeight = 0;
         close.Padding = new Thickness(0);
         var top = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(0, 0, 0, 8) };
@@ -48,7 +49,8 @@ public sealed class NumberPad : UserControl
         };
         var screen = new Border
         {
-            Background = new SolidColorBrush(Color.FromArgb(0x55, 0x00, 0x00, 0x00)), CornerRadius = new CornerRadius(12), Padding = new Thickness(14, 8), MinHeight = 52,
+            Background = new SolidColorBrush(Color.FromArgb(0x70, 0x00, 0x00, 0x00)), CornerRadius = new CornerRadius(13), Padding = new Thickness(14, 6), MinHeight = 48,
+            BorderBrush = new SolidColorBrush(Color.FromArgb(0x26, 0xFF, 0xFF, 0xFF)), BorderThickness = new Thickness(1),
             Child = new Grid
             {
                 ColumnDefinitions = new ColumnDefinitions("*,Auto"),
@@ -73,20 +75,19 @@ public sealed class NumberPad : UserControl
         for (var i = 0; i < layout.Length; i++)
         {
             var symbol = layout[i];
-            Put(Key(symbol, () => Add(symbol), 22, 0x2E), i / 3, i % 3);
+            Put(Key(symbol, () => Add(symbol), 21, "padKey"), i / 3, i % 3);
         }
 
-        Put(Key("±", Negate, 22, 0x22), 4, 0);
-        Put(Key("⌫", Back, 22, 0x22), 4, 1);
-        var ok = Key("OK", () => Committed?.Invoke(_text), 18, 0x00);
-        ok.Background = new SolidColorBrush(Color.FromArgb(0xE6, 0x2F, 0x9B, 0xFF));
+        Put(Key("±", Negate, 20, "padKey soft"), 4, 0);
+        Put(Key("⌫", Back, 20, "padKey soft"), 4, 1);
+        var ok = Key("OK", () => Committed?.Invoke(_text), 17, "padKey ok");
         ok.FontWeight = FontWeight.Bold;
         Put(ok, 4, 2);
 
         // frosted glass: a see-through surface that fades from lighter at the top to darker at the bottom, a thin bright rim and a soft shadow
         Content = new Border
         {
-            Width = 268, Padding = new Thickness(14), CornerRadius = new CornerRadius(22), BorderThickness = new Thickness(1),
+            Width = 268, Padding = new Thickness(14, 12, 14, 12), CornerRadius = new CornerRadius(22), BorderThickness = new Thickness(1),
             BorderBrush = new LinearGradientBrush
             {
                 StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative), EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
@@ -143,14 +144,14 @@ public sealed class NumberPad : UserControl
         Refresh();
     }
 
-    private static Button Key(string text, Action tap, double size, byte alpha)
+    private static Button Key(string text, Action tap, double size, string classes)
     {
         var key = new Button
         {
-            Content = text, FontSize = size, MinHeight = 54, Margin = new Thickness(3), HorizontalAlignment = HorizontalAlignment.Stretch,
-            HorizontalContentAlignment = HorizontalAlignment.Center, VerticalContentAlignment = VerticalAlignment.Center, CornerRadius = new CornerRadius(14),
-            Background = new SolidColorBrush(Color.FromArgb(alpha, 0xFF, 0xFF, 0xFF)), Foreground = Brushes.White,
+            Content = text, FontSize = size, MinHeight = 48, Margin = new Thickness(2.5), HorizontalAlignment = HorizontalAlignment.Stretch,
+            HorizontalContentAlignment = HorizontalAlignment.Center, VerticalContentAlignment = VerticalAlignment.Center, Padding = new Thickness(0),
         };
+        key.Classes.AddRange(classes.Split(' '));
         key.Click += (_, _) => tap();
         return key;
     }
