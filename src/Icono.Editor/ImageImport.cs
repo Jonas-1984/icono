@@ -82,6 +82,32 @@ public static class ImageImport
         return png is null ? Fail("The file could not be read as an image.", out error) : InsertPicture(context, png, decoded.Width, decoded.Height, out error);
     }
 
+    /// <summary>The longest side (pixels) of a picture used as the background of the page.</summary>
+    public const int MaxBackgroundSide = 3000;
+
+    /// <summary>A picture (any format Skia reads, or an .ico) as the PNG bytes for the page background, at most 3000 px on its long side. Null with
+    /// <paramref name="error"/> set when the bytes are no picture.</summary>
+    public static byte[]? ToBackgroundPng(byte[] data, out string? error)
+    {
+        error = null;
+        if (data.Length == 0 || data.Length > MaxPictureBytes)
+        {
+            error = data.Length == 0 ? "The file could not be read as an image." : "The picture is too big.";
+            return null;
+        }
+
+        using var source = SKData.CreateCopy(data);
+        using var codec = IcoReader.IsIco(data) ? null : SKCodec.Create(source);
+        using var decoded = IcoReader.IsIco(data) ? IcoReader.LargestFrame(data) : codec is null ? null : SKBitmap.Decode(codec);
+        var png = decoded is null || decoded.Width < 1 || decoded.Height < 1 ? null : ToPng(decoded, MaxBackgroundSide);
+        if (png is null)
+        {
+            error = "The file could not be read as an image.";
+        }
+
+        return png;
+    }
+
     /// <summary>Puts picture bytes (PNG) of the given pixel size into the drawing as an image shape, at most 160 px on its long side.</summary>
     public static Shape? InsertPicture(EditorContext context, byte[] png, int pixelWidth, int pixelHeight, out string? error)
     {
@@ -109,9 +135,9 @@ public static class ImageImport
     }
 
     /// <summary>The picture as PNG bytes, made smaller when its long side is over <see cref="MaxPictureSide"/>.</summary>
-    private static byte[]? ToPng(SKBitmap source)
+    private static byte[]? ToPng(SKBitmap source, int maxSide = MaxPictureSide)
     {
-        var scale = Math.Min(1.0, (double)MaxPictureSide / Math.Max(source.Width, source.Height));
+        var scale = Math.Min(1.0, (double)maxSide / Math.Max(source.Width, source.Height));
         using var image = scale < 1
             ? ResizedImage(source, Math.Max(1, (int)(source.Width * scale)), Math.Max(1, (int)(source.Height * scale)))
             : SKImage.FromBitmap(source);

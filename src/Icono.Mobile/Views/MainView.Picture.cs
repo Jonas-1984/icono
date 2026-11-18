@@ -1,5 +1,6 @@
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Icono.Core;
 using Icono.Editor;
 using Icono.Rendering;
 
@@ -30,7 +31,27 @@ public partial class MainView
             return;
         }
 
-        byte[] data;
+        var data = await ReadPictureBytesAsync(file);
+        if (data is null)
+        {
+            return;
+        }
+        string? error;
+        if (file.Name.EndsWith(".svg", StringComparison.OrdinalIgnoreCase))
+        {
+            error = ImageImport.ImportSvg(_context, System.Text.Encoding.UTF8.GetString(data), out var failed) is null ? failed : null;
+        }
+        else
+        {
+            error = ImageImport.ImportPicture(_context, data, out var failed) is null ? failed : null;
+        }
+
+        StatusText.Text = error ?? "Added " + file.Name + " - drag it to move it, its corners to change the size.";
+    }
+
+    /// <summary>Reads the file chosen in the file window (a status message tells when it is too big or cannot be read).</summary>
+    private async Task<byte[]?> ReadPictureBytesAsync(IStorageFile file)
+    {
         try
         {
             await using var stream = await file.OpenReadAsync();
@@ -44,28 +65,52 @@ public partial class MainView
                 if (memory.Length > limit)
                 {
                     StatusText.Text = "That file is too big.";
-                    return;
+                    return null;
                 }
             }
 
-            data = memory.ToArray();
+            return memory.ToArray();
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
             StatusText.Text = "The file could not be read: " + ex.Message;
+            return null;
+        }
+    }
+
+    /// <summary>The picture for the page background (BACKGROUND in the Properties): chosen in the file window, made at most 3000 px.</summary>
+    private async void OnBackgroundImageRequested(object? sender, EventArgs e)
+    {
+        var file = await AskPictureFileAsync();
+        if (file is null || file.Name.EndsWith(".svg", StringComparison.OrdinalIgnoreCase))
+        {
+            if (file is not null)
+            {
+                StatusText.Text = "A background needs a picture (PNG, JPEG ...), not an SVG.";
+            }
+
             return;
         }
 
-        string? error;
-        if (file.Name.EndsWith(".svg", StringComparison.OrdinalIgnoreCase))
+        var data = await ReadPictureBytesAsync(file);
+        if (data is null)
         {
-            error = ImageImport.ImportSvg(_context, System.Text.Encoding.UTF8.GetString(data), out var failed) is null ? failed : null;
-        }
-        else
-        {
-            error = ImageImport.ImportPicture(_context, data, out var failed) is null ? failed : null;
+            return;
         }
 
-        StatusText.Text = error ?? "Added " + file.Name + " - drag it to move it, its corners to change the size.";
+        var png = ImageImport.ToBackgroundPng(data, out var error);
+        if (png is null)
+        {
+            StatusText.Text = error ?? "The file could not be read as an image.";
+            return;
+        }
+
+        DocumentBackgroundEditing.Edit(_context, d =>
+        {
+            d.BackgroundImageBytes = png;
+            d.BackgroundImageName = file.Name;
+            d.BackgroundMode = BackgroundMode.Image;
+        });
+        StatusText.Text = "Background: " + file.Name;
     }
 }

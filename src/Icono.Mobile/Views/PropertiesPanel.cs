@@ -205,6 +205,8 @@ public sealed partial class PropertiesPanel : UserControl
             }
         }
 
+        BuildDesignStyle(context, shapes);
+
         if (outlined.Count > 0)
         {
             BuildBorder(context, outlined);
@@ -302,6 +304,9 @@ public sealed partial class PropertiesPanel : UserControl
         Heading("PAGE");
         Note($"{doc.Width / PxPerCm * 10:0} x {doc.Height / PxPerCm * 10:0} mm, {doc.PageCount} page(s), " +
              $"{doc.Layers.Sum(l => l.Shapes.Count)} object(s)");
+        BuildCanvasSize(context);
+        BuildSheet(context);
+        BuildBackground(context);
         Heading("SELECTION");
         ButtonRow(("Select all", context.SelectAll));
         BuildSnapping(context);
@@ -469,12 +474,12 @@ public sealed partial class PropertiesPanel : UserControl
     {
         string Show(double v) => v.ToString(format, CultureInfo.InvariantCulture);
 
+        // the box shows the number; a tap opens a number pad of frosted glass (not the keyboard of the tablet)
         var box = new TextBox
         {
             Text = Show(value), FontSize = 13, MinHeight = 34, Padding = new Thickness(6, 4), HorizontalContentAlignment = HorizontalAlignment.Center,
-            VerticalContentAlignment = VerticalAlignment.Center,
+            VerticalContentAlignment = VerticalAlignment.Center, IsReadOnly = true, Focusable = false,
         };
-        TextInputOptions.SetContentType(box, TextInputContentType.Number);
 
         void Commit(double v)
         {
@@ -489,9 +494,9 @@ public sealed partial class PropertiesPanel : UserControl
             }
         }
 
-        void CommitTyped()
+        void CommitTyped(string text)
         {
-            if (double.TryParse(box.Text?.Trim().Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out var typed))
+            if (double.TryParse(text.Trim().Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out var typed))
             {
                 // typed values are taken as they are (only kept inside the limits), the buttons go in steps
                 typed = Math.Clamp(typed, min, max);
@@ -505,15 +510,20 @@ public sealed partial class PropertiesPanel : UserControl
             box.Text = Show(value);
         }
 
-        box.LostFocus += (_, _) => CommitTyped();
-        box.KeyDown += (_, e) =>
+        box.AddHandler(InputElement.PointerPressedEvent, (_, e) =>
         {
-            if (e.Key == Key.Enter)
+            e.Handled = true;
+            var pad = new NumberPad(label, unit, Show(value));
+            var flyout = new Flyout { Content = pad, Placement = PlacementMode.LeftEdgeAlignedTop };
+            flyout.FlyoutPresenterClasses.Add("numpad");
+            pad.Committed += text =>
             {
-                CommitTyped();
-                e.Handled = true;
-            }
-        };
+                flyout.Hide();
+                CommitTyped(text);
+            };
+            pad.Cancelled += flyout.Hide;
+            flyout.ShowAt(box);
+        }, Avalonia.Interactivity.RoutingStrategies.Tunnel);
 
         var minus = StepButton("−");
         minus.Click += (_, _) => Commit(value - step);
