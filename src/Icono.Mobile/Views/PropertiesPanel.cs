@@ -141,6 +141,7 @@ public sealed partial class PropertiesPanel : UserControl
             return;
         }
 
+        context.WallSegmentHighlight = null; // BuildDimension sets it again for a wall whose dimension is being edited
         if (_showLayers)
         {
             BuildPagesAndLayers(context);
@@ -187,10 +188,7 @@ public sealed partial class PropertiesPanel : UserControl
             BuildSymbol(context, symbols[0]);
         }
 
-        if (dimensions.Count > 0 || symbols.Count > 0)
-        {
-            BuildDimensionText(context, dimensions.Count > 0 ? dimensions[0] : symbols[0]);
-        }
+        BuildDimension(context, shapes);
 
         if (filled.Count > 0)
         {
@@ -308,33 +306,6 @@ public sealed partial class PropertiesPanel : UserControl
         ButtonRow(("Select all", context.SelectAll));
         BuildSnapping(context);
         Note("Tap an object to see its properties here.");
-    }
-
-    private void BuildWall(EditorContext context, Shape wall)
-    {
-        Heading("WALL");
-        NumberRow("Thickness", ToRealCm(wall.WallThickness), "cm", 1, 1, 500, "0.#",
-            cm => context.SetOnSelection(s => s.WallThickness = Math.Max(0.5, FromRealCm(cm)), s => s.Kind == ShapeKind.Wall));
-        Choice("Hatch", Enum.GetValues<HatchKind>().Select(h => (Words(h.ToString()), h)).ToList(), wall.Hatch,
-            h => context.SetOnSelection(s => s.Hatch = h, s => s.Kind == ShapeKind.Wall));
-        Toggle("Dimensions", wall.WallShowDimensions,
-            on => context.SetOnSelection(s => s.WallShowDimensions = on, s => s.Kind == ShapeKind.Wall));
-    }
-
-    private void BuildSymbol(EditorContext context, Shape symbol)
-    {
-        Heading(ArchitecturalSymbols.IsDoor(symbol.Kind) ? "DOOR" : "WINDOW");
-        NumberRow("Width", ToRealCm(symbol.Width), "cm", 5, 10, 1000, "0.#",
-            cm => context.SetSymbolWidth(symbol, FromRealCm(cm)));
-    }
-
-    private void BuildDimensionText(EditorContext context, Shape sample)
-    {
-        Heading("MEASUREMENT");
-        Choice("Unit", Units.Select(u => (u.Name, u.Unit)).ToList(), sample.DimUnit,
-            unit => context.SetOnSelection(s => s.DimUnit = unit, s => s.Kind == ShapeKind.Dimension || ArchitecturalSymbols.IsSymbol(s.Kind)));
-        Choice("Decimals", Enumerable.Range(0, 4).Select(i => (i.ToString(CultureInfo.InvariantCulture), i)).ToList(), sample.DimPrecision,
-            places => context.SetOnSelection(s => s.DimPrecision = places, s => s.Kind == ShapeKind.Dimension || ArchitecturalSymbols.IsSymbol(s.Kind)));
     }
 
     private static bool HasFill(Shape shape) =>
