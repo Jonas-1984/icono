@@ -658,7 +658,26 @@ public sealed partial class PropertiesPanel : UserControl
                 box.Text = Show(Math.Round(slider.Value / tick) * tick);
             }
         };
-        slider.AddHandler(InputElement.PointerPressedEvent, (_, _) => sliding = true, Avalonia.Interactivity.RoutingStrategies.Tunnel, handledEventsToo: true);
+        // a finger that starts on the slider to scroll the panel (it moves up or down, not along the slider) must not change the number: that is a scroll
+        Point? pressedAt = null;
+        double moveAlong = 0, moveAcross = 0;
+        var startValue = slider.Value;
+        slider.AddHandler(InputElement.PointerPressedEvent, (_, e) =>
+        {
+            sliding = true;
+            pressedAt = e.GetPosition(slider);
+            moveAlong = moveAcross = 0;
+            startValue = slider.Value;
+        }, Avalonia.Interactivity.RoutingStrategies.Tunnel, handledEventsToo: true);
+        slider.AddHandler(InputElement.PointerMovedEvent, (_, e) =>
+        {
+            if (sliding && pressedAt is { } start)
+            {
+                var now = e.GetPosition(slider);
+                moveAlong = Math.Max(moveAlong, Math.Abs(now.X - start.X));
+                moveAcross = Math.Max(moveAcross, Math.Abs(now.Y - start.Y));
+            }
+        }, Avalonia.Interactivity.RoutingStrategies.Tunnel | Avalonia.Interactivity.RoutingStrategies.Bubble, handledEventsToo: true);
 
         void Release()
         {
@@ -668,6 +687,14 @@ public sealed partial class PropertiesPanel : UserControl
             }
 
             sliding = false;
+            if (moveAcross > 12 && moveAcross > moveAlong)
+            {
+                // it was a scroll of the panel: the slider and the number go back, nothing is changed
+                slider.Value = startValue;
+                box.Text = Show(value);
+                return;
+            }
+
             CommitTyped((Math.Round(slider.Value / tick) * tick).ToString("0.##", CultureInfo.InvariantCulture));
         }
 

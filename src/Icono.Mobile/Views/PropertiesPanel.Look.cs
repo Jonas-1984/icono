@@ -65,6 +65,11 @@ public sealed partial class PropertiesPanel
             RealRow("Y", box.Y, 1, -100000, 100000, px => Set(b => (b.X, px, b.W, b.H)));
             RealRow("Width", box.W, 1, 0.1, 100000, px => Set(b => (b.X, b.Y, px, b.H)));
             RealRow("Height", box.H, 1, 0.1, 100000, px => Set(b => (b.X, b.Y, b.W, px)));
+            if (ShapeGeometryFactory.HasLineEnds(shape.Kind))
+            {
+                // the length of a line, arrow or polyline: real length at the drawing scale (the line is scaled from its first point), as in the line window of Windows
+                RealRow("Length", LineMetrics.Length(shape), 1, 0.1, 100000, px => context.SetOnSelection(s => LineMetrics.SetLength(s, px), s => ReferenceEquals(s, shape)));
+            }
         }
 
         NumberRow("Turn", shape.Rotation, "°", 15, 0, 360, "0.#", angle => context.SetOnSelection(s => s.Rotation = ((angle % 360) + 360) % 360));
@@ -96,6 +101,7 @@ public sealed partial class PropertiesPanel
         }
 
         Toggle("Dashed", sample.Dashed, on => context.SetOnSelection(s => s.Dashed = on, Applies));
+        Toggle("Sketch (hand-drawn)", sample.Sketch, on => context.SetOnSelection(s => s.Sketch = on, Applies));
         NumberRow("Blur", sample.BorderBlurRadius, "px", 1, 0, 30, "0.#", v => context.SetOnSelection(s => s.BorderBlurRadius = v, Applies));
         if (isLine)
         {
