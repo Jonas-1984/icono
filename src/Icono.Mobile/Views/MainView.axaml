@@ -188,8 +188,8 @@
 
         <!-- icono's own file window (MainView.Files.cs): the drawings of the chosen folder, a name to save under, and always a Cancel -->
         <Border x:Name="FilesLayer" IsVisible="False" Background="#99000000">
-            <Border Background="{StaticResource ToolbarBackgroundBrush}" CornerRadius="14" Padding="20,16" Width="640" Margin="0,40"
-                    HorizontalAlignment="Center" VerticalAlignment="Top" BorderBrush="{StaticResource RaisedPressedBrush}" BorderThickness="1">
+            <Border Classes="dialog" Padding="20,16" Width="640" Margin="0,40"
+                    HorizontalAlignment="Center" VerticalAlignment="Top">
                 <DockPanel>
                     <StackPanel DockPanel.Dock="Top" Spacing="8">
                         <TextBlock x:Name="FilesTitle" FontSize="17" FontWeight="SemiBold" Foreground="{StaticResource ForegroundTextBrush}" />
@@ -224,25 +224,25 @@
 
         <!-- Export as PDF or PNG, saved or shared (MainView.Export.cs) -->
         <Border x:Name="ExportLayer" IsVisible="False" Background="#99000000">
-            <Border Background="{StaticResource ToolbarBackgroundBrush}" CornerRadius="14" Padding="22,18" Width="460"
-                    HorizontalAlignment="Center" VerticalAlignment="Center" BorderBrush="{StaticResource RaisedPressedBrush}" BorderThickness="1">
+            <Border Classes="dialog" Padding="22,18" Width="460"
+                    HorizontalAlignment="Center" VerticalAlignment="Center">
                 <StackPanel Spacing="10">
                     <TextBlock Text="Export" FontSize="17" FontWeight="SemiBold" Foreground="{StaticResource ForegroundTextBrush}" />
 
-                    <TextBlock Text="FORMAT" FontSize="10.5" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}" />
+                    <TextBlock Text="FORMAT" FontSize="10.5" FontWeight="SemiBold" LetterSpacing="0.8" Foreground="{StaticResource MutedTextBrush}" />
                     <UniformGrid Columns="2">
                         <Button Classes="tool" x:Name="ExportPdfButton" Content="PDF (real size, vectors)" HorizontalAlignment="Stretch" Click="OnExportPdf" />
                         <Button Classes="tool" x:Name="ExportPngButton" Content="PNG (image)" HorizontalAlignment="Stretch" Click="OnExportPng" />
                     </UniformGrid>
 
-                    <TextBlock Text="PAGES" FontSize="10.5" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}" />
+                    <TextBlock Text="PAGES" FontSize="10.5" FontWeight="SemiBold" LetterSpacing="0.8" Foreground="{StaticResource MutedTextBrush}" />
                     <UniformGrid Columns="2">
                         <Button Classes="tool" x:Name="ExportCurrentButton" HorizontalAlignment="Stretch" Click="OnExportCurrentPage" />
                         <Button Classes="tool" x:Name="ExportAllButton" HorizontalAlignment="Stretch" Click="OnExportAllPages" />
                     </UniformGrid>
 
                     <StackPanel x:Name="ExportResolutionPanel" Spacing="10">
-                        <TextBlock Text="RESOLUTION" FontSize="10.5" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}" />
+                        <TextBlock Text="RESOLUTION" FontSize="10.5" FontWeight="SemiBold" LetterSpacing="0.8" Foreground="{StaticResource MutedTextBrush}" />
                         <UniformGrid Columns="3">
                             <Button Classes="tool" x:Name="ExportDpi96" Content="96 dpi" HorizontalAlignment="Stretch" Click="OnExportDpi" Tag="96" />
                             <Button Classes="tool" x:Name="ExportDpi150" Content="150 dpi" HorizontalAlignment="Stretch" Click="OnExportDpi" Tag="150" />
@@ -250,8 +250,10 @@
                         </UniformGrid>
                     </StackPanel>
 
-                    <CheckBox x:Name="ExportBackground" Content="With the page background" IsChecked="True" FontSize="13"
-                              Foreground="{StaticResource ForegroundTextBrush}" />
+                    <Grid ColumnDefinitions="*,Auto" MinHeight="30">
+                        <TextBlock Text="With the page background" FontSize="13" VerticalAlignment="Center" Foreground="{StaticResource ForegroundTextBrush}" />
+                        <ToggleSwitch Grid.Column="1" x:Name="ExportBackground" IsChecked="True" OnContent="{x:Null}" OffContent="{x:Null}" MinWidth="0" />
+                    </Grid>
                     <TextBlock x:Name="ExportInfo" FontSize="12" TextWrapping="Wrap" Foreground="{StaticResource MutedTextBrush}" />
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,6,0,0">
@@ -265,12 +267,11 @@
 
         <!-- the length of the next wall and the way it goes (MainView.TypedWall.cs); at the top, so the on-screen keyboard does not cover it -->
         <Border x:Name="LengthLayer" IsVisible="False" Background="#66000000">
-            <Border Background="{StaticResource ToolbarBackgroundBrush}" CornerRadius="14" Padding="18,14" Width="460"
-                    HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,50,0,0"
-                    BorderBrush="{StaticResource RaisedPressedBrush}" BorderThickness="1">
+            <Border Classes="dialog" Padding="18,14" Width="460"
+                    HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,50,0,0">
                 <StackPanel Spacing="10">
                     <TextBlock Text="Next wall" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource ForegroundTextBrush}" />
-                    <TextBox x:Name="LengthEntry" FontSize="15" MinHeight="40" PlaceholderText="Length, e.g. 250 or 2.5 m" />
+                    <TextBox Classes="field" x:Name="LengthEntry" FontSize="15" MinHeight="40" PlaceholderText="Length, e.g. 250 or 2.5 m" />
                     <TextBlock x:Name="LengthNote" FontSize="11.5" TextWrapping="Wrap" Foreground="{StaticResource MutedTextBrush}"
                                Text="Type the length (inside length, like the number on the wall), then tap the way the wall goes." />
                     <!-- the four ways a wall can go: the corner is placed there -->
@@ -289,8 +290,7 @@
 
         <!-- About (tap the logo): version, test terms, privacy, licences (MainView.About.cs) -->
         <Border x:Name="AboutLayer" IsVisible="False" Background="#99000000">
-            <Border Background="{StaticResource ToolbarBackgroundBrush}" CornerRadius="14" Padding="20,16" Margin="60,40"
-                    BorderBrush="{StaticResource RaisedPressedBrush}" BorderThickness="1">
+            <Border Classes="dialog" Padding="20,16" Margin="60,40">
                 <Grid ColumnDefinitions="220,*" ColumnSpacing="20">
                     <StackPanel Grid.Column="0" Spacing="10">
                         <Border Background="#FFF1F5FB" CornerRadius="10" Padding="12,8">
@@ -318,12 +318,11 @@
 
         <!-- typing a text (MainView.Text.cs); at the top, so the on-screen keyboard does not cover it -->
         <Border x:Name="TextLayer" IsVisible="False" Background="#66000000">
-            <Border Background="{StaticResource ToolbarBackgroundBrush}" CornerRadius="14" Padding="18,14" Width="520"
-                    HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,70,0,0"
-                    BorderBrush="{StaticResource RaisedPressedBrush}" BorderThickness="1">
+            <Border Classes="dialog" Padding="18,14" Width="520"
+                    HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,70,0,0">
                 <StackPanel Spacing="12">
                     <TextBlock x:Name="TextTitle" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource ForegroundTextBrush}" />
-                    <TextBox x:Name="TextEntry" FontSize="15" MinHeight="40" TextWrapping="Wrap" />
+                    <TextBox Classes="field" x:Name="TextEntry" FontSize="15" MinHeight="40" TextWrapping="Wrap" />
                     <TextBlock x:Name="TextNote" FontSize="11.5" TextWrapping="Wrap" Foreground="{StaticResource MutedTextBrush}" />
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button Classes="tool" Content="Cancel" Click="OnTextCancel" />
@@ -335,8 +334,8 @@
 
         <!-- question in front of everything (unsaved changes) -->
         <Border x:Name="QuestionLayer" IsVisible="False" Background="#99000000">
-            <Border Background="{StaticResource ToolbarBackgroundBrush}" CornerRadius="14" Padding="22,18" MaxWidth="480"
-                    HorizontalAlignment="Center" VerticalAlignment="Center" BorderBrush="{StaticResource RaisedPressedBrush}" BorderThickness="1">
+            <Border Classes="dialog" Padding="22,18" MaxWidth="480"
+                    HorizontalAlignment="Center" VerticalAlignment="Center">
                 <StackPanel Spacing="16">
                     <TextBlock x:Name="QuestionTitle" FontSize="17" FontWeight="SemiBold" Foreground="{StaticResource ForegroundTextBrush}" />
                     <TextBlock x:Name="QuestionText" FontSize="14" TextWrapping="Wrap" Foreground="{StaticResource MutedTextBrush}" />

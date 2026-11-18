@@ -180,7 +180,7 @@ public partial class MainView
             var button = new Button
             {
                 Content = row, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Stretch,
-                Background = Brushes.Transparent, Padding = new Thickness(10, 8), CornerRadius = new CornerRadius(8),
+                Classes = { "listRow" }, Padding = new Thickness(10, 6),
             };
             button.Click += (_, _) =>
             {
@@ -331,7 +331,7 @@ public partial class MainView
 
         FilesList.Children.Add(new TextBlock
         {
-            Text = "RECENT", FontSize = 10.5, FontWeight = FontWeight.SemiBold, Foreground = Brush("MutedTextBrush"), Margin = new Thickness(8, 6, 0, 2),
+            Text = "RECENT", FontSize = 10.5, FontWeight = FontWeight.SemiBold, LetterSpacing = 0.8, Foreground = Brush("MutedTextBrush"), Margin = new Thickness(8, 6, 0, 2),
         });
         foreach (var entry in recent)
         {
@@ -342,8 +342,8 @@ public partial class MainView
                     Text = entry.Name, FontSize = 14, TextTrimming = TextTrimming.CharacterEllipsis, Foreground = Brush("ForegroundTextBrush"),
                     VerticalAlignment = VerticalAlignment.Center,
                 },
-                HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Background = Brushes.Transparent,
-                Padding = new Thickness(10, 8), CornerRadius = new CornerRadius(8),
+                HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left,
+                Classes = { "listRow" }, Padding = new Thickness(10, 6),
             };
             name.Click += async (_, _) =>
             {
@@ -371,7 +371,7 @@ public partial class MainView
             };
             var forget = new Button
             {
-                Content = "✕", FontSize = 12, Width = 36, Background = Brushes.Transparent, Foreground = Brush("MutedTextBrush"),
+                Content = "✕", FontSize = 12, Width = 36, Classes = { "listRow" }, Foreground = Brush("MutedTextBrush"),
                 HorizontalContentAlignment = HorizontalAlignment.Center,
             };
             forget.Click += async (_, _) =>
@@ -388,7 +388,7 @@ public partial class MainView
 
         FilesList.Children.Add(new TextBlock
         {
-            Text = "IN THE FOLDER", FontSize = 10.5, FontWeight = FontWeight.SemiBold, Foreground = Brush("MutedTextBrush"), Margin = new Thickness(8, 10, 0, 2),
+            Text = "IN THE FOLDER", FontSize = 10.5, FontWeight = FontWeight.SemiBold, LetterSpacing = 0.8, Foreground = Brush("MutedTextBrush"), Margin = new Thickness(8, 10, 0, 2),
         });
     }
 }
