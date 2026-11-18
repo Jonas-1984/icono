@@ -13,6 +13,34 @@ public sealed partial class PropertiesPanel
 
     private double _moveY;
 
+    /// <summary>Shapes with straight sides and no points of their own: for angles and lengths they become shapes of points first (as when their
+    /// corners are edited), so that every corner and every side can be measured.</summary>
+    private static readonly HashSet<ShapeKind> StraightSided =
+    [
+        ShapeKind.Rectangle, ShapeKind.Triangle, ShapeKind.Diamond, ShapeKind.Pentagon, ShapeKind.Hexagon, ShapeKind.Octagon,
+        ShapeKind.Parallelogram, ShapeKind.Trapezoid, ShapeKind.Star, ShapeKind.Cross,
+    ];
+
+    /// <summary>"Add dimensions" for the selection; a box shape is made a shape of points for angles and lengths, a round measure on something that
+    /// is no circle says so.</summary>
+    private static void AddDimensions(EditorContext context, DimensionSet set)
+    {
+        if (set is DimensionSet.Corners or DimensionSet.Segments)
+        {
+            foreach (var shape in context.SelectedShapes.Where(s => s.Points is null && StraightSided.Contains(s.Kind)).ToList())
+            {
+                context.ConvertToEditablePoints(shape);
+            }
+        }
+        else if (set == DimensionSet.Round && !context.SelectedShapes.Any(s => s.Kind == ShapeKind.Ellipse))
+        {
+            context.Notify("Round measures (diameter, radius) are for circles and ellipses.");
+            return;
+        }
+
+        context.AddDimensionsToSelection(set);
+    }
+
     private void BuildArrange(EditorContext context, IReadOnlyList<Shape> shapes)
     {
         Heading("ARRANGE");
@@ -71,10 +99,11 @@ public sealed partial class PropertiesPanel
         ButtonRow(
             ("Automatic", () => context.AddDimensionsToSelection(DimensionSet.Auto)),
             ("Width, height", () => context.AddDimensionsToSelection(DimensionSet.Size)),
-            ("Round", () => context.AddDimensionsToSelection(DimensionSet.Round)));
+            ("Round", () => AddDimensions(context, DimensionSet.Round)));
         ButtonRow(
-            ("Angles", () => context.AddDimensionsToSelection(DimensionSet.Corners)),
-            ("Lengths", () => context.AddDimensionsToSelection(DimensionSet.Segments)));
+            ("Angles", () => AddDimensions(context, DimensionSet.Corners)),
+            ("Lengths", () => AddDimensions(context, DimensionSet.Segments)));
+        Note("Round: for circles and ellipses. Angles and Lengths: for shapes with straight sides (a rectangle or triangle becomes editable points first) and for lines with several points.");
 
         Heading("DOOR & WINDOW MEASURES");
         ButtonRow(
