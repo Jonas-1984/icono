@@ -364,15 +364,21 @@ public static class FreehandBuilder
         };
     }
 
+    /// <summary>The sensitivity the pen starts with: a light touch is 0.3 times the pen width, a hard one 1.7 times.</summary>
+    public const double DefaultPressureStrength = 0.7;
+
     /// <summary>How thick a stroke is at a pen pressure (0 - 1) compared to the pen width: the width is that of the pen at half pressure (a touch with
-    /// no pressure information is half pressure), a light touch is a hairline and a hard one reaches 1.7 times.</summary>
-    public static double PressureFactor(double pressure) => 0.3 + 1.4 * Math.Clamp(pressure, 0, 1);
+    /// no pressure information is half pressure). <paramref name="strength"/> (0 - 1) is how much the pressure changes it: 0 = always the same width, 0.7 = from
+    /// 0.3 times (light) to 1.7 times (hard), 1 = from a hairline to twice the width.</summary>
+    public static double PressureFactor(double pressure, double strength = DefaultPressureStrength) =>
+        Math.Max(0.05, 1 + (Math.Clamp(pressure, 0, 1) - 0.5) * 2 * Math.Clamp(strength, 0, 1));
 
     /// <summary>A stroke written with pen pressure: a filled outline whose width follows the pressure at every point, with round ends (<see cref="Shape.CustomPathData"/>,
     /// filled) - and the line down its middle (<see cref="Shape.InkCenterline"/>), which is what the writing is read from. <paramref name="pressure"/> has one value
     /// (0 - 1) for every one of <paramref name="raw"/>; <paramref name="width"/> is the pen width at half pressure.</summary>
     public static Shape? CreatePressureShape(
-        IReadOnlyList<SKPoint> raw, IReadOnlyList<float> pressure, ArgbColor color, double width, float tolerance, float smoothing = 0)
+        IReadOnlyList<SKPoint> raw, IReadOnlyList<float> pressure, ArgbColor color, double width, float tolerance, float smoothing = 0,
+        double strength = DefaultPressureStrength)
     {
         if (raw.Count == 0)
         {
@@ -414,7 +420,7 @@ public static class FreehandBuilder
         if (length < 0.5f)
         {
             // a dot: a round dot as thick as the pressure says
-            var dot = (float)(width * PressureFactor(pressure.Count > 0 ? pressure.Average() : 0.5)) / 2;
+            var dot = (float)(width * PressureFactor(pressure.Count > 0 ? pressure.Average() : 0.5, strength)) / 2;
             outline.AddCircle(raw[0].X, raw[0].Y, Math.Max(0.4f, dot));
             return OutlineShape(outline, null, color);
         }
@@ -430,7 +436,7 @@ public static class FreehandBuilder
             centres[k] = p;
             tangents[k] = t;
             normals[k] = new SKPoint(-t.Y, t.X);
-            widths[k] = (float)(width * PressureFactor(PressureAt((float)k / count)));
+            widths[k] = (float)(width * PressureFactor(PressureAt((float)k / count), strength));
         }
 
         // the width changes smoothly: a light average, twice

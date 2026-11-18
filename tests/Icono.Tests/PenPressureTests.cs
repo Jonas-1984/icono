@@ -31,6 +31,33 @@ public class PenPressureTests
     }
 
     [Fact]
+    public void TheSensitivity_SetsHowMuchThePressureChangesTheWidth()
+    {
+        Assert.Equal(1.0, FreehandBuilder.PressureFactor(0.1, 0), 6); // 0: one width
+        Assert.Equal(1.0, FreehandBuilder.PressureFactor(0.9, 0), 6);
+        Assert.Equal(0.3, FreehandBuilder.PressureFactor(0, 0.7), 6); // the start: 0.3 to 1.7
+        Assert.Equal(1.7, FreehandBuilder.PressureFactor(1, 0.7), 6);
+        Assert.Equal(2.0, FreehandBuilder.PressureFactor(1, 1), 6); // 1: up to twice
+        Assert.True(FreehandBuilder.PressureFactor(0, 1) > 0 && FreehandBuilder.PressureFactor(0, 1) < 0.1); // a hairline, never zero
+    }
+
+    [Fact]
+    public void TheContextSensitivity_ReachesTheStroke()
+    {
+        var points = Enumerable.Range(0, 40).Select(i => new SKPoint(20 + i * 5, 100)).ToList();
+        var pressure = points.Select((_, i) => i < 20 ? 0.1f : 0.95f).ToList();
+        var flat = FreehandBuilder.CreatePressureShape(points, pressure, ArgbColor.FromRgb(0, 0, 0), 4, 0.5f, 0, strength: 0)!;
+        var strong = FreehandBuilder.CreatePressureShape(points, pressure, ArgbColor.FromRgb(0, 0, 0), 4, 0.5f, 0, strength: 1)!;
+
+        Assert.True(strong.Height > flat.Height + 3); // with 0 the line has one width, with 10 the hard end is far thicker
+
+        var (context, layer) = NewContext();
+        Assert.Equal(0.7, context.PenPressureStrength, 6);
+        context.PenPressureStrength = 5;
+        Assert.Equal(1, context.PenPressureStrength); // kept in range
+    }
+
+    [Fact]
     public void AStrokeWithPressure_IsAFilledOutline_WithItsCentreline()
     {
         var points = Line();

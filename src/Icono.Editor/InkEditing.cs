@@ -15,7 +15,7 @@ public static class InkEditing
     /// <summary>The stroke as it looks while it is being drawn (coarser than the final one, so that it stays fast), or null for too few points.</summary>
     public static Shape? Preview(EditorContext context, IReadOnlyList<SKPoint> points, double zoom, IReadOnlyList<float>? pressures = null) =>
         UsesPressure(context, pressures)
-            ? FreehandBuilder.CreatePressureShape(points, pressures!, context.PenColor, context.PenWidth, (float)(0.5 / Math.Max(zoom, 1e-6)), SmoothingDistance(context, zoom))
+            ? FreehandBuilder.CreatePressureShape(points, pressures!, context.PenColor, context.PenWidth, (float)(0.5 / Math.Max(zoom, 1e-6)), SmoothingDistance(context, zoom), context.PenPressureStrength)
             : FreehandBuilder.CreateShape(points, context.PenColor, context.PenWidth, (float)(0.5 / Math.Max(zoom, 1e-6)), SmoothingDistance(context, zoom));
 
     /// <summary>True when the stroke is written with pen pressure: the setting is on and the pen really reported different pressures (a mouse, a finger
@@ -35,7 +35,7 @@ public static class InkEditing
 
         var tolerance = (float)Math.Max(0.2, 0.8 / Math.Max(zoom, 1e-6));
         var shape = UsesPressure(context, pressures)
-            ? FreehandBuilder.CreatePressureShape(points, pressures!, context.PenColor, context.PenWidth, tolerance, SmoothingDistance(context, zoom))
+            ? FreehandBuilder.CreatePressureShape(points, pressures!, context.PenColor, context.PenWidth, tolerance, SmoothingDistance(context, zoom), context.PenPressureStrength)
             : FreehandBuilder.CreateShape(points, context.PenColor, context.PenWidth, tolerance, SmoothingDistance(context, zoom));
         if (shape is null)
         {

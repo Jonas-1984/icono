@@ -197,9 +197,13 @@ public sealed partial class EditorContext : ObservableObject
     public bool PenEraser { get => _penEraser; set => SetField(ref _penEraser, value); }
 
     private bool _penPressure = true;
+    private double _penPressureStrength = FreehandBuilder.DefaultPressureStrength;
 
     /// <summary>True when a pen that reports pressure writes thinner and thicker as it is pressed less and harder (<see cref="InkEditing.UsesPressure"/>).</summary>
     public bool PenPressure { get => _penPressure; set => SetField(ref _penPressure, value); }
+
+    /// <summary>How strongly the pressure changes the width (0 - 1): 0 = one width, 0.7 = from 0.3 to 1.7 times the pen width (<see cref="FreehandBuilder.PressureFactor"/>).</summary>
+    public double PenPressureStrength { get => _penPressureStrength; set => SetField(ref _penPressureStrength, Math.Clamp(value, 0, 1)); }
 
     private bool _penSnapShapes = true;
 

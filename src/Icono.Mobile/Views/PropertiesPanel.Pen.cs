@@ -48,7 +48,13 @@ public sealed partial class PropertiesPanel
 
         Heading("PRESSURE");
         Toggle("Pen pressure", context.PenPressure, on => context.PenPressure = on);
-        Note("With a pen that senses pressure the line gets thinner when you press lightly and thicker when you press hard. The Width below is the line at half pressure. A finger writes one width.");
+        if (context.PenPressure)
+        {
+            // 0 = always one width, 7 (the start) = 0.3 to 1.7 times the pen width, 10 = from a hairline to twice the width
+            NumberRow("Sensitivity", Math.Round(context.PenPressureStrength * 10), "", 1, 0, 10, "0", v => context.PenPressureStrength = v / 10);
+        }
+
+        Note("With a pen that senses pressure the line gets thinner when you press lightly and thicker when you press hard. The Width below is the line at half pressure. Sensitivity: 0 = always the same width, 10 = from a hairline to twice the width. A finger writes one width.");
 
         Heading("SHAPE CORRECTION");
         Toggle("Hold to make shapes clean", context.PenSnapShapes, on => context.PenSnapShapes = on);
