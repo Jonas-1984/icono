@@ -51,7 +51,7 @@ public sealed partial class PropertiesPanel
         pager.Children.Add(previous);
         pager.Children.Add(where);
         pager.Children.Add(next);
-        _content.Children.Add(pager);
+        _into.Children.Add(pager);
 
         var onLastPage = context.ShapesOnLastPage().Count;
         var confirmPage = Equals(_confirm, "page");
@@ -88,7 +88,7 @@ public sealed partial class PropertiesPanel
         Note("New objects go on the active layer (marked blue). The top layer is drawn in front.");
         foreach (var layer in document.Layers)
         {
-            _content.Children.Add(LayerRow(context, layer, document.Layers.IndexOf(layer), document.Layers.Count));
+            _into.Children.Add(LayerRow(context, layer, document.Layers.IndexOf(layer), document.Layers.Count));
         }
 
         var active = context.SelectedLayer ?? document.Layers.FirstOrDefault();

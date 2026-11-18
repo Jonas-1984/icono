@@ -135,6 +135,7 @@ public sealed partial class PropertiesPanel : UserControl
     private void Rebuild()
     {
         _content.Children.Clear();
+        _into = _content;
         if (_context is not { } context)
         {
             return;
@@ -208,11 +209,12 @@ public sealed partial class PropertiesPanel : UserControl
 
         if (outlined.Count > 0)
         {
-            Heading(outlined.All(s => ShapeGeometryFactory.IsLineFamily(s.Kind)) ? "LINE" : "OUTLINE");
-            ColorRow(outlined[0].BorderColor, c => context.SetOnSelection(s => s.BorderColor = c, s => outlined.Contains(s)));
-            NumberRow("Width", outlined[0].BorderThickness / PxPerCm * 10, "mm", 0.1, 0, 20, "0.0",
-                mm => context.SetOnSelection(s => s.BorderThickness = mm / 10 * PxPerCm, s => outlined.Contains(s)));
+            BuildBorder(context, outlined);
         }
+
+        BuildEffects(context, shapes);
+        BuildLineEnds(context, shapes);
+        BuildPosition(context, shapes);
 
         BuildArrange(context, shapes);
     }
@@ -249,6 +251,7 @@ public sealed partial class PropertiesPanel : UserControl
             pt => context.SetOnSelection(s => s.TextFontSize = pt / 0.75, HasText));
         Toggle("Bold", sample.TextBold, on => context.SetOnSelection(s => s.TextBold = on, HasText));
         Toggle("Italic", sample.TextItalic, on => context.SetOnSelection(s => s.TextItalic = on, HasText));
+        BuildTextFormat(context, withText, HasText);
 
         // a text object is drawn in its fill colour, the text in a shape in its own text colour
         var color = sample.Kind == ShapeKind.Text ? sample.FillColor : ShapeLabel.EffectiveColor(sample);
@@ -263,6 +266,10 @@ public sealed partial class PropertiesPanel : UserControl
                 s.TextColor = c;
             }
         }, HasText));
+        if (withText.Any(s => s.Kind != ShapeKind.Text && s.TextColor is not null))
+        {
+            ButtonRow(("Automatic text colour", () => context.SetOnSelection(s => s.TextColor = null, s => HasText(s) && s.Kind != ShapeKind.Text)));
+        }
     }
 
     private void BuildDrawing(EditorContext context)
@@ -290,7 +297,7 @@ public sealed partial class PropertiesPanel : UserControl
                 context.SetScale(presets[combo.SelectedIndex]);
             }
         };
-        _content.Children.Add(combo);
+        _into.Children.Add(combo);
         Note("The drawing is resized with the scale, so all dimensions keep their values.");
 
         var doc = context.Document;
@@ -347,20 +354,57 @@ public sealed partial class PropertiesPanel : UserControl
         TextTrimming = TextTrimming.CharacterEllipsis,
     });
 
-    private void Heading(string text) => _content.Children.Add(new TextBlock
-    {
-        Text = text, FontSize = 10.5, FontWeight = FontWeight.SemiBold, Foreground = Brush("MutedTextBrush"), Margin = new Thickness(0, 10, 0, 0),
-    });
+    /// <summary>The panel adds its controls to this: the body of the section that was started last (see <see cref="Heading"/>).</summary>
+    private Panel _into = null!;
 
-    private void Note(string text) => _content.Children.Add(new TextBlock
+    /// <summary>The sections that are folded in (the rest is open): kept while the panel is built again.</summary>
+    private readonly HashSet<string> _closedSections =
+    [
+        "MOVE", "ALIGN", "ALIGN TO PAGE", "COMBINE", "ADD DIMENSIONS", "DOOR & WINDOW MEASURES", "SNAP TO OBJECTS", "WHEN MOVING", "WALL DRAWING",
+        "OPACITY, BLUR & SHADOW", "TEXT POSITION",
+    ];
+
+    /// <summary>Starts a section: its name is a button that folds the controls below it in and out (until the next section starts).</summary>
+    private void Heading(string text)
+    {
+        var body = new StackPanel { Spacing = 6, IsVisible = !_closedSections.Contains(text) };
+        var header = new Button
+        {
+            HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Background = Brushes.Transparent,
+            Padding = new Thickness(0, 8, 0, 4), Margin = new Thickness(0, 6, 0, 0), FontSize = 10.5, FontWeight = FontWeight.SemiBold,
+            Foreground = Brush("MutedTextBrush"),
+        };
+
+        void Show() => header.Content = (body.IsVisible ? "▾  " : "▸  ") + text;
+        header.Click += (_, _) =>
+        {
+            body.IsVisible = !body.IsVisible;
+            if (body.IsVisible)
+            {
+                _closedSections.Remove(text);
+            }
+            else
+            {
+                _closedSections.Add(text);
+            }
+
+            Show();
+        };
+        Show();
+        _content.Children.Add(header);
+        _content.Children.Add(body);
+        _into = body;
+    }
+
+    private void Note(string text) => _into.Children.Add(new TextBlock
     {
         Text = text, FontSize = 11.5, TextWrapping = TextWrapping.Wrap, Foreground = Brush("MutedTextBrush"),
     });
 
-    private void ColorRow(ArgbColor current, Action<ArgbColor> choose)
+    private void ColorRow(ArgbColor current, Action<ArgbColor> choose, IReadOnlyList<ArgbColor>? palette = null, bool hexEntry = true)
     {
         var grid = new UniformGrid { Columns = 6 };
-        foreach (var swatch in Swatches)
+        foreach (var swatch in palette ?? Swatches)
         {
             var isCurrent = swatch.R == current.R && swatch.G == current.G && swatch.B == current.B;
             var button = new Button
@@ -378,7 +422,75 @@ public sealed partial class PropertiesPanel : UserControl
             grid.Children.Add(button);
         }
 
-        _content.Children.Add(grid);
+        _into.Children.Add(grid);
+        if (!hexEntry)
+        {
+            return;
+        }
+
+        // any colour: type it as #RRGGBB (the box shows the current one)
+        var box = new TextBox
+        {
+            Text = $"#{current.R:X2}{current.G:X2}{current.B:X2}", FontSize = 13, MinHeight = 34, Padding = new Thickness(6, 4),
+            HorizontalContentAlignment = HorizontalAlignment.Center, VerticalContentAlignment = VerticalAlignment.Center,
+        };
+
+        void Commit()
+        {
+            var text = (box.Text ?? string.Empty).Trim().TrimStart('#');
+            if (text.Length == 6 && int.TryParse(text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var rgb))
+            {
+                var typed = ArgbColor.FromRgb((byte)(rgb >> 16), (byte)(rgb >> 8), (byte)rgb);
+                if (typed.R != current.R || typed.G != current.G || typed.B != current.B)
+                {
+                    choose(typed);
+                    return;
+                }
+            }
+
+            box.Text = $"#{current.R:X2}{current.G:X2}{current.B:X2}";
+        }
+
+        box.LostFocus += (_, _) => Commit();
+        box.KeyDown += (_, e) =>
+        {
+            if (e.Key == Key.Enter)
+            {
+                Commit();
+                e.Handled = true;
+            }
+        };
+
+        // the paletteButton: a tap opens a square and a bar to choose any colour with the finger; the colour is taken when the paletteButton is closed
+        var paletteButton = new Button
+        {
+            Width = 44, Height = 34, Margin = new Thickness(6, 0, 0, 0), Padding = new Thickness(0), CornerRadius = new CornerRadius(8),
+            Background = new SolidColorBrush(Color.FromRgb(current.R, current.G, current.B)),
+            BorderBrush = new SolidColorBrush(Color.FromArgb(0x99, 0xFF, 0xFF, 0xFF)), BorderThickness = new Thickness(2),
+            Content = new TextBlock { Text = "▾", FontSize = 11, HorizontalAlignment = HorizontalAlignment.Center, Foreground = Brushes.White },
+        };
+        paletteButton.Click += (_, _) =>
+        {
+            var pad = new ColorPickerPad(current);
+            var flyout = new Flyout { Content = pad, Placement = PlacementMode.LeftEdgeAlignedTop };
+            flyout.Closed += (_, _) =>
+            {
+                var chosen = pad.Chosen;
+                if (chosen.R != current.R || chosen.G != current.G || chosen.B != current.B)
+                {
+                    choose(chosen);
+                }
+            };
+            flyout.ShowAt(paletteButton);
+        };
+
+        var row = new Grid { ColumnDefinitions = new ColumnDefinitions("78,*,Auto"), Margin = new Thickness(0, 2) };
+        row.Children.Add(Label("Colour #"));
+        Grid.SetColumn(box, 1);
+        Grid.SetColumn(paletteButton, 2);
+        row.Children.Add(box);
+        row.Children.Add(paletteButton);
+        _into.Children.Add(row);
     }
 
     /// <summary>A value with - and + (one step each) and a box to type it in; the value is applied on Enter or when the box loses focus.</summary>
@@ -449,7 +561,7 @@ public sealed partial class PropertiesPanel : UserControl
         row.Children.Add(box);
         row.Children.Add(plus);
         row.Children.Add(unitText);
-        _content.Children.Add(row);
+        _into.Children.Add(row);
     }
 
     private void Choice<T>(string label, IReadOnlyList<(string Name, T Value)> options, T current, Action<T> choose)
@@ -474,7 +586,7 @@ public sealed partial class PropertiesPanel : UserControl
         row.Children.Add(Label(label));
         Grid.SetColumn(combo, 1);
         row.Children.Add(combo);
-        _content.Children.Add(row);
+        _into.Children.Add(row);
     }
 
     private void Toggle(string label, bool on, Action<bool> set)
@@ -487,7 +599,7 @@ public sealed partial class PropertiesPanel : UserControl
                 set(value);
             }
         };
-        _content.Children.Add(box);
+        _into.Children.Add(box);
     }
 
     private void ButtonRow(params (string Text, Action Action)[] buttons)
@@ -505,7 +617,7 @@ public sealed partial class PropertiesPanel : UserControl
             grid.Children.Add(button);
         }
 
-        _content.Children.Add(grid);
+        _into.Children.Add(grid);
     }
 
     private Button StepButton(string text) => new()
