@@ -158,6 +158,11 @@ public partial class MainView
 
     private void ShowLibrary(bool show)
     {
+        if (show)
+        {
+            Library.Refresh(); // an icon may have been saved
+        }
+
         LibraryPane.IsVisible = show;
         UpdateToolButtons();
     }
@@ -173,6 +178,17 @@ public partial class MainView
 
         Canvas.AreaMode = false;
         ShowLibrary(false);
+        if (item.Icon is { } icon)
+        {
+            // an icon is put into the drawing at once: in the middle of the page when it comes with icono, else where it was saved
+            _libraryItem = null;
+            _context.ActiveTool = ActiveTool.Select;
+            var copies = IconLibrary.Insert(_context, icon.Entry, icon.IsBuiltIn);
+            StatusText.Text = copies.Count > 0 ? icon.Entry.Name + " added - drag it to move it, its corners to change the size." : "There is no layer to put the icon on.";
+            UpdateToolButtons();
+            return;
+        }
+
         if (item.Room is { } room)
         {
             _libraryItem = null;

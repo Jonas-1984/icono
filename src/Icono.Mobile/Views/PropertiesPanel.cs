@@ -220,7 +220,7 @@ public sealed partial class PropertiesPanel : UserControl
             ("Flip ↔", () => context.FlipSelection(horizontally: true)),
             ("Flip ↕", () => context.FlipSelection(horizontally: false)));
 
-        ButtonRow(("Offset...", () => AskOffset(context)));
+        ButtonRow(("Offset...", () => AskOffset(context)), ("Save as icon", () => SaveAsIcon(context)));
 
         // one object aligns to the page, several to each other; three or more can also be spread evenly
         Heading(shapes.Count == 1 ? "ALIGN TO PAGE" : "ALIGN");

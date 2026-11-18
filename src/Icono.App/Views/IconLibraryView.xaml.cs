@@ -96,30 +96,11 @@ public partial class IconLibraryView : UserControl
     /// though the whole group visually reads as one icon — saving must still capture all of it.</summary>
     private void SaveSelectionButton_OnClick(object sender, RoutedEventArgs e)
     {
-        if (_context is null || _context.SelectedShapes.Count == 0)
+        if (_context is null || IconLibrary.SaveSelection(_context, _store) is null)
         {
             return;
         }
 
-        var groupIds = _context.SelectedShapes
-            .Select(s => s.GroupId)
-            .Where(id => id is not null)
-            .ToHashSet();
-
-        var shapesToSave = _context.SelectedShapes
-            .Concat(_context.Document.Layers.SelectMany(l => l.Shapes)
-                .Where(s => s.GroupId is not null && groupIds.Contains(s.GroupId)))
-            .Distinct()
-            .ToList();
-
-        var name = $"Icon {DateTime.Now:HH:mm:ss}";
-        var entry = new IconLibraryEntry
-        {
-            Name = name,
-            Shapes = shapesToSave.Select(CloneShape).ToList(),
-        };
-
-        _store.Save(entry);
         RefreshLibrary();
     }
 
@@ -295,42 +276,8 @@ public partial class IconLibraryView : UserControl
             return;
         }
 
-        var layer = _context.SelectedLayer ?? _context.Document.Layers.FirstOrDefault();
-        if (layer is null)
-        {
-            return;
-        }
-
-        var copies = item.Entry.Shapes.Select(CloneShape).ToList();
-        if (item.IsBuiltIn)
-        {
-            // an icon that comes with icono has no place of its own: it lands in the middle of the current page
-            BuiltInIcons.PlaceOnPage(copies, 0, _context.Document.PageTop(_context.CurrentPage), _context.Document.Width, _context.Document.Height);
-        }
-
-        var inserted = new List<Shape>();
-        foreach (var shape in copies)
-        {
-            layer.Shapes.Insert(0, shape);
-            inserted.Add(shape);
-        }
-
-        if (inserted.Count > 0)
-        {
-            // Every shape above was inserted at index 0 (front-most) at the moment of its own
-            // insertion, so that's the correct redo-index for each — not its position in `inserted`.
-            var undoActions = inserted.Select(s => UndoableAction.ForInsert(layer.Shapes, s, 0)).ToList();
-            _context.UndoManager.Push(UndoableAction.Combine(undoActions));
-
-            _context.SelectedShapes.Clear();
-            foreach (var shape in inserted)
-            {
-                _context.SelectedShapes.Add(shape);
-            }
-        }
-
-        _context.SelectedLayer = layer;
-        _context.RequestRedraw();
+        // an icon that comes with icono has no place of its own: it lands in the middle of the current page
+        IconLibrary.Insert(_context, item.Entry, item.IsBuiltIn);
     }
 
     private static Shape CloneShape(Shape source)

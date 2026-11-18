@@ -19,18 +19,29 @@ public sealed class ObjectThumbnail : Control
     private readonly Document _document;
 
     /// <param name="shape">The object; it is moved into a little drawing of its own (pass a fresh shape, not one of the user's drawing).</param>
-    public ObjectThumbnail(Shape shape)
+    public ObjectThumbnail(Shape shape) : this([shape])
     {
-        // no measurements in a picture of 50 pixels
-        shape.SymbolShowDimension = false;
-        shape.SymbolShowGaps = false;
-        shape.WallShowDimensions = false;
+    }
 
-        // the drawing is exactly the object's outline with a margin, so it fills the tile
-        var box = ShapeOutline.Box(shape);
-        var margin = Math.Max(box.W, box.H) * 0.1 + shape.BorderThickness + (shape.Kind == ShapeKind.Wall ? shape.WallThickness : 0);
-        shape.X += margin - box.X;
-        shape.Y += margin - box.Y;
+    /// <param name="shapes">The pieces of an icon; they are moved together into a little drawing of their own (pass copies).</param>
+    public ObjectThumbnail(IReadOnlyList<Shape> shapes)
+    {
+        foreach (var shape in shapes)
+        {
+            // no measurements in a picture of 50 pixels
+            shape.SymbolShowDimension = false;
+            shape.SymbolShowGaps = false;
+            shape.WallShowDimensions = false;
+        }
+
+        // the drawing is exactly the outline of the pieces with a margin, so it fills the tile
+        var box = Icono.Editor.ShapeResizer.GroupBounds(shapes);
+        var margin = Math.Max(box.W, box.H) * 0.1 + shapes.Max(s => s.BorderThickness + (s.Kind == ShapeKind.Wall ? s.WallThickness : 0));
+        foreach (var shape in shapes)
+        {
+            shape.X += margin - box.X;
+            shape.Y += margin - box.Y;
+        }
 
         _document = new Document
         {
@@ -40,7 +51,11 @@ public sealed class ObjectThumbnail : Control
             BackgroundColor = ArgbColor.FromRgb(Tile.Red, Tile.Green, Tile.Blue),
         };
         var layer = new Layer { Name = "Layer 1" };
-        layer.Shapes.Add(shape);
+        foreach (var shape in shapes)
+        {
+            layer.Shapes.Add(shape);
+        }
+
         _document.Layers.Add(layer);
     }
 

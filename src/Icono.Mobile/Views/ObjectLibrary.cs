@@ -1,8 +1,11 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Input;
 using Avalonia.Layout;
+using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Threading;
 using Icono.Core;
 using Icono.Editor;
 using Icono.Rendering;
@@ -11,7 +14,7 @@ namespace Icono.Mobile.Views;
 
 /// <summary>One object of the library: a room (inserted at once), or a shape / plan symbol / catalogue unit that is then placed with a tap or a
 /// drag.</summary>
-public sealed record LibraryItem(string Name, string Group, ShapeKind Kind, UnitObject? Unit = null, RoomPreset? Room = null);
+public sealed record LibraryItem(string Name, string Group, ShapeKind Kind, UnitObject? Unit = null, RoomPreset? Room = null, MyIcons.Icon? Icon = null);
 
 /// <summary>The objects of the Windows program's libraries in groups (rooms, doors and windows, plan symbols, the catalogues of cabinets,
 /// kitchen elements and computers, shapes, arrows, IT, icons) with a search box. The groups fold open with a tap on their name.</summary>
@@ -130,50 +133,102 @@ public sealed class ObjectLibrary : UserControl
         return shape;
     }
 
+    private const string MyIconsGroup = "My icons";
+
     private void Build()
     {
         foreach (var group in Items().GroupBy(i => i.Group))
         {
-            var tiles = new WrapPanel { Margin = new Thickness(2, 2, 2, 8) };
-            var items = new List<(LibraryItem, Control)>();
-            foreach (var item in group)
-            {
-                var tile = Tile(item);
-                tiles.Children.Add(tile);
-                items.Add((item, tile));
-            }
-
-            var header = new Button
-            {
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                HorizontalContentAlignment = HorizontalAlignment.Left,
-                Background = Brushes.Transparent,
-                Padding = new Thickness(6, 6),
-                FontSize = 11,
-                FontWeight = FontWeight.SemiBold,
-                Foreground = Brush("MutedTextBrush"),
-            };
-            header.Click += (_, _) =>
-            {
-                if (!_open.Remove(group.Key))
-                {
-                    _open.Add(group.Key);
-                }
-
-                ApplyFilter();
-            };
-
-            _groups.Children.Add(header);
-            _groups.Children.Add(tiles);
-            _built.Add((group.Key, header, tiles, items));
+            AddGroup(group.Key, group, -1);
         }
 
+        BuildMyIcons();
         ApplyFilter();
+    }
+
+    /// <summary>Reads the icons again (one was saved or removed since): only the group of the icons is made new.</summary>
+    public void Refresh()
+    {
+        BuildMyIcons();
+        ApplyFilter();
+    }
+
+    /// <summary>The icons that come with icono and the ones the user saved, as the first group (open while it has icons of the user).</summary>
+    private void BuildMyIcons()
+    {
+        var old = _built.FindIndex(b => b.Group == MyIconsGroup);
+        if (old >= 0)
+        {
+            _groups.Children.Remove(_built[old].Header);
+            _groups.Children.Remove(_built[old].Tiles);
+            _built.RemoveAt(old);
+        }
+
+        var icons = MyIcons.Load();
+        if (icons.Count == 0)
+        {
+            return;
+        }
+
+        var items = icons.Select(i => new LibraryItem(i.Entry.Name, MyIconsGroup, ShapeKind.CombinedPath, Icon: i)).ToList();
+        AddGroup(MyIconsGroup, items, 0);
+        if (icons.Any(i => !i.IsBuiltIn))
+        {
+            _open.Add(MyIconsGroup);
+        }
+    }
+
+    private void AddGroup(string name, IEnumerable<LibraryItem> group, int insertAt)
+    {
+        var tiles = new WrapPanel { Margin = new Thickness(2, 2, 2, 8) };
+        var items = new List<(LibraryItem, Control)>();
+        foreach (var item in group)
+        {
+            var tile = Tile(item);
+            tiles.Children.Add(tile);
+            items.Add((item, tile));
+        }
+
+        var header = new Button
+        {
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            HorizontalContentAlignment = HorizontalAlignment.Left,
+            Background = Brushes.Transparent,
+            Padding = new Thickness(6, 6),
+            FontSize = 11,
+            FontWeight = FontWeight.SemiBold,
+            Foreground = Brush("MutedTextBrush"),
+        };
+        header.Click += (_, _) =>
+        {
+            if (!_open.Remove(name))
+            {
+                _open.Add(name);
+            }
+
+            ApplyFilter();
+        };
+
+        if (insertAt >= 0)
+        {
+            _groups.Children.Insert(insertAt, tiles);
+            _groups.Children.Insert(insertAt, header);
+            _built.Insert(insertAt, (name, header, tiles, items));
+        }
+        else
+        {
+            _groups.Children.Add(header);
+            _groups.Children.Add(tiles);
+            _built.Add((name, header, tiles, items));
+        }
     }
 
     private Control Tile(LibraryItem item)
     {
-        var picture = new ObjectThumbnail(Sample(item)) { Width = 58, Height = 50 };
+        // an icon is shown from copies of its shapes (the thumbnail moves them); everything else from a fresh sample shape
+        var picture = item.Icon is { } icon
+            ? new ObjectThumbnail(icon.Entry.Shapes.Select(IconLibrary.Clone).ToList()) { Width = 58, Height = 50 }
+            : new ObjectThumbnail(Sample(item)) { Width = 58, Height = 50 };
         var name = new TextBlock
         {
             Text = item.Name, FontSize = 9, TextAlignment = TextAlignment.Center, TextWrapping = TextWrapping.Wrap, MaxLines = 2,
@@ -187,7 +242,45 @@ public sealed class ObjectLibrary : UserControl
             Background = Brushes.Transparent,
             CornerRadius = new CornerRadius(8),
         };
-        button.Click += (_, _) => ItemChosen?.Invoke(this, item);
+
+        var held = false;
+        if (item.Icon is { IsBuiltIn: false } own)
+        {
+            // an icon of the user: a long press offers to remove it (the tap that ends the long press must not insert it)
+            var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(600) };
+            timer.Tick += (_, _) =>
+            {
+                timer.Stop();
+                held = true;
+                var remove = new MenuItem { Header = "Remove \"" + own.Entry.Name + "\" from My icons" };
+                remove.Click += (_, _) =>
+                {
+                    MyIcons.Store.Delete(own.FilePath);
+                    Refresh();
+                };
+                new MenuFlyout { Items = { remove } }.ShowAt(button);
+            };
+            button.AddHandler(InputElement.PointerPressedEvent, (_, _) =>
+            {
+                held = false;
+                timer.Start();
+            }, RoutingStrategies.Tunnel, handledEventsToo: true);
+            button.AddHandler(InputElement.PointerReleasedEvent, (_, _) => timer.Stop(), RoutingStrategies.Tunnel, handledEventsToo: true);
+            button.AddHandler(InputElement.PointerExitedEvent, (_, _) => timer.Stop(), RoutingStrategies.Tunnel, handledEventsToo: true);
+            // the list scrolls under the finger: that is no long press
+            button.AddHandler(InputElement.PointerCaptureLostEvent, (_, _) => timer.Stop(), RoutingStrategies.Tunnel, handledEventsToo: true);
+        }
+
+        button.Click += (_, _) =>
+        {
+            if (held)
+            {
+                held = false;
+                return;
+            }
+
+            ItemChosen?.Invoke(this, item);
+        };
         return button;
     }
 

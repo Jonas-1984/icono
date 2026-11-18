@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <AvaloniaResource Include="..\Icono.App\Assets\icono.png" Link="Assets\icono.png" />
+    <AvaloniaResource Include="..\Icono.App\Assets\Samples\icono-logo.svg" Link="Assets\Samples\icono-logo.svg" />
     <!-- Selawik (SIL OFL 1.1): stands in for Segoe UI and other Windows fonts the tablet does not have -->
     <AvaloniaResource Include="Assets\Fonts\*.ttf" />
     <!-- the licence notices travel with every copy of the app (shown in About: tap the logo) -->

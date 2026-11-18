@@ -11,6 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Icono.Core\Icono.Core.csproj" />
     <ProjectReference Include="..\Icono.Rendering\Icono.Rendering.csproj" />
+    <ProjectReference Include="..\Icono.IO\Icono.IO.csproj" />
   </ItemGroup>
 
 </Project>
