@@ -25,6 +25,19 @@ public static class PolylineClosing
         PathBoundsCalculator.Recompute(shape);
     }
 
+    /// <summary>A polyline whose last point was dragged onto its first point (they snapped together) is closed: the last point goes, the shape is a polygon.
+    /// True when it was closed.</summary>
+    public static bool CloseWhenEndsMeet(Shape shape)
+    {
+        if (shape is not { Kind: ShapeKind.Polyline, Points.Count: >= 4 } || !CorePointsTouch(shape.Points[0], shape.Points[^1]))
+        {
+            return false;
+        }
+
+        Close(shape);
+        return true;
+    }
+
     /// <summary>Closes every selected open polyline as one undo step. Returns how many were closed.</summary>
     public static int CloseSelected(EditorContext context)
     {

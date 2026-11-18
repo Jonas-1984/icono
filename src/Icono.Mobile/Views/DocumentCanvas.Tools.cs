@@ -30,6 +30,9 @@ public sealed partial class DocumentCanvas
     /// <summary>The kind of point and the guide lines of the snap that <see cref="_snapMark"/> shows (null for the other helpers: the room closing, the wall tool).</summary>
     private PointSnapResult? _snapDetail;
 
+    /// <summary>The helpers of the wall tool that were applied (straight, parallel, in line with, same length): their guide lines and the length - angle label.</summary>
+    private WallSnapResult? _wallSnapResult;
+
     /// <summary>Raised when a wall / polyline / dimension starts or ends, or gets a point (the window shows Done / Cancel then).</summary>
     public event EventHandler? PathDrawingChanged;
 
@@ -135,7 +138,7 @@ public sealed partial class DocumentCanvas
             if (shape.Points is not null)
             {
                 var start = new SKPoint((float)_placeStart.X, (float)_placeStart.Y);
-                var end = SnapToObjectPoints(at, exclude: [], reference: start) ?? GridPoint(at);
+                var end = SnapLinePoint(at, [start], start, null) ?? GridPoint(at);
 
                 // re-anchored to the fixed start every time, so the bounds recomputation never drifts
                 shape.X = _placeStart.X;
@@ -177,6 +180,7 @@ public sealed partial class DocumentCanvas
     {
         _snapMark = null;
         _snapDetail = null;
+        _wallSnapResult = null;
         if (_gesture == Gesture.Place)
         {
             CommitPendingShape();
@@ -192,6 +196,7 @@ public sealed partial class DocumentCanvas
     {
         _snapMark = null;
         _snapDetail = null;
+        _wallSnapResult = null;
         if (_gesture == Gesture.Place)
         {
             _pendingShape = null;
@@ -374,6 +379,7 @@ public sealed partial class DocumentCanvas
         _placingFirstPoint = false;
         _snapMark = null;
         _snapDetail = null;
+        _wallSnapResult = null;
         WallTyping?.Clear();
         WallTyping?.Forget();
         PathDrawingChanged?.Invoke(this, EventArgs.Empty);
@@ -431,6 +437,7 @@ public sealed partial class DocumentCanvas
     {
         _snapMark = null;
         _snapDetail = null;
+        _wallSnapResult = null;
         if (_context is not { } context)
         {
             return null;
@@ -453,6 +460,7 @@ public sealed partial class DocumentCanvas
     {
         _snapMark = null;
         _snapDetail = null;
+        _wallSnapResult = null;
         if (_context is not { } context)
         {
             return at;
@@ -477,6 +485,12 @@ public sealed partial class DocumentCanvas
             }
         }
 
+        if (kind != ShapeKind.Wall && IsLineLike(kind))
+        {
+            // the points of the objects AND of the part of this line that is there already, then the helpers of the wall tool: as in the Windows program
+            return SnapLinePoint(at, placed, previous, null) ?? GridPoint(at);
+        }
+
         if (SnapToObjectPoints(at, exclude: [], reference: previous) is { } onPoint)
         {
             return onPoint;
@@ -489,7 +503,8 @@ public sealed partial class DocumentCanvas
                 new SKPoint((float)at.X, (float)at.Y), previous, placed, context.Document, context.WallSnap, FingerReach / _zoom, wallThickness: thickness);
             if (result.Snapped)
             {
-                _snapMark = (result.Point.X, result.Point.Y, "");
+                _snapMark = (result.Point.X, result.Point.Y, result.Label);
+                _wallSnapResult = result;
                 return new Point(result.Point.X, result.Point.Y);
             }
         }

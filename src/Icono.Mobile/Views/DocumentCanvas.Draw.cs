@@ -49,7 +49,8 @@ public sealed partial class DocumentCanvas
         var chrome = new Chrome(
             frames, handles, stem, _rotationLabel, pathMarks, snap, MarqueeForRender(), EraserForRender(), DimensionGuideForRender(),
             ObjectGuidesForRender(), grid, CurvePicksForRender(), RulerForRender(), HighlightsForRender(),
-            _context.ShowRulers ? (_context.DimensionUnit, _fingerAt) : null);
+            _context.ShowRulers ? (_context.DimensionUnit, _fingerAt) : null,
+            (_wallSnapResult?.Guides ?? []).Select(g => (ToScreen((g.From.X, g.From.Y)), ToScreen((g.To.X, g.To.Y)), g.Kind)).ToList());
         context.Custom(new DrawOperation(new Rect(Bounds.Size), _context.Document, PendingForRender(), _zoom, _offset, chrome));
     }
 
@@ -72,7 +73,8 @@ public sealed partial class DocumentCanvas
         (IReadOnlyList<(SKPoint From, SKPoint To)> Sides, SKPoint? Corner) CurvePicks,
         (SKPoint From, SKPoint To, string Label)? Ruler,
         IReadOnlyList<Shape> Highlights,
-        (LengthUnit Unit, Point? Cursor)? Rulers);
+        (LengthUnit Unit, Point? Cursor)? Rulers,
+        IReadOnlyList<(SKPoint From, SKPoint To, SnapKind Kind)> HelperGuides);
 
     /// <summary>The corners of the frame round a shape in drawing units (turned with it), as the Windows program draws it.</summary>
     private static (double X, double Y)[] FrameCorners(Shape shape)
@@ -331,6 +333,22 @@ public sealed partial class DocumentCanvas
             {
                 canvas.DrawCircle(mark, 5, dot);
                 canvas.DrawCircle(mark, 5, ring);
+            }
+
+            // the guide lines of the helpers of the wall tool: blue for straight and parallel, green for in line with other points, orange for the same length
+            foreach (var helper in chrome.HelperGuides)
+            {
+                var colour = helper.Kind switch
+                {
+                    SnapKind.Align => new SKColor(0x2E, 0xCC, 0x71),
+                    SnapKind.EqualLength => SnapColor,
+                    _ => new SKColor(0x5A, 0xB0, 0xFF),
+                };
+                using var helperLine = new SKPaint
+                {
+                    IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 1.5f, Color = colour.WithAlpha(215), PathEffect = SKPathEffect.CreateDash([6, 5], 0),
+                };
+                canvas.DrawLine(helper.From, helper.To, helperLine);
             }
 
             if (chrome.Snap is { } snap)

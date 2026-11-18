@@ -84,6 +84,19 @@ public class PolylineClosingTests
     }
 
     [Fact]
+    public void ADraggedEnd_OnTheStart_ClosesThePolyline_ButAFarEndDoesNot()
+    {
+        var (_, _, polyline) = NewPolyline();
+        Assert.False(PolylineClosing.CloseWhenEndsMeet(polyline));
+        Assert.Equal(ShapeKind.Polyline, polyline.Kind);
+
+        polyline.Points = [new CorePoint(0, 0), new CorePoint(100, 0), new CorePoint(100, 80), new CorePoint(0, 0)];
+        Assert.True(PolylineClosing.CloseWhenEndsMeet(polyline));
+        Assert.Equal(ShapeKind.Polygon, polyline.Kind);
+        Assert.Equal(3, polyline.Points.Count);
+    }
+
+    [Fact]
     public void ThePolygonKind_IsNotAStrokeOnlyLine_SoFillAndHitTestsWork()
     {
         Assert.False(ShapeGeometryFactory.IsStrokeOnly(ShapeKind.Polygon));

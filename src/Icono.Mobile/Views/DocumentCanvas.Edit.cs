@@ -339,12 +339,10 @@ public sealed partial class DocumentCanvas
 
         if (!snapped)
         {
-            // on a point of another object (the neighbour in the line lets right angles and parallels work), failing that on the grid
-            var neighbour = _pointIndex > 0
-                ? new SKPoint((float)(shape.X + points[_pointIndex - 1].X), (float)(shape.Y + points[_pointIndex - 1].Y))
-                : points.Count > 1 ? new SKPoint((float)(shape.X + points[1].X), (float)(shape.Y + points[1].Y)) : (SKPoint?)null;
-            var onPoint = _context.PointSnap.Enabled ? SnapToObjectPoints(at, [shape], neighbour) : null;
-            at = onPoint ?? GridPoint(at);
+            // on a point of another object or of the rest of this line, then the helpers of the wall tool (straight, parallel, in line with the other
+            // points ...); failing that on the grid
+            var (others, neighbour) = OtherPoints(shape, _pointIndex);
+            at = SnapLinePoint(at, others, neighbour, shape) ?? GridPoint(at);
         }
 
         var list = points.ToList();
@@ -375,6 +373,11 @@ public sealed partial class DocumentCanvas
             if (shape.Kind == ShapeKind.Dimension)
             {
                 DimensionRouter.AttachPoints(_context.Document, shape);
+            }
+
+            if (PolylineClosing.CloseWhenEndsMeet(shape))
+            {
+                _context.Notify("The two ends meet: the shape is closed now.");
             }
 
             if (shape.Kind == ShapeKind.Wall && WallEditor.CloseWhenEndsMeet(shape))

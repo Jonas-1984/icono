@@ -20,6 +20,7 @@ public sealed partial class DocumentCanvas
     {
         _snapMark = null;
         _snapDetail = null;
+        _wallSnapResult = null;
         if (_context is not { } context || !context.PointSnap.Enabled || _editShapes.Count == 0 || _editShapes.Count > 8)
         {
             return false;
@@ -75,5 +76,6 @@ public sealed partial class DocumentCanvas
     {
         _snapMark = null;
         _snapDetail = null;
+        _wallSnapResult = null;
     }
 }
