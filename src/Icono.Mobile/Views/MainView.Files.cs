@@ -73,6 +73,7 @@ public partial class MainView
         FilesNameBox.Text = baseName;
         FilesExtensionText.Text = _filesExtension;
         FilesActionButton.IsVisible = mode == FilesMode.Save;
+        FilesSvgButton.IsVisible = pictures;
         FilesActionButton.Content = "Save";
         FilesLayer.IsVisible = true;
 

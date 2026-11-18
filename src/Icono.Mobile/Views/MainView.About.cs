@@ -56,6 +56,26 @@ public partial class MainView
 
     private void OnAboutClose(object? sender, RoutedEventArgs e) => CloseAbout();
 
+    private async void OnAboutWebsite(object? sender, RoutedEventArgs e) => await OpenLinkAsync("https://www.bitbins.de");
+
+    private async void OnAboutContact(object? sender, RoutedEventArgs e) => await OpenLinkAsync("mailto:info.de?subject=icono%20tablet");
+
+    /// <summary>Hands a link to the browser or the mail app of the tablet (only when the button is tapped).</summary>
+    private async Task OpenLinkAsync(string address)
+    {
+        try
+        {
+            if (TopLevel.GetTopLevel(this)?.Launcher is not { } launcher || !await launcher.LaunchUriAsync(new Uri(address)))
+            {
+                StatusText.Text = "No app on this tablet could open " + address;
+            }
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or NotSupportedException or UriFormatException)
+        {
+            StatusText.Text = "The link could not be opened: " + ex.Message;
+        }
+    }
+
     private void ShowDocument(string name, Avalonia.Controls.Button tab)
     {
         AboutPage.Content = AboutDocument.Build(Read("Docs/" + name), numberedHeadings: true);

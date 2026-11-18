@@ -53,6 +53,8 @@ public partial class MainView : UserControl
         _context.PointSnap.PropertyChanged += (_, _) => UpdateStatusPills();
         SetUpZoomMenu();
         SetUpCurvePad();
+        SetUpKeys();
+        Loaded += (_, _) => Canvas.Focus();
         _context.PagesChanged += UpdateStatusPills;
         _context.CurrentPageChanged += UpdateStatusPills;
         _context.UndoManager.PropertyChanged += OnHistoryChanged;

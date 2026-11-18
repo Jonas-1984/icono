@@ -55,7 +55,8 @@ für das Windows-Programm und die Android-Tablet-App.
    E-Mail-Programm. Erst dann findet eine Verbindung statt, und zwar durch diese Programme. Für sie gelten deren Datenschutzbestimmungen und
    die der besuchten Seite.
    Das Benutzerhandbuch (Help > User Manual) und die Hinweise im Fenster "About icono" öffnen sich lokal aus dem Installationsordner, ohne Internet.
-   Die Tablet-App hat solche Links nicht; ihr Fenster "About" (auf das icono-Logo tippen) zeigt Bedingungen, diesen Hinweis und die Lizenzen lokal.
+   Die Tablet-App hat zwei davon: "Website" und "Contact" in ihrem Fenster "About" (auf das icono-Logo tippen) öffnen auf Ihren Tipp hin Ihren Browser oder Ihre
+   E-Mail-App - erst dann findet eine Verbindung statt, und zwar durch diese Apps. Bedingungen, dieser Hinweis und die Lizenzen in diesem Fenster werden lokal angezeigt.
 
 6. Wenn Sie mir schreiben
    Schreiben Sie mir (info@bitbins.de), verarbeite ich Ihre E-Mail-Adresse und Ihre Nachricht, um Ihnen zu antworten und den gemeldeten Fehler zu

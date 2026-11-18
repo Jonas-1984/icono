@@ -49,10 +49,18 @@ Die wichtigsten Gesten und Werkzeuge in wenigen Minuten. Dieses Fenster öffnest
 7. Dateien, Bilder und Export
    - New, Open, Save und Save as stehen links in der oberen Leiste. icono zeigt sein eigenes Dateifenster; Recent listet die zuletzt geöffneten Zeichnungen.
    - Export speichert die Seite oder alle Seiten als PDF (echte Größe, Vektoren) oder PNG oder gibt sie an eine andere App weiter.
-   - Picture setzt ein Foto oder ein SVG in die Zeichnung. Save as icon (unter Arrange) legt die Auswahl unter My icons in Objects ab.
+   - Picture setzt ein Foto oder ein SVG in die Zeichnung. SVG code... in seinem Fenster nimmt eingefügten SVG-Code (oder nur Pfaddaten) statt einer Datei. Save as icon (unter Arrange) legt die Auswahl unter My icons in Objects ab.
    - Verlässt du die App mit ungespeicherten Änderungen, fragt icono vorher.
 
-8. Tipps
+8. Tastatur (Tablet mit Tastatur)
+   - Werkzeuge: V Select, I Colour picker, G Region colour, W Wall, D Dimension, M Ruler, B Distance, X Cut wall, Q Match, P Pen, T Text. Enter oder Esc verlässt ein Werkzeug.
+     Beim Zeichnen einer Wand oder Polylinie ist Enter Done und Esc bricht sie ab.
+   - Strg + Z Rückgängig, Strg + Y (oder Strg + Umschalt + Z) Wiederholen, Strg + C Kopieren, Strg + X Ausschneiden, Strg + V Einfügen, Strg + D Duplizieren, Strg + A Alles auswählen, Entf löscht die Auswahl.
+   - Strg + G Gruppieren, Strg + Umschalt + G Gruppe auflösen, Strg + Umschalt + X Zerlegen.
+   - Strg + N New, Strg + O Open, Strg + S Save, Strg + Umschalt + S Save as, Strg + E Export.
+   - Strg + Plus und Strg + Minus zoomen, Strg + 0 ist 100 %, Strg + 1 passt die Seite an. F3 schaltet den Objektfang ein und aus, F1 öffnet diese Hilfe.
+
+9. Tipps
    - Zeichne mit dem Werkzeug, das du brauchst, und tippe Select, um zurückzukehren. Die Werkzeugleiste zeigt das aktive Werkzeug in Blau.
    - Alles bleibt auf dem Tablet. Nur das Handschrift-Sprachmodell wird einmal von Google geladen, und nur wenn du Convert to text benutzt.
-   - About icono (auf das Logo oben links tippen) zeigt die Version, die Testbedingungen, den Datenschutzhinweis und die Lizenzen.
+   - About icono (auf das Logo oben links tippen) zeigt die Version, die Testbedingungen, den Datenschutzhinweis und die Lizenzen; Website und Contact öffnen deinen Browser oder deine E-Mail-App.

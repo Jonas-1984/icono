@@ -182,6 +182,7 @@ public sealed partial class DocumentCanvas : Control
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
         base.OnPointerPressed(e);
+        Focus(); // the keys of a keyboard (shortcuts) go to the drawing, unless a text box has them
         // a hand resting on the screen while a pen writes is ignored
         if (PalmShouldBeIgnored(e))
         {

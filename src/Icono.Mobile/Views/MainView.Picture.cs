@@ -49,6 +49,24 @@ public partial class MainView
         StatusText.Text = error ?? "Added " + file.Name + " - drag it to move it, its corners to change the size.";
     }
 
+    /// <summary>"SVG code..." of the picture window: the code of an SVG (or only path data) is pasted into a text box and becomes shapes, as the Insert > SVG Code menu
+    /// of the Windows program does.</summary>
+    private void OnFilesSvgCode(object? sender, RoutedEventArgs e)
+    {
+        CloseFiles(null);
+        OpenTextBox("SVG code", "Paste the code of an SVG (or only the path data). It becomes shapes in the middle of the page.", string.Empty, multiline: true, text =>
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return;
+            }
+
+            StatusText.Text = ImageImport.ImportSvg(_context, text, out var error) is null
+                ? error
+                : "Added the SVG shapes - drag them to move them, their corners to change the size.";
+        });
+    }
+
     /// <summary>Reads the file chosen in the file window (a status message tells when it is too big or cannot be read).</summary>
     private async Task<byte[]?> ReadPictureBytesAsync(IStorageFile file)
     {
