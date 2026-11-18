@@ -131,6 +131,9 @@
                 <!-- the drawing -->
                 <views:DocumentCanvas Grid.Column="1" x:Name="Canvas" ClipToBounds="True" />
 
+                <!-- where small pads open: placed at the spot they are about (the corner of the Curve tool) -->
+                <Border Grid.Column="1" x:Name="PadAnchor" Width="1" Height="1" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" />
+
                 <!-- the object library (Objects in the tool bar) lies over the left of the drawing -->
                 <Border Grid.Column="1" x:Name="LibraryPane" IsVisible="False" Width="300" HorizontalAlignment="Left"
                         Background="{StaticResource ToolbarBackgroundBrush}" BorderBrush="{StaticResource BorderLineBrush}" BorderThickness="0,0,1,0">

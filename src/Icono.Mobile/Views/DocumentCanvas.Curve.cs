@@ -9,6 +9,9 @@ namespace Icono.Mobile.Views;
 /// only that corner is curved (<see cref="CornerFillet"/>, <see cref="Icono.Editor.EditorContext.FilletCorner"/>). The size is asked for like a length.</summary>
 public sealed partial class DocumentCanvas
 {
+    /// <summary>Raised when the size of a corner is wanted: the pad opens at <see cref="CurveSizeRequest.At"/>.</summary>
+    public event EventHandler<CurveSizeRequest>? CurveSizeRequested;
+
     private (Shape Shape, int Side)? _curveFirst;
     private (Shape Shape, int Side)? _curveSecond;
     private int _curveCorner;
@@ -92,28 +95,28 @@ public sealed partial class DocumentCanvas
         _curveCorner = found;
         context.RequestRedraw();
 
+        // a small pad right at the corner (slider 0 - 20 and a number box); OK curves the corner, closing it any other way leaves it as it was
         var picked = first.Shape;
-        LengthRequested?.Invoke(this, new LengthRequest(
-            "Curve size",
-            "Radius of the corner in cm on the page. 0 makes the corner sharp again.",
-            context.CurveSizeCm.ToString("0.##", CultureInfo.InvariantCulture),
-            text =>
+        var anchor = ToScreen((vertices![found].X, vertices[found].Y));
+        CurveSizeRequested?.Invoke(this, new CurveSizeRequest(
+            context.CurveSizeCm,
+            new Avalonia.Point(anchor.X, anchor.Y),
+            cm =>
             {
                 _curveFirst = null;
                 _curveSecond = null;
-                if (text is null || !double.TryParse(text.Trim().Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out var cm) || cm < 0)
+                if (cm is not { } size || size < 0)
                 {
-                    context.Notify("That is not a size. Type a number in cm, for example 1.5.");
                     context.RequestRedraw();
                     return;
                 }
 
-                if (cm > 0)
+                if (size > 0)
                 {
-                    context.CurveSizeCm = cm;
+                    context.CurveSizeCm = size;
                 }
 
-                context.FilletCorner(picked, found, cm);
+                context.FilletCorner(picked, found, size);
             }));
     }
 
@@ -147,3 +150,6 @@ public sealed partial class DocumentCanvas
         return (sides, corner);
     }
 }
+
+/// <summary>The size of a curved corner is wanted (cm on the page): where the corner is (view units), and what to do with the answer (null = none).</summary>
+public sealed record CurveSizeRequest(double Cm, Avalonia.Point At, Action<double?> Commit);

@@ -52,6 +52,7 @@ public partial class MainView : UserControl
         _context.RecentInkChanged += UpdateInkBar;
         _context.PointSnap.PropertyChanged += (_, _) => UpdateStatusPills();
         SetUpZoomMenu();
+        SetUpCurvePad();
         _context.PagesChanged += UpdateStatusPills;
         _context.CurrentPageChanged += UpdateStatusPills;
         _context.UndoManager.PropertyChanged += OnHistoryChanged;
