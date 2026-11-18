@@ -94,6 +94,31 @@
             <Setter Property="Margin" Value="8,4" />
             <Setter Property="Background" Value="#22FFFFFF" />
         </Style>
+        <Style Selector="Button.pillKey">
+            <Setter Property="MinHeight" Value="20" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="Padding" Value="9,0" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="CornerRadius" Value="9" />
+            <Setter Property="Background" Value="#1AFFFFFF" />
+            <Setter Property="Foreground" Value="{StaticResource ForegroundTextBrush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.pillKey:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#2AFFFFFF" />
+        </Style>
+        <Style Selector="Button.pillKey:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="#3AFFFFFF" />
+        </Style>
+        <Style Selector="Button.pillKey.on /template/ ContentPresenter">
+            <Setter Property="Background" Value="#335AB0FF" />
+        </Style>
+        <Style Selector="Button.pillKey.on">
+            <Setter Property="Foreground" Value="#FFD6EBFF" />
+        </Style>
         <Style Selector="Border.pill">
             <Setter Property="CornerRadius" Value="9" />
             <Setter Property="Padding" Value="9,1" />

@@ -165,14 +165,23 @@
                 </Border.Background>
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
                     <Border Grid.Column="0" Classes="pill" MinWidth="64">
-                        <TextBlock x:Name="ToolNameText" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center"
-                                   Foreground="{StaticResource AccentBrush}" Text="Select" />
+                        <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Center">
+                            <Path x:Name="ToolIcon" Width="11" Height="11" Stretch="Uniform" StrokeThickness="1.2" StrokeLineCap="Round" StrokeJoin="Round"
+                                  Stroke="{StaticResource AccentBrush}" VerticalAlignment="Center" />
+                            <TextBlock x:Name="ToolNameText" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"
+                                       Foreground="{StaticResource AccentBrush}" Text="Select" />
+                        </StackPanel>
                     </Border>
                     <TextBlock Grid.Column="1" x:Name="StatusText" FontSize="11.5" VerticalAlignment="Center" Foreground="{StaticResource MutedTextBrush}"
                                TextTrimming="CharacterEllipsis" />
-                    <Border Grid.Column="2" Classes="pill">
-                        <TextBlock x:Name="ZoomText" FontSize="11" Foreground="{StaticResource ForegroundTextBrush}" Text="100 %" />
-                    </Border>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
+                        <Button Classes="pillKey" x:Name="SnapPill" Content="Snap" Click="OnSnapPill" ToolTip.Tip="Snap to the grid: on / off" />
+                        <Button Classes="pillKey" x:Name="PagePill" Content="Page 1 / 1" Click="OnPageSettings" ToolTip.Tip="The page in view - tap for the page settings" />
+                        <Button Classes="pillKey" x:Name="ScalePill" Content="1:40" Click="OnPageSettings" ToolTip.Tip="The scale of the drawing - tap to change it" />
+                        <Button Classes="pillKey" Click="OnFit" ToolTip.Tip="Zoom - tap to fit the page">
+                            <TextBlock x:Name="ZoomText" Text="100 %" />
+                        </Button>
+                    </StackPanel>
                 </Grid>
             </Border>
         </Grid>

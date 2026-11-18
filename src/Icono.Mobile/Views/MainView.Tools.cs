@@ -69,6 +69,10 @@ public partial class MainView
             "Distance: tap one object, then another - a dimension of the gap between them is added and follows both.", More: true),
     ];
 
+    private const string AreaIcon = "M5,3 H8 M11,3 H14 M17,3 H19 A2,2 0 0 1 21,5 V8 M21,11 V14 M21,17 V19 A2,2 0 0 1 19,21 H17 M14,21 H11 M8,21 H5 A2,2 0 0 1 3,19 V17 M3,14 V11 M3,8 V5 A2,2 0 0 1 5,3";
+
+    private const string ObjectsIcon = "M3,3 H10 V10 H3 Z M14,3 H21 V10 H14 Z M3,14 H10 V21 H3 Z M14,14 H21 V21 H14 Z";
+
     private readonly List<(ToolDefinition Tool, Button Button)> _toolButtons = [];
 
     /// <summary>The library object being placed (chosen in Objects), or null.</summary>
@@ -100,7 +104,7 @@ public partial class MainView
             if (tool.Tool == ActiveTool.Select)
             {
                 // choosing several objects: a dashed frame (the Area mode, DocumentCanvas.Area.cs)
-                _areaButton = PaletteButton("Area", "M5,3 H8 M11,3 H14 M17,3 H19 A2,2 0 0 1 21,5 V8 M21,11 V14 M21,17 V19 A2,2 0 0 1 19,21 H17 M14,21 H11 M8,21 H5 A2,2 0 0 1 3,19 V17 M3,14 V11 M3,8 V5 A2,2 0 0 1 5,3");
+                _areaButton = PaletteButton("Area", AreaIcon);
                 _areaButton.Click += (_, _) => ToggleAreaMode();
                 ToolPanel.Children.Add(_areaButton);
             }
@@ -108,7 +112,7 @@ public partial class MainView
 
         ToolPanel.Children.Add(Separator());
         // the libraries of the Windows program: rooms, doors, symbols, cabinets, shapes ...
-        _objectsButton = PaletteButton("Objects", "M3,3 H10 V10 H3 Z M14,3 H21 V10 H14 Z M3,14 H10 V21 H3 Z M14,14 H21 V21 H14 Z");
+        _objectsButton = PaletteButton("Objects", ObjectsIcon);
         _objectsButton.Click += (_, _) => ShowLibrary(!LibraryPane.IsVisible);
         ToolPanel.Children.Add(_objectsButton);
         Library.ItemChosen += (_, item) => ChooseLibraryItem(item);
@@ -271,6 +275,7 @@ public partial class MainView
 
     private void OnContextPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        UpdateStatusPills();
         if (e.PropertyName is nameof(EditorContext.ActiveTool) or nameof(EditorContext.SelectedShapeKind))
         {
             UpdateToolButtons();
@@ -312,6 +317,7 @@ public partial class MainView
         _moreButton?.Classes.Set("active", _toolButtons.Any(t => t.Tool.More && ReferenceEquals(t.Tool, current) && !Canvas.AreaMode));
         _objectsButton?.Classes.Set("active", LibraryPane.IsVisible || (current is null && _context.ActiveTool != ActiveTool.Select));
         ToolNameText.Text = Canvas.AreaMode ? "Area" : current?.Name ?? _libraryItem?.Name ?? "";
+        ToolIcon.Data = Geometry.Parse(Canvas.AreaMode ? AreaIcon : current?.Icon ?? ObjectsIcon);
         UpdateCommands();
     }
 

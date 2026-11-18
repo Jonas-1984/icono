@@ -44,7 +44,13 @@ public partial class MainView : UserControl
 
         Canvas.Context = _context;
         Properties.Context = _context;
-        Canvas.ZoomChanged += (_, _) => ZoomText.Text = $"{Canvas.Zoom * 100:0} %";
+        Canvas.ZoomChanged += (_, _) =>
+        {
+            ZoomText.Text = $"{Canvas.Zoom * 100:0} %";
+            UpdateStatusPills();
+        };
+        _context.PagesChanged += UpdateStatusPills;
+        _context.CurrentPageChanged += UpdateStatusPills;
         _context.UndoManager.PropertyChanged += OnHistoryChanged;
         _context.SelectedShapes.CollectionChanged += (_, _) => UpdateCommands();
 
@@ -115,8 +121,20 @@ public partial class MainView : UserControl
 
     private void UpdateTitle() => TitleText.Text = (HasUnsavedChanges ? "● " : "") + _name;
 
+    /// <summary>The small keys of the status line: snap, the page in view, the scale.</summary>
+    private void UpdateStatusPills()
+    {
+        var document = _context.Document;
+        PagePill.Content = $"Page {Math.Clamp(_context.CurrentPage, 0, Math.Max(0, document.PageCount - 1)) + 1} / {document.PageCount}";
+        ScalePill.Content = "1:" + document.ScaleDenominator.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+        SnapPill.Classes.Set("on", _context.SnapToGrid);
+    }
+
+    private void OnSnapPill(object? sender, RoutedEventArgs e) => _context.SnapToGrid = !_context.SnapToGrid;
+
     private void UpdateCommands()
     {
+        UpdateStatusPills();
         UndoButton.IsEnabled = _context.UndoManager.CanUndo;
         RedoButton.IsEnabled = _context.UndoManager.CanRedo;
         var anything = _context.SelectedShapes.Count > 0;
