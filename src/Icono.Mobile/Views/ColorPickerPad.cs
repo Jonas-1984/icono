@@ -18,28 +18,95 @@ public sealed class ColorPickerPad : UserControl
     private double _value;
     private readonly SquareSurface _square;
     private readonly HueSurface _bar;
-    private readonly Border _newColour = new() { CornerRadius = new CornerRadius(0, 8, 8, 0) };
+    private readonly Border _newColour = new() { CornerRadius = new CornerRadius(0, 10, 10, 0) };
     private readonly TextBox _hex;
     private bool _changing;
 
-    public ColorPickerPad(ArgbColor start)
+    /// <param name="start">The colour the palette opens with.</param>
+    /// <param name="swatches">Ready colours to tap (optional).</param>
+    public ColorPickerPad(ArgbColor start, IReadOnlyList<ArgbColor>? swatches = null)
     {
         Start = start;
         (_hue, _saturation, _value) = ToHsv(start);
-        _square = new SquareSurface(this) { Height = 190, MinWidth = 280 };
-        _bar = new HueSurface(this) { Height = 34, Margin = new Thickness(0, 10, 0, 0) };
+        _square = new SquareSurface(this) { Height = 180, MinWidth = 280 };
+        _bar = new HueSurface(this) { Height = 28, Margin = new Thickness(0, 10, 0, 0) };
 
         _hex = new TextBox
         {
-            FontSize = 14, MinHeight = 38, Padding = new Thickness(8, 4), HorizontalContentAlignment = HorizontalAlignment.Center,
-            VerticalContentAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 10, 0, 0),
+            FontSize = 14, MinHeight = 34, Padding = new Thickness(8, 0), HorizontalContentAlignment = HorizontalAlignment.Center,
+            VerticalContentAlignment = VerticalAlignment.Center, Classes = { "field" },
         };
         _hex.TextChanged += (_, _) => OnHexTyped();
 
-        var oldColour = new Border { Background = new SolidColorBrush(Avalonia.Media.Color.FromRgb(start.R, start.G, start.B)), CornerRadius = new CornerRadius(8, 0, 0, 8) };
-        var preview = new UniformGrid { Columns = 2, Height = 30, Margin = new Thickness(0, 10, 0, 0), Children = { oldColour, _newColour } };
+        var oldColour = new Border { Background = new SolidColorBrush(Avalonia.Media.Color.FromRgb(start.R, start.G, start.B)), CornerRadius = new CornerRadius(10, 0, 0, 10) };
+        var preview = new UniformGrid
+        {
+            Columns = 2, Height = 34, Children = { oldColour, _newColour },
+        };
+        var previewFrame = new Border
+        {
+            CornerRadius = new CornerRadius(10), ClipToBounds = true, BorderThickness = new Thickness(1), Child = preview,
+            BorderBrush = new SolidColorBrush(Avalonia.Media.Color.FromArgb(0x55, 0xFF, 0xFF, 0xFF)),
+        };
 
-        Content = new StackPanel { Width = 290, Margin = new Thickness(6), Children = { _square, _bar, preview, _hex } };
+        // ready colours: a tap sets the colour at once
+        var ready = new WrapPanel { Margin = new Thickness(0, 10, 0, 0), HorizontalAlignment = HorizontalAlignment.Center };
+        foreach (var swatch in swatches ?? [])
+        {
+            var colour = swatch;
+            var dot = new Button
+            {
+                Width = 30, Height = 30, MinHeight = 0, MinWidth = 0, Padding = new Thickness(0), Margin = new Thickness(3), CornerRadius = new CornerRadius(15),
+                Background = new SolidColorBrush(Avalonia.Media.Color.FromRgb(colour.R, colour.G, colour.B)),
+                BorderBrush = new SolidColorBrush(Avalonia.Media.Color.FromArgb(0x66, 0xFF, 0xFF, 0xFF)), BorderThickness = new Thickness(1),
+            };
+            dot.Click += (_, _) =>
+            {
+                (_hue, _saturation, _value) = ToHsv(colour);
+                Changed();
+            };
+            ready.Children.Add(dot);
+        }
+
+        var ok = new Button { Content = "OK", FontSize = 15, FontWeight = FontWeight.Bold, MinHeight = 34, MinWidth = 76, Padding = new Thickness(0), Classes = { "padKey", "ok" },
+            HorizontalContentAlignment = HorizontalAlignment.Center, VerticalContentAlignment = VerticalAlignment.Center };
+        ok.Click += (_, _) => Done?.Invoke();
+        var bottom = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto,Auto"), ColumnSpacing = 8, Margin = new Thickness(0, 10, 0, 0) };
+        Grid.SetColumn(_hex, 1);
+        _hex.Width = 118;
+        Grid.SetColumn(ok, 2);
+        bottom.Children.Add(previewFrame);
+        bottom.Children.Add(_hex);
+        bottom.Children.Add(ok);
+
+        // frosted glass like the number pad: see-through, lighter at the top, a fine bright rim and a soft shadow
+        Content = new Border
+        {
+            Width = 308, Padding = new Thickness(14, 14, 14, 12), CornerRadius = new CornerRadius(22), BorderThickness = new Thickness(1),
+            BorderBrush = new LinearGradientBrush
+            {
+                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative), EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
+                GradientStops = [new GradientStop(Avalonia.Media.Color.FromArgb(0x88, 0xFF, 0xFF, 0xFF), 0), new GradientStop(Avalonia.Media.Color.FromArgb(0x22, 0xFF, 0xFF, 0xFF), 1)],
+            },
+            Background = new LinearGradientBrush
+            {
+                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative), EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
+                GradientStops = [new GradientStop(Avalonia.Media.Color.FromArgb(0xD0, 0x3A, 0x48, 0x66), 0), new GradientStop(Avalonia.Media.Color.FromArgb(0xC0, 0x14, 0x1A, 0x28), 1)],
+            },
+            BoxShadow = BoxShadows.Parse("0 12 36 0 #66000000"),
+            Child = new StackPanel
+            {
+                Children =
+                {
+                    new TextBlock
+                    {
+                        Text = "Colour", FontSize = 12.5, FontWeight = FontWeight.SemiBold, LetterSpacing = 0.6, Margin = new Thickness(2, 0, 0, 8),
+                        Foreground = new SolidColorBrush(Avalonia.Media.Color.FromArgb(0xCC, 0xFF, 0xFF, 0xFF)),
+                    },
+                    _square, _bar, ready, bottom,
+                },
+            },
+        };
         Refresh();
     }
 
@@ -50,6 +117,9 @@ public sealed class ColorPickerPad : UserControl
     public ArgbColor Chosen => FromHsv(_hue, _saturation, _value);
 
     public event EventHandler? ColorChanged;
+
+    /// <summary>OK was tapped.</summary>
+    public event Action? Done;
 
     private void Refresh()
     {
@@ -147,17 +217,19 @@ public sealed class ColorPickerPad : UserControl
                 {
                     StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative), EndPoint = new RelativePoint(1, 0, RelativeUnit.Relative),
                     GradientStops = [new GradientStop(Colors.White, 0), new GradientStop(Avalonia.Media.Color.FromRgb(hue.R, hue.G, hue.B), 1)],
-                }, null, rect, 8, 8);
+                }, null, rect, 10, 10);
                 context.DrawRectangle(new LinearGradientBrush
                 {
                     StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative), EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
                     GradientStops = [new GradientStop(Colors.Transparent, 0), new GradientStop(Colors.Black, 1)],
-                }, null, rect, 8, 8);
+                }, null, rect, 10, 10);
             }
 
+            context.DrawRectangle(null, new Pen(new SolidColorBrush(Avalonia.Media.Color.FromArgb(0x55, 0xFF, 0xFF, 0xFF)), 1), rect.Deflate(0.5), 10, 10);
             var at = new Point(pad._saturation * rect.Width, (1 - pad._value) * rect.Height);
-            context.DrawEllipse(null, new Pen(Brushes.Black, 4), at, 11, 11);
-            context.DrawEllipse(null, new Pen(Brushes.White, 2.5), at, 11, 11);
+            var chosen = pad.Chosen;
+            context.DrawEllipse(new SolidColorBrush(Avalonia.Media.Color.FromRgb(chosen.R, chosen.G, chosen.B)), new Pen(Brushes.Black, 4), at, 10, 10);
+            context.DrawEllipse(null, new Pen(Brushes.White, 2.5), at, 10, 10);
         }
 
         protected override void OnPointerPressed(PointerPressedEventArgs e)
@@ -204,10 +276,12 @@ public sealed class ColorPickerPad : UserControl
         public override void Render(DrawingContext context)
         {
             var rect = new Rect(Bounds.Size);
-            context.DrawRectangle(Rainbow, null, rect, 8, 8);
+            context.DrawRectangle(Rainbow, null, rect, 14, 14);
+            context.DrawRectangle(null, new Pen(new SolidColorBrush(Avalonia.Media.Color.FromArgb(0x55, 0xFF, 0xFF, 0xFF)), 1), rect.Deflate(0.5), 14, 14);
             var at = new Point(pad._hue / 360 * rect.Width, rect.Height / 2);
-            context.DrawEllipse(null, new Pen(Brushes.Black, 4), at, 12, 12);
-            context.DrawEllipse(null, new Pen(Brushes.White, 2.5), at, 12, 12);
+            var hue = FromHsv(pad._hue, 1, 1);
+            context.DrawEllipse(new SolidColorBrush(Avalonia.Media.Color.FromRgb(hue.R, hue.G, hue.B)), new Pen(Brushes.Black, 4), at, 11, 11);
+            context.DrawEllipse(null, new Pen(Brushes.White, 2.5), at, 11, 11);
         }
 
         protected override void OnPointerPressed(PointerPressedEventArgs e)

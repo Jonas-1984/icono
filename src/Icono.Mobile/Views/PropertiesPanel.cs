@@ -491,17 +491,30 @@ public sealed partial class PropertiesPanel : UserControl
         };
 
         // the paletteButton: a tap opens a square and a bar to choose any colour with the finger; the colour is taken when the paletteButton is closed
+        // the colour as a key as high as the hex box next to it; the arrow is dark on a light colour and white on a dark one
+        var light = (0.299 * current.R + 0.587 * current.G + 0.114 * current.B) / 255 > 0.6;
         var paletteButton = new Button
         {
-            Width = 44, Height = 34, Margin = new Thickness(6, 0, 0, 0), Padding = new Thickness(0), CornerRadius = new CornerRadius(8),
-            Background = new SolidColorBrush(Color.FromRgb(current.R, current.G, current.B)),
-            BorderBrush = new SolidColorBrush(Color.FromArgb(0x99, 0xFF, 0xFF, 0xFF)), BorderThickness = new Thickness(2),
-            Content = new TextBlock { Text = "▾", FontSize = 11, HorizontalAlignment = HorizontalAlignment.Center, Foreground = Brushes.White },
+            Width = 44, Height = 28, MinHeight = 28, Margin = new Thickness(6, 0, 0, 0), Padding = new Thickness(0), VerticalAlignment = VerticalAlignment.Center,
+            CornerRadius = new CornerRadius(10), Classes = { "bare" },
+            Content = new Border
+            {
+                CornerRadius = new CornerRadius(10), Background = new SolidColorBrush(Color.FromRgb(current.R, current.G, current.B)),
+                BorderBrush = new SolidColorBrush(Color.FromArgb(0x66, 0xFF, 0xFF, 0xFF)), BorderThickness = new Thickness(1),
+                Child = new Avalonia.Controls.Shapes.Path
+                {
+                    Data = Geometry.Parse("M2,4 L6,8 L10,4"), StrokeThickness = 1.6, StrokeLineCap = PenLineCap.Round, StrokeJoin = PenLineJoin.Round,
+                    Width = 12, Height = 12, Stretch = Stretch.Uniform, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
+                    Stroke = light ? new SolidColorBrush(Color.Parse("#FF082A52")) : Brushes.White,
+                },
+            },
         };
         paletteButton.Click += (_, _) =>
         {
-            var pad = new ColorPickerPad(current);
+            var pad = new ColorPickerPad(current, palette ?? Swatches);
             var flyout = new Flyout { Content = pad, Placement = PlacementMode.LeftEdgeAlignedTop };
+            flyout.FlyoutPresenterClasses.Add("numpad"); // see-through around the glass of the pad
+            pad.Done += flyout.Hide;
             flyout.Closed += (_, _) =>
             {
                 var chosen = pad.Chosen;
@@ -595,7 +608,51 @@ public sealed partial class PropertiesPanel : UserControl
         row.Children.Add(box);
         row.Children.Add(plus);
         row.Children.Add(unitText);
-        _into.Children.Add(row);
+
+        // under the number: a slider for 0.1 to 10 (finer values by the number box); larger numbers are typed into the box
+        var tick = step >= 1 ? 1.0 : 0.1; // whole-number rows slide in whole steps
+        var low = tick >= 1 ? Math.Ceiling(Math.Max(min, 0.1)) : Math.Max(min, 0.1);
+        var high = Math.Min(max, 10);
+        if (low >= high)
+        {
+            _into.Children.Add(row);
+            return;
+        }
+
+        var slider = new Slider
+        {
+            Minimum = low, Maximum = high, Value = Math.Round(Math.Clamp(value, low, high) / tick) * tick, TickFrequency = tick, IsSnapToTickEnabled = true,
+            Classes = { "thin" }, Margin = new Thickness(78, -4, 30, 0), Opacity = value is >= 0.1 and <= 10 ? 1 : 0.4,
+        };
+        var sliding = false;
+        slider.PropertyChanged += (_, e) =>
+        {
+            // while the finger is on the slider only the number moves; the change is made (one undo step) when the finger lifts
+            if (e.Property == RangeBase.ValueProperty && sliding)
+            {
+                box.Text = Show(Math.Round(slider.Value / tick) * tick);
+            }
+        };
+        slider.AddHandler(InputElement.PointerPressedEvent, (_, _) => sliding = true, Avalonia.Interactivity.RoutingStrategies.Tunnel, handledEventsToo: true);
+
+        void Release()
+        {
+            if (!sliding)
+            {
+                return;
+            }
+
+            sliding = false;
+            CommitTyped((Math.Round(slider.Value / tick) * tick).ToString("0.##", CultureInfo.InvariantCulture));
+        }
+
+        slider.AddHandler(InputElement.PointerReleasedEvent, (_, _) => Release(), Avalonia.Interactivity.RoutingStrategies.Tunnel | Avalonia.Interactivity.RoutingStrategies.Bubble, handledEventsToo: true);
+        slider.AddHandler(InputElement.PointerCaptureLostEvent, (_, _) => Release(), Avalonia.Interactivity.RoutingStrategies.Tunnel | Avalonia.Interactivity.RoutingStrategies.Bubble, handledEventsToo: true);
+
+        var both = new StackPanel { Spacing = 0 };
+        both.Children.Add(row);
+        both.Children.Add(slider);
+        _into.Children.Add(both);
     }
 
     private void Choice<T>(string label, IReadOnlyList<(string Name, T Value)> options, T current, Action<T> choose)

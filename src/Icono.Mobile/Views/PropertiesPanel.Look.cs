@@ -170,6 +170,14 @@ public sealed partial class PropertiesPanel
         Heading("LINE ENDS");
         Choice("Start", ArrowHeads, sample.LineStartHead, h => context.SetOnSelection(s => s.LineStartHead = h, Applies));
         Choice("End", ArrowHeads, sample.LineEndHead, h => context.SetOnSelection(s => s.LineEndHead = h, Applies));
+        if (sample.LineStartHead != ArrowHeadKind.None || sample.LineEndHead != ArrowHeadKind.None)
+        {
+            // the size of the arrowhead (px on the paper), as the "Head px" box of the Windows line window; automatic until it is set
+            var headKind = sample.LineEndHead != ArrowHeadKind.None ? sample.LineEndHead : sample.LineStartHead;
+            NumberRow("Head size", sample.LineHeadSize ?? ShapeGeometryFactory.NominalHeadSize(headKind), "px", 1, 1, 200, "0.#",
+                v => context.SetOnSelection(s => s.LineHeadSize = v, Applies));
+        }
+
         Choice("Path", [("Straight", PathRoutingStyle.Straight), ("Right angles", PathRoutingStyle.Orthogonal), ("Rounded", PathRoutingStyle.Rounded),
             ("Curved", PathRoutingStyle.Curved)], sample.PathRoutingStyle, r => context.SetOnSelection(s => s.PathRoutingStyle = r, Applies));
     }

@@ -1,4 +1,5 @@
 using System.Globalization;
+using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform;
 
@@ -24,29 +25,42 @@ public partial class MainView
     private void OpenAbout()
     {
         AboutVersion.Text = "Version " + (string.IsNullOrEmpty(AppVersion) ? "-" : AppVersion);
-        ShowDocument(German ? "Testbedingungen-DE.txt" : "Terms-EN.txt");
+        ShowDocument(German ? "Testbedingungen-DE.txt" : "Terms-EN.txt", AboutTermsButton);
         AboutLayer.IsVisible = true;
     }
 
     private void CloseAbout() => AboutLayer.IsVisible = false;
 
-    private void OnAboutTerms(object? sender, RoutedEventArgs e) => ShowDocument(German ? "Testbedingungen-DE.txt" : "Terms-EN.txt");
+    private void OnAboutTerms(object? sender, RoutedEventArgs e) => ShowDocument(German ? "Testbedingungen-DE.txt" : "Terms-EN.txt", AboutTermsButton);
 
-    private void OnAboutPrivacy(object? sender, RoutedEventArgs e) => ShowDocument(German ? "Datenschutz-DE.txt" : "Privacy-EN.txt");
+    private void OnAboutPrivacy(object? sender, RoutedEventArgs e) => ShowDocument(German ? "Datenschutz-DE.txt" : "Privacy-EN.txt", AboutPrivacyButton);
 
-    private void OnAboutNotices(object? sender, RoutedEventArgs e) =>
-        AboutText.Text = string.Join(
-            "\n\n\n",
-            Read("Notices/THIRD-PARTY-NOTICES.txt"),
-            "Selawik font - SIL Open Font License 1.1\n=======================================\n\n" + Read("Notices/Selawik-OFL.txt"),
-            Read("Notices/THIRD-PARTY-NOTICES-DOTNET.txt"));
+    private void OnAboutNotices(object? sender, RoutedEventArgs e)
+    {
+        var page = new StackPanel { Spacing = 26 };
+        page.Children.Add(AboutDocument.Build(Read("Notices/THIRD-PARTY-NOTICES.txt"), numberedHeadings: false));
+        page.Children.Add(AboutDocument.Build("Selawik font - SIL Open Font License 1.1\n-------\n" + Read("Notices/Selawik-OFL.txt"), numberedHeadings: false));
+        page.Children.Add(AboutDocument.Build(Read("Notices/THIRD-PARTY-NOTICES-DOTNET.txt"), numberedHeadings: false));
+        AboutPage.Content = page;
+        AboutScroll.Offset = default;
+        MarkAboutTab(AboutNoticesButton);
+    }
+
+    private void MarkAboutTab(Avalonia.Controls.Button current)
+    {
+        foreach (var button in new[] { AboutTermsButton, AboutPrivacyButton, AboutNoticesButton })
+        {
+            button.Classes.Set("on", ReferenceEquals(button, current));
+        }
+    }
 
     private void OnAboutClose(object? sender, RoutedEventArgs e) => CloseAbout();
 
-    private void ShowDocument(string name)
+    private void ShowDocument(string name, Avalonia.Controls.Button tab)
     {
-        AboutText.Text = Read("Docs/" + name);
+        AboutPage.Content = AboutDocument.Build(Read("Docs/" + name), numberedHeadings: true);
         AboutScroll.Offset = default;
+        MarkAboutTab(tab);
     }
 
     private static string Read(string path)

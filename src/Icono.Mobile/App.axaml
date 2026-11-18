@@ -63,7 +63,7 @@
             </Setter>
         </Style>
         <Style Selector="Button.padKey.ok">
-            <Setter Property="Foreground" Value="#FF06101C" />
+            <Setter Property="Foreground" Value="#FF082A52" />
             <Setter Property="BorderBrush" Value="#88D6EBFF" />
             <Setter Property="Background">
                 <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
@@ -78,10 +78,29 @@
         </Style>
         <Style Selector="Button.padKey.ok:pressed /template/ ContentPresenter">
             <Setter Property="Background" Value="#FF3B86CC" />
-            <Setter Property="Foreground" Value="#FF06101C" />
+            <Setter Property="Foreground" Value="#FF082A52" />
         </Style>
         <Style Selector="Button.padKey:pointerover /template/ ContentPresenter">
             <Setter Property="BorderBrush" Value="#99FFFFFF" />
+        </Style>
+        <!-- the slider under the number boxes of the panel: thin line, round thumb -->
+        <Style Selector="Slider.thin">
+            <Setter Property="MinHeight" Value="20" />
+        </Style>
+        <Style Selector="Slider.thin /template/ Thumb">
+            <Setter Property="Width" Value="18" />
+            <Setter Property="Height" Value="18" />
+        </Style>
+        <!-- a key that only holds its content (the colour key of the panel): no grey plate behind it when it is touched -->
+        <Style Selector="Button.bare">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style Selector="Button.bare:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.bare:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="#33FFFFFF" />
         </Style>
         <Style Selector="Border.dialog">
             <Setter Property="CornerRadius" Value="18" />
@@ -131,7 +150,7 @@
             <Setter Property="BorderThickness" Value="1" />
         </Style>
         <Style Selector="Button.primary">
-            <Setter Property="Foreground" Value="#FF06070A" />
+            <Setter Property="Foreground" Value="#FF082A52" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="BorderBrush" Value="#557BC0FF" />
             <Setter Property="Background">
@@ -143,11 +162,11 @@
         </Style>
         <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
             <Setter Property="BorderBrush" Value="#FFD6EBFF" />
-            <Setter Property="Foreground" Value="#FF06070A" />
+            <Setter Property="Foreground" Value="#FF082A52" />
         </Style>
         <Style Selector="Button.primary:pressed /template/ ContentPresenter">
             <Setter Property="Background" Value="#FF3B86CC" />
-            <Setter Property="Foreground" Value="#FF06070A" />
+            <Setter Property="Foreground" Value="#FF082A52" />
         </Style>
 
         <!-- the tool bar on the left: soft round keys with icon and name; the active tool glows -->

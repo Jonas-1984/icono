@@ -306,10 +306,10 @@
                         <Button Classes="tool" x:Name="AboutNoticesButton" Content="Licences" HorizontalAlignment="Stretch" Click="OnAboutNotices" />
                         <Button Classes="tool primary" Content="Close" HorizontalAlignment="Stretch" Click="OnAboutClose" />
                     </StackPanel>
-                    <Border Grid.Column="1" Background="{StaticResource PanelBackgroundBrush}" CornerRadius="10" Padding="14,10">
+                    <!-- the document: white paper, dark readable text, a colour for every section (AboutDocument.cs) -->
+                    <Border Grid.Column="1" Background="White" CornerRadius="12" ClipToBounds="True" BorderBrush="#33FFFFFF" BorderThickness="1">
                         <ScrollViewer x:Name="AboutScroll">
-                            <SelectableTextBlock x:Name="AboutText" FontFamily="monospace" FontSize="11.5" TextWrapping="Wrap"
-                                                 Foreground="{StaticResource ForegroundTextBrush}" />
+                            <ContentControl x:Name="AboutPage" Padding="28,22,28,28" />
                         </ScrollViewer>
                     </Border>
                 </Grid>
