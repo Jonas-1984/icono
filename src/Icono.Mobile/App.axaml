@@ -100,6 +100,95 @@
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
+        <!-- the properties panel: segmented tabs, section cards, inset fields, soft keys -->
+        <Style Selector="Border.segPlate">
+            <Setter Property="Background" Value="#FF0D1016" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="3" />
+            <Setter Property="BorderBrush" Value="#1AFFFFFF" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="Button.seg">
+            <Setter Property="MinHeight" Value="28" />
+            <Setter Property="Padding" Value="4,0" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="CornerRadius" Value="9" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.seg:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#14FFFFFF" />
+        </Style>
+        <Style Selector="Button.seg.on /template/ ContentPresenter">
+            <Setter Property="Background">
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                    <GradientStop Offset="0" Color="#4D5AB0FF" />
+                    <GradientStop Offset="1" Color="#26398FE0" />
+                </LinearGradientBrush>
+            </Setter>
+            <Setter Property="BorderBrush" Value="#885AB0FF" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="Button.seg.on">
+            <Setter Property="Foreground" Value="#FFD6EBFF" />
+        </Style>
+
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="#0DFFFFFF" />
+            <Setter Property="BorderBrush" Value="#14FFFFFF" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="10,8" />
+        </Style>
+
+        <Style Selector="Button.soft">
+            <Setter Property="MinHeight" Value="32" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{StaticResource ForegroundTextBrush}" />
+            <Setter Property="BorderBrush" Value="#1FFFFFFF" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Background">
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                    <GradientStop Offset="0" Color="#FF272D3A" />
+                    <GradientStop Offset="1" Color="#FF1D222C" />
+                </LinearGradientBrush>
+            </Setter>
+        </Style>
+        <Style Selector="Button.soft:pointerover /template/ ContentPresenter">
+            <Setter Property="BorderBrush" Value="#665AB0FF" />
+        </Style>
+        <Style Selector="Button.soft:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="#FF303847" />
+        </Style>
+        <Style Selector="Button.soft:disabled /template/ ContentPresenter">
+            <Setter Property="Opacity" Value="0.45" />
+        </Style>
+
+        <Style Selector="TextBox.field">
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Background" Value="#FF0D1016" />
+            <Setter Property="BorderBrush" Value="#26FFFFFF" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="TextBox.field /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="#FF0D1016" />
+            <Setter Property="BorderBrush" Value="#26FFFFFF" />
+        </Style>
+        <Style Selector="TextBox.field:focus /template/ Border#PART_BorderElement">
+            <Setter Property="BorderBrush" Value="#FF5AB0FF" />
+        </Style>
+        <Style Selector="ComboBox.field">
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Background" Value="#FF0D1016" />
+            <Setter Property="BorderBrush" Value="#26FFFFFF" />
+        </Style>
+
         <!-- small icon buttons (layer list): no grey box when they cannot be used, they only fade -->
         <Style Selector="Button.icon:disabled /template/ ContentPresenter">
             <Setter Property="Background" Value="Transparent" />

@@ -48,10 +48,11 @@ public sealed partial class PropertiesPanel : UserControl
         _propertiesTab = TabButton("Properties", () => ShowTab(Tab.Properties));
         _pageTab = TabButton("Page", () => ShowTab(Tab.Page));
         _layersTab = TabButton("Layers", () => ShowTab(Tab.Layers));
-        var tabs = new UniformGrid { Columns = 3, Margin = new Thickness(8, 8, 8, 0) };
-        tabs.Children.Add(_propertiesTab);
-        tabs.Children.Add(_pageTab);
-        tabs.Children.Add(_layersTab);
+        var tabGrid = new UniformGrid { Columns = 3 };
+        tabGrid.Children.Add(_propertiesTab);
+        tabGrid.Children.Add(_pageTab);
+        tabGrid.Children.Add(_layersTab);
+        var tabs = new Border { Classes = { "segPlate" }, Margin = new Thickness(10, 8, 10, 2), Child = tabGrid };
 
         var layout = new DockPanel();
         DockPanel.SetDock(tabs, Dock.Top);
@@ -109,8 +110,7 @@ public sealed partial class PropertiesPanel : UserControl
     {
         var button = new Button
         {
-            Content = text, FontSize = 12, MinHeight = 32, Margin = new Thickness(2), HorizontalAlignment = HorizontalAlignment.Stretch,
-            HorizontalContentAlignment = HorizontalAlignment.Center, CornerRadius = new CornerRadius(8), Classes = { "tool" },
+            Content = text, Classes = { "seg" },
         };
         button.Click += (_, _) => click();
         return button;
@@ -384,19 +384,31 @@ public sealed partial class PropertiesPanel : UserControl
     /// <summary>Starts a section: its name is a button that folds the controls below it in and out (until the next section starts).</summary>
     private void Heading(string text)
     {
-        var body = new StackPanel { Spacing = 6, IsVisible = !_closedSections.Contains(text) };
+        var body = new StackPanel { Spacing = 6 };
+        var card = new Border { Classes = { "card" }, Child = body, IsVisible = !_closedSections.Contains(text) };
+        var chevron = new Avalonia.Controls.Shapes.Path
+        {
+            Data = Geometry.Parse("M2,4 L6,8 L10,4"), Stroke = Brush("MutedTextBrush"), StrokeThickness = 1.6, StrokeLineCap = PenLineCap.Round,
+            StrokeJoin = PenLineJoin.Round, Width = 12, Height = 12, Stretch = Stretch.Uniform, VerticalAlignment = VerticalAlignment.Center,
+            RenderTransformOrigin = RelativePoint.Center,
+        };
         var header = new Button
         {
             HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Background = Brushes.Transparent,
-            Padding = new Thickness(0, 8, 0, 4), Margin = new Thickness(0, 6, 0, 0), FontSize = 10.5, FontWeight = FontWeight.SemiBold,
+            Padding = new Thickness(4, 8, 4, 5), Margin = new Thickness(0, 4, 0, 0), FontSize = 10.5, FontWeight = FontWeight.SemiBold,
             Foreground = Brush("MutedTextBrush"),
+            Content = new StackPanel
+            {
+                Orientation = Orientation.Horizontal, Spacing = 7,
+                Children = { chevron, new TextBlock { Text = text, LetterSpacing = 0.8, VerticalAlignment = VerticalAlignment.Center } },
+            },
         };
 
-        void Show() => header.Content = (body.IsVisible ? "▾  " : "▸  ") + text;
+        void Show() => chevron.RenderTransform = card.IsVisible ? null : new RotateTransform(-90);
         header.Click += (_, _) =>
         {
-            body.IsVisible = !body.IsVisible;
-            if (body.IsVisible)
+            card.IsVisible = !card.IsVisible;
+            if (card.IsVisible)
             {
                 _closedSections.Remove(text);
             }
@@ -409,7 +421,7 @@ public sealed partial class PropertiesPanel : UserControl
         };
         Show();
         _content.Children.Add(header);
-        _content.Children.Add(body);
+        _content.Children.Add(card);
         _into = body;
     }
 
@@ -448,7 +460,7 @@ public sealed partial class PropertiesPanel : UserControl
         // any colour: type it as #RRGGBB (the box shows the current one)
         var box = new TextBox
         {
-            Text = $"#{current.R:X2}{current.G:X2}{current.B:X2}", FontSize = 13, MinHeight = 34, Padding = new Thickness(6, 4),
+            Text = $"#{current.R:X2}{current.G:X2}{current.B:X2}", FontSize = 13, MinHeight = 34, Padding = new Thickness(6, 4), Classes = { "field" },
             HorizontalContentAlignment = HorizontalAlignment.Center, VerticalContentAlignment = VerticalAlignment.Center,
         };
 
@@ -519,7 +531,7 @@ public sealed partial class PropertiesPanel : UserControl
         var box = new TextBox
         {
             Text = Show(value), FontSize = 13, MinHeight = 34, Padding = new Thickness(6, 4), HorizontalContentAlignment = HorizontalAlignment.Center,
-            VerticalContentAlignment = VerticalAlignment.Center, IsReadOnly = true, Focusable = false,
+            VerticalContentAlignment = VerticalAlignment.Center, IsReadOnly = true, Focusable = false, Classes = { "field" },
         };
 
         void Commit(double v)
@@ -595,6 +607,7 @@ public sealed partial class PropertiesPanel : UserControl
             HorizontalAlignment = HorizontalAlignment.Stretch,
             FontSize = 13,
             MinHeight = 34,
+            Classes = { "field" },
         };
         combo.SelectionChanged += (_, _) =>
         {
@@ -613,7 +626,7 @@ public sealed partial class PropertiesPanel : UserControl
 
     private void Toggle(string label, bool on, Action<bool> set)
     {
-        var box = new CheckBox { Content = label, IsChecked = on, FontSize = 13, Foreground = Brush("ForegroundTextBrush") };
+        var box = new ToggleSwitch { IsChecked = on, OnContent = null, OffContent = null, HorizontalAlignment = HorizontalAlignment.Right, MinWidth = 0 };
         box.IsCheckedChanged += (_, _) =>
         {
             if (box.IsChecked is { } value && value != on)
@@ -621,7 +634,21 @@ public sealed partial class PropertiesPanel : UserControl
                 set(value);
             }
         };
-        _into.Children.Add(box);
+        var row = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), MinHeight = 30 };
+        var text = Label(label);
+        text.TextWrapping = TextWrapping.Wrap;
+        row.Children.Add(text);
+        Grid.SetColumn(box, 1);
+        row.Children.Add(box);
+        row.PointerReleased += (_, e) =>
+        {
+            // a tap on the name switches as well (a bigger target than the switch)
+            if (!ReferenceEquals(e.Source, box) && e.Source is not Avalonia.Controls.Shapes.Shape && box.IsEnabled)
+            {
+                box.IsChecked = !box.IsChecked;
+            }
+        };
+        _into.Children.Add(row);
     }
 
     private void ButtonRow(params (string Text, Action Action)[] buttons)
@@ -631,9 +658,8 @@ public sealed partial class PropertiesPanel : UserControl
         {
             var button = new Button
             {
-                Content = text, FontSize = 12, MinHeight = 34, Margin = new Thickness(2), HorizontalAlignment = HorizontalAlignment.Stretch,
-                HorizontalContentAlignment = HorizontalAlignment.Center, Background = Brush("RaisedBrush"), Foreground = Brush("ForegroundTextBrush"),
-                CornerRadius = new CornerRadius(8),
+                Content = text, MinHeight = 34, Margin = new Thickness(2), HorizontalAlignment = HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = HorizontalAlignment.Center, Classes = { "soft" },
             };
             button.Click += (_, _) => action();
             grid.Children.Add(button);
@@ -645,8 +671,7 @@ public sealed partial class PropertiesPanel : UserControl
     private Button StepButton(string text) => new()
     {
         Content = text, FontSize = 16, Width = 32, MinHeight = 34, Padding = new Thickness(0), HorizontalContentAlignment = HorizontalAlignment.Center,
-        VerticalContentAlignment = VerticalAlignment.Center, Background = Brush("RaisedBrush"), Foreground = Brush("ForegroundTextBrush"),
-        CornerRadius = new CornerRadius(8),
+        VerticalContentAlignment = VerticalAlignment.Center, Classes = { "soft" },
     };
 
     private TextBlock Label(string text) => new()

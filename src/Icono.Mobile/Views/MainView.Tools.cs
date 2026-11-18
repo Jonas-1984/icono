@@ -114,7 +114,7 @@ public partial class MainView
         Library.ItemChosen += (_, item) => ChooseLibraryItem(item);
 
         // the rest of the tools of the Windows program: a tap on More opens them
-        _moreButton = PaletteButton("More", "M5,12 H5.01 M12,12 H12.01 M19,12 H19.01");
+        _moreButton = PaletteButton("More", "M6,12 A1,1 0 1 1 4,12 A1,1 0 1 1 6,12 Z M13,12 A1,1 0 1 1 11,12 A1,1 0 1 1 13,12 Z M20,12 A1,1 0 1 1 18,12 A1,1 0 1 1 20,12 Z");
         var more = new UniformGrid { Columns = 3 };
         var moreFlyout = new Flyout { Content = more, Placement = PlacementMode.RightEdgeAlignedTop };
         foreach (var (tool, button) in _toolButtons.Where(t => t.Tool.More))
