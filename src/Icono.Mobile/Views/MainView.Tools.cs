@@ -14,7 +14,7 @@ namespace Icono.Mobile.Views;
 public partial class MainView
 {
     /// <summary>One tool of the bar. The icons are the ones of the Windows tool bar (24 x 24, drawn as lines).</summary>
-    private sealed record ToolDefinition(string Name, ActiveTool Tool, ShapeKind Kind, string Icon, string Hint);
+    private sealed record ToolDefinition(string Name, ActiveTool Tool, ShapeKind Kind, string Icon, string Hint, bool More = false);
 
     private static readonly ToolDefinition[] Tools =
     [
@@ -47,6 +47,26 @@ public partial class MainView
         new("Window", ActiveTool.Shape, ShapeKind.WindowSingle,
             "M1,8 H4 V16 H1 Z M20,8 H23 V16 H20 Z M4,8 H20 V16 H4 Z M4,11 H20 M4,13 H20",
             "Window: tap for a 100 cm window at the drawing scale, or drag it open."),
+
+        // the other tools of the Windows program: behind "More"
+        new("Double arrow", ActiveTool.Shape, ShapeKind.DoubleArrow, "M3,12 L21,12 M7,8 L3,12 L7,16 M17,8 L21,12 L17,16",
+            "Double arrow: drag from one tip to the other - the ends snap to the points of other objects.", More: true),
+        new("Match", ActiveTool.Match, ShapeKind.Rectangle, "M14,4 L20,10 L11,19 L5,19 L5,13 Z M4,22 H20",
+            "Match: tap the object whose look you want to copy, then tap the objects that should get it. Tap beside everything to end.", More: true),
+        new("Colour picker", ActiveTool.Eyedropper, ShapeKind.Rectangle, "M20,4 L16,8 M14,6 L18,10 L8,20 L4,20 L4,16 Z",
+            "Colour picker: tap a spot of the drawing - the next shapes get its colour.", More: true),
+        new("Region colour", ActiveTool.RegionColor, ShapeKind.Rectangle, "M6,13 L12,7 L18,13 L12,19 Z M19,16 Q21,19 19,20 Q17,19 19,16",
+            "Region colour: tap a shape to colour it with the current colour; on a design grid slide over the squares to paint them.", More: true),
+        new("Add point", ActiveTool.AddPoint, ShapeKind.Rectangle, "M4,20 L12,8 L20,16 M17,3 V9 M14,6 H20",
+            "Add point: select a line, wall or shape of points, then tap on one of its sides.", More: true),
+        new("Delete point", ActiveTool.DeletePoint, ShapeKind.Rectangle, "M4,20 L12,8 L20,16 M14,6 H20",
+            "Delete point: select a line, wall or shape of points, then tap on the point to take out.", More: true),
+        new("Cut wall", ActiveTool.WallCut, ShapeKind.Rectangle, "M5,5 L19,19 M19,5 L5,19",
+            "Cut wall: tap on a wall where it is to be cut in two.", More: true),
+        new("Ruler", ActiveTool.Measure, ShapeKind.Rectangle, "M3,16 L16,3 L21,8 L8,21 Z M7,12 L9,14 M10,9 L12,11 M13,6 L15,8",
+            "Ruler: drag from one point to another to measure (nothing is added). It stays until the next measurement.", More: true),
+        new("Distance", ActiveTool.MeasureGap, ShapeKind.Rectangle, "M3,6 V18 M21,6 V18 M3,12 H21 M7,8 L3,12 L7,16 M17,8 L21,12 L17,16",
+            "Distance: tap one object, then another - a dimension of the gap between them is added and follows both.", More: true),
     ];
 
     private readonly List<(ToolDefinition Tool, Button Button)> _toolButtons = [];
@@ -56,6 +76,7 @@ public partial class MainView
 
     private Button? _objectsButton;
     private Button? _areaButton;
+    private Button? _moreButton;
 
     private void BuildTools()
     {
@@ -63,8 +84,13 @@ public partial class MainView
         {
             var button = PaletteButton(tool.Name, tool.Icon);
             button.Click += (_, _) => ChooseTool(tool);
-            ToolPanel.Children.Add(button);
             _toolButtons.Add((tool, button));
+            if (tool.More)
+            {
+                continue; // in the flyout of the More button
+            }
+
+            ToolPanel.Children.Add(button);
 
             if (tool.Tool == ActiveTool.Select)
             {
@@ -80,6 +106,20 @@ public partial class MainView
         _objectsButton.Click += (_, _) => ShowLibrary(!LibraryPane.IsVisible);
         ToolPanel.Children.Add(_objectsButton);
         Library.ItemChosen += (_, item) => ChooseLibraryItem(item);
+
+        // the rest of the tools of the Windows program: a tap on More opens them
+        _moreButton = PaletteButton("More", "M5,12 H5.01 M12,12 H12.01 M19,12 H19.01");
+        var more = new UniformGrid { Columns = 3 };
+        var moreFlyout = new Flyout { Content = more, Placement = PlacementMode.RightEdgeAlignedTop };
+        foreach (var (tool, button) in _toolButtons.Where(t => t.Tool.More))
+        {
+            button.Width = 78;
+            button.Click += (_, _) => moreFlyout.Hide();
+            more.Children.Add(button);
+        }
+
+        _moreButton.Click += (_, _) => moreFlyout.ShowAt(_moreButton);
+        ToolPanel.Children.Add(_moreButton);
 
         _context.PropertyChanged += OnContextPropertyChanged;
         Canvas.PathDrawingChanged += (_, _) => UpdatePathBar();
@@ -121,14 +161,28 @@ public partial class MainView
 
         _libraryItem = null;
         Canvas.AreaMode = false;
-        Canvas.CancelCurve();
+        Canvas.ResetToolState();
         ShowLibrary(false);
+        if (tool.Tool == ActiveTool.Match)
+        {
+            // the selected object (if there is one) is the source at once
+            _context.BeginMatch();
+            UpdateToolButtons();
+            return;
+        }
+
         if (tool.Tool != ActiveTool.Select)
         {
             _context.SelectedShapeKind = tool.Kind;
             _context.PendingUnit = null;
             _context.CurrentDimensionKind = DimensionKind.Aligned;
-            _context.SelectedShapes.Clear();
+
+            // the tools that work on the selected object keep it
+            if (tool.Tool is not (ActiveTool.AddPoint or ActiveTool.DeletePoint))
+            {
+                _context.SelectedShapes.Clear();
+            }
+
             _context.RequestRedraw();
         }
 
@@ -246,6 +300,7 @@ public partial class MainView
 
         _areaButton?.Classes.Set("active", Canvas.AreaMode);
 
+        _moreButton?.Classes.Set("active", _toolButtons.Any(t => t.Tool.More && ReferenceEquals(t.Tool, current) && !Canvas.AreaMode));
         _objectsButton?.Classes.Set("active", LibraryPane.IsVisible || (current is null && _context.ActiveTool != ActiveTool.Select));
         UpdateCommands();
     }

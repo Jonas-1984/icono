@@ -201,6 +201,12 @@ public sealed partial class EditorContext : ObservableObject
     /// <summary>The radius the Curve tool gives to corners, in cm on the page (like the corner radius of a line).</summary>
     public double CurveSizeCm { get => _curveSizeCm; set => SetField(ref _curveSizeCm, Math.Clamp(value, 0.01, 100)); }
 
+    private bool _gridPaintErase;
+
+    /// <summary>The Region Color tool takes the colour off the squares of a design grid instead of painting them (the tablet's switch for what Alt
+    /// does on Windows).</summary>
+    public bool GridPaintErase { get => _gridPaintErase; set => SetField(ref _gridPaintErase, value); }
+
     /// <summary>Holds clones of the last Cut/Copy selection, ready for Paste. Plain in-memory
     /// list (no OS clipboard integration) — scoped to this document/session only.</summary>
     public List<Shape> Clipboard { get; } = new();

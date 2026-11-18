@@ -36,7 +36,7 @@ public sealed partial class DocumentCanvas
     /// <summary>How many points the wall / polyline / dimension being drawn has placed.</summary>
     public int PathPointCount => _pendingPath?.Points is { } points ? Math.Max(0, points.Count - 1) : 0;
 
-    private bool ToolIsActive => _context is { ActiveTool: ActiveTool.Shape or ActiveTool.PathDraw or ActiveTool.Freehand or ActiveTool.CornerCurve };
+    private bool ToolIsActive => _context is { ActiveTool: ActiveTool.Shape or ActiveTool.PathDraw or ActiveTool.Freehand or ActiveTool.CornerCurve or ActiveTool.Measure or ActiveTool.RegionColor } || (_context is not null && IsTapTool(_context.ActiveTool));
 
     // ---------------------------------------------------------------- finger down / moves / up
 
@@ -48,6 +48,27 @@ public sealed partial class DocumentCanvas
         }
 
         var at = ToDocument(view);
+        if (IsTapTool(context.ActiveTool))
+        {
+            // Match, colour picker, Add / Delete Point, Cut Wall, distance: a tap does it (DocumentCanvas.MoreTools.cs)
+            _gesture = Gesture.ToolTap;
+            return;
+        }
+
+        if (context.ActiveTool == ActiveTool.Measure)
+        {
+            BeginRuler(at);
+            _gesture = Gesture.Ruler;
+            return;
+        }
+
+        if (context.ActiveTool == ActiveTool.RegionColor)
+        {
+            BeginBucket(context, at);
+            _gesture = Gesture.Bucket;
+            return;
+        }
+
         if (context.ActiveTool == ActiveTool.CornerCurve)
         {
             // the sides of a corner are tapped (DocumentCanvas.Curve.cs), when the finger lifts

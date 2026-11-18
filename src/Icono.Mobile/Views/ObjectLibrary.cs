@@ -25,7 +25,7 @@ public sealed class ObjectLibrary : UserControl
         ("Doors & windows", ["DoorSingle", "DoorDouble", "WindowSingle", "WindowDouble", "WallOpening"]),
         ("Plan symbols", ["Socket", "DoubleSocket", "ElectricAppliance", "Cooker", "Oven", "Microwave", "WaterAndWastewater", "Hood"]),
         ("Shapes", ["Rectangle", "RoundedRectangle", "Ellipse", "Triangle", "Diamond", "Pentagon", "Hexagon", "Octagon", "Star", "Parallelogram",
-            "Trapezoid", "Cross", "HalfCircle", "Ring", "SpeechBubble", "Heart", "Cloud", "Shield", "Bookmark", "Gear", "Club", "Box3D", "Cylinder",
+            "Trapezoid", "Cross", "DesignGrid", "HalfCircle", "Ring", "SpeechBubble", "Heart", "Cloud", "Shield", "Bookmark", "Gear", "Club", "Box3D", "Cylinder",
             "Cone", "Pyramid"]),
         ("Arrows", ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown", "ChevronRight", "ChevronLeft", "ChevronUp", "ChevronDown", "ArrowLeftRight",
             "ArrowUpDown", "BentArrowRight", "BentArrowUp", "LoopArrowClockwise", "LoopArrowCounterClockwise", "CompassArrows", "NotchedArrowRight",

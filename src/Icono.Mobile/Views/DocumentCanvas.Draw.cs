@@ -45,7 +45,7 @@ public sealed partial class DocumentCanvas
         var grid = _context.ShowGrid && _context.GridSize > 0 ? _context.GridSize : 0;
         var chrome = new Chrome(
             frames, handles, stem, _rotationLabel, pathMarks, snap, MarqueeForRender(), EraserForRender(), DimensionGuideForRender(),
-            ObjectGuidesForRender(), grid, CurvePicksForRender());
+            ObjectGuidesForRender(), grid, CurvePicksForRender(), RulerForRender(), HighlightsForRender());
         context.Custom(new DrawOperation(new Rect(Bounds.Size), _context.Document, PendingForRender(), _zoom, _offset, chrome));
     }
 
@@ -65,7 +65,9 @@ public sealed partial class DocumentCanvas
         (SKPoint From, SKPoint To)? DimensionGuide,
         IReadOnlyList<(SKPoint From, SKPoint To)> ObjectGuides,
         double GridSize,
-        (IReadOnlyList<(SKPoint From, SKPoint To)> Sides, SKPoint? Corner) CurvePicks);
+        (IReadOnlyList<(SKPoint From, SKPoint To)> Sides, SKPoint? Corner) CurvePicks,
+        (SKPoint From, SKPoint To, string Label)? Ruler,
+        IReadOnlyList<Shape> Highlights);
 
     /// <summary>The corners of the frame round a shape in drawing units (turned with it), as the Windows program draws it.</summary>
     private static (double X, double Y)[] FrameCorners(Shape shape)
@@ -173,6 +175,32 @@ public sealed partial class DocumentCanvas
         private void DrawChrome(SKCanvas canvas)
         {
             DrawDrawingMarks(canvas);
+
+            // objects that are outlined: the source of Match, the first object of a distance
+            foreach (var marked in chrome.Highlights)
+            {
+                using var path = ShapeGeometryFactory.Build(marked);
+                path.Transform(SKMatrix.CreateScaleTranslation((float)zoom, (float)zoom, (float)offset.X, (float)offset.Y));
+                using var outline = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 3, Color = SnapColor.WithAlpha(220) };
+                canvas.DrawPath(path, outline);
+            }
+
+            // the ruler: the line, its two parts across and along, and what it measures
+            if (chrome.Ruler is { } ruler)
+            {
+                using var line = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 2.5f, Color = SnapColor };
+                canvas.DrawLine(ruler.From, ruler.To, line);
+                using var parts = new SKPaint
+                {
+                    IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 1.2f, Color = SnapColor.WithAlpha(150), PathEffect = SKPathEffect.CreateDash([4, 5], 0),
+                };
+                canvas.DrawLine(ruler.From.X, ruler.From.Y, ruler.To.X, ruler.From.Y, parts);
+                canvas.DrawLine(ruler.To.X, ruler.From.Y, ruler.To.X, ruler.To.Y, parts);
+                using var ends = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill, Color = SnapColor };
+                canvas.DrawCircle(ruler.From, 6, ends);
+                canvas.DrawCircle(ruler.To, 6, ends);
+                DrawLabel(canvas, ruler.Label, new SKPoint((ruler.From.X + ruler.To.X) / 2 + 12, (ruler.From.Y + ruler.To.Y) / 2 - 40));
+            }
 
             // the Curve tool: the sides that were tapped and the corner between them
             foreach (var (from, to) in chrome.CurvePicks.Sides)

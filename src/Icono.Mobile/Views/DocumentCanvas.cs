@@ -45,7 +45,7 @@ public sealed partial class DocumentCanvas : Control
     private Vector _offset;
     private bool _fitPending = true;
 
-    private enum Gesture { None, Pending, Menu, MoveShapes, Resize, GroupResize, Rotate, DragPoint, Place, PathPoint, TextTap, CurveTap, Marquee, Ink, DimensionLine, View }
+    private enum Gesture { None, Pending, Menu, MoveShapes, Resize, GroupResize, Rotate, DragPoint, Place, PathPoint, TextTap, CurveTap, ToolTap, Ruler, Bucket, Marquee, Ink, DimensionLine, View }
 
     private Gesture _gesture;
 
@@ -227,6 +227,10 @@ public sealed partial class DocumentCanvas : Control
         {
             CancelInk();
         }
+        else if (_gesture == Gesture.Bucket)
+        {
+            CancelBucket();
+        }
         else if (_gesture == Gesture.DimensionLine)
         {
             CancelDimensionDrag();
@@ -309,6 +313,12 @@ public sealed partial class DocumentCanvas : Control
                 break;
             case Gesture.Ink:
                 ContinueInk(e);
+                break;
+            case Gesture.Ruler:
+                UpdateRuler(position);
+                break;
+            case Gesture.Bucket:
+                ContinueBucket(position);
                 break;
             case Gesture.DimensionLine:
                 UpdateDimensionDrag(position);
@@ -409,6 +419,18 @@ public sealed partial class DocumentCanvas : Control
             {
                 var at = ToDocument(_pressPoint);
                 RequestText(null, _context?.SelectedLayer ?? Document?.Layers.FirstOrDefault(), at.X, at.Y);
+            }
+            else if (_gesture == Gesture.ToolTap)
+            {
+                ToolTapped(_pressPoint);
+            }
+            else if (_gesture == Gesture.Ruler)
+            {
+                FinishRuler();
+            }
+            else if (_gesture == Gesture.Bucket)
+            {
+                FinishBucket();
             }
             else if (_gesture == Gesture.CurveTap)
             {

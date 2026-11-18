@@ -148,6 +148,11 @@ public sealed partial class PropertiesPanel : UserControl
             return;
         }
 
+        if (BuildToolOptions(context))
+        {
+            return;
+        }
+
         // while the Pen is the tool its settings are shown (colour, width, smoothing)
         if (context.ActiveTool == ActiveTool.Freehand)
         {
@@ -205,6 +210,7 @@ public sealed partial class PropertiesPanel : UserControl
             }
         }
 
+        BuildDesignGrid(context, shapes);
         BuildDesignStyle(context, shapes);
 
         if (outlined.Count > 0)
