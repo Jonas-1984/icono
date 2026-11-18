@@ -123,6 +123,7 @@ public partial class MainView
     {
         FilesList.Children.Clear();
         _filesInFolder = [];
+        AddRecentRows();
         if (_folder is null)
         {
             return;
@@ -311,4 +312,83 @@ public partial class MainView
 
     private static IBrush Brush(string key) =>
         Application.Current?.TryGetResource(key, null, out var value) == true && value is IBrush brush ? brush : Brushes.Gray;
+
+    // ---------------------------------------------------------------- Open Recent
+
+    /// <summary>"Open Recent": above the files of the folder, the drawings that were opened or saved last (not for pictures, not when saving).</summary>
+    private void AddRecentRows()
+    {
+        if (_filesMode != FilesMode.Open || _filesForPictures)
+        {
+            return;
+        }
+
+        var recent = RecentDrawings.Load();
+        if (recent.Count == 0)
+        {
+            return;
+        }
+
+        FilesList.Children.Add(new TextBlock
+        {
+            Text = "RECENT", FontSize = 10.5, FontWeight = FontWeight.SemiBold, Foreground = Brush("MutedTextBrush"), Margin = new Thickness(8, 6, 0, 2),
+        });
+        foreach (var entry in recent)
+        {
+            var name = new Button
+            {
+                Content = new TextBlock
+                {
+                    Text = entry.Name, FontSize = 14, TextTrimming = TextTrimming.CharacterEllipsis, Foreground = Brush("ForegroundTextBrush"),
+                    VerticalAlignment = VerticalAlignment.Center,
+                },
+                HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Background = Brushes.Transparent,
+                Padding = new Thickness(10, 8), CornerRadius = new CornerRadius(8),
+            };
+            name.Click += async (_, _) =>
+            {
+                var storage = Storage();
+                IStorageFile? file = null;
+                try
+                {
+                    file = storage is null ? null : await storage.OpenFileBookmarkAsync(entry.Bookmark);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException or NotSupportedException)
+                {
+                    file = null;
+                }
+
+                if (file is null)
+                {
+                    // the file is gone or cannot be reached any more
+                    RecentDrawings.Remove(entry);
+                    FilesNote.Text = $"\"{entry.Name}\" cannot be found any more - it was taken off the list.";
+                    await ListFilesAsync();
+                    return;
+                }
+
+                CloseFiles(file);
+            };
+            var forget = new Button
+            {
+                Content = "✕", FontSize = 12, Width = 36, Background = Brushes.Transparent, Foreground = Brush("MutedTextBrush"),
+                HorizontalContentAlignment = HorizontalAlignment.Center,
+            };
+            forget.Click += async (_, _) =>
+            {
+                RecentDrawings.Remove(entry);
+                await ListFilesAsync();
+            };
+            var row = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
+            row.Children.Add(name);
+            Grid.SetColumn(forget, 1);
+            row.Children.Add(forget);
+            FilesList.Children.Add(row);
+        }
+
+        FilesList.Children.Add(new TextBlock
+        {
+            Text = "IN THE FOLDER", FontSize = 10.5, FontWeight = FontWeight.SemiBold, Foreground = Brush("MutedTextBrush"), Margin = new Thickness(8, 10, 0, 2),
+        });
+    }
 }

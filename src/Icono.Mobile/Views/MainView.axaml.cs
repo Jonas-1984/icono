@@ -172,6 +172,7 @@ public partial class MainView : UserControl
             }
 
             LoadDocument(file, picked, picked.Name);
+            await RecentDrawings.AddAsync(picked);
             var document = _context.Document;
             StatusText.Text = $"{picked.Name}: {document.PageCount} page(s), {document.Layers.Sum(l => l.Shapes.Count)} object(s), " +
                               $"scale 1:{document.ScaleDenominator:0.##}";
@@ -222,6 +223,7 @@ public partial class MainView : UserControl
             _savedVersion = _context.UndoManager.Version;
             UpdateTitle();
             StatusText.Text = "Saved: " + target.Name;
+            await RecentDrawings.AddAsync(target);
             return true;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
