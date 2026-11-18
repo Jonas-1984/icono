@@ -109,7 +109,13 @@ public sealed partial class PropertiesPanel
             content.Children.Add(text);
             key.Classes.Set("on", current);
             ToolTip.SetTip(key, tip);
-            key.Click += (_, _) => set(!current);
+            key.Click += (_, _) =>
+            {
+                // the key keeps its own state: a snap option is not part of the settings the panel is rebuilt from, so it is lit and unlit here
+                current = !current;
+                key.Classes.Set("on", current);
+                set(current);
+            };
             grid.Children.Add(key);
         }
 

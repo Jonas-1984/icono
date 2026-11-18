@@ -81,6 +81,7 @@ public sealed partial class PropertiesPanel : UserControl
                 _context.PagesChanged -= OnChanged;
                 _context.CurrentPageChanged -= OnChanged;
                 _context.PropertyChanged -= OnChanged;
+                _context.PointSnap.PropertyChanged -= OnPointSnapChanged;
             }
 
             _context = value;
@@ -92,6 +93,7 @@ public sealed partial class PropertiesPanel : UserControl
                 _context.PagesChanged += OnChanged;
                 _context.CurrentPageChanged += OnChanged;
                 _context.PropertyChanged += OnChanged; // the tool (the Pen shows its settings), the pen colour and width ...
+                _context.PointSnap.PropertyChanged += OnPointSnapChanged;
             }
 
             Rebuild();
@@ -99,6 +101,15 @@ public sealed partial class PropertiesPanel : UserControl
     }
 
     private void OnChanged() => OnChanged(null, EventArgs.Empty);
+
+    /// <summary>OSnap in the status line (or another place) switched the object snap: the Snap tab shows it.</summary>
+    private void OnPointSnapChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (_tab == Tab.Snap && e.PropertyName == nameof(Icono.Rendering.PointSnapOptions.Enabled))
+        {
+            OnChanged();
+        }
+    }
 
     private void ShowTab(Tab tab)
     {
