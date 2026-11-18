@@ -53,6 +53,11 @@ public sealed partial class PropertiesPanel
             ("Flip ↕", () => context.FlipSelection(horizontally: false)),
             ("Reflect", context.ReflectSelection));
         ButtonRow(("Offset...", () => AskOffset(context)), ("Save as icon", () => SaveAsIcon(context)));
+        if (shapes.Any(PolylineClosing.CanClose))
+        {
+            // an open polyline: its two ends are joined and it becomes a closed shape that takes a fill
+            ButtonRow(("Close shape", () => PolylineClosing.CloseSelected(context)));
+        }
 
         Heading("COMBINE");
         ButtonRow(

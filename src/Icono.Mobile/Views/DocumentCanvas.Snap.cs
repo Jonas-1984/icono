@@ -36,6 +36,12 @@ public sealed partial class DocumentCanvas
             return;
         }
 
+        // a corner, middle or centre of the moved objects on a point of another object comes first; else the edges and the grid
+        if (SnapSelectionToPoints())
+        {
+            return;
+        }
+
         var frame = Icono.Editor.ShapeResizer.GroupBounds(_editShapes);
         var result = ObjectSnapper.Snap(context.Document, frame, _editShapes, EdgeReach / _zoom, context.ObjectSnap);
         var dx = result.Dx;

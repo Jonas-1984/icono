@@ -21,6 +21,7 @@ public sealed class Shape : ObservableObject
     private double _cornerRadius;
     private double _opacity = 100;
     private double _blurRadius;
+    private double _backdropBlurRadius;
     private double _fadeAmount;
     private FadeDirection _fadeDirection = FadeDirection.TopToBottom;
     private bool _shadowEnabled;
@@ -96,7 +97,7 @@ public sealed class Shape : ObservableObject
     private ShapeAnchor? _startAnchor;
     private ShapeAnchor? _endAnchor;
 
-    public required ShapeKind Kind { get; init; }
+    public required ShapeKind Kind { get; set; }
 
     /// <summary>Stable identity, so a line can say which shape it is attached to (see <see cref="StartAnchor"/>). Not part of
     /// the undo snapshot: a clone is a new shape and gets its own id.</summary>
@@ -164,6 +165,10 @@ public sealed class Shape : ObservableObject
 
     /// <summary>Gaussian blur radius in px, 0 = none.</summary>
     public double BlurRadius { get => _blurRadius; set => SetField(ref _blurRadius, value); }
+
+    /// <summary>Frosted glass: blur radius in px of what lies BEHIND the shape (the objects below it and the page), seen through the shape. 0 = none.
+    /// Together with a translucent fill this makes a pane of frosted glass; unlike <see cref="BlurRadius"/> it does not blur the shape itself.</summary>
+    public double BackdropBlurRadius { get => _backdropBlurRadius; set => SetField(ref _backdropBlurRadius, value); }
 
     /// <summary>
     /// 0-100. Unlike <see cref="Opacity"/> (uniform dimming), Fade is a one-directional alpha

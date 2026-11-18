@@ -1,3 +1,4 @@
+using Avalonia;
 using Icono.Editor;
 
 namespace Icono.Mobile.Views;
@@ -5,6 +6,40 @@ namespace Icono.Mobile.Views;
 /// <summary>The settings of the Pen tool (handwriting), shown while it is the tool: colour, width on the paper and smoothing of the tremor.</summary>
 public sealed partial class PropertiesPanel
 {
+    /// <summary>The Lucide eraser.</summary>
+    private const string EraserIcon = "M21 21H8a2 2 0 0 1-1.42-.587l-3.994-3.999a2 2 0 0 1 0-2.828l10-10a2 2 0 0 1 2.829 0l5.999 6a2 2 0 0 1 0 2.828L12.834 21 M5.082 11.09 l8.828 8.828";
+
+    /// <summary>A switch that is an icon key: lit blue when on. The note beside it says what it does in the state it is in.</summary>
+    private void IconToggle(string iconData, string tip, bool on, Action<bool> set, string note)
+    {
+        var icon = new Avalonia.Controls.Shapes.Path
+        {
+            Data = Avalonia.Media.Geometry.Parse(iconData), StrokeThickness = 1.2, StrokeLineCap = Avalonia.Media.PenLineCap.Round,
+            StrokeJoin = Avalonia.Media.PenLineJoin.Round, Width = 19, Height = 19, Stretch = Avalonia.Media.Stretch.Uniform,
+        };
+        var key = new Avalonia.Controls.Button
+        {
+            Content = icon, Width = 44, Height = 40, CornerRadius = new Avalonia.CornerRadius(11), Padding = new Avalonia.Thickness(0), Classes = { "soft" }, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top,
+            HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalContentAlignment = Avalonia.Layout.VerticalAlignment.Center,
+        };
+        key.MinHeight = 40;
+        key.Classes.Set("on", on);
+        icon.Bind(Avalonia.Controls.Shapes.Shape.StrokeProperty, key.GetObservable(Avalonia.Controls.Primitives.TemplatedControl.ForegroundProperty));
+        Avalonia.Controls.ToolTip.SetTip(key, tip);
+        key.Click += (_, _) => set(!on);
+
+        var text = new Avalonia.Controls.TextBlock
+        {
+            Text = note, FontSize = 11.5, TextWrapping = Avalonia.Media.TextWrapping.Wrap, Foreground = Brush("MutedTextBrush"), Margin = new Avalonia.Thickness(12, 0, 0, 0),
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+        };
+        var row = new Avalonia.Controls.Grid { ColumnDefinitions = new Avalonia.Controls.ColumnDefinitions("Auto,*") };
+        row.Children.Add(key);
+        Avalonia.Controls.Grid.SetColumn(text, 1);
+        row.Children.Add(text);
+        _into.Children.Add(row);
+    }
+
     private void BuildPen(EditorContext context)
     {
         Title("Pen");
@@ -20,10 +55,10 @@ public sealed partial class PropertiesPanel
         Note("Draw a circle, line, rectangle or triangle and keep the pen or finger still for a moment: it becomes the clean shape. Lift to keep it, or move on to go on drawing freehand.");
 
         Heading("ERASER");
-        Toggle("Erase strokes (drag over them)", context.PenEraser, on => context.PenEraser = on);
-        Note(context.PenEraser
-            ? "Touching a stroke deletes it. Only handwriting is erased - never walls, furniture or text. Undo brings a stroke back."
-            : "Off: the pen writes. A pen with an eraser end erases with that end.");
+        IconToggle(EraserIcon, "Erase strokes: drag over them", context.PenEraser, on => context.PenEraser = on,
+            context.PenEraser
+                ? "Eraser on: touching a stroke deletes it. Only handwriting is erased - never walls, furniture or text. Undo brings a stroke back."
+                : "Eraser off: the pen writes. A pen with an eraser end erases with that end.");
 
         Heading("COLOUR");
         ColorRow(context.PenColor, color => context.PenColor = color);

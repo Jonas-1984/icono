@@ -130,6 +130,18 @@ public sealed partial class DocumentCanvas : Control
             Math.Max(FitMargin, (Bounds.Height - document.Height * zoom) / 2) - top * zoom));
     }
 
+    /// <summary>Zooms to <paramref name="zoom"/> (screen pixels per drawing unit), keeping the drawing point in the middle of the view where it is.</summary>
+    public void ZoomTo(double zoom)
+    {
+        zoom = Math.Clamp(zoom, 0.02, 40);
+        var middle = new Point(Bounds.Width / 2, Bounds.Height / 2);
+        var anchor = ToDocument(middle);
+        SetView(zoom, new Vector(middle.X - anchor.X * zoom, middle.Y - anchor.Y * zoom));
+    }
+
+    /// <summary>Zooms by <paramref name="factor"/> about the middle of the view.</summary>
+    public void ZoomBy(double factor) => ZoomTo(_zoom * factor);
+
     /// <summary>The drawing point under a point of this control.</summary>
     public Point ToDocument(Point view) => new((view.X - _offset.X) / _zoom, (view.Y - _offset.Y) / _zoom);
 

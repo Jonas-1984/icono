@@ -278,6 +278,7 @@ public sealed partial class DocumentCanvas
     private void FinishRuler()
     {
         _snapMark = null;
+        _snapDetail = null;
         _rulerFrozen = true;
         _context?.RequestRedraw();
     }

@@ -123,6 +123,7 @@ public sealed partial class PropertiesPanel
         shape.FillColor = ArgbColor.FromRgb(0xFF, 0xFF, 0xFF);
         shape.Opacity = 55;
         shape.BlurRadius = 3;
+        shape.BackdropBlurRadius = 12;
         shape.FadeAmount = 25;
         shape.BorderStyleKind = BorderStyleKind.Gradient;
         shape.BorderColor = ArgbColor.FromRgb(0xFF, 0xFF, 0xFF);
@@ -138,6 +139,7 @@ public sealed partial class PropertiesPanel
         Heading("OPACITY, BLUR & SHADOW");
         NumberRow("Opacity", sample.Opacity, "%", 5, 0, 100, "0", v => context.SetOnSelection(s => s.Opacity = v));
         NumberRow("Blur", sample.BlurRadius, "px", 1, 0, 30, "0.#", v => context.SetOnSelection(s => s.BlurRadius = v));
+        NumberRow("Glass blur", sample.BackdropBlurRadius, "px", 1, 0, 40, "0.#", v => context.SetOnSelection(s => s.BackdropBlurRadius = v));
         NumberRow("Fade", sample.FadeAmount, "%", 5, 0, 100, "0", v => context.SetOnSelection(s => s.FadeAmount = v));
         if (sample.FadeAmount > 0)
         {

@@ -27,7 +27,7 @@ public sealed partial class PropertiesPanel
         Note($"{PageUnits.FromPx(document.Width, PageUnit.Mm):0} x {PageUnits.FromPx(document.Height, PageUnit.Mm):0} mm, {document.PageCount} page(s), " +
              $"{document.Layers.Sum(l => l.Shapes.Count)} object(s), scale 1:{document.ScaleDenominator:0.##}");
         ButtonRow(("Page settings...", ShowPageSettings), ("Select all", context.SelectAll));
-        Note("Page size (A5, A4, A3, own size), unit (mm, cm, inch), scale, rulers, sheet, background, grid and snapping are in the Page tab.");
+        Note("Page size (A5, A4, A3, own size), unit (mm, cm, inch), scale, rulers, sheet and background are in the Page tab; the grid and snapping have the Snap tab.");
     }
 
     // ---------------------------------------------------------------- CANVAS SIZE

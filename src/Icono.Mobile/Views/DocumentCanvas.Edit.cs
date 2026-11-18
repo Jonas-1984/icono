@@ -282,6 +282,7 @@ public sealed partial class DocumentCanvas
                 break;
 
             case Gesture.Resize:
+                at = SnapDraggedPoint(at, _editShapes);
                 // a corner keeps the proportions (there is no Shift key to lift that on a tablet), an edge stretches one side
                 var shape = _editShapes[0];
                 (shape.X, shape.Y, shape.Width, shape.Height) = ShapeResizer.ResizeFrame(
@@ -290,6 +291,7 @@ public sealed partial class DocumentCanvas
                 break;
 
             case Gesture.GroupResize:
+                at = SnapDraggedPoint(at, _editShapes);
                 ShapeResizer.ResizeGroup(
                     _editShapes, _groupStartRects, _resizeHandle, _resizeStartOutline, _resizeStartPoint, (at.X, at.Y), keepProportions: true, snap: GridRounding);
                 break;
@@ -337,7 +339,12 @@ public sealed partial class DocumentCanvas
 
         if (!snapped)
         {
-            at = GridPoint(at);
+            // on a point of another object (the neighbour in the line lets right angles and parallels work), failing that on the grid
+            var neighbour = _pointIndex > 0
+                ? new SKPoint((float)(shape.X + points[_pointIndex - 1].X), (float)(shape.Y + points[_pointIndex - 1].Y))
+                : points.Count > 1 ? new SKPoint((float)(shape.X + points[1].X), (float)(shape.Y + points[1].Y)) : (SKPoint?)null;
+            var onPoint = _context.PointSnap.Enabled ? SnapToObjectPoints(at, [shape], neighbour) : null;
+            at = onPoint ?? GridPoint(at);
         }
 
         var list = points.ToList();
@@ -350,6 +357,7 @@ public sealed partial class DocumentCanvas
     private void FinishEdit()
     {
         _rotationLabel = null;
+        ForgetSnapMark();
         if (_context is null || _editShapes.Count == 0)
         {
             return;
@@ -389,6 +397,7 @@ public sealed partial class DocumentCanvas
     private void CancelEdit()
     {
         _rotationLabel = null;
+        ForgetSnapMark();
         if (_context is null || _editShapes.Count == 0 || _gesture is Gesture.Pending or Gesture.View or Gesture.Menu)
         {
             ClearEdit();

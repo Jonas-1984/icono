@@ -157,7 +157,7 @@ public class StrokeShapeRecognizerTests
         Assert.Equal(3, layer.Shapes.Count);
         Assert.Contains(layer.Shapes, s => s.Kind == ShapeKind.Ellipse);
         Assert.Contains(layer.Shapes, s => s.Kind == ShapeKind.Line);
-        Assert.Contains(layer.Shapes, s => s.Kind == ShapeKind.Polyline && s.Points!.Count == 4); // closed: the first corner again
+        Assert.Contains(layer.Shapes, s => s.Kind == ShapeKind.Polygon && s.Points!.Count == 3); // a closed shape of its three corners
         Assert.All(layer.Shapes, s =>
         {
             Assert.False(s.FillEnabled);

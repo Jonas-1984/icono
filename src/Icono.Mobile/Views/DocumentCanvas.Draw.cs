@@ -40,7 +40,10 @@ public sealed partial class DocumentCanvas
         }
 
         var pathMarks = PathPointMarks().Select(ToScreen).ToList();
-        (SKPoint At, string Label)? snap = _snapMark is { } mark ? (ToScreen((mark.X, mark.Y)), mark.Label) : null;
+        (SKPoint At, string Label, PointSnapKind? Kind, IReadOnlyList<(SKPoint From, SKPoint To)> Guides)? snap = _snapMark is { } mark
+            ? (ToScreen((mark.X, mark.Y)), mark.Label, _snapDetail?.Kind,
+                (_snapDetail?.Guides ?? []).Select(g => (ToScreen((g.From.X, g.From.Y)), ToScreen((g.To.X, g.To.Y)))).ToList())
+            : null;
 
         var grid = _context.ShowGrid && _context.GridSize > 0 ? _context.GridSize : 0;
         var chrome = new Chrome(
@@ -60,7 +63,7 @@ public sealed partial class DocumentCanvas
         (SKPoint From, SKPoint To)? Stem,
         string? Label,
         IReadOnlyList<SKPoint> PathMarks,
-        (SKPoint At, string Label)? Snap,
+        (SKPoint At, string Label, PointSnapKind? Kind, IReadOnlyList<(SKPoint From, SKPoint To)> Guides)? Snap,
         (SKRect Area, bool Crossing)? Marquee,
         (SKPoint At, float Radius)? Eraser,
         (SKPoint From, SKPoint To)? DimensionGuide,
@@ -332,8 +335,31 @@ public sealed partial class DocumentCanvas
 
             if (chrome.Snap is { } snap)
             {
-                using var snapRing = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 2.5f, Color = SnapColor };
-                canvas.DrawCircle(snap.At, 9, snapRing);
+                // the guide lines of the snap (the line it lined up with), then the symbol of the kind of point: as the Windows program shows it
+                using var guide = new SKPaint
+                {
+                    IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 1.5f, Color = SnapColor.WithAlpha(215), PathEffect = SKPathEffect.CreateDash([6, 5], 0),
+                };
+                foreach (var line in snap.Guides)
+                {
+                    canvas.DrawLine(line.From, line.To, guide);
+                }
+
+                if (snap.Kind is { } kind)
+                {
+                    using var halo = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 5f, Color = SKColors.White.WithAlpha(200) };
+                    using var symbol = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 2.4f, Color = SnapColor };
+                    foreach (var pen in new[] { halo, symbol })
+                    {
+                        PointSnapMarks.Draw(canvas, kind, snap.At.X, snap.At.Y, pen);
+                    }
+                }
+                else
+                {
+                    using var snapRing = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 2.5f, Color = SnapColor };
+                    canvas.DrawCircle(snap.At, 9, snapRing);
+                }
+
                 if (!string.IsNullOrEmpty(snap.Label))
                 {
                     DrawLabel(canvas, snap.Label, new SKPoint(snap.At.X + 14, snap.At.Y - 70));

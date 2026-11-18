@@ -29,6 +29,7 @@ public static class DesignStylePresets
         switch (kind)
         {
             case DesignStyleKind.Glassmorphism:
+                shape.BackdropBlurRadius = Math.Clamp(m * 0.05, 6, 24); // frosted: what lies behind the pane is blurred
                 shape.BorderThickness = Math.Clamp(m * 0.014, 1.2, 3);
                 shape.BorderColor = new ArgbColor(235, 255, 255, 255);
                 shape.BorderStyleKind = BorderStyleKind.Gradient;

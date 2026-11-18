@@ -325,6 +325,8 @@ public partial class MainView
     {
         PathBar.IsVisible = Canvas.IsDrawingPath;
         PathLengthButton.IsVisible = Canvas.CanTypeLength;
+        PathCloseButton.IsVisible = Canvas.CanClosePath;
+        PathCloseButton.Content = CurrentTool?.Tool == ActiveTool.PathDraw && _context.SelectedShapeKind == ShapeKind.Wall ? "Close room" : "Close shape";
         if (!Canvas.IsDrawingPath)
         {
             LengthLayer.IsVisible = false; // the wall is finished (e.g. a typed room was closed)
@@ -342,4 +344,6 @@ public partial class MainView
     private void OnPathCancel(object? sender, RoutedEventArgs e) => Canvas.CancelPath();
 
     private void OnPathDone(object? sender, RoutedEventArgs e) => Canvas.FinishPath();
+
+    private void OnPathClose(object? sender, RoutedEventArgs e) => Canvas.ClosePath();
 }

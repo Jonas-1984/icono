@@ -35,23 +35,29 @@ public sealed partial class PropertiesPanel : UserControl
     private bool _rebuildQueued;
 
     /// <summary>Which of the two tabs is shown: the properties of the selection, or the pages and layers of the drawing.</summary>
-    private enum Tab { Properties, Page, Layers }
+    private enum Tab { Properties, Page, Layers, Snap }
 
     private Tab _tab = Tab.Properties;
 
     private readonly Button _propertiesTab;
     private readonly Button _pageTab;
     private readonly Button _layersTab;
+    private readonly Button _snapTab;
 
     public PropertiesPanel()
     {
         _propertiesTab = TabButton("Properties", () => ShowTab(Tab.Properties));
         _pageTab = TabButton("Page", () => ShowTab(Tab.Page));
         _layersTab = TabButton("Layers", () => ShowTab(Tab.Layers));
-        var tabGrid = new UniformGrid { Columns = 3 };
-        tabGrid.Children.Add(_propertiesTab);
-        tabGrid.Children.Add(_pageTab);
-        tabGrid.Children.Add(_layersTab);
+        _snapTab = TabButton("Snap", () => ShowTab(Tab.Snap));
+        // Properties is the longest name: its tab is a little wider than the other three
+        var tabGrid = new Grid { ColumnDefinitions = new ColumnDefinitions("1.5*,*,*,*") };
+        var tabKeys = new[] { _propertiesTab, _pageTab, _layersTab, _snapTab };
+        for (var i = 0; i < tabKeys.Length; i++)
+        {
+            Grid.SetColumn(tabKeys[i], i);
+            tabGrid.Children.Add(tabKeys[i]);
+        }
         var tabs = new Border { Classes = { "segPlate" }, Margin = new Thickness(10, 8, 10, 2), Child = tabGrid };
 
         var layout = new DockPanel();
@@ -100,11 +106,15 @@ public sealed partial class PropertiesPanel : UserControl
         _propertiesTab.Classes.Set("on", tab == Tab.Properties);
         _pageTab.Classes.Set("on", tab == Tab.Page);
         _layersTab.Classes.Set("on", tab == Tab.Layers);
+        _snapTab.Classes.Set("on", tab == Tab.Snap);
         Rebuild();
     }
 
     /// <summary>Shows the PAGE tab (the page size, the sheet, the background ...).</summary>
     public void ShowPageSettings() => ShowTab(Tab.Page);
+
+    /// <summary>Shows the SNAP tab (grid, object snap, aligning, the helpers of the wall tool).</summary>
+    public void ShowSnapSettings() => ShowTab(Tab.Snap);
 
     private Button TabButton(string text, Action click)
     {
@@ -174,6 +184,14 @@ public sealed partial class PropertiesPanel : UserControl
         if (_tab == Tab.Page)
         {
             BuildPage(context);
+            return;
+        }
+
+        if (_tab == Tab.Snap)
+        {
+            Title("Snapping");
+            Note("What the points and lines you draw or move jump to. OSnap, Snap and Grid in the status line switch the main ones on and off.");
+            BuildSnapping(context);
             return;
         }
 
@@ -348,10 +366,6 @@ public sealed partial class PropertiesPanel : UserControl
         });
         BuildSheet(context);
         BuildBackground(context);
-
-
-        BuildSnapping(context);
-
     }
 
     private static bool HasFill(Shape shape) =>
@@ -377,7 +391,7 @@ public sealed partial class PropertiesPanel : UserControl
     /// <summary>The sections that are folded in (the rest is open): kept while the panel is built again.</summary>
     private readonly HashSet<string> _closedSections =
     [
-        "MOVE", "ALIGN", "ALIGN TO PAGE", "COMBINE", "ADD DIMENSIONS", "DOOR & WINDOW MEASURES", "SNAP TO OBJECTS", "WHEN MOVING", "WALL DRAWING",
+        "MOVE", "ALIGN", "ALIGN TO PAGE", "COMBINE", "ADD DIMENSIONS", "DOOR & WINDOW MEASURES", "ALIGN WHILE MOVING", "WALL DRAWING",
         "OPACITY, BLUR & SHADOW", "TEXT POSITION",
     ];
 
@@ -609,10 +623,10 @@ public sealed partial class PropertiesPanel : UserControl
         row.Children.Add(plus);
         row.Children.Add(unitText);
 
-        // under the number: a slider for 0.1 to 10 (finer values by the number box); larger numbers are typed into the box
+        // under the number: a slider for 0 to 20 (finer values by the number box); larger numbers are typed into the box
         var tick = step >= 1 ? 1.0 : 0.1; // whole-number rows slide in whole steps
-        var low = tick >= 1 ? Math.Ceiling(Math.Max(min, 0.1)) : Math.Max(min, 0.1);
-        var high = Math.Min(max, 10);
+        var low = tick >= 1 ? Math.Ceiling(Math.Max(min, 0)) : Math.Max(min, 0);
+        var high = Math.Min(max, 20);
         if (low >= high)
         {
             _into.Children.Add(row);
@@ -622,7 +636,7 @@ public sealed partial class PropertiesPanel : UserControl
         var slider = new Slider
         {
             Minimum = low, Maximum = high, Value = Math.Round(Math.Clamp(value, low, high) / tick) * tick, TickFrequency = tick, IsSnapToTickEnabled = true,
-            Classes = { "thin" }, Margin = new Thickness(78, -4, 30, 0), Opacity = value is >= 0.1 and <= 10 ? 1 : 0.4,
+            Classes = { "thin" }, Margin = new Thickness(78, -4, 30, 0), Opacity = value >= low && value <= high ? 1 : 0.4,
         };
         var sliding = false;
         slider.PropertyChanged += (_, e) =>

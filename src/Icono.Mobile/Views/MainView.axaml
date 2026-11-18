@@ -88,6 +88,9 @@
                         <!-- the view and the settings -->
                         <Border Classes="barGroup">
                             <StackPanel Orientation="Horizontal">
+                                <Button Classes="bar icon" Click="OnHelp" ToolTip.Tip="Help: the gestures and tools in short">
+                                    <Path Classes="barIcon" Data="M22,12 A10,10 0 1 1 2,12 A10,10 0 1 1 22,12 Z M9.09 9 a3 3 0 0 1 5.83 1 c0 2-3 3-3 3 M12 17 h.01" />
+                                </Button>
                                 <Button Classes="bar icon" Click="OnFit" ToolTip.Tip="Fit the page to the screen">
                                     <Path Classes="barIcon" Data="M8 3H5a2 2 0 0 0-2 2v3 M21 8V5a2 2 0 0 0-2-2h-3 M3 16v3a2 2 0 0 0 2 2h3 M16 21h3a2 2 0 0 0 2-2v-3" />
                                 </Button>
@@ -142,6 +145,7 @@
                         <TextBlock x:Name="PathBarText" VerticalAlignment="Center" FontSize="13" Margin="4,0,10,0"
                                    Foreground="{StaticResource ForegroundTextBrush}" />
                         <Button Classes="tool" x:Name="PathLengthButton" Content="Length..." Click="OnPathLength" IsVisible="False" />
+                        <Button Classes="tool" x:Name="PathCloseButton" Content="Close shape" Click="OnPathClose" IsVisible="False" ToolTip.Tip="Join the last point with the first: a closed shape (a room for a wall). Tapping the first point does the same." />
                         <Button Classes="tool" x:Name="PathUndoButton" Content="Undo point" Click="OnPathUndoPoint" />
                         <Button Classes="tool" Content="Cancel" Click="OnPathCancel" />
                         <Button Classes="tool primary" x:Name="PathDoneButton" Content="Done" Click="OnPathDone" />
@@ -160,7 +164,7 @@
                 </Border>
 
                 <!-- the properties of the selection (Properties in the top bar shows / hides it) -->
-                <Border Grid.Column="2" x:Name="PropertiesPane" Width="250" Background="{StaticResource ToolbarBackgroundBrush}"
+                <Border Grid.Column="2" x:Name="PropertiesPane" Width="276" Background="{StaticResource ToolbarBackgroundBrush}"
                         BorderBrush="{StaticResource BorderLineBrush}" BorderThickness="1,0,0,0">
                     <views:PropertiesPanel x:Name="Properties" />
                 </Border>
@@ -186,10 +190,12 @@
                     <TextBlock Grid.Column="1" x:Name="StatusText" FontSize="11.5" VerticalAlignment="Center" Foreground="{StaticResource MutedTextBrush}"
                                TextTrimming="CharacterEllipsis" />
                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
+                        <Button Classes="pillKey" x:Name="GridPill" Content="Grid" Click="OnGridPill" ToolTip.Tip="Show the grid: on / off" />
                         <Button Classes="pillKey" x:Name="SnapPill" Content="Snap" Click="OnSnapPill" ToolTip.Tip="Snap to the grid: on / off" />
+                        <Button Classes="pillKey" x:Name="OSnapPill" Content="OSnap" Click="OnOSnapPill" ToolTip.Tip="Object snap (end points, middles, centres ...): on / off. The kinds are in the Properties of the page." />
                         <Button Classes="pillKey" x:Name="PagePill" Content="Page 1 / 1" Click="OnPageSettings" ToolTip.Tip="The page in view - tap for the page settings" />
                         <Button Classes="pillKey" x:Name="ScalePill" Content="1:40" Click="OnPageSettings" ToolTip.Tip="The scale of the drawing - tap to change it" />
-                        <Button Classes="pillKey" Click="OnFit" ToolTip.Tip="Zoom - tap to fit the page">
+                        <Button Classes="pillKey" x:Name="ZoomPill" ToolTip.Tip="Zoom: in, out, actual size, fit the page">
                             <TextBlock x:Name="ZoomText" Text="100 %" />
                         </Button>
                     </StackPanel>
@@ -296,6 +302,23 @@
                         <Button Classes="tool" Content="Cancel" Click="OnLengthCancel" />
                     </StackPanel>
                 </StackPanel>
+            </Border>
+        </Border>
+
+        <!-- quick help (the ? key in the top bar, MainView.Help.cs): the gestures and tools on white paper -->
+        <Border x:Name="HelpLayer" IsVisible="False" Background="#99000000">
+            <Border Classes="dialog" Padding="20,16" Margin="60,36">
+                <Grid RowDefinitions="Auto,*" RowSpacing="12">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock x:Name="HelpTitle" Text="Help" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{StaticResource ForegroundTextBrush}" />
+                        <Button Grid.Column="1" Classes="tool primary" Content="Close" Click="OnHelpClose" />
+                    </Grid>
+                    <Border Grid.Row="1" Background="White" CornerRadius="12" ClipToBounds="True" BorderBrush="#33FFFFFF" BorderThickness="1">
+                        <ScrollViewer x:Name="HelpScroll">
+                            <ContentControl x:Name="HelpPage" Padding="28,22,28,28" />
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
             </Border>
         </Border>
 

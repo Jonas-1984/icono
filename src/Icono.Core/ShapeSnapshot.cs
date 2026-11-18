@@ -96,7 +96,9 @@ public readonly record struct ShapeSnapshot(
     double? LineHeadSize = null,
     bool Sketch = false,
     bool Freehand = false,
-    string? InkCenterline = null)
+    string? InkCenterline = null,
+    double BackdropBlurRadius = 0,
+    ShapeKind? Kind = null)
 {
     public static ShapeSnapshot Capture(Shape shape) => new(
         shape.X,
@@ -189,7 +191,9 @@ public readonly record struct ShapeSnapshot(
         shape.LineHeadSize,
         shape.Sketch,
         shape.Freehand,
-        shape.InkCenterline);
+        shape.InkCenterline,
+        shape.BackdropBlurRadius,
+        shape.Kind);
 
     public void ApplyTo(Shape shape)
     {
@@ -284,5 +288,10 @@ public readonly record struct ShapeSnapshot(
         shape.Sketch = Sketch;
         shape.Freehand = Freehand;
         shape.InkCenterline = InkCenterline;
+        shape.BackdropBlurRadius = BackdropBlurRadius;
+        if (Kind is { } kind)
+        {
+            shape.Kind = kind; // a polyline that was closed becomes a polyline again with undo
+        }
     }
 }

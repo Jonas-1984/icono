@@ -178,4 +178,8 @@ public enum ShapeKind
 
     /// <summary>A cooker hood: a circle with a cross.</summary>
     Hood,
+
+    /// <summary>A closed shape made of straight sides between points (<see cref="Shape.Points"/>): what a polyline becomes when its two ends are joined. It has a fill
+    /// like any other shape.</summary>
+    Polygon,
 }

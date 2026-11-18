@@ -16,6 +16,22 @@ public static class ShapeRenderer
         return sk.WithAlpha((byte)(sk.Alpha * opacityAlpha / 255.0));
     }
 
+    /// <summary>Blurs what is already drawn (the objects below, the page) inside <paramref name="path"/>: a backdrop filter of the canvas layer clipped to
+    /// the shape. Where the target cannot do that (a PDF page) nothing is blurred and the shape stays a plain translucent one.</summary>
+    private static void DrawBackdropBlur(SKCanvas canvas, SKPath path, double radius)
+    {
+        var sigma = (float)Math.Clamp(radius, 0.5, 80);
+        canvas.Save();
+        canvas.ClipPath(path, SKClipOperation.Intersect, true);
+        using var blur = SKImageFilter.CreateBlur(sigma, sigma, SKShaderTileMode.Clamp);
+        // Src: the blurred picture REPLACES what is behind inside the shape (drawn over it, the sharp objects would still show through)
+        using var replace = new SKPaint { BlendMode = SKBlendMode.Src };
+        var layer = new SKCanvasSaveLayerRec { Backdrop = blur, Paint = replace };
+        canvas.SaveLayer(layer);
+        canvas.Restore(); // the layer: the blurred backdrop is put back inside the clip
+        canvas.Restore();
+    }
+
     public static void Draw(SKCanvas canvas, Shape shape)
     {
         DrawBody(canvas, shape);
@@ -79,6 +95,12 @@ public static class ShapeRenderer
         var strokeOnly = shape.Kind == ShapeKind.CombinedPath
             ? shape.CustomPathStrokeOnly
             : ShapeGeometryFactory.IsStrokeOnly(shape.Kind);
+
+        // frosted glass: what lies behind the shape is blurred inside it, before the shape itself is drawn over it
+        if (shape.BackdropBlurRadius > 0 && shape.FillEnabled && !strokeOnly)
+        {
+            DrawBackdropBlur(canvas, path, shape.BackdropBlurRadius);
+        }
 
         // A design style (Glassmorphism, Neumorphism, ...) replaces the plain fill + border look.
         if (shape.DesignStyle != DesignStyleKind.None && shape.FillEnabled && DesignStyleRenderer.Supports(shape))

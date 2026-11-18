@@ -1,0 +1,58 @@
+icono auf dem Tablet - Kurzhilfe
+================================
+
+Die wichtigsten Gesten und Werkzeuge in wenigen Minuten. Dieses Fenster öffnest du jederzeit wieder mit der ?-Taste in der oberen Leiste.
+
+1. Auf der Seite bewegen
+   - Ziehe die graue Fläche oder das Blatt mit einem Finger, um die Ansicht zu verschieben, oder nimm zwei Finger, um gleichzeitig zu verschieben und zu zoomen.
+   - Doppeltippen auf das Blatt oder die Taste Fit in der oberen Leiste passt die Seite auf den Bildschirm an. Die Taste 53 % in der Statuszeile tut dasselbe.
+   - Die Lineale oben und links zeigen echte Längen in der Einheit der Seite (mm, cm oder Zoll). Eine blaue Marke folgt deinem Finger.
+   - Die Statuszeile zeigt das aktive Werkzeug, die Seite in der Ansicht, den Maßstab und den Zoom. Grid zeigt das Raster, Snap rastet am Raster ein, OSnap rastet an Punkten anderer Objekte ein.
+
+2. Objekte auswählen und ändern
+   - Tippe ein Objekt an, um es auszuwählen. Ziehe es, um es zu verschieben. Ziehe die runden Griffe an Ecken und Seiten, um die Größe zu ändern, den oberen Griff zum Drehen.
+   - Halte ein Objekt einen Moment gedrückt, dann öffnet sich sein Menü (ausschneiden, kopieren, einfügen, duplizieren, löschen, gruppieren, nach vorn und mehr).
+   - Mehrere Objekte: tippe in der Werkzeugleiste auf Area und ziehe einen Rahmen. Ein Rahmen nach rechts nimmt, was ganz darin liegt, ein Rahmen nach links (grün)
+     nimmt alles, was er berührt. Ein Tipp fügt ein Objekt hinzu oder nimmt es heraus.
+   - Die Properties rechts ändern die Auswahl: Farbe, Linie, Größe, Text, Anordnen. Jede Änderung ist ein Rückgängig-Schritt.
+   - Undo und Redo stehen in der oberen Leiste. Ein zweiter Finger während des Ziehens nimmt die Bewegung zurück.
+
+3. Formen und Pläne zeichnen
+   - Rectangle, Ellipse, Line und Arrow: ziehe sie mit einem Finger auf. Ein Tipp ergibt eine Standardgröße.
+   - Polyline und Wall: Finger aufsetzen, zum Punkt gleiten, anheben setzt den Punkt. Done beendet. Bei einer Wand schließt ein Tipp auf die erste Ecke den Raum.
+   - Wände mit genauen Längen: tippe in der Wandleiste auf Length..., tippe die Länge ein (250, 2.5 m, 2500 mm) und tippe die Richtung der Wand an.
+   - Dimension: setze die zwei Punkte, die gemessen werden, dann die Stelle, an der die Maßlinie verläuft. Tippe auf eine Maßzahl, um die Länge einzutippen, ziehe sie, um ihre Linie zu verschieben.
+   - Door und Window: tippe für die Standardgröße im Maßstab der Zeichnung oder ziehe sie auf.
+   - Text: tippe an die Stelle für den Text und tippe ihn ein. Doppeltippe einen Text oder eine Form, um den Text zu ändern.
+   - Objects öffnet die Bibliothek: Räume, Türen und Fenster, Symbole, Schränke, Formen und deine eigenen Symbole. Ein Tipp setzt ein Objekt ein oder lässt es dich platzieren.
+   - More hat die weiteren Werkzeuge: Doppelpfeil, Eigenschaften übertragen, Farbpipette, Flächenfarbe, Punkte hinzufügen und löschen, Wand schneiden, Lineal, Abstand.
+
+4. Stift und Handschrift
+   - Wähle Pen und schreibe oder zeichne mit dem e-Pen oder einem Finger. Jeder Strich ist ein Objekt. Liegt ein Stift auf, wird eine aufliegende Hand ignoriert.
+   - Stiftdruck: mit einem Stift, der Druck erkennt, wird die Linie dünner bei leichtem und dicker bei festem Druck.
+     Ausschalten kannst du das in den Properties des Pen.
+   - Radieren: schalte in den Properties des Pen Erase strokes ein oder nimm das Radierer-Ende des Stiftes. Radiert wird nur Handschrift.
+   - Formen sauber machen: zeichne einen Kreis, eine Linie, ein Rechteck oder ein Dreieck und halte Stift oder Finger einen Moment still. Es wird die saubere Form.
+     Anheben behält sie, weiterziehen zeichnet wieder frei.
+   - Handschrift zu Text: schreibe ein Wort, tippe dann in der Leiste oben auf der Zeichnung auf Convert to text und wähle die Sprache (English oder Deutsch).
+     Die Schrift wird ein Textobjekt in einer Schriftart. Beim ersten Mal braucht das Tablet einmal Internet, um die Sprache zu laden (etwa 20 MB).
+
+5. Zahlen, Einheiten und Regler
+   - Tippe in den Properties auf ein Zahlenfeld: eine Zahlentastatur öffnet sich. Tippe die Zahl ein und tippe OK. Minus und Plus ändern sie schrittweise.
+   - Unter einer Zahl liegt ein Regler für 0 bis 20. Größere Zahlen tippst du ins Feld.
+   - Größen stehen in der Einheit der Seite. Ändere sie, die Seitengröße, den Maßstab und die Lineale unter Page (die Taste Page in der oberen Leiste).
+
+6. Seiten und Ebenen
+   - Der Reiter Layers der Properties listet die Seiten und Ebenen. Hinzufügen, umbenennen, verschieben, ausblenden oder sperren. Der Pfeil vor einer Ebene listet ihre Objekte.
+   - Der Reiter Page stellt die Blattgröße ein (A5, A4, A3, Letter oder eigene), die Ausrichtung, den Maßstab, einen Blattrahmen und den Hintergrund. Der Reiter Snap hat das Raster und alles, woran Punkte und Linien einrasten.
+
+7. Dateien, Bilder und Export
+   - New, Open, Save und Save as stehen links in der oberen Leiste. icono zeigt sein eigenes Dateifenster; Recent listet die zuletzt geöffneten Zeichnungen.
+   - Export speichert die Seite oder alle Seiten als PDF (echte Größe, Vektoren) oder PNG oder gibt sie an eine andere App weiter.
+   - Picture setzt ein Foto oder ein SVG in die Zeichnung. Save as icon (unter Arrange) legt die Auswahl unter My icons in Objects ab.
+   - Verlässt du die App mit ungespeicherten Änderungen, fragt icono vorher.
+
+8. Tipps
+   - Zeichne mit dem Werkzeug, das du brauchst, und tippe Select, um zurückzukehren. Die Werkzeugleiste zeigt das aktive Werkzeug in Blau.
+   - Alles bleibt auf dem Tablet. Nur das Handschrift-Sprachmodell wird einmal von Google geladen, und nur wenn du Convert to text benutzt.
+   - About icono (auf das Logo oben links tippen) zeigt die Version, die Testbedingungen, den Datenschutzhinweis und die Lizenzen.

@@ -50,6 +50,8 @@ public partial class MainView : UserControl
             UpdateStatusPills();
         };
         _context.RecentInkChanged += UpdateInkBar;
+        _context.PointSnap.PropertyChanged += (_, _) => UpdateStatusPills();
+        SetUpZoomMenu();
         _context.PagesChanged += UpdateStatusPills;
         _context.CurrentPageChanged += UpdateStatusPills;
         _context.UndoManager.PropertyChanged += OnHistoryChanged;
@@ -129,6 +131,38 @@ public partial class MainView : UserControl
         PagePill.Content = $"Page {Math.Clamp(_context.CurrentPage, 0, Math.Max(0, document.PageCount - 1)) + 1} / {document.PageCount}";
         ScalePill.Content = "1:" + document.ScaleDenominator.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
         SnapPill.Classes.Set("on", _context.SnapToGrid);
+        GridPill.Classes.Set("on", _context.ShowGrid);
+        OSnapPill.Classes.Set("on", _context.PointSnap.Enabled);
+    }
+
+    private void OnGridPill(object? sender, RoutedEventArgs e)
+    {
+        _context.ShowGrid = !_context.ShowGrid;
+        _context.RequestRedraw();
+    }
+
+    private void OnOSnapPill(object? sender, RoutedEventArgs e)
+    {
+        _context.PointSnap.Enabled = !_context.PointSnap.Enabled;
+        _context.Notify("Object snap " + (_context.PointSnap.Enabled ? "on" : "off") + ".");
+    }
+
+    /// <summary>The zoom key of the status line: zoom in, zoom out, actual size (100 %) and fit the page - as the View menu of the Windows program.</summary>
+    private void SetUpZoomMenu()
+    {
+        var menu = new Avalonia.Controls.MenuFlyout { Placement = Avalonia.Controls.PlacementMode.TopEdgeAlignedRight };
+        void Add(string header, Action action)
+        {
+            var item = new Avalonia.Controls.MenuItem { Header = header, MinHeight = 38, FontSize = 14 };
+            item.Click += (_, _) => action();
+            menu.Items.Add(item);
+        }
+
+        Add("Zoom in", () => Canvas.ZoomBy(1.5));
+        Add("Zoom out", () => Canvas.ZoomBy(1 / 1.5));
+        Add("Actual size (100 %)", () => Canvas.ZoomTo(1));
+        Add("Fit page to the screen", Canvas.FitToView);
+        ZoomPill.Flyout = menu;
     }
 
     private void OnSnapPill(object? sender, RoutedEventArgs e) => _context.SnapToGrid = !_context.SnapToGrid;
@@ -300,6 +334,13 @@ public partial class MainView : UserControl
         {
             e.Handled = true;
             CloseText();
+            return;
+        }
+
+        if (HelpLayer.IsVisible)
+        {
+            e.Handled = true;
+            CloseHelp();
             return;
         }
 

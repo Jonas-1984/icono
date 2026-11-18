@@ -30,17 +30,17 @@ public static class StrokeShapes
 
             default:
             {
-                // corners: a closed polyline (the first corner again at the end)
+                // corners: a closed shape of points
                 var first = shape.Points[0];
                 result = new Shape
                 {
-                    Kind = ShapeKind.Polyline,
+                    Kind = ShapeKind.Polygon,
                     X = first.X,
                     Y = first.Y,
                     Width = 1,
                     Height = 1,
                     FillColor = colour,
-                    Points = shape.Points.Append(first).Select(p => new CorePoint(p.X - first.X, p.Y - first.Y)).ToList(),
+                    Points = shape.Points.Select(p => new CorePoint(p.X - first.X, p.Y - first.Y)).ToList(),
                 };
                 PathBoundsCalculator.Recompute(result);
                 break;

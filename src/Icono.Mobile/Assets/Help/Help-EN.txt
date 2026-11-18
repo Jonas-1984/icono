@@ -1,0 +1,58 @@
+icono on the tablet - quick help
+================================
+
+The most important gestures and tools in a few minutes. Open this window again at any time with the ? key in the top bar.
+
+1. Moving around the page
+   - Drag the grey area or the paper with one finger to move the view, or use two fingers to move and zoom at the same time.
+   - Double tap the paper, or tap the Fit key in the top bar, to fit the page to the screen. The 53 % key in the status line does the same.
+   - The rulers at the top and on the left show real lengths in the unit of the page (mm, cm or inch). A blue mark follows your finger.
+   - The status line shows the tool you work with, the page in view, the scale and the zoom. Grid shows the grid, Snap snaps to the grid, OSnap snaps to the points of other objects.
+
+2. Selecting and changing objects
+   - Tap an object to select it. Drag it to move it. Drag the round handles on its corners and sides to change its size, the top handle to turn it.
+   - Press and hold an object for a moment to open its menu (cut, copy, paste, duplicate, delete, group, bring to front and more).
+   - Several objects: tap Area in the tool bar, then drag a frame. A frame to the right takes what is completely inside, a frame to the left (green)
+     takes everything it touches. A tap adds or removes one object.
+   - The Properties on the right change the selection: colour, line, size, text, arrange. Every change is one undo step.
+   - Undo and Redo are in the top bar. A second finger while you drag takes the move back.
+
+3. Drawing shapes and plans
+   - Rectangle, Ellipse, Line and Arrow: drag them open with one finger. A tap gives a standard size.
+   - Polyline and Wall: finger down, slide to the point, lift to place it. Done ends. For a wall, tap the first corner again to close the room.
+   - Walls with exact lengths: in the wall bar tap Length..., type the length (250, 2.5 m, 2500 mm) and tap the way the wall goes.
+   - Dimension: place the two points to measure, then where the dimension line runs. Tap a dimension number to type its length, drag it to move its line.
+   - Door and Window: tap for the standard size at the drawing scale, or drag them open.
+   - Text: tap where the text should go and type it. Double tap a text, or a shape, to change its text.
+   - Objects opens the library: rooms, doors and windows, symbols, cabinets, shapes and your own icons. A tap puts an object in, or lets you place it.
+   - More has the other tools: double arrow, match properties, colour picker, region colour, add and delete points, cut wall, ruler, distance.
+
+4. Pen and handwriting
+   - Choose Pen and write or draw with the e-pen or a finger. Every stroke is one object. With a pen in contact, a resting hand is ignored.
+   - Pen pressure: with a pen that senses pressure the line is thinner when you press lightly and thicker when you press hard.
+     Switch it off in the Properties of the Pen.
+   - Erase: switch on Erase strokes in the Properties of the Pen, or use the eraser end of the pen. Only handwriting is erased.
+   - Make shapes clean: draw a circle, a line, a rectangle or a triangle and keep the pen or finger still for a moment. It becomes the clean shape.
+     Lift to keep it, or move on to draw freehand again.
+   - Handwriting to text: write a word, then tap Convert to text in the bar at the top of the drawing and choose the language (English or Deutsch).
+     The writing becomes a text object in a font. The first time, the tablet needs the internet once to load the language (about 20 MB).
+
+5. Numbers, units and sliders
+   - Tap a number box in the Properties: a number pad opens. Type the number and tap OK. The minus and plus keys change it step by step.
+   - Under a number there is a slider for 0 to 20. For larger numbers type them in the box.
+   - Sizes are shown in the unit of the page. Change it, the page size, the scale and the rulers under Page (the Page key in the top bar).
+
+6. Pages and layers
+   - The Layers tab of the Properties lists the pages and layers. Add, rename, move, hide or lock them. The arrow in front of a layer lists its objects.
+   - The Page tab sets the sheet size (A5, A4, A3, Letter or your own), the orientation, the scale, a sheet frame and the background. The Snap tab has the grid and what points and lines snap to.
+
+7. Files, pictures and export
+   - New, Open, Save and Save as are at the left of the top bar. icono shows its own file window; Recent lists the drawings you opened last.
+   - Export saves the page or all pages as PDF (real size, vectors) or PNG, or shares it with another app.
+   - Picture puts a photo or an SVG into the drawing. Save as icon (in Arrange) keeps the selection under My icons in Objects.
+   - When you leave with unsaved changes, icono asks first.
+
+8. Tips
+   - Draw in the tool you need and tap Select to go back. The tool bar shows the active tool in blue.
+   - Everything stays on the tablet. Only the handwriting language model is loaded once from Google, and only if you use Convert to text.
+   - About icono (tap the logo at the top left) shows the version, the test terms, the privacy notice and the licences.

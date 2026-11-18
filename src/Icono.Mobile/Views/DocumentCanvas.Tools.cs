@@ -27,6 +27,9 @@ public sealed partial class DocumentCanvas
     /// <summary>Where the point being placed snapped to, and to what (shown while the finger is down).</summary>
     private (double X, double Y, string Label)? _snapMark;
 
+    /// <summary>The kind of point and the guide lines of the snap that <see cref="_snapMark"/> shows (null for the other helpers: the room closing, the wall tool).</summary>
+    private PointSnapResult? _snapDetail;
+
     /// <summary>Raised when a wall / polyline / dimension starts or ends, or gets a point (the window shows Done / Cancel then).</summary>
     public event EventHandler? PathDrawingChanged;
 
@@ -173,6 +176,7 @@ public sealed partial class DocumentCanvas
     private void FinishToolPress()
     {
         _snapMark = null;
+        _snapDetail = null;
         if (_gesture == Gesture.Place)
         {
             CommitPendingShape();
@@ -187,6 +191,7 @@ public sealed partial class DocumentCanvas
     private void CancelToolPress()
     {
         _snapMark = null;
+        _snapDetail = null;
         if (_gesture == Gesture.Place)
         {
             _pendingShape = null;
@@ -277,7 +282,7 @@ public sealed partial class DocumentCanvas
         }
 
         var placed = points.Count - 1;
-        if (path.Kind == ShapeKind.Wall && placed >= 3 && IsAtStart(path, points[^1]))
+        if (path.Kind is ShapeKind.Wall or ShapeKind.Polyline && placed >= 3 && IsAtStart(path, points[^1]))
         {
             FinishPath(closeWall: true);
             return;
@@ -296,6 +301,12 @@ public sealed partial class DocumentCanvas
         PathDrawingChanged?.Invoke(this, EventArgs.Empty);
         _context.RequestRedraw();
     }
+
+    /// <summary>True while a wall or polyline has three points: its two ends can be joined (the Close key of the drawing bar).</summary>
+    public bool CanClosePath => _pendingPath is { Kind: ShapeKind.Wall or ShapeKind.Polyline, Points.Count: >= 4 } && !_placingFirstPoint;
+
+    /// <summary>Joins the two ends of the wall or polyline being drawn and ends it: a room, or a closed shape that takes a fill.</summary>
+    public void ClosePath() => FinishPath(closeWall: true);
 
     /// <summary>Ends the wall / polyline / dimension being drawn and adds it to the drawing (as Enter or a double click on Windows).</summary>
     public void FinishPath(bool closeWall = false)
@@ -326,6 +337,10 @@ public sealed partial class DocumentCanvas
         }
 
         PathBoundsCalculator.Recompute(shape);
+        if (closeWall && shape.Kind == ShapeKind.Polyline && points.Count >= 3)
+        {
+            PolylineClosing.Close(shape); // the two ends are joined: a closed shape that takes a fill
+        }
 
         // a wall that ends free gives back what was added for a corner that never came (typed lengths, see DocumentCanvas.TypedWall.cs)
         if (shape.Kind == ShapeKind.Wall)
@@ -358,6 +373,7 @@ public sealed partial class DocumentCanvas
         _pendingPath = null;
         _placingFirstPoint = false;
         _snapMark = null;
+        _snapDetail = null;
         WallTyping?.Clear();
         WallTyping?.Forget();
         PathDrawingChanged?.Invoke(this, EventArgs.Empty);
@@ -414,6 +430,7 @@ public sealed partial class DocumentCanvas
     private Point? SnapToObjectPoints(Point at, IReadOnlyCollection<Shape> exclude, SKPoint? reference = null)
     {
         _snapMark = null;
+        _snapDetail = null;
         if (_context is not { } context)
         {
             return null;
@@ -426,6 +443,7 @@ public sealed partial class DocumentCanvas
         }
 
         _snapMark = (result.Point.X, result.Point.Y, result.Label);
+        _snapDetail = result;
         return new Point(result.Point.X, result.Point.Y);
     }
 
@@ -434,6 +452,7 @@ public sealed partial class DocumentCanvas
     private Point SnapPathPoint(Point at, Shape? path)
     {
         _snapMark = null;
+        _snapDetail = null;
         if (_context is not { } context)
         {
             return at;
@@ -448,12 +467,12 @@ public sealed partial class DocumentCanvas
 
         SKPoint? previous = placed.Count > 0 ? placed[^1] : null;
 
-        if (kind == ShapeKind.Wall && path?.Points is { } own && placed.Count >= 3)
+        if (kind is ShapeKind.Wall or ShapeKind.Polyline && path?.Points is { } own && placed.Count >= 3)
         {
             var start = new Point(path.X + own[0].X, path.Y + own[0].Y);
             if (Math.Sqrt(Math.Pow(at.X - start.X, 2) + Math.Pow(at.Y - start.Y, 2)) <= FingerReach * 1.6 / _zoom)
             {
-                _snapMark = (start.X, start.Y, "Close room");
+                _snapMark = (start.X, start.Y, kind == ShapeKind.Wall ? "Close room" : "Close shape");
                 return start;
             }
         }

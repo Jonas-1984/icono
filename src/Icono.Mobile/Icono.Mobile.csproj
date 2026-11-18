@@ -37,6 +37,8 @@
     <AvaloniaResource Include="..\..\installer\docs\Testbedingungen-DE.txt" Link="Assets\Docs\Testbedingungen-DE.txt" />
     <AvaloniaResource Include="..\..\installer\docs\Privacy-EN.txt" Link="Assets\Docs\Privacy-EN.txt" />
     <AvaloniaResource Include="..\..\installer\docs\Datenschutz-DE.txt" Link="Assets\Docs\Datenschutz-DE.txt" />
+    <!-- the quick help of the tablet app (the ? key in the top bar) -->
+    <AvaloniaResource Include="Assets/Help/*.txt" />
   </ItemGroup>
 
 </Project>
