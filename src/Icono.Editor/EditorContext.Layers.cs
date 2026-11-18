@@ -30,6 +30,28 @@ public sealed partial class EditorContext
         return layer;
     }
 
+    /// <summary>Moves an object of a layer <paramref name="delta"/> places to the front (negative: index 0 is the front-most) or to the back
+    /// (positive), within its layer. One undo step. False when it cannot move that way.</summary>
+    public bool MoveShapeInLayer(Layer layer, Shape shape, int delta)
+    {
+        var index = layer.Shapes.IndexOf(shape);
+        if (index < 0 || layer.Locked || shape.Locked)
+        {
+            return false;
+        }
+
+        var target = Math.Clamp(index + delta, 0, layer.Shapes.Count - 1);
+        if (target == index)
+        {
+            return false;
+        }
+
+        layer.Shapes.Move(index, target);
+        UndoManager.Push(UndoableAction.ForMove(layer.Shapes, index, target));
+        RequestRedraw();
+        return true;
+    }
+
     /// <summary>Moves a layer <paramref name="delta"/> places to the front (negative) or the back (positive).</summary>
     public bool MoveLayer(Layer layer, int delta)
     {

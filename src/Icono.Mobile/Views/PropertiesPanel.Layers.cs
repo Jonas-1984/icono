@@ -27,6 +27,9 @@ public sealed partial class PropertiesPanel
     /// <summary>A removal that takes objects with it asks for a second tap: what is waiting for it.</summary>
     private object? _confirm;
 
+    /// <summary>The layers whose objects are listed (folded open with the arrow in front of the name).</summary>
+    private readonly HashSet<Layer> _openLayers = [];
+
     /// <summary>Raised by "Rename": the window asks for the new name.</summary>
     public event EventHandler<Layer>? RenameLayerRequested;
 
@@ -89,6 +92,10 @@ public sealed partial class PropertiesPanel
         foreach (var layer in document.Layers)
         {
             _into.Children.Add(LayerRow(context, layer, document.Layers.IndexOf(layer), document.Layers.Count));
+            if (_openLayers.Contains(layer))
+            {
+                _into.Children.Add(ShapeList(context, layer));
+            }
         }
 
         var active = context.SelectedLayer ?? document.Layers.FirstOrDefault();
@@ -155,14 +162,25 @@ public sealed partial class PropertiesPanel
             Rebuild();
         };
 
-        var row = new Grid { ColumnDefinitions = new ColumnDefinitions("*,30,30,26,26") };
+        var open = _openLayers.Contains(layer);
+        var row = new Grid { ColumnDefinitions = new ColumnDefinitions("30,*,30,30,26,26") };
+        AddAt(row, 0, IconButton(open ? DownIcon : "M7,4 L13,10 L7,16", open ? "Hide the objects of the layer" : "Show the objects of the layer", () =>
+        {
+            if (!_openLayers.Remove(layer))
+            {
+                _openLayers.Add(layer);
+            }
+
+            Rebuild();
+        }));
+        Grid.SetColumn(name, 1);
         row.Children.Add(name);
-        AddAt(row, 1, IconButton(layer.Visible ? EyeIcon : EyeOffIcon, layer.Visible ? "Hide" : "Show",
+        AddAt(row, 2, IconButton(layer.Visible ? EyeIcon : EyeOffIcon, layer.Visible ? "Hide" : "Show",
             () => context.SetLayerVisible(layer, !layer.Visible)));
-        AddAt(row, 2, IconButton(layer.Locked ? LockIcon : UnlockIcon, layer.Locked ? "Unlock" : "Lock",
+        AddAt(row, 3, IconButton(layer.Locked ? LockIcon : UnlockIcon, layer.Locked ? "Unlock" : "Lock",
             () => context.SetLayerLocked(layer, !layer.Locked)));
-        AddAt(row, 3, IconButton(UpIcon, "To the front", () => context.MoveLayer(layer, -1), enabled: index > 0));
-        AddAt(row, 4, IconButton(DownIcon, "To the back", () => context.MoveLayer(layer, 1), enabled: index < count - 1));
+        AddAt(row, 4, IconButton(UpIcon, "To the front", () => context.MoveLayer(layer, -1), enabled: index > 0));
+        AddAt(row, 5, IconButton(DownIcon, "To the back", () => context.MoveLayer(layer, 1), enabled: index < count - 1));
 
         return new Border
         {
@@ -173,6 +191,66 @@ public sealed partial class PropertiesPanel
             BorderBrush = isActive ? Brush("AccentBrush") : Brushes.Transparent,
             BorderThickness = new Thickness(1),
         };
+    }
+
+    /// <summary>The objects of one layer, the front-most first: tap one to select it, the arrows move it forward or back within the layer (as in the
+    /// layers list of the Windows program).</summary>
+    private Control ShapeList(EditorContext context, Layer layer)
+    {
+        var list = new StackPanel { Spacing = 1, Margin = new Thickness(18, 0, 0, 6) };
+        if (layer.Shapes.Count == 0)
+        {
+            list.Children.Add(new TextBlock { Text = "No objects on this layer.", FontSize = 11.5, Foreground = Brush("MutedTextBrush"), Margin = new Thickness(6, 4) });
+            return list;
+        }
+
+        var count = layer.Shapes.Count;
+        for (var i = 0; i < count; i++)
+        {
+            var shape = layer.Shapes[i];
+            var index = i;
+            var selected = context.SelectedShapes.Contains(shape);
+            var label = !string.IsNullOrWhiteSpace(shape.Name)
+                ? shape.Name
+                : shape.Kind == ShapeKind.Text && !string.IsNullOrWhiteSpace(shape.TextContent)
+                    ? $"Text \"{(shape.TextContent!.Length > 18 ? shape.TextContent[..18] + "…" : shape.TextContent)}\""
+                    : $"{Words(shape.Kind.ToString())} {i + 1}";
+            var dot = new Border
+            {
+                Width = 14, Height = 14, CornerRadius = new CornerRadius(7), Margin = new Thickness(0, 0, 8, 0),
+                Background = new SolidColorBrush(Color.FromRgb(shape.FillColor.R, shape.FillColor.G, shape.FillColor.B)),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(shape.BorderColor.R, shape.BorderColor.G, shape.BorderColor.B)), BorderThickness = new Thickness(1.5),
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            var text = new TextBlock
+            {
+                Text = label + (shape.Locked ? "  (locked)" : string.Empty), FontSize = 12, TextTrimming = TextTrimming.CharacterEllipsis,
+                Foreground = Brush(shape.Locked || !layer.Visible ? "MutedTextBrush" : "ForegroundTextBrush"), VerticalAlignment = VerticalAlignment.Center,
+            };
+            var name = new Button
+            {
+                Content = new StackPanel { Orientation = Orientation.Horizontal, Children = { dot, text } }, Background = Brushes.Transparent,
+                HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Padding = new Thickness(6, 3), MinHeight = 30,
+            };
+            name.Click += (_, _) =>
+            {
+                context.SelectedLayer = layer;
+                context.SelectedShape = shape;
+                context.RequestRedraw();
+            };
+
+            var row = new Grid { ColumnDefinitions = new ColumnDefinitions("*,30,30") };
+            row.Children.Add(name);
+            AddAt(row, 1, IconButton(UpIcon, "Forward", () => context.MoveShapeInLayer(layer, shape, -1), enabled: index > 0 && !layer.Locked && !shape.Locked));
+            AddAt(row, 2, IconButton(DownIcon, "Back", () => context.MoveShapeInLayer(layer, shape, 1), enabled: index < count - 1 && !layer.Locked && !shape.Locked));
+            list.Children.Add(new Border
+            {
+                Child = row, CornerRadius = new CornerRadius(6),
+                Background = selected ? new SolidColorBrush(Color.FromArgb(0x33, 0x5A, 0xB0, 0xFF)) : Brushes.Transparent,
+            });
+        }
+
+        return list;
     }
 
     private static void AddAt(Grid grid, int column, Control control)
