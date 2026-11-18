@@ -34,9 +34,9 @@ für das Windows-Programm und die Android-Tablet-App.
    merkt sich die Sprache Ihrer Handschrift (icono-handwriting.txt) und, sobald Sie "Convert to text" benutzt haben, das Handschrift-Modell dieser
    Sprache (von Google ML Kit geladen, von Android im privaten Speicher der App gehalten). Die Berechtigung, die sie verlangt, ist das Internet,
    und nur zum Laden dieses Modells: Ihr Tablet verbindet sich dann mit Servern von Google (Ihre IP-Adresse ist für sie sichtbar, wie bei jedem Download;
-   es gelten die Bedingungen von Google). Die Google-Komponente, die das Modell lädt (ML Kit), bringt vier technische Berechtigungen mit, die die
-   Download-Planung von Android nutzt: Netzwerkstatus, das Gerät beim Laden wach halten, ihren Lader nach einem Neustart starten und ihn als
-   Vordergrunddienst ausführen. icono nutzt sie für nichts anderes. Danach funktioniert "Convert to text" ohne Internet; die Schrift wird auf dem Tablet erkannt.
+   es gelten die Bedingungen von Google). Die Google-Komponente, die das Modell lädt (ML Kit), bringt zwei technische Berechtigungen mit, die die
+   Download-Planung von Android nutzt: Netzwerkstatus und das Gerät beim Laden wach halten. icono nutzt sie für nichts anderes. (Zwei weitere
+   Berechtigungen dieser Komponente, der Start nach einem Neustart und der Vordergrunddienst, sind aus der App entfernt.) Danach funktioniert "Convert to text" ohne Internet; die Schrift wird auf dem Tablet erkannt.
    Android gibt icono nur Zugriff auf den Ordner, den Sie gewählt haben, und auf Dateien, die Sie selbst
    auswählen. Die App ist so eingestellt, dass Android ihre Daten nicht in die automatische Geräte-Sicherung (Cloud-Backup) aufnimmt. Ihre
    Zeichnungen speichert die App nur dort, wo Sie es wählen (Save as, Export > Save...).

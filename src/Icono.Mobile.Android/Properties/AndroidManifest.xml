@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- INTERNET (own), and only so that the handwriting model of a language (about 20 MB) can be loaded once when "Convert to text" is used the first time (Google ML Kit); nothing of the drawings is sent. icono works offline and only reads/writes the files the user picks. An exported file is handed to the app the user
      chooses in the share sheet through the FileProvider below (read access to that one file only). -->
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:installLocation="auto">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools" android:installLocation="auto">
 	<uses-permission android:name="android.permission.INTERNET" />
+	<!-- the model loader of Google ML Kit brings two permissions icono has no use for: starting after a restart of the tablet and running as a foreground service. They are taken out. -->
+	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" tools:node="remove" />
+	<uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:node="remove" />
 	<!-- allowBackup=false: Android does not put the app's data (the reference to the drawings folder) into the automatic cloud backup -->
 	<application android:label="icono" android:icon="@drawable/icon" android:allowBackup="false">
 		<provider android:name="androidx.core.content.FileProvider"

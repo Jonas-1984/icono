@@ -33,9 +33,9 @@ the Android tablet app.
    The tablet app keeps no theme, no list of recent files, no own library and no error log. It keeps the language of your handwriting (icono-handwriting.txt)
    and, once you have used "Convert to text", the handwriting model of that language (loaded by Google ML Kit, kept by Android in the app's private storage).
    The permission it asks for is the internet, and only for loading that model: your tablet then contacts Google's servers (your IP address is visible
-   to them, as with any download; Google's terms apply). The Google component that loads the model (ML Kit) adds four technical permissions that Android's
-   download scheduling uses: network state, keeping the device awake while the model loads, running its loader after a restart and running it as a foreground
-   service. icono uses them for nothing else. After that "Convert to text" works without internet; the writing is recognized on the tablet.
+   to them, as with any download; Google's terms apply). The Google component that loads the model (ML Kit) adds two technical permissions that Android's
+   download scheduling uses: network state and keeping the device awake while the model loads. icono uses them for nothing else. (Two more permissions
+   of that component, starting after a restart and running as a foreground service, are taken out of the app.) After that "Convert to text" works without internet; the writing is recognized on the tablet.
    Android gives icono
    access only to the folder you chose and to files you pick yourself. The app is set so that Android does not include its data in the
    automatic device backup (cloud backup). Your drawings are saved only where you choose (Save as, Export > Save...).
