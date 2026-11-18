@@ -110,12 +110,19 @@
             </Border>
 
             <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto">
-                <!-- the tools (filled in MainView.Tools.cs) -->
-                <Border Grid.Column="0" Background="{StaticResource ToolbarBackgroundBrush}" BorderBrush="{StaticResource BorderLineBrush}"
-                        BorderThickness="0,0,1,0">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <StackPanel x:Name="ToolPanel" Margin="3,6" Spacing="2" />
-                    </ScrollViewer>
+                <!-- the tools (filled in MainView.Tools.cs): a soft plate -->
+                <Border Grid.Column="0" Background="{StaticResource PanelBackgroundBrush}" Padding="5,5,0,5">
+                    <Border CornerRadius="14" BorderBrush="#22FFFFFF" BorderThickness="1" ClipToBounds="True">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                <GradientStop Offset="0" Color="#FF1B202B" />
+                                <GradientStop Offset="1" Color="#FF12151C" />
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <ScrollViewer VerticalScrollBarVisibility="Hidden">
+                            <StackPanel x:Name="ToolPanel" Margin="3,5" Spacing="1" />
+                        </ScrollViewer>
+                    </Border>
                 </Border>
 
                 <!-- the drawing -->
@@ -148,12 +155,24 @@
                 </Border>
             </Grid>
 
-            <!-- status line -->
-            <Border Grid.Row="2" Background="{StaticResource PanelBackgroundBrush}" Padding="12,4">
-                <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock Grid.Column="0" x:Name="StatusText" FontSize="12" Foreground="{StaticResource MutedTextBrush}"
+            <!-- status line: thin, the tool and the zoom as small pills -->
+            <Border Grid.Row="2" Padding="8,2" BorderBrush="#22FFFFFF" BorderThickness="0,1,0,0">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0" Color="#FF12151C" />
+                        <GradientStop Offset="1" Color="#FF0B0D12" />
+                    </LinearGradientBrush>
+                </Border.Background>
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                    <Border Grid.Column="0" Classes="pill" MinWidth="64">
+                        <TextBlock x:Name="ToolNameText" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center"
+                                   Foreground="{StaticResource AccentBrush}" Text="Select" />
+                    </Border>
+                    <TextBlock Grid.Column="1" x:Name="StatusText" FontSize="11.5" VerticalAlignment="Center" Foreground="{StaticResource MutedTextBrush}"
                                TextTrimming="CharacterEllipsis" />
-                    <TextBlock Grid.Column="1" x:Name="ZoomText" FontSize="12" Foreground="{StaticResource ForegroundTextBrush}" Text="100 %" />
+                    <Border Grid.Column="2" Classes="pill">
+                        <TextBlock x:Name="ZoomText" FontSize="11" Foreground="{StaticResource ForegroundTextBrush}" Text="100 %" />
+                    </Border>
                 </Grid>
             </Border>
         </Grid>

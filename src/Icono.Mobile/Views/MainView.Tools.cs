@@ -90,6 +90,11 @@ public partial class MainView
                 continue; // in the flyout of the More button
             }
 
+            if (tool.Name is "Rectangle" or "Polyline")
+            {
+                ToolPanel.Children.Add(Separator());
+            }
+
             ToolPanel.Children.Add(button);
 
             if (tool.Tool == ActiveTool.Select)
@@ -101,6 +106,7 @@ public partial class MainView
             }
         }
 
+        ToolPanel.Children.Add(Separator());
         // the libraries of the Windows program: rooms, doors, symbols, cabinets, shapes ...
         _objectsButton = PaletteButton("Objects", "M3,3 H10 V10 H3 Z M14,3 H21 V10 H14 Z M3,14 H10 V21 H3 Z M14,14 H21 V21 H14 Z");
         _objectsButton.Click += (_, _) => ShowLibrary(!LibraryPane.IsVisible);
@@ -127,19 +133,22 @@ public partial class MainView
         UpdateToolButtons();
     }
 
+    /// <summary>A fine line between the groups of tools.</summary>
+    private static Border Separator() => new() { Classes = { "paletteLine" } };
+
     private static Button PaletteButton(string name, string iconData)
     {
         var icon = new Avalonia.Controls.Shapes.Path
         {
             Data = Geometry.Parse(iconData),
-            StrokeThickness = 1.6,
+            StrokeThickness = 1.5,
             StrokeLineCap = PenLineCap.Round,
             StrokeJoin = PenLineJoin.Round,
-            Width = 17,
-            Height = 17,
+            Width = 19,
+            Height = 19,
             Stretch = Stretch.Uniform,
         };
-        var label = new TextBlock { Text = name, FontSize = 8.5, HorizontalAlignment = HorizontalAlignment.Center };
+        var label = new TextBlock { Text = name, FontSize = 8.5, FontWeight = FontWeight.Medium, HorizontalAlignment = HorizontalAlignment.Center };
         var button = new Button
         {
             Classes = { "palette" },
@@ -302,6 +311,7 @@ public partial class MainView
 
         _moreButton?.Classes.Set("active", _toolButtons.Any(t => t.Tool.More && ReferenceEquals(t.Tool, current) && !Canvas.AreaMode));
         _objectsButton?.Classes.Set("active", LibraryPane.IsVisible || (current is null && _context.ActiveTool != ActiveTool.Select));
+        ToolNameText.Text = Canvas.AreaMode ? "Area" : current?.Name ?? _libraryItem?.Name ?? "";
         UpdateCommands();
     }
 

@@ -58,26 +58,46 @@
             <Setter Property="Foreground" Value="#FF06070A" />
         </Style>
 
-        <!-- the tool bar on the left: big square buttons with icon and name; the active tool is lit -->
+        <!-- the tool bar on the left: soft round keys with icon and name; the active tool glows -->
         <Style Selector="Button.palette">
-            <Setter Property="Width" Value="46" />
-            <Setter Property="MinHeight" Value="42" />
-            <Setter Property="Padding" Value="1,4" />
+            <Setter Property="Width" Value="44" />
+            <Setter Property="MinHeight" Value="40" />
+            <Setter Property="Padding" Value="1,3" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
-            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="CornerRadius" Value="11" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}" />
         </Style>
+        <Style Selector="Button.palette:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#14FFFFFF" />
+        </Style>
         <Style Selector="Button.palette:pressed /template/ ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource RaisedPressedBrush}" />
+            <Setter Property="Background" Value="#26FFFFFF" />
         </Style>
         <Style Selector="Button.palette.active /template/ ContentPresenter">
-            <Setter Property="Background" Value="#335AB0FF" />
-            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
-            <Setter Property="BorderThickness" Value="1.5" />
+            <Setter Property="Background">
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                    <GradientStop Offset="0" Color="#4D5AB0FF" />
+                    <GradientStop Offset="1" Color="#26398FE0" />
+                </LinearGradientBrush>
+            </Setter>
+            <Setter Property="BorderBrush" Value="#995AB0FF" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BoxShadow" Value="0 0 12 0 #405AB0FF" />
         </Style>
         <Style Selector="Button.palette.active">
-            <Setter Property="Foreground" Value="{StaticResource ForegroundTextBrush}" />
+            <Setter Property="Foreground" Value="#FFD6EBFF" />
+        </Style>
+        <Style Selector="Border.paletteLine">
+            <Setter Property="Height" Value="1" />
+            <Setter Property="Margin" Value="8,4" />
+            <Setter Property="Background" Value="#22FFFFFF" />
+        </Style>
+        <Style Selector="Border.pill">
+            <Setter Property="CornerRadius" Value="9" />
+            <Setter Property="Padding" Value="9,1" />
+            <Setter Property="Background" Value="#1AFFFFFF" />
+            <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
         <!-- small icon buttons (layer list): no grey box when they cannot be used, they only fade -->
