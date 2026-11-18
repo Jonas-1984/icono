@@ -68,9 +68,10 @@ public static class ImageImport
         }
 
         // Skia throws (instead of returning null) for bytes it has no codec for: look for the codec first
+        // (an .ico file is a container of several pictures: its largest one is taken)
         using var source = SKData.CreateCopy(data);
-        using var codec = SKCodec.Create(source);
-        using var decoded = codec is null ? null : SKBitmap.Decode(codec);
+        using var codec = IcoReader.IsIco(data) ? null : SKCodec.Create(source);
+        using var decoded = IcoReader.IsIco(data) ? IcoReader.LargestFrame(data) : codec is null ? null : SKBitmap.Decode(codec);
         if (decoded is null || decoded.Width < 1 || decoded.Height < 1)
         {
             error = "The file could not be read as an image.";

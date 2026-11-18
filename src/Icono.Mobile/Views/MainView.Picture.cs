@@ -9,12 +9,12 @@ namespace Icono.Mobile.Views;
 /// (<see cref="ImageImport"/>, shared with the Windows program). A picture becomes one image object, an SVG becomes shapes that can be coloured.</summary>
 public partial class MainView
 {
-    private static readonly string[] PictureExtensions = [".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp", ".svg"];
+    private static readonly string[] PictureExtensions = [".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp", ".ico", ".svg"];
 
     private static readonly FilePickerFileType PictureFiles = new("Pictures and SVG")
     {
         Patterns = PictureExtensions.Select(e => "*" + e).ToList(),
-        MimeTypes = ["image/png", "image/jpeg", "image/webp", "image/gif", "image/bmp", "image/svg+xml"],
+        MimeTypes = ["image/png", "image/jpeg", "image/webp", "image/gif", "image/bmp", "image/x-icon", "image/vnd.microsoft.icon", "image/svg+xml"],
     };
 
     private async void OnInsertPicture(object? sender, RoutedEventArgs e)

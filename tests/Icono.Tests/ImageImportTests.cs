@@ -144,3 +144,31 @@ public class ImageImportTests
         Assert.Empty(context.Document.Layers[0].Shapes);
     }
 }
+
+public class ImageImportIcoTests
+{
+    [Fact]
+    public void AnIcoFile_BecomesAnImageShape_FromItsLargestPicture()
+    {
+        var context = new EditorContext();
+        context.Document.Width = 800;
+        context.Document.Height = 600;
+        context.Document.Layers.Add(new Layer { Name = "Layer 1" });
+        using var bitmap = new SKBitmap(64, 64);
+        bitmap.Erase(SKColors.Purple);
+        using var image = SKImage.FromBitmap(bitmap);
+        var png = image.Encode(SKEncodedImageFormat.Png, 100).ToArray();
+        using var file = new MemoryStream();
+        using var writer = new BinaryWriter(file);
+        writer.Write(new byte[] { 0, 0, 1, 0, 1, 0, 64, 64, 0, 0, 1, 0, 32, 0 });
+        writer.Write(png.Length);
+        writer.Write(22);
+        writer.Write(png);
+
+        var shape = ImageImport.ImportPicture(context, file.ToArray(), out var error);
+
+        Assert.Null(error);
+        Assert.Equal(ShapeKind.RasterImage, shape!.Kind);
+        Assert.Equal(64, shape.Width, 3);
+    }
+}
