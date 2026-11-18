@@ -214,30 +214,7 @@ public sealed partial class PropertiesPanel : UserControl
                 mm => context.SetOnSelection(s => s.BorderThickness = mm / 10 * PxPerCm, s => outlined.Contains(s)));
         }
 
-        Heading("ARRANGE");
-        ButtonRow(
-            ("Turn 90°", () => context.RotateSelection(90)),
-            ("Flip ↔", () => context.FlipSelection(horizontally: true)),
-            ("Flip ↕", () => context.FlipSelection(horizontally: false)));
-
-        ButtonRow(("Offset...", () => AskOffset(context)), ("Save as icon", () => SaveAsIcon(context)));
-
-        // one object aligns to the page, several to each other; three or more can also be spread evenly
-        Heading(shapes.Count == 1 ? "ALIGN TO PAGE" : "ALIGN");
-        ButtonRow(
-            ("Left", () => context.AlignSelection(AlignKind.Left)),
-            ("Centre", () => context.AlignSelection(AlignKind.CenterHorizontally)),
-            ("Right", () => context.AlignSelection(AlignKind.Right)));
-        ButtonRow(
-            ("Top", () => context.AlignSelection(AlignKind.Top)),
-            ("Middle", () => context.AlignSelection(AlignKind.CenterVertically)),
-            ("Bottom", () => context.AlignSelection(AlignKind.Bottom)));
-        if (shapes.Count >= 3)
-        {
-            ButtonRow(
-                ("Spread ↔", () => context.DistributeSelection(horizontally: true)),
-                ("Spread ↕", () => context.DistributeSelection(horizontally: false)));
-        }
+        BuildArrange(context, shapes);
     }
 
     /// <summary>Raised by "Edit text": the window opens the text to type for this shape.</summary>
@@ -320,6 +297,8 @@ public sealed partial class PropertiesPanel : UserControl
         Heading("PAGE");
         Note($"{doc.Width / PxPerCm * 10:0} x {doc.Height / PxPerCm * 10:0} mm, {doc.PageCount} page(s), " +
              $"{doc.Layers.Sum(l => l.Shapes.Count)} object(s)");
+        Heading("SELECTION");
+        ButtonRow(("Select all", context.SelectAll));
         BuildSnapping(context);
         Note("Tap an object to see its properties here.");
     }
