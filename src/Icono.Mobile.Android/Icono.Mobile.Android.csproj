@@ -10,8 +10,8 @@
     <ApplicationId>de.bitbins.icono</ApplicationId>
     <ApplicationTitle>icono</ApplicationTitle>
     <!-- ApplicationVersion must grow with every APK handed out (Android only installs an update with a higher number) -->
-    <ApplicationVersion>11</ApplicationVersion>
-    <ApplicationDisplayVersion>0.1.0-test.11</ApplicationDisplayVersion>
+    <ApplicationVersion>12</ApplicationVersion>
+    <ApplicationDisplayVersion>0.1.0-test.12</ApplicationDisplayVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
     <!-- the app is installed with "adb install"; fast deployment (assemblies pushed separately) does not work on the Xiaomi tablet -->
