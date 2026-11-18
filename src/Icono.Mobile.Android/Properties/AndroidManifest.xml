@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Only one permission: INTERNET, and only so that the handwriting model of a language (about 20 MB) can be loaded once when "Convert to text" is used the first time (Google ML Kit); nothing of the drawings is sent. icono works offline and only reads/writes the files the user picks. An exported file is handed to the app the user
+<!-- INTERNET (own), and only so that the handwriting model of a language (about 20 MB) can be loaded once when "Convert to text" is used the first time (Google ML Kit); nothing of the drawings is sent. icono works offline and only reads/writes the files the user picks. An exported file is handed to the app the user
      chooses in the share sheet through the FileProvider below (read access to that one file only). -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" android:installLocation="auto">
 	<uses-permission android:name="android.permission.INTERNET" />
