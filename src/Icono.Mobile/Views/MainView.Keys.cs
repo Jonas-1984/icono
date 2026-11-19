@@ -121,5 +121,5 @@ public partial class MainView
 
     /// <summary>True while a dialog lies over the drawing (the keys then belong to it).</summary>
     private bool IsAnyDialogOpen =>
-        FilesLayer.IsVisible || ExportLayer.IsVisible || LengthLayer.IsVisible || AboutLayer.IsVisible || HelpLayer.IsVisible || TextLayer.IsVisible || QuestionLayer.IsVisible;
+        FilesLayer.IsVisible || ExportLayer.IsVisible || NewLayer.IsVisible || LengthLayer.IsVisible || AboutLayer.IsVisible || HelpLayer.IsVisible || TextLayer.IsVisible || QuestionLayer.IsVisible;
 }
