@@ -2,18 +2,13 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:views="using:Icono.Mobile.Views"
              x:Class="Icono.Mobile.Views.MainView"
-             Background="{StaticResource CanvasSurroundBrush}">
+             Background="{DynamicResource CanvasSurroundBrush}">
     <Grid>
         <Grid RowDefinitions="Auto,*,Auto">
 
             <!-- top bar: thin, in three groups; icon (and name) on every key -->
-            <Border Grid.Row="0" Padding="10,4" BorderBrush="{StaticResource BorderLineBrush}" BorderThickness="0,0,0,1">
-                <Border.Background>
-                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                        <GradientStop Offset="0" Color="#FF1B202B" />
-                        <GradientStop Offset="1" Color="#FF12151C" />
-                    </LinearGradientBrush>
-                </Border.Background>
+            <Border Grid.Row="0" Padding="10,4" BorderBrush="{DynamicResource BorderLineBrush}" BorderThickness="0,0,0,1" Background="{DynamicResource BarGradient}">
+                
                 <Grid ColumnDefinitions="Auto,*,Auto">
                     <!-- the logo on a light plate, like the app icon: its fine blue lines get lost on the dark bar -->
                     <Border Grid.Column="0" x:Name="LogoPlate" Background="#FFF1F5FB" CornerRadius="8" Padding="7,2" Margin="0,0,12,0" VerticalAlignment="Center"
@@ -22,7 +17,7 @@
                     </Border>
 
                     <TextBlock Grid.Column="1" x:Name="TitleText" VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold" Margin="0,0,10,0"
-                               Foreground="{StaticResource ForegroundTextBrush}" TextTrimming="CharacterEllipsis" Text="Untitled" />
+                               Foreground="{DynamicResource ForegroundTextBrush}" TextTrimming="CharacterEllipsis" Text="Untitled" />
 
                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
                         <!-- the file -->
@@ -114,14 +109,9 @@
 
             <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto">
                 <!-- the tools (filled in MainView.Tools.cs): a soft plate -->
-                <Border Grid.Column="0" Background="{StaticResource PanelBackgroundBrush}" Padding="5,5,0,5">
-                    <Border CornerRadius="14" BorderBrush="#22FFFFFF" BorderThickness="1" ClipToBounds="True">
-                        <Border.Background>
-                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                                <GradientStop Offset="0" Color="#FF1B202B" />
-                                <GradientStop Offset="1" Color="#FF12151C" />
-                            </LinearGradientBrush>
-                        </Border.Background>
+                <Border Grid.Column="0" Background="{DynamicResource PanelBackgroundBrush}" Padding="5,5,0,5">
+                    <Border CornerRadius="14" BorderBrush="{DynamicResource HairBrush}" BorderThickness="1" ClipToBounds="True" Background="{DynamicResource BarGradient}">
+                        
                         <ScrollViewer VerticalScrollBarVisibility="Hidden">
                             <StackPanel x:Name="ToolPanel" Margin="3,5" Spacing="1" />
                         </ScrollViewer>
@@ -136,17 +126,17 @@
 
                 <!-- the object library (Objects in the tool bar) lies over the left of the drawing -->
                 <Border Grid.Column="1" x:Name="LibraryPane" IsVisible="False" Width="300" HorizontalAlignment="Left"
-                        Background="{StaticResource ToolbarBackgroundBrush}" BorderBrush="{StaticResource BorderLineBrush}" BorderThickness="0,0,1,0">
+                        Background="{DynamicResource ToolbarBackgroundBrush}" BorderBrush="{DynamicResource BorderLineBrush}" BorderThickness="0,0,1,0">
                     <views:ObjectLibrary x:Name="Library" />
                 </Border>
 
                 <!-- while a wall, polyline or dimension is drawn -->
                 <Border Grid.Column="1" x:Name="PathBar" IsVisible="False" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="10"
-                        Background="{StaticResource ToolbarBackgroundBrush}" CornerRadius="12" Padding="10,6"
-                        BorderBrush="{StaticResource RaisedPressedBrush}" BorderThickness="1">
+                        Background="{DynamicResource ToolbarBackgroundBrush}" CornerRadius="12" Padding="10,6"
+                        BorderBrush="{DynamicResource RaisedPressedBrush}" BorderThickness="1">
                     <StackPanel Orientation="Horizontal" Spacing="4">
                         <TextBlock x:Name="PathBarText" VerticalAlignment="Center" FontSize="13" Margin="4,0,10,0"
-                                   Foreground="{StaticResource ForegroundTextBrush}" />
+                                   Foreground="{DynamicResource ForegroundTextBrush}" />
                         <Button Classes="tool" x:Name="PathLengthButton" Content="Length..." Click="OnPathLength" IsVisible="False" />
                         <Button Classes="tool" x:Name="PathCloseButton" Content="Close shape" Click="OnPathClose" IsVisible="False" ToolTip.Tip="Join the last point with the first: a closed shape (a room for a wall). Tapping the first point does the same." />
                         <Button Classes="tool" x:Name="PathUndoButton" Content="Undo point" Click="OnPathUndoPoint" />
@@ -160,37 +150,32 @@
                 <Border Grid.Column="1" x:Name="InkBar" Classes="dialog" IsVisible="False" HorizontalAlignment="Center" VerticalAlignment="Top"
                         Margin="0,34,0,0" Padding="10,6" CornerRadius="14">
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock x:Name="InkText" VerticalAlignment="Center" FontSize="13" Margin="4,0,8,0" Foreground="{StaticResource ForegroundTextBrush}" />
+                        <TextBlock x:Name="InkText" VerticalAlignment="Center" FontSize="13" Margin="4,0,8,0" Foreground="{DynamicResource ForegroundTextBrush}" />
                         <Button Classes="tool" x:Name="InkLanguageButton" Click="OnInkLanguage" ToolTip.Tip="The language of the writing" />
                         <Button Classes="tool primary" x:Name="InkConvertButton" Content="Convert to text" Click="OnInkConvert" />
                     </StackPanel>
                 </Border>
 
                 <!-- the properties of the selection (Properties in the top bar shows / hides it) -->
-                <Border Grid.Column="2" x:Name="PropertiesPane" Width="276" Background="{StaticResource ToolbarBackgroundBrush}"
-                        BorderBrush="{StaticResource BorderLineBrush}" BorderThickness="1,0,0,0">
+                <Border Grid.Column="2" x:Name="PropertiesPane" Width="276" Background="{DynamicResource ToolbarBackgroundBrush}"
+                        BorderBrush="{DynamicResource BorderLineBrush}" BorderThickness="1,0,0,0">
                     <views:PropertiesPanel x:Name="Properties" />
                 </Border>
             </Grid>
 
             <!-- status line: thin, the tool and the zoom as small pills -->
-            <Border Grid.Row="2" Padding="8,2" BorderBrush="#22FFFFFF" BorderThickness="0,1,0,0">
-                <Border.Background>
-                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                        <GradientStop Offset="0" Color="#FF12151C" />
-                        <GradientStop Offset="1" Color="#FF0B0D12" />
-                    </LinearGradientBrush>
-                </Border.Background>
+            <Border Grid.Row="2" Padding="8,2" BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,1,0,0" Background="{DynamicResource StatusGradient}">
+                
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
                     <Border Grid.Column="0" Classes="pill" MinWidth="64">
                         <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Center">
                             <Path x:Name="ToolIcon" Width="11" Height="11" Stretch="Uniform" StrokeThickness="1.2" StrokeLineCap="Round" StrokeJoin="Round"
-                                  Stroke="{StaticResource AccentBrush}" VerticalAlignment="Center" />
+                                  Stroke="{DynamicResource AccentBrush}" VerticalAlignment="Center" />
                             <TextBlock x:Name="ToolNameText" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"
-                                       Foreground="{StaticResource AccentBrush}" Text="Select" />
+                                       Foreground="{DynamicResource AccentBrush}" Text="Select" />
                         </StackPanel>
                     </Border>
-                    <TextBlock Grid.Column="1" x:Name="StatusText" FontSize="11.5" VerticalAlignment="Center" Foreground="{StaticResource MutedTextBrush}"
+                    <TextBlock Grid.Column="1" x:Name="StatusText" FontSize="11.5" VerticalAlignment="Center" Foreground="{DynamicResource MutedTextBrush}"
                                TextTrimming="CharacterEllipsis" />
                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
                         <Button Classes="pillKey" x:Name="GridPill" Content="Grid" Click="OnGridPill" ToolTip.Tip="Show the grid: on / off" />
@@ -207,24 +192,24 @@
         </Grid>
 
         <!-- icono's own file window (MainView.Files.cs): the drawings of the chosen folder, a name to save under, and always a Cancel -->
-        <Border x:Name="FilesLayer" IsVisible="False" Background="#99000000">
+        <Border x:Name="FilesLayer" IsVisible="False" Background="{DynamicResource ScrimBrush}">
             <Border Classes="dialog" Padding="20,16" Width="640" Margin="0,40"
                     HorizontalAlignment="Center" VerticalAlignment="Top">
                 <DockPanel>
                     <StackPanel DockPanel.Dock="Top" Spacing="8">
-                        <TextBlock x:Name="FilesTitle" FontSize="17" FontWeight="SemiBold" Foreground="{StaticResource ForegroundTextBrush}" />
+                        <TextBlock x:Name="FilesTitle" FontSize="17" FontWeight="SemiBold" Foreground="{DynamicResource ForegroundTextBrush}" />
                         <Grid ColumnDefinitions="*,Auto">
                             <TextBlock x:Name="FilesFolderText" VerticalAlignment="Center" FontSize="12.5" TextTrimming="CharacterEllipsis"
-                                       Foreground="{StaticResource MutedTextBrush}" />
+                                       Foreground="{DynamicResource MutedTextBrush}" />
                             <Button Grid.Column="1" Classes="tool" x:Name="FilesFolderButton" Content="Choose folder..." Click="OnFilesChooseFolder" />
                         </Grid>
                         <Grid x:Name="FilesNameRow" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-                            <TextBlock Text="Name" VerticalAlignment="Center" FontSize="13" Foreground="{StaticResource ForegroundTextBrush}" />
+                            <TextBlock Text="Name" VerticalAlignment="Center" FontSize="13" Foreground="{DynamicResource ForegroundTextBrush}" />
                             <TextBox Grid.Column="1" x:Name="FilesNameBox" FontSize="14" MinHeight="36" />
                             <TextBlock Grid.Column="2" x:Name="FilesExtensionText" VerticalAlignment="Center" FontSize="13"
-                                       Foreground="{StaticResource MutedTextBrush}" />
+                                       Foreground="{DynamicResource MutedTextBrush}" />
                         </Grid>
-                        <TextBlock x:Name="FilesNote" FontSize="12" TextWrapping="Wrap" Foreground="{StaticResource MutedTextBrush}" />
+                        <TextBlock x:Name="FilesNote" FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" />
                     </StackPanel>
 
                     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
@@ -234,7 +219,7 @@
                         <Button Classes="tool primary" x:Name="FilesActionButton" Content="Save" Click="OnFilesAction" />
                     </StackPanel>
 
-                    <Border Background="{StaticResource PanelBackgroundBrush}" CornerRadius="10" Margin="0,8,0,0" MaxHeight="420">
+                    <Border Background="{DynamicResource PanelBackgroundBrush}" CornerRadius="10" Margin="0,8,0,0" MaxHeight="420">
                         <ScrollViewer>
                             <StackPanel x:Name="FilesList" Margin="6" Spacing="2" />
                         </ScrollViewer>
@@ -244,26 +229,26 @@
         </Border>
 
         <!-- Export as PDF or PNG, saved or shared (MainView.Export.cs) -->
-        <Border x:Name="ExportLayer" IsVisible="False" Background="#99000000">
+        <Border x:Name="ExportLayer" IsVisible="False" Background="{DynamicResource ScrimBrush}">
             <Border Classes="dialog" Padding="22,18" Width="460"
                     HorizontalAlignment="Center" VerticalAlignment="Center">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="Export" FontSize="17" FontWeight="SemiBold" Foreground="{StaticResource ForegroundTextBrush}" />
+                    <TextBlock Text="Export" FontSize="17" FontWeight="SemiBold" Foreground="{DynamicResource ForegroundTextBrush}" />
 
-                    <TextBlock Text="FORMAT" FontSize="10.5" FontWeight="SemiBold" LetterSpacing="0.8" Foreground="{StaticResource MutedTextBrush}" />
+                    <TextBlock Text="FORMAT" FontSize="10.5" FontWeight="SemiBold" LetterSpacing="0.8" Foreground="{DynamicResource MutedTextBrush}" />
                     <UniformGrid Columns="2">
                         <Button Classes="tool" x:Name="ExportPdfButton" Content="PDF (real size, vectors)" HorizontalAlignment="Stretch" Click="OnExportPdf" />
                         <Button Classes="tool" x:Name="ExportPngButton" Content="PNG (image)" HorizontalAlignment="Stretch" Click="OnExportPng" />
                     </UniformGrid>
 
-                    <TextBlock Text="PAGES" FontSize="10.5" FontWeight="SemiBold" LetterSpacing="0.8" Foreground="{StaticResource MutedTextBrush}" />
+                    <TextBlock Text="PAGES" FontSize="10.5" FontWeight="SemiBold" LetterSpacing="0.8" Foreground="{DynamicResource MutedTextBrush}" />
                     <UniformGrid Columns="2">
                         <Button Classes="tool" x:Name="ExportCurrentButton" HorizontalAlignment="Stretch" Click="OnExportCurrentPage" />
                         <Button Classes="tool" x:Name="ExportAllButton" HorizontalAlignment="Stretch" Click="OnExportAllPages" />
                     </UniformGrid>
 
                     <StackPanel x:Name="ExportResolutionPanel" Spacing="10">
-                        <TextBlock Text="RESOLUTION" FontSize="10.5" FontWeight="SemiBold" LetterSpacing="0.8" Foreground="{StaticResource MutedTextBrush}" />
+                        <TextBlock Text="RESOLUTION" FontSize="10.5" FontWeight="SemiBold" LetterSpacing="0.8" Foreground="{DynamicResource MutedTextBrush}" />
                         <UniformGrid Columns="3">
                             <Button Classes="tool" x:Name="ExportDpi96" Content="96 dpi" HorizontalAlignment="Stretch" Click="OnExportDpi" Tag="96" />
                             <Button Classes="tool" x:Name="ExportDpi150" Content="150 dpi" HorizontalAlignment="Stretch" Click="OnExportDpi" Tag="150" />
@@ -272,10 +257,10 @@
                     </StackPanel>
 
                     <Grid ColumnDefinitions="*,Auto" MinHeight="30">
-                        <TextBlock Text="With the page background" FontSize="13" VerticalAlignment="Center" Foreground="{StaticResource ForegroundTextBrush}" />
+                        <TextBlock Text="With the page background" FontSize="13" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundTextBrush}" />
                         <ToggleSwitch Grid.Column="1" x:Name="ExportBackground" IsChecked="True" OnContent="{x:Null}" OffContent="{x:Null}" MinWidth="0" />
                     </Grid>
-                    <TextBlock x:Name="ExportInfo" FontSize="12" TextWrapping="Wrap" Foreground="{StaticResource MutedTextBrush}" />
+                    <TextBlock x:Name="ExportInfo" FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" />
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,6,0,0">
                         <Button Classes="tool" Content="Cancel" Click="OnExportCancel" />
@@ -288,13 +273,13 @@
         </Border>
 
         <!-- the length of the next wall and the way it goes (MainView.TypedWall.cs); at the top, so the on-screen keyboard does not cover it -->
-        <Border x:Name="LengthLayer" IsVisible="False" Background="#66000000">
+        <Border x:Name="LengthLayer" IsVisible="False" Background="{DynamicResource ScrimLightBrush}">
             <Border Classes="dialog" Padding="18,14" Width="460"
                     HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,50,0,0">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="Next wall" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource ForegroundTextBrush}" />
+                    <TextBlock Text="Next wall" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource ForegroundTextBrush}" />
                     <TextBox Classes="field" x:Name="LengthEntry" FontSize="15" MinHeight="40" PlaceholderText="Length, e.g. 250 or 2.5 m" />
-                    <TextBlock x:Name="LengthNote" FontSize="11.5" TextWrapping="Wrap" Foreground="{StaticResource MutedTextBrush}"
+                    <TextBlock x:Name="LengthNote" FontSize="11.5" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}"
                                Text="Type the length (inside length, like the number on the wall), then tap the way the wall goes." />
                     <!-- the four ways a wall can go: the corner is placed there -->
                     <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,*,*" HorizontalAlignment="Center" Width="270">
@@ -311,11 +296,11 @@
         </Border>
 
         <!-- quick help (the ? key in the top bar, MainView.Help.cs): the gestures and tools on white paper -->
-        <Border x:Name="HelpLayer" IsVisible="False" Background="#99000000">
+        <Border x:Name="HelpLayer" IsVisible="False" Background="{DynamicResource ScrimBrush}">
             <Border Classes="dialog" Padding="20,16" Margin="60,36">
                 <Grid RowDefinitions="Auto,*" RowSpacing="12">
                     <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock x:Name="HelpTitle" Text="Help" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{StaticResource ForegroundTextBrush}" />
+                        <TextBlock x:Name="HelpTitle" Text="Help" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundTextBrush}" />
                         <Button Grid.Column="1" Classes="tool primary" Content="Close" Click="OnHelpClose" />
                     </Grid>
                     <Border Grid.Row="1" Background="White" CornerRadius="12" ClipToBounds="True" BorderBrush="#33FFFFFF" BorderThickness="1">
@@ -328,18 +313,20 @@
         </Border>
 
         <!-- About (tap the logo): version, test terms, privacy, licences (MainView.About.cs) -->
-        <Border x:Name="AboutLayer" IsVisible="False" Background="#99000000">
+        <Border x:Name="AboutLayer" IsVisible="False" Background="{DynamicResource ScrimBrush}">
             <Border Classes="dialog" Padding="20,16" Margin="60,40">
                 <Grid ColumnDefinitions="220,*" ColumnSpacing="20">
                     <StackPanel Grid.Column="0" Spacing="10">
                         <Border Background="#FFF1F5FB" CornerRadius="10" Padding="12,8">
                             <Image Source="avares://Icono.Mobile/Assets/icono.png" Height="60" RenderOptions.BitmapInterpolationMode="HighQuality" />
                         </Border>
-                        <TextBlock Text="icono for tablets" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource ForegroundTextBrush}" />
-                        <TextBlock x:Name="AboutVersion" FontSize="12.5" Foreground="{StaticResource MutedTextBrush}" />
-                        <TextBlock Text="© 2026 Jonas Shojaei" FontSize="12.5" Foreground="{StaticResource MutedTextBrush}" />
+                        <TextBlock Text="icono for tablets" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource ForegroundTextBrush}" />
+                        <TextBlock x:Name="AboutVersion" FontSize="12.5" Foreground="{DynamicResource MutedTextBrush}" />
+                        <TextBlock Text="© 2026 Jonas Shojaei" FontSize="12.5" Foreground="{DynamicResource MutedTextBrush}" />
                         <TextBlock Text="Test version: results (dimensions, areas, plans) are aids - check them before you build or buy anything."
-                                   FontSize="12" TextWrapping="Wrap" Foreground="{StaticResource MutedTextBrush}" />
+                                   FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" />
+                        <!-- the look of the app (MainView.About.cs): Dark / Light and Soft / Pro / Glass -->
+                        <StackPanel x:Name="AboutLookHost" Spacing="5" Margin="0,4,0,4" />
                         <Button Classes="tool" x:Name="AboutTermsButton" Content="Test terms" HorizontalAlignment="Stretch" Click="OnAboutTerms" />
                         <Button Classes="tool" x:Name="AboutPrivacyButton" Content="Privacy" HorizontalAlignment="Stretch" Click="OnAboutPrivacy" />
                         <Button Classes="tool" x:Name="AboutNoticesButton" Content="Licences" HorizontalAlignment="Stretch" Click="OnAboutNotices" />
@@ -360,13 +347,13 @@
         </Border>
 
         <!-- typing a text (MainView.Text.cs); at the top, so the on-screen keyboard does not cover it -->
-        <Border x:Name="TextLayer" IsVisible="False" Background="#66000000">
+        <Border x:Name="TextLayer" IsVisible="False" Background="{DynamicResource ScrimLightBrush}">
             <Border Classes="dialog" Padding="18,14" Width="520"
                     HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,70,0,0">
                 <StackPanel Spacing="12">
-                    <TextBlock x:Name="TextTitle" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource ForegroundTextBrush}" />
+                    <TextBlock x:Name="TextTitle" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource ForegroundTextBrush}" />
                     <TextBox Classes="field" x:Name="TextEntry" FontSize="15" MinHeight="40" TextWrapping="Wrap" />
-                    <TextBlock x:Name="TextNote" FontSize="11.5" TextWrapping="Wrap" Foreground="{StaticResource MutedTextBrush}" />
+                    <TextBlock x:Name="TextNote" FontSize="11.5" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" />
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button Classes="tool" Content="Cancel" Click="OnTextCancel" />
                         <Button Classes="tool primary" Content="OK" Click="OnTextOk" />
@@ -376,12 +363,12 @@
         </Border>
 
         <!-- question in front of everything (unsaved changes) -->
-        <Border x:Name="QuestionLayer" IsVisible="False" Background="#99000000">
+        <Border x:Name="QuestionLayer" IsVisible="False" Background="{DynamicResource ScrimBrush}">
             <Border Classes="dialog" Padding="22,18" MaxWidth="480"
                     HorizontalAlignment="Center" VerticalAlignment="Center">
                 <StackPanel Spacing="16">
-                    <TextBlock x:Name="QuestionTitle" FontSize="17" FontWeight="SemiBold" Foreground="{StaticResource ForegroundTextBrush}" />
-                    <TextBlock x:Name="QuestionText" FontSize="14" TextWrapping="Wrap" Foreground="{StaticResource MutedTextBrush}" />
+                    <TextBlock x:Name="QuestionTitle" FontSize="17" FontWeight="SemiBold" Foreground="{DynamicResource ForegroundTextBrush}" />
+                    <TextBlock x:Name="QuestionText" FontSize="14" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" />
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button Classes="tool" Content="Cancel" Click="OnQuestionCancel" />
                         <Button Classes="tool" Content="Don't save" Click="OnQuestionDiscard" />

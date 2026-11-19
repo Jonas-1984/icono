@@ -281,7 +281,7 @@ public sealed partial class PropertiesPanel
             Content = path,
             IsEnabled = enabled,
             Opacity = enabled ? 1 : 0.35,
-            Background = new SolidColorBrush(Color.FromArgb(enabled ? (byte)0x1C : (byte)0x08, 0xFF, 0xFF, 0xFF)),
+            Background = Brush(enabled ? "VeilStrongBrush" : "VeilBrush"),
             CornerRadius = new CornerRadius(7),
             Margin = new Thickness(1, 0),
             Padding = new Thickness(0),

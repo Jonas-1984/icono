@@ -311,8 +311,7 @@ public partial class MainView
 
     private void OnFilesCancel(object? sender, RoutedEventArgs e) => CloseFiles(null);
 
-    private static IBrush Brush(string key) =>
-        Application.Current?.TryGetResource(key, null, out var value) == true && value is IBrush brush ? brush : Brushes.Gray;
+    private static IBrush Brush(string key) => AppTheme.Brush(key);
 
     // ---------------------------------------------------------------- Open Recent
 

@@ -1,32 +1,194 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Icono.Mobile.App"
+             xmlns:local="using:Icono.Mobile"
              RequestedThemeVariant="Dark">
 
-    <!-- Colours of the standard dark design of the Windows program (Themes/DarkPalette.xaml). -->
+    <!-- The colours of the look. Mode: Dark / Light. Style: Soft (the usual one, soft gradients), Pro (flat, content first) and Glass (see-through plates over a
+         colourful background - plain colours, no blur, so it costs nothing). The theme variants are Dark, Light, DarkPro, LightPro, DarkGlass and LightGlass
+         (AppTheme.cs); Pro and Glass only replace what they change and take the rest from Dark or Light. Everything refers to these keys with DynamicResource. -->
     <Application.Resources>
-        <SolidColorBrush x:Key="ToolbarBackgroundBrush" Color="#FF14171E" />
-        <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#FF0B0D12" />
-        <SolidColorBrush x:Key="CanvasSurroundBrush" Color="#FF06070A" />
-        <SolidColorBrush x:Key="BorderLineBrush" Color="#FF030405" />
-        <SolidColorBrush x:Key="ForegroundTextBrush" Color="#FFE9F0FA" />
-        <SolidColorBrush x:Key="MutedTextBrush" Color="#FF8994A8" />
-        <SolidColorBrush x:Key="AccentBrush" Color="#FF5AB0FF" />
-        <SolidColorBrush x:Key="RaisedBrush" Color="#FF1C2029" />
-        <SolidColorBrush x:Key="RaisedPressedBrush" Color="#FF262B36" />
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
 
-        <!-- the accent of check boxes, sliders, focus marks ...: icono blue, not the device's accent colour (red on Xiaomi) -->
-        <Color x:Key="SystemAccentColor">#FF5AB0FF</Color>
-        <Color x:Key="SystemAccentColorDark1">#FF4A9BE6</Color>
-        <Color x:Key="SystemAccentColorDark2">#FF3B86CC</Color>
-        <Color x:Key="SystemAccentColorDark3">#FF2C6CB0</Color>
-        <Color x:Key="SystemAccentColorLight1">#FF7BC0FF</Color>
-        <Color x:Key="SystemAccentColorLight2">#FF9ED2FF</Color>
-        <Color x:Key="SystemAccentColorLight3">#FFC2E2FF</Color>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="ToolbarBackgroundBrush" Color="#FF14171E" />
+                    <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#FF0B0D12" />
+                    <SolidColorBrush x:Key="CanvasSurroundBrush" Color="#FF06070A" />
+                    <SolidColorBrush x:Key="BorderLineBrush" Color="#FF030405" />
+                    <SolidColorBrush x:Key="ForegroundTextBrush" Color="#FFE9F0FA" />
+                    <SolidColorBrush x:Key="MutedTextBrush" Color="#FF8994A8" />
+                    <SolidColorBrush x:Key="AccentBrush" Color="#FF5AB0FF" />
+                    <SolidColorBrush x:Key="RaisedBrush" Color="#FF1C2029" />
+                    <SolidColorBrush x:Key="RaisedPressedBrush" Color="#FF262B36" />
+                    <SolidColorBrush x:Key="HairBrush" Color="#22FFFFFF" />
+                    <SolidColorBrush x:Key="HairSoftBrush" Color="#14FFFFFF" />
+                    <SolidColorBrush x:Key="VeilBrush" Color="#14FFFFFF" />
+                    <SolidColorBrush x:Key="VeilStrongBrush" Color="#26FFFFFF" />
+                    <SolidColorBrush x:Key="CardBrush" Color="#0DFFFFFF" />
+                    <SolidColorBrush x:Key="FieldBrush" Color="#FF0D1016" />
+                    <SolidColorBrush x:Key="FieldEdgeBrush" Color="#26FFFFFF" />
+                    <SolidColorBrush x:Key="PillBrush" Color="#1AFFFFFF" />
+                    <SolidColorBrush x:Key="BarTextBrush" Color="#FFD3DCEB" />
+                    <SolidColorBrush x:Key="BarActiveTextBrush" Color="#FF8CCBFF" />
+                    <SolidColorBrush x:Key="DisabledTextBrush" Color="#FF485063" />
+                    <SolidColorBrush x:Key="ActiveTextBrush" Color="#FFD6EBFF" />
+                    <SolidColorBrush x:Key="BarGroupBrush" Color="#FF1E2430" />
+                    <SolidColorBrush x:Key="KeyPressedBrush" Color="#FF303847" />
+                    <SolidColorBrush x:Key="ScrimBrush" Color="#99000000" />
+                    <SolidColorBrush x:Key="ScrimLightBrush" Color="#66000000" />
+                    <LinearGradientBrush x:Key="BarGradient" StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0" Color="#FF1B202B" />
+                        <GradientStop Offset="1" Color="#FF12151C" />
+                    </LinearGradientBrush>
+                    <LinearGradientBrush x:Key="StatusGradient" StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0" Color="#FF12151C" />
+                        <GradientStop Offset="1" Color="#FF0B0D12" />
+                    </LinearGradientBrush>
+                    <LinearGradientBrush x:Key="KeyGradient" StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0" Color="#FF272D3A" />
+                        <GradientStop Offset="1" Color="#FF1D222C" />
+                    </LinearGradientBrush>
+                    <LinearGradientBrush x:Key="DialogGradient" StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0" Color="#FF1D2330" />
+                        <GradientStop Offset="1" Color="#FF131720" />
+                    </LinearGradientBrush>
+                </ResourceDictionary>
+
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="ToolbarBackgroundBrush" Color="#FFF3F6FA" />
+                    <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#FFE3E8EF" />
+                    <SolidColorBrush x:Key="CanvasSurroundBrush" Color="#FFD3D9E2" />
+                    <SolidColorBrush x:Key="BorderLineBrush" Color="#FFC5CCD8" />
+                    <SolidColorBrush x:Key="ForegroundTextBrush" Color="#FF1B2233" />
+                    <SolidColorBrush x:Key="MutedTextBrush" Color="#FF5C687C" />
+                    <SolidColorBrush x:Key="AccentBrush" Color="#FF1D78E0" />
+                    <SolidColorBrush x:Key="RaisedBrush" Color="#FFFFFFFF" />
+                    <SolidColorBrush x:Key="RaisedPressedBrush" Color="#FFDDE3EC" />
+                    <SolidColorBrush x:Key="HairBrush" Color="#2A1B2233" />
+                    <SolidColorBrush x:Key="HairSoftBrush" Color="#181B2233" />
+                    <SolidColorBrush x:Key="VeilBrush" Color="#12000000" />
+                    <SolidColorBrush x:Key="VeilStrongBrush" Color="#24000000" />
+                    <SolidColorBrush x:Key="CardBrush" Color="#0A1B2233" />
+                    <SolidColorBrush x:Key="FieldBrush" Color="#FFFFFFFF" />
+                    <SolidColorBrush x:Key="FieldEdgeBrush" Color="#38000000" />
+                    <SolidColorBrush x:Key="PillBrush" Color="#141B2233" />
+                    <SolidColorBrush x:Key="BarTextBrush" Color="#FF2B3548" />
+                    <SolidColorBrush x:Key="BarActiveTextBrush" Color="#FF0A5BC4" />
+                    <SolidColorBrush x:Key="DisabledTextBrush" Color="#FFA4ADBC" />
+                    <SolidColorBrush x:Key="ActiveTextBrush" Color="#FF0A4A9A" />
+                    <SolidColorBrush x:Key="BarGroupBrush" Color="#FFE6EAF2" />
+                    <SolidColorBrush x:Key="KeyPressedBrush" Color="#FFD8DEE8" />
+                    <SolidColorBrush x:Key="ScrimBrush" Color="#66101828" />
+                    <SolidColorBrush x:Key="ScrimLightBrush" Color="#44101828" />
+                    <LinearGradientBrush x:Key="BarGradient" StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0" Color="#FFFFFFFF" />
+                        <GradientStop Offset="1" Color="#FFE9EDF4" />
+                    </LinearGradientBrush>
+                    <LinearGradientBrush x:Key="StatusGradient" StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0" Color="#FFEEF1F6" />
+                        <GradientStop Offset="1" Color="#FFE1E6EE" />
+                    </LinearGradientBrush>
+                    <LinearGradientBrush x:Key="KeyGradient" StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0" Color="#FFFFFFFF" />
+                        <GradientStop Offset="1" Color="#FFEDF0F6" />
+                    </LinearGradientBrush>
+                    <LinearGradientBrush x:Key="DialogGradient" StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0" Color="#FFFFFFFF" />
+                        <GradientStop Offset="1" Color="#FFEEF2F8" />
+                    </LinearGradientBrush>
+                </ResourceDictionary>
+
+                <!-- PRO: flat, no gradients -->
+                <ResourceDictionary x:Key="{x:Static local:AppTheme.DarkPro}">
+                    <SolidColorBrush x:Key="BarGradient" Color="#FF14171E" />
+                    <SolidColorBrush x:Key="StatusGradient" Color="#FF14171E" />
+                    <SolidColorBrush x:Key="KeyGradient" Color="#FF222733" />
+                    <SolidColorBrush x:Key="DialogGradient" Color="#FF181C25" />
+                    <SolidColorBrush x:Key="BarGroupBrush" Color="#FF1B202A" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="{x:Static local:AppTheme.LightPro}">
+                    <SolidColorBrush x:Key="BarGradient" Color="#FFF3F6FA" />
+                    <SolidColorBrush x:Key="StatusGradient" Color="#FFF3F6FA" />
+                    <SolidColorBrush x:Key="KeyGradient" Color="#FFFFFFFF" />
+                    <SolidColorBrush x:Key="DialogGradient" Color="#FFFFFFFF" />
+                    <SolidColorBrush x:Key="BarGroupBrush" Color="#FFE9EDF4" />
+                </ResourceDictionary>
+
+                <!-- GLASS: see-through plates over a colourful background (plain translucent colours - no blur) -->
+                <ResourceDictionary x:Key="{x:Static local:AppTheme.DarkGlass}">
+                    <LinearGradientBrush x:Key="CanvasSurroundBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Offset="0" Color="#FF1A2748" />
+                        <GradientStop Offset="0.55" Color="#FF2A1E4A" />
+                        <GradientStop Offset="1" Color="#FF0E3A4A" />
+                    </LinearGradientBrush>
+                    <SolidColorBrush x:Key="ToolbarBackgroundBrush" Color="#8014171E" />
+                    <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#590B0D12" />
+                    <SolidColorBrush x:Key="RaisedBrush" Color="#661C2029" />
+                    <SolidColorBrush x:Key="BorderLineBrush" Color="#33FFFFFF" />
+                    <LinearGradientBrush x:Key="BarGradient" StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0" Color="#802A3552" />
+                        <GradientStop Offset="1" Color="#661B2238" />
+                    </LinearGradientBrush>
+                    <LinearGradientBrush x:Key="StatusGradient" StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0" Color="#661B2238" />
+                        <GradientStop Offset="1" Color="#80121A2E" />
+                    </LinearGradientBrush>
+                    <LinearGradientBrush x:Key="KeyGradient" StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0" Color="#4DFFFFFF" />
+                        <GradientStop Offset="1" Color="#26FFFFFF" />
+                    </LinearGradientBrush>
+                    <LinearGradientBrush x:Key="DialogGradient" StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0" Color="#E62A3352" />
+                        <GradientStop Offset="1" Color="#E6171E36" />
+                    </LinearGradientBrush>
+                    <SolidColorBrush x:Key="BarGroupBrush" Color="#33FFFFFF" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="{x:Static local:AppTheme.LightGlass}">
+                    <LinearGradientBrush x:Key="CanvasSurroundBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Offset="0" Color="#FFBBD3F5" />
+                        <GradientStop Offset="0.5" Color="#FFD3C4F0" />
+                        <GradientStop Offset="1" Color="#FFB9E3D6" />
+                    </LinearGradientBrush>
+                    <SolidColorBrush x:Key="ToolbarBackgroundBrush" Color="#99FFFFFF" />
+                    <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#66FFFFFF" />
+                    <SolidColorBrush x:Key="RaisedBrush" Color="#99FFFFFF" />
+                    <SolidColorBrush x:Key="BorderLineBrush" Color="#66FFFFFF" />
+                    <LinearGradientBrush x:Key="BarGradient" StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0" Color="#B3FFFFFF" />
+                        <GradientStop Offset="1" Color="#80FFFFFF" />
+                    </LinearGradientBrush>
+                    <LinearGradientBrush x:Key="StatusGradient" StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0" Color="#80FFFFFF" />
+                        <GradientStop Offset="1" Color="#99FFFFFF" />
+                    </LinearGradientBrush>
+                    <LinearGradientBrush x:Key="KeyGradient" StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0" Color="#CCFFFFFF" />
+                        <GradientStop Offset="1" Color="#80FFFFFF" />
+                    </LinearGradientBrush>
+                    <LinearGradientBrush x:Key="DialogGradient" StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0" Color="#F2FFFFFF" />
+                        <GradientStop Offset="1" Color="#E0F4F7FF" />
+                    </LinearGradientBrush>
+                    <SolidColorBrush x:Key="BarGroupBrush" Color="#66FFFFFF" />
+                </ResourceDictionary>
+
+            </ResourceDictionary.ThemeDictionaries>
+
+            <!-- the accent of check boxes, sliders, focus marks ...: icono blue, not the device's accent colour (red on Xiaomi) -->
+            <Color x:Key="SystemAccentColor">#FF5AB0FF</Color>
+            <Color x:Key="SystemAccentColorDark1">#FF4A9BE6</Color>
+            <Color x:Key="SystemAccentColorDark2">#FF3B86CC</Color>
+            <Color x:Key="SystemAccentColorDark3">#FF2C6CB0</Color>
+            <Color x:Key="SystemAccentColorLight1">#FF7BC0FF</Color>
+            <Color x:Key="SystemAccentColorLight2">#FF9ED2FF</Color>
+            <Color x:Key="SystemAccentColorLight3">#FFC2E2FF</Color>
+        </ResourceDictionary>
     </Application.Resources>
 
     <Application.Styles>
         <FluentTheme />
+
 
         <!-- Toolbar buttons: still easy to hit with a finger (38 dp high). -->
         <Style Selector="Button.listRow">
@@ -36,7 +198,7 @@
             <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
         <Style Selector="Button.listRow:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#18FFFFFF" />
+            <Setter Property="Background" Value="{DynamicResource VeilBrush}" />
         </Style>
         <Style Selector="Button.listRow:pressed /template/ ContentPresenter">
             <Setter Property="Background" Value="#335AB0FF" />
@@ -100,19 +262,14 @@
             <Setter Property="Background" Value="Transparent" />
         </Style>
         <Style Selector="Button.bare:pressed /template/ ContentPresenter">
-            <Setter Property="Background" Value="#33FFFFFF" />
+            <Setter Property="Background" Value="{DynamicResource VeilStrongBrush}" />
         </Style>
         <Style Selector="Border.dialog">
             <Setter Property="CornerRadius" Value="18" />
-            <Setter Property="BorderBrush" Value="#2AFFFFFF" />
+            <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="BoxShadow" Value="0 18 48 0 #AA000000" />
-            <Setter Property="Background">
-                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                    <GradientStop Offset="0" Color="#FF1D2330" />
-                    <GradientStop Offset="1" Color="#FF131720" />
-                </LinearGradientBrush>
-            </Setter>
+            <Setter Property="Background" Value="{DynamicResource DialogGradient}" />
         </Style>
         <Style Selector="Button.tool">
             <Setter Property="MinHeight" Value="32" />
@@ -123,30 +280,25 @@
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="FontSize" Value="13" />
             <Setter Property="CornerRadius" Value="10" />
-            <Setter Property="BorderBrush" Value="#1FFFFFFF" />
+            <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Foreground" Value="{StaticResource ForegroundTextBrush}" />
-            <Setter Property="Background">
-                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                    <GradientStop Offset="0" Color="#FF272D3A" />
-                    <GradientStop Offset="1" Color="#FF1D222C" />
-                </LinearGradientBrush>
-            </Setter>
+            <Setter Property="Foreground" Value="{DynamicResource ForegroundTextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource KeyGradient}" />
         </Style>
         <Style Selector="Button.tool:pointerover /template/ ContentPresenter">
             <Setter Property="BorderBrush" Value="#665AB0FF" />
         </Style>
         <Style Selector="Button.tool:pressed /template/ ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource RaisedPressedBrush}" />
+            <Setter Property="Background" Value="{DynamicResource RaisedPressedBrush}" />
         </Style>
         <Style Selector="Button.tool:disabled /template/ ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource ToolbarBackgroundBrush}" />
-            <Setter Property="Foreground" Value="#FF4A5263" />
+            <Setter Property="Background" Value="{DynamicResource ToolbarBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource DisabledTextBrush}" />
         </Style>
         <!-- a toolbar button that switches something on (Properties) -->
         <Style Selector="Button.tool.on">
             <Setter Property="Background" Value="#335AB0FF" />
-            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
         <Style Selector="Button.primary">
@@ -177,13 +329,13 @@
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="CornerRadius" Value="11" />
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
         </Style>
         <Style Selector="Button.palette:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#14FFFFFF" />
+            <Setter Property="Background" Value="{DynamicResource VeilBrush}" />
         </Style>
         <Style Selector="Button.palette:pressed /template/ ContentPresenter">
-            <Setter Property="Background" Value="#26FFFFFF" />
+            <Setter Property="Background" Value="{DynamicResource VeilStrongBrush}" />
         </Style>
         <Style Selector="Button.palette.active /template/ ContentPresenter">
             <Setter Property="Background">
@@ -197,12 +349,12 @@
             <Setter Property="BoxShadow" Value="0 0 12 0 #405AB0FF" />
         </Style>
         <Style Selector="Button.palette.active">
-            <Setter Property="Foreground" Value="#FFD6EBFF" />
+            <Setter Property="Foreground" Value="{DynamicResource ActiveTextBrush}" />
         </Style>
         <Style Selector="Border.paletteLine">
             <Setter Property="Height" Value="1" />
             <Setter Property="Margin" Value="8,4" />
-            <Setter Property="Background" Value="#22FFFFFF" />
+            <Setter Property="Background" Value="{DynamicResource HairBrush}" />
         </Style>
         <Style Selector="Button.pillKey">
             <Setter Property="MinHeight" Value="20" />
@@ -211,37 +363,37 @@
             <Setter Property="Margin" Value="0" />
             <Setter Property="FontSize" Value="11" />
             <Setter Property="CornerRadius" Value="9" />
-            <Setter Property="Background" Value="#1AFFFFFF" />
-            <Setter Property="Foreground" Value="{StaticResource ForegroundTextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource PillBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource ForegroundTextBrush}" />
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
         </Style>
         <Style Selector="Button.pillKey:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#2AFFFFFF" />
+            <Setter Property="Background" Value="{DynamicResource VeilStrongBrush}" />
         </Style>
         <Style Selector="Button.pillKey:pressed /template/ ContentPresenter">
-            <Setter Property="Background" Value="#3AFFFFFF" />
+            <Setter Property="Background" Value="{DynamicResource VeilStrongBrush}" />
         </Style>
         <Style Selector="Button.pillKey.on /template/ ContentPresenter">
             <Setter Property="Background" Value="#335AB0FF" />
         </Style>
         <Style Selector="Button.pillKey.on">
-            <Setter Property="Foreground" Value="#FFD6EBFF" />
+            <Setter Property="Foreground" Value="{DynamicResource ActiveTextBrush}" />
         </Style>
         <Style Selector="Border.pill">
             <Setter Property="CornerRadius" Value="9" />
             <Setter Property="Padding" Value="9,1" />
-            <Setter Property="Background" Value="#1AFFFFFF" />
+            <Setter Property="Background" Value="{DynamicResource PillBrush}" />
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
         <!-- the properties panel: segmented tabs, section cards, inset fields, soft keys -->
         <Style Selector="Border.segPlate">
-            <Setter Property="Background" Value="#FF0D1016" />
+            <Setter Property="Background" Value="{DynamicResource FieldBrush}" />
             <Setter Property="CornerRadius" Value="12" />
             <Setter Property="Padding" Value="3" />
-            <Setter Property="BorderBrush" Value="#1AFFFFFF" />
+            <Setter Property="BorderBrush" Value="{DynamicResource HairSoftBrush}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
         <Style Selector="Button.seg">
@@ -252,13 +404,13 @@
             <Setter Property="FontWeight" Value="Medium" />
             <Setter Property="CornerRadius" Value="9" />
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
         <Style Selector="Button.seg:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#14FFFFFF" />
+            <Setter Property="Background" Value="{DynamicResource VeilBrush}" />
         </Style>
         <Style Selector="Button.seg.on /template/ ContentPresenter">
             <Setter Property="Background">
@@ -271,12 +423,12 @@
             <Setter Property="BorderThickness" Value="1" />
         </Style>
         <Style Selector="Button.seg.on">
-            <Setter Property="Foreground" Value="#FFD6EBFF" />
+            <Setter Property="Foreground" Value="{DynamicResource ActiveTextBrush}" />
         </Style>
 
         <Style Selector="Border.card">
-            <Setter Property="Background" Value="#0DFFFFFF" />
-            <Setter Property="BorderBrush" Value="#14FFFFFF" />
+            <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource HairSoftBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="12" />
             <Setter Property="Padding" Value="10,8" />
@@ -289,19 +441,14 @@
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="CornerRadius" Value="10" />
             <Setter Property="FontSize" Value="12" />
-            <Setter Property="Foreground" Value="{StaticResource ForegroundTextBrush}" />
-            <Setter Property="BorderBrush" Value="#1FFFFFFF" />
+            <Setter Property="Foreground" Value="{DynamicResource ForegroundTextBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Background">
-                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                    <GradientStop Offset="0" Color="#FF272D3A" />
-                    <GradientStop Offset="1" Color="#FF1D222C" />
-                </LinearGradientBrush>
-            </Setter>
+            <Setter Property="Background" Value="{DynamicResource KeyGradient}" />
         </Style>
         <!-- an icon key that is switched on -->
         <Style Selector="Button.soft.on">
-            <Setter Property="Foreground" Value="#FFD6EBFF" />
+            <Setter Property="Foreground" Value="{DynamicResource ActiveTextBrush}" />
             <Setter Property="BorderBrush" Value="#995AB0FF" />
             <Setter Property="Background">
                 <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
@@ -314,7 +461,7 @@
             <Setter Property="BorderBrush" Value="#665AB0FF" />
         </Style>
         <Style Selector="Button.soft:pressed /template/ ContentPresenter">
-            <Setter Property="Background" Value="#FF303847" />
+            <Setter Property="Background" Value="{DynamicResource KeyPressedBrush}" />
         </Style>
         <Style Selector="Button.soft:disabled /template/ ContentPresenter">
             <Setter Property="Opacity" Value="0.45" />
@@ -324,23 +471,23 @@
             <Setter Property="MinHeight" Value="28" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="CornerRadius" Value="10" />
-            <Setter Property="Background" Value="#FF0D1016" />
-            <Setter Property="BorderBrush" Value="#26FFFFFF" />
+            <Setter Property="Background" Value="{DynamicResource FieldBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource FieldEdgeBrush}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
         <Style Selector="TextBox.field /template/ Border#PART_BorderElement">
-            <Setter Property="Background" Value="#FF0D1016" />
-            <Setter Property="BorderBrush" Value="#26FFFFFF" />
+            <Setter Property="Background" Value="{DynamicResource FieldBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource FieldEdgeBrush}" />
         </Style>
         <Style Selector="TextBox.field:focus /template/ Border#PART_BorderElement">
-            <Setter Property="BorderBrush" Value="#FF5AB0FF" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
         </Style>
         <Style Selector="ComboBox.field">
             <Setter Property="MinHeight" Value="28" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="CornerRadius" Value="10" />
-            <Setter Property="Background" Value="#FF0D1016" />
-            <Setter Property="BorderBrush" Value="#26FFFFFF" />
+            <Setter Property="Background" Value="{DynamicResource FieldBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource FieldEdgeBrush}" />
         </Style>
 
         <!-- small icon buttons (layer list): no grey box when they cannot be used, they only fade -->
@@ -352,7 +499,7 @@
         <Style Selector="Border.separator">
             <Setter Property="Width" Value="1" />
             <Setter Property="Margin" Value="6,6" />
-            <Setter Property="Background" Value="{StaticResource RaisedPressedBrush}" />
+            <Setter Property="Background" Value="{DynamicResource RaisedPressedBrush}" />
         </Style>
 
         <!-- the number pad (NumberPad.cs) brings its own frosted glass: the flyout around it is see-through -->
@@ -366,10 +513,10 @@
 
         <!-- the thin top bar: groups of flat keys with an icon (and a name) -->
         <Style Selector="Border.barGroup">
-            <Setter Property="Background" Value="#FF1E2430" />
+            <Setter Property="Background" Value="{DynamicResource BarGroupBrush}" />
             <Setter Property="CornerRadius" Value="11" />
             <Setter Property="Padding" Value="2" />
-            <Setter Property="BorderBrush" Value="#22FFFFFF" />
+            <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
@@ -383,7 +530,7 @@
             <Setter Property="FontWeight" Value="Medium" />
             <Setter Property="CornerRadius" Value="9" />
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="#FFD3DCEB" />
+            <Setter Property="Foreground" Value="{DynamicResource BarTextBrush}" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
         </Style>
@@ -392,10 +539,10 @@
             <Setter Property="Width" Value="34" />
         </Style>
         <Style Selector="Button.bar:pressed /template/ ContentPresenter">
-            <Setter Property="Background" Value="#33FFFFFF" />
+            <Setter Property="Background" Value="{DynamicResource VeilStrongBrush}" />
         </Style>
         <Style Selector="Button.bar:disabled">
-            <Setter Property="Foreground" Value="#FF485063" />
+            <Setter Property="Foreground" Value="{DynamicResource DisabledTextBrush}" />
         </Style>
         <Style Selector="Button.bar:disabled /template/ ContentPresenter">
             <Setter Property="Background" Value="Transparent" />
@@ -404,7 +551,7 @@
             <Setter Property="Background" Value="#335AB0FF" />
         </Style>
         <Style Selector="Button.bar.on">
-            <Setter Property="Foreground" Value="#FF8CCBFF" />
+            <Setter Property="Foreground" Value="{DynamicResource BarActiveTextBrush}" />
         </Style>
         <Style Selector="Path.barIcon">
             <Setter Property="Width" Value="15" />

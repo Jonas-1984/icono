@@ -11,10 +11,11 @@ internal static class RulerPainter
     /// <summary>Width of the left ruler, height of the top one (DIP).</summary>
     public const float Thickness = 22;
 
-    private static readonly SKColor Back = new(0x14, 0x17, 0x1E, 0xF0);
-    private static readonly SKColor Ink = new(0x8A, 0x94, 0xA6);
-    private static readonly SKColor Text = new(0xE9, 0xF0, 0xFA);
-    private static readonly SKColor Accent = new(0x5A, 0xB0, 0xFF);
+    // the colours follow the look of the app (dark or light)
+    private static SKColor Back => AppTheme.RulerBack;
+    private static SKColor Ink => AppTheme.RulerInk;
+    private static SKColor Text => AppTheme.RulerText;
+    private static SKColor Accent => AppTheme.RulerAccent;
 
     public static string UnitLabel(LengthUnit unit) => unit switch
     {

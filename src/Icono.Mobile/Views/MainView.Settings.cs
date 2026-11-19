@@ -32,6 +32,7 @@ public partial class MainView
         _context.PointSnap.PropertyChanged += Soon;
         _context.ObjectSnap.PropertyChanged += Soon;
         _context.SettingsChanged += () => Soon(null, EventArgs.Empty);
+        AppTheme.Changed += _context.RequestRedraw; // the rulers and labels painted on the canvas take the colours of the look
     }
 
     /// <summary>Writes the settings at once (the app is being left or closed).</summary>

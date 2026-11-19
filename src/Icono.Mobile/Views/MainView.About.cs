@@ -1,5 +1,6 @@
 using System.Globalization;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Avalonia.Platform;
 
@@ -20,6 +21,39 @@ public partial class MainView
         AboutTermsButton.Content = German ? "Testbedingungen" : "Test terms";
         AboutPrivacyButton.Content = German ? "Datenschutz" : "Privacy";
         AboutNoticesButton.Content = German ? "Lizenzen" : "Licences";
+        BuildLookChooser();
+        AppTheme.Changed += BuildLookChooser; // the marks follow a change of the look
+    }
+
+    /// <summary>The colour design of the app, as in the Windows program: Mode (Dark / Light) and Style (Soft / Pro / Glass). Kept for the next start (AppTheme).</summary>
+    private void BuildLookChooser()
+    {
+        AboutLookHost.Children.Clear();
+        AboutLookHost.Children.Add(LookLabel("MODE"));
+        AboutLookHost.Children.Add(LookSegments([("Dark", ThemeMode.Dark), ("Light", ThemeMode.Light)], AppTheme.Mode, mode => AppTheme.Set(mode, AppTheme.Style)));
+        AboutLookHost.Children.Add(LookLabel("STYLE"));
+        AboutLookHost.Children.Add(LookSegments(
+            [("Soft", ThemeStyle.Soft), ("Pro", ThemeStyle.Pro), ("Glass", ThemeStyle.Glass)], AppTheme.Style, style => AppTheme.Set(AppTheme.Mode, style)));
+    }
+
+    private static TextBlock LookLabel(string text) => new()
+    {
+        Text = text, FontSize = 10.5, FontWeight = Avalonia.Media.FontWeight.SemiBold, Foreground = AppTheme.Brush("MutedTextBrush"),
+        Margin = new Avalonia.Thickness(2, 2, 0, 0),
+    };
+
+    private static Border LookSegments<T>(IReadOnlyList<(string Name, T Value)> options, T current, Action<T> choose)
+    {
+        var grid = new UniformGrid { Columns = options.Count };
+        foreach (var (name, value) in options)
+        {
+            var key = new Button { Content = name, Classes = { "seg" } };
+            key.Classes.Set("on", EqualityComparer<T>.Default.Equals(value, current));
+            key.Click += (_, _) => choose(value);
+            grid.Children.Add(key);
+        }
+
+        return new Border { Classes = { "segPlate" }, Child = grid };
     }
 
     private void OpenAbout()

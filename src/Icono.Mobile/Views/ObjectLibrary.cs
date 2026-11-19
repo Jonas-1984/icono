@@ -307,6 +307,5 @@ public sealed class ObjectLibrary : UserControl
         }
     }
 
-    private static IBrush Brush(string key) =>
-        Application.Current?.TryGetResource(key, null, out var value) == true && value is IBrush brush ? brush : Brushes.Gray;
+    private static IBrush Brush(string key) => AppTheme.Brush(key);
 }

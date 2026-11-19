@@ -103,6 +103,18 @@ public sealed partial class PropertiesPanel : UserControl
 
     private void OnChanged() => OnChanged(null, EventArgs.Empty);
 
+    protected override void OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        AppTheme.Changed += OnChanged; // controls built in code take their colours from the look at the time they are built
+    }
+
+    protected override void OnDetachedFromVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
+    {
+        AppTheme.Changed -= OnChanged;
+        base.OnDetachedFromVisualTree(e);
+    }
+
     /// <summary>OSnap in the status line (or another place) switched the object snap: the Snap tab shows it.</summary>
     private void OnPointSnapChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
@@ -493,7 +505,7 @@ public sealed partial class PropertiesPanel : UserControl
                 Padding = new Thickness(0),
                 CornerRadius = new CornerRadius(15),
                 Background = new SolidColorBrush(Color.FromRgb(swatch.R, swatch.G, swatch.B)),
-                BorderBrush = isCurrent ? Brush("AccentBrush") : new SolidColorBrush(Color.FromArgb(0x55, 0xFF, 0xFF, 0xFF)),
+                BorderBrush = isCurrent ? Brush("AccentBrush") : Brush("FieldEdgeBrush"),
                 BorderThickness = new Thickness(isCurrent ? 3 : 1),
             };
             button.Click += (_, _) => choose(swatch);
@@ -812,6 +824,5 @@ public sealed partial class PropertiesPanel : UserControl
         Text = text, FontSize = 12.5, VerticalAlignment = VerticalAlignment.Center, Foreground = Brush("ForegroundTextBrush"),
     };
 
-    private static IBrush Brush(string key) =>
-        Application.Current?.TryGetResource(key, null, out var value) == true && value is IBrush brush ? brush : Brushes.Gray;
+    private static IBrush Brush(string key) => AppTheme.Brush(key);
 }
