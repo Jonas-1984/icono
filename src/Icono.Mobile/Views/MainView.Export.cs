@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Icono.Core;
 using Icono.Rendering;
 
 namespace Icono.Mobile.Views;
@@ -24,11 +25,17 @@ public partial class MainView
 
     private ExportKind _exportKind = ExportKind.Pdf;
     private bool _exportAllPages;
+    private bool _exportSome; // the pages typed in the box (PDF and PNG set)
     private int _exportDpi = 150;
 
     private void OnExport(object? sender, RoutedEventArgs e)
     {
         _exportAllPages = _context.Document.PageCount > 1 && _exportAllPages;
+        if (string.IsNullOrWhiteSpace(ExportRangeEntry.Text))
+        {
+            ExportRangeEntry.Text = (_context.CurrentPage + 1).ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+
         ExportShareButton.IsVisible = Sharing.ShareFile is not null;
         ExportPrintButton.IsVisible = Sharing.PrintPdf is not null;
         UpdateExport();
@@ -53,8 +60,17 @@ public partial class MainView
         ExportCurrentButton.Content = several ? $"Page {page + 1}" : "The page";
         ExportAllButton.Content = $"All {document.PageCount} pages";
         ExportAllButton.IsVisible = several && _exportKind != ExportKind.Ico; // an icon is made of one page
-        ExportCurrentButton.Classes.Set("on", !_exportAllPages);
+        var someUsable = several && (_exportKind is ExportKind.Pdf or ExportKind.PngSet); // one file can hold several pages only as a PDF or in a zip
+        if (!someUsable)
+        {
+            _exportSome = false;
+        }
+
+        ExportSomeButton.IsVisible = someUsable;
+        ExportRangeEntry.IsVisible = _exportSome;
+        ExportCurrentButton.Classes.Set("on", !_exportAllPages && !_exportSome);
         ExportAllButton.Classes.Set("on", _exportAllPages);
+        ExportSomeButton.Classes.Set("on", _exportSome);
         ExportResolutionPanel.IsVisible = _exportKind == ExportKind.Png;
         ExportDpi96.Classes.Set("on", _exportDpi == 96);
         ExportDpi150.Classes.Set("on", _exportDpi == 150);
@@ -72,11 +88,17 @@ public partial class MainView
         }
         else if (_exportKind == ExportKind.PngSet)
         {
-            ExportInfo.Text = $"A zip file with six pictures (16, 32, 64, 128, 256 and 512 px on the longer side) of {(_exportAllPages ? "every page" : thePage)}.";
+            ExportInfo.Text = $"A zip file with six pictures (16, 32, 64, 128, 256 and 512 px on the longer side) of {(_exportAllPages ? "every page" : _exportSome ? "the pages you typed" : thePage)}.";
         }
         else if (_exportKind == ExportKind.Pdf)
         {
-            var pages = _exportAllPages ? document.PageCount : 1;
+            var pages = _exportAllPages ? document.PageCount : _exportSome ? (PageRange.TryParse(ExportRangeEntry.Text, document.PageCount, out var typed, out var typedError) ? typed.Count : 0) : 1;
+            if (_exportSome && pages == 0)
+            {
+                ExportInfo.Text = PageRange.TryParse(ExportRangeEntry.Text, document.PageCount, out _, out var why) ? "" : why;
+                return;
+            }
+
 
             ExportInfo.Text = $"{pages} PDF page(s) of {mm.Width:0} x {mm.Height:0} mm. Printed at 100 % (no \"fit to page\") the drawing keeps " +
                               $"its scale 1:{document.ScaleDenominator:0.##}.";
@@ -112,9 +134,32 @@ public partial class MainView
         }
     }
 
-    private void OnExportCurrentPage(object? sender, RoutedEventArgs e) => SetExport(() => _exportAllPages = false);
+    private void OnExportCurrentPage(object? sender, RoutedEventArgs e) => SetExport(() => (_exportAllPages, _exportSome) = (false, false));
 
-    private void OnExportAllPages(object? sender, RoutedEventArgs e) => SetExport(() => _exportAllPages = true);
+    private void OnExportAllPages(object? sender, RoutedEventArgs e) => SetExport(() => (_exportAllPages, _exportSome) = (true, false));
+
+    private void OnExportSomePages(object? sender, RoutedEventArgs e)
+    {
+        SetExport(() => (_exportAllPages, _exportSome) = (false, true));
+        ExportRangeEntry.Focus(Avalonia.Input.NavigationMethod.Tab);
+        ExportRangeEntry.SelectAll();
+    }
+
+    /// <summary>The pages typed in the box, or false (the message is shown in the window, which stays open) when they are not right.</summary>
+    private bool TryExportPages(out List<int> pages)
+    {
+        if (PageRange.TryParse(ExportRangeEntry.Text, _context.Document.PageCount, out pages, out var error))
+        {
+            return true;
+        }
+
+        ExportInfo.Text = error;
+        ExportRangeEntry.Focus();
+        return false;
+    }
+
+    /// <summary>The pages of a PDF: the ones typed, all, or the page being worked on (null = all).</summary>
+    private IReadOnlyList<int>? ExportPdfPages(bool allPages, int page) => _exportSome && TryExportPages(out var typed) ? typed : allPages ? null : [page];
 
     private void OnExportDpi(object? sender, RoutedEventArgs e) =>
         SetExport(() => _exportDpi = sender is Button { Tag: string tag } && int.TryParse(tag, out var dpi) ? dpi : 150);
@@ -140,7 +185,8 @@ public partial class MainView
             baseName = "Drawing";
         }
 
-        var pageSuffix = allPages || document.PageCount == 1 ? "" : $"-page{page + 1}";
+        var pageSuffix = _exportSome ? "-pages" : allPages || document.PageCount == 1 ? "" : $"-page{page + 1}";
+        var chosen = ExportPdfPages(allPages, page); // the pages of a PDF or of a PNG set
         switch (_exportKind)
         {
             case ExportKind.Svg:
@@ -157,14 +203,14 @@ public partial class MainView
 
             case ExportKind.PngSet:
             {
-                var zip = await Task.Run(() => DocumentExporter.RenderPngSetZip(document, baseName, background, allPages ? null : page));
+                var zip = await Task.Run(() => chosen is { } list ? DocumentExporter.RenderPngSetZip(document, baseName, background, list) : DocumentExporter.RenderPngSetZip(document, baseName, background));
                 return (baseName + pageSuffix + ".zip", "application/zip", zip);
             }
         }
 
         if (_exportKind == ExportKind.Pdf)
         {
-            var pdf = await  Task.Run(() => DocumentExporter.RenderPdf(document, background, allPages ? null : [page]));
+            var pdf = await Task.Run(() => DocumentExporter.RenderPdf(document, background, chosen));
             return (baseName + pageSuffix + ".pdf", "application/pdf", pdf);
         }
 
@@ -182,6 +228,11 @@ public partial class MainView
             return;
         }
 
+        if (_exportSome && !TryExportPages(out _))
+        {
+            return;
+        }
+
         ExportLayer.IsVisible = false;
         StatusText.Text = "Preparing the print ...";
         var document = _context.Document;
@@ -189,7 +240,8 @@ public partial class MainView
         var page = _context.CurrentPage;
         var allPages = _exportAllPages;
         var name = Path.GetFileNameWithoutExtension(_name);
-        var pdf = await Task.Run(() => DocumentExporter.RenderPdf(document, background, allPages ? null : [page]));
+        var printPages = ExportPdfPages(allPages, page);
+        var pdf = await Task.Run(() => DocumentExporter.RenderPdf(document, background, printPages));
         StatusText.Text = print(string.IsNullOrWhiteSpace(name) ? "icono drawing" : name, pdf)
             ? "The print dialog is open."
             : "The tablet could not open its print dialog.";
@@ -197,6 +249,11 @@ public partial class MainView
 
     private async void OnExportSave(object? sender, RoutedEventArgs e)
     {
+        if (_exportSome && !TryExportPages(out _))
+        {
+            return;
+        }
+
         ExportLayer.IsVisible = false;
         StatusText.Text = "Exporting ...";
         try
@@ -236,6 +293,11 @@ public partial class MainView
     private async void OnExportShare(object? sender, RoutedEventArgs e)
     {
         if (Sharing.ShareFile is not { } share)
+        {
+            return;
+        }
+
+        if (_exportSome && !TryExportPages(out _))
         {
             return;
         }

@@ -28,15 +28,18 @@ public static class DocumentExporter
 
     /// <summary>A zip file with the pictures of a PNG set (<see cref="PngSetSizes"/>) named "{baseName}_{size}.png" - for a project with several pages and
     /// <paramref name="page"/> null "{baseName}_page{n}_{size}.png" for every page. The Windows program writes the same pictures into a folder.</summary>
-    public static byte[] RenderPngSetZip(Document document, string baseName, bool includeBackground, int? page = null)
+    public static byte[] RenderPngSetZip(Document document, string baseName, bool includeBackground, int? page = null) =>
+        RenderPngSetZip(document, baseName, includeBackground, page is { } one ? [one] : Enumerable.Range(0, document.PageCount).ToList());
+
+    /// <summary>The same for the pages in <paramref name="pages"/> (0-based); with more than one page the names carry the page number.</summary>
+    public static byte[] RenderPngSetZip(Document document, string baseName, bool includeBackground, IReadOnlyList<int> pages)
     {
         using var stream = new MemoryStream();
         using (var zip = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true))
         {
-            var pages = page is { } one ? new[] { one } : Enumerable.Range(0, document.PageCount).ToArray();
-            foreach (var index in pages)
+            foreach (var index in pages.Distinct().Where(p => p >= 0 && p < document.PageCount))
             {
-                var name = page is null && document.PageCount > 1 ? $"{baseName}_page{index + 1}" : baseName;
+                var name = pages.Count > 1 ? $"{baseName}_page{index + 1}" : baseName;
                 foreach (var size in PngSetSizes)
                 {
                     var entry = zip.CreateEntry($"{name}_{size}.png", CompressionLevel.Optimal);

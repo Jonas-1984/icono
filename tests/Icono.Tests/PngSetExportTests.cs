@@ -40,6 +40,32 @@ public class PngSetExportTests
     }
 
     [Fact]
+    public void ChosenPages_GivePicturesOnlyForThem()
+    {
+        var document = new Document { Width = 300, Height = 200, PageCount = 3 };
+        document.Layers.Add(new Layer { Name = "L" });
+
+        var two = DocumentExporter.RenderPngSetZip(document, "plan", includeBackground: true, [0, 2]);
+        var one = DocumentExporter.RenderPngSetZip(document, "plan", includeBackground: true, [1]);
+
+        var entries = Entries(two, out var archive);
+        using (archive)
+        {
+            Assert.Equal(12, entries.Count);
+            Assert.Contains(entries, e => e.Name == "plan_page1_16.png");
+            Assert.Contains(entries, e => e.Name == "plan_page3_512.png");
+            Assert.DoesNotContain(entries, e => e.Name.StartsWith("plan_page2"));
+        }
+
+        var single = Entries(one, out var archiveOne);
+        using (archiveOne)
+        {
+            Assert.Equal(6, single.Count);
+            Assert.Contains(single, e => e.Name == "plan_16.png"); // one page: no page number in the names
+        }
+    }
+
+    [Fact]
     public void AllPages_GiveSixPicturesPerPage()
     {
         var zip = DocumentExporter.RenderPngSetZip(TwoPages(), "plan", includeBackground: false);

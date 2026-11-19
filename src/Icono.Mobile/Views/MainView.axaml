@@ -246,10 +246,12 @@
                     </UniformGrid>
 
                     <TextBlock Text="PAGES" FontSize="10.5" FontWeight="SemiBold" LetterSpacing="0.8" Foreground="{DynamicResource MutedTextBrush}" />
-                    <UniformGrid Columns="2">
+                    <UniformGrid Columns="3">
                         <Button Classes="tool" x:Name="ExportCurrentButton" HorizontalAlignment="Stretch" Click="OnExportCurrentPage" />
                         <Button Classes="tool" x:Name="ExportAllButton" HorizontalAlignment="Stretch" Click="OnExportAllPages" />
+                        <Button Classes="tool" x:Name="ExportSomeButton" Content="Some pages" HorizontalAlignment="Stretch" Click="OnExportSomePages" ToolTip.Tip="Type the pages, for example 1,3-5" />
                     </UniformGrid>
+                    <TextBox Classes="field" x:Name="ExportRangeEntry" IsVisible="False" FontSize="15" MinHeight="40" PlaceholderText="Pages, for example 1,3-5" />
 
                     <StackPanel x:Name="ExportResolutionPanel" Spacing="10">
                         <TextBlock Text="RESOLUTION" FontSize="10.5" FontWeight="SemiBold" LetterSpacing="0.8" Foreground="{DynamicResource MutedTextBrush}" />
@@ -361,6 +363,38 @@
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button Classes="tool" Content="Cancel" Click="OnTextCancel" />
                         <Button Classes="tool primary" Content="OK" Click="OnTextOk" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Border>
+
+        <!-- New (MainView.New.cs): a preset for the page and the background; at the top, so the on-screen keyboard does not cover the size -->
+        <Border x:Name="NewLayer" IsVisible="False" Background="{DynamicResource ScrimBrush}">
+            <Border Classes="dialog" Padding="22,18" Width="520"
+                    HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,40,0,0">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="New drawing" FontSize="17" FontWeight="SemiBold" Foreground="{DynamicResource ForegroundTextBrush}" />
+
+                    <TextBlock Text="PRESET" FontSize="10.5" FontWeight="SemiBold" LetterSpacing="0.8" Foreground="{DynamicResource MutedTextBrush}" />
+                    <UniformGrid x:Name="NewPresetGrid" Columns="2" />
+
+                    <TextBlock Text="SIZE (PX)" FontSize="10.5" FontWeight="SemiBold" LetterSpacing="0.8" Foreground="{DynamicResource MutedTextBrush}" />
+                    <Grid ColumnDefinitions="*,Auto,*">
+                        <TextBox Classes="field" x:Name="NewWidthEntry" FontSize="15" MinHeight="40" TextAlignment="Center" />
+                        <TextBlock Grid.Column="1" Text="x" VerticalAlignment="Center" Margin="12,0" Foreground="{DynamicResource MutedTextBrush}" />
+                        <TextBox Classes="field" Grid.Column="2" x:Name="NewHeightEntry" FontSize="15" MinHeight="40" TextAlignment="Center" />
+                    </Grid>
+                    <TextBlock x:Name="NewSizeHint" FontSize="11.5" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" />
+
+                    <TextBlock Text="BACKGROUND" FontSize="10.5" FontWeight="SemiBold" LetterSpacing="0.8" Foreground="{DynamicResource MutedTextBrush}" />
+                    <UniformGrid Columns="2">
+                        <Button Classes="tool" x:Name="NewWhiteButton" Content="White" HorizontalAlignment="Stretch" Click="OnNewWhite" />
+                        <Button Classes="tool" x:Name="NewTransparentButton" Content="Transparent" HorizontalAlignment="Stretch" Click="OnNewTransparent" />
+                    </UniformGrid>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,6,0,0">
+                        <Button Classes="tool" Content="Cancel" Click="OnNewCancel" />
+                        <Button Classes="tool primary" Content="Create" Click="OnNewCreate" />
                     </StackPanel>
                 </StackPanel>
             </Border>

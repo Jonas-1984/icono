@@ -64,6 +64,7 @@ public partial class MainView : UserControl
         BuildTools();
         SetUpText();
         SetUpAbout();
+        SetUpNew();
         LoadDocument(DocumentFile.From(NewDocument()), null, "Untitled");
         StatusText.Text = Hint;
     }
@@ -204,8 +205,7 @@ public partial class MainView : UserControl
             return;
         }
 
-        LoadDocument(DocumentFile.From(NewDocument()), null, "Untitled");
-        StatusText.Text = "New page (A4, scale 1:" + DefaultScale + ")";
+        OpenNewDialog();
     }
 
     private async void OnOpen(object? sender, RoutedEventArgs e)
@@ -360,6 +360,13 @@ public partial class MainView : UserControl
         {
             e.Handled = true;
             CloseLength();
+            return;
+        }
+
+        if (IsNewOpen)
+        {
+            e.Handled = true;
+            CloseNewDialog();
             return;
         }
 
