@@ -12,6 +12,7 @@
             <ResourceDictionary.ThemeDictionaries>
 
                 <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="FloatBrush" Color="#FF14171E" />
                     <SolidColorBrush x:Key="ToolbarBackgroundBrush" Color="#FF14171E" />
                     <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#FF0B0D12" />
                     <SolidColorBrush x:Key="CanvasSurroundBrush" Color="#FF06070A" />
@@ -56,6 +57,7 @@
                 </ResourceDictionary>
 
                 <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="FloatBrush" Color="#FFF3F6FA" />
                     <SolidColorBrush x:Key="ToolbarBackgroundBrush" Color="#FFF3F6FA" />
                     <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#FFE3E8EF" />
                     <SolidColorBrush x:Key="CanvasSurroundBrush" Color="#FFD3D9E2" />
@@ -117,6 +119,7 @@
 
                 <!-- GLASS: see-through plates over a colourful background (plain translucent colours - no blur) -->
                 <ResourceDictionary x:Key="{x:Static local:AppTheme.DarkGlass}">
+                    <SolidColorBrush x:Key="FloatBrush" Color="#F014171E" />
                     <LinearGradientBrush x:Key="CanvasSurroundBrush" StartPoint="0%,0%" EndPoint="100%,100%">
                         <GradientStop Offset="0" Color="#FF1A2748" />
                         <GradientStop Offset="0.55" Color="#FF2A1E4A" />
@@ -145,6 +148,7 @@
                     <SolidColorBrush x:Key="BarGroupBrush" Color="#33FFFFFF" />
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="{x:Static local:AppTheme.LightGlass}">
+                    <SolidColorBrush x:Key="FloatBrush" Color="#F2F6F8FD" />
                     <LinearGradientBrush x:Key="CanvasSurroundBrush" StartPoint="0%,0%" EndPoint="100%,100%">
                         <GradientStop Offset="0" Color="#FFBBD3F5" />
                         <GradientStop Offset="0.5" Color="#FFD3C4F0" />

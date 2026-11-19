@@ -67,6 +67,26 @@ public sealed class ObjectLibrary : UserControl
         Build();
     }
 
+    protected override void OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        AppTheme.Changed += Remake;
+    }
+
+    protected override void OnDetachedFromVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
+    {
+        AppTheme.Changed -= Remake;
+        base.OnDetachedFromVisualTree(e);
+    }
+
+    /// <summary>The look changed (dark or light): the names are built with the colours of the look, so every group is made new.</summary>
+    private void Remake()
+    {
+        _groups.Children.Clear();
+        _built.Clear();
+        Build();
+    }
+
     /// <summary>Raised when an object is tapped.</summary>
     public event EventHandler<LibraryItem>? ItemChosen;
 

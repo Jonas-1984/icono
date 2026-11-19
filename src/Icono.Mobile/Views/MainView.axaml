@@ -126,13 +126,13 @@
 
                 <!-- the object library (Objects in the tool bar) lies over the left of the drawing -->
                 <Border Grid.Column="1" x:Name="LibraryPane" IsVisible="False" Width="300" HorizontalAlignment="Left"
-                        Background="{DynamicResource ToolbarBackgroundBrush}" BorderBrush="{DynamicResource BorderLineBrush}" BorderThickness="0,0,1,0">
+                        Background="{DynamicResource FloatBrush}" BorderBrush="{DynamicResource BorderLineBrush}" BorderThickness="0,0,1,0">
                     <views:ObjectLibrary x:Name="Library" />
                 </Border>
 
                 <!-- while a wall, polyline or dimension is drawn -->
                 <Border Grid.Column="1" x:Name="PathBar" IsVisible="False" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="10"
-                        Background="{DynamicResource ToolbarBackgroundBrush}" CornerRadius="12" Padding="10,6"
+                        Background="{DynamicResource FloatBrush}" CornerRadius="12" Padding="10,6"
                         BorderBrush="{DynamicResource RaisedPressedBrush}" BorderThickness="1">
                     <StackPanel Orientation="Horizontal" Spacing="4">
                         <TextBlock x:Name="PathBarText" VerticalAlignment="Center" FontSize="13" Margin="4,0,10,0"
