@@ -50,6 +50,7 @@ public sealed partial class PropertiesPanel
     {
         var shape = shapes[0];
         Heading("SIZE & POSITION");
+        Toggle("Keep proportions (corner handles)", context.KeepProportions, on => context.KeepProportions = on);
         if (shapes.Count == 1)
         {
             var box = ShapeOutline.Box(shape);

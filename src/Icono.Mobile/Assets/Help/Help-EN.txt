@@ -24,6 +24,7 @@ The most important gestures and tools in a few minutes. Open this window again a
    - Dimension: place the two points to measure, then where the dimension line runs. Tap a dimension number to type its length, drag it to move its line.
    - Door and Window: tap for the standard size at the drawing scale, or drag them open.
    - Text: tap where the text should go and type it. Double tap a text, or a shape, to change its text.
+   - Corners keep the proportions while you resize; switch Keep proportions (SIZE & POSITION in the Properties) off to stretch a corner freely.
    - Objects opens the library: rooms, doors and windows, symbols, cabinets, shapes and your own icons. A tap puts an object in, or lets you place it.
    - More has the other tools: double arrow, match properties, colour picker, region colour, add and delete points, cut wall, ruler, distance.
 
@@ -56,6 +57,7 @@ The most important gestures and tools in a few minutes. Open this window again a
    - Tools: V Select, I Colour picker, G Region colour, W Wall, D Dimension, M Ruler, B Distance, X Cut wall, Q Match, P Pen, T Text. Enter or Esc leaves a tool.
      While a wall or polyline is drawn, Enter is Done and Esc cancels it.
    - Ctrl + Z Undo, Ctrl + Y (or Ctrl + Shift + Z) Redo, Ctrl + C Copy, Ctrl + X Cut, Ctrl + V Paste, Ctrl + D Duplicate, Ctrl + A Select all, Delete removes the selection.
+   - The arrow keys move the selection by 1 px (10 px with Shift). Ctrl + P prints.
    - Ctrl + G Group, Ctrl + Shift + G Ungroup, Ctrl + Shift + X Explode.
    - Ctrl + N New, Ctrl + O Open, Ctrl + S Save, Ctrl + Shift + S Save as, Ctrl + E Export.
    - Ctrl + Plus and Ctrl + Minus zoom, Ctrl + 0 is 100 %, Ctrl + 1 fits the page. F3 switches object snap on and off, F1 opens this help.

@@ -287,13 +287,13 @@ public sealed partial class DocumentCanvas
                 var shape = _editShapes[0];
                 (shape.X, shape.Y, shape.Width, shape.Height) = ShapeResizer.ResizeFrame(
                     _resizeHandle, _resizeStartOutline, _resizeStartFrame, _resizeStartPoint, (at.X, at.Y),
-                    _resizeRotation, _resizePivot, keepProportions: true, snap: GridRounding);
+                    _resizeRotation, _resizePivot, keepProportions: _context.KeepProportions, snap: GridRounding);
                 break;
 
             case Gesture.GroupResize:
                 at = SnapDraggedPoint(at, _editShapes);
                 ShapeResizer.ResizeGroup(
-                    _editShapes, _groupStartRects, _resizeHandle, _resizeStartOutline, _resizeStartPoint, (at.X, at.Y), keepProportions: true, snap: GridRounding);
+                    _editShapes, _groupStartRects, _resizeHandle, _resizeStartOutline, _resizeStartPoint, (at.X, at.Y), keepProportions: _context.KeepProportions, snap: GridRounding);
                 break;
 
             case Gesture.Rotate:

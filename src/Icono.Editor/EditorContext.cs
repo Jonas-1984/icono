@@ -197,9 +197,14 @@ public sealed partial class EditorContext : ObservableObject
     public bool PenEraser { get => _penEraser; set => SetField(ref _penEraser, value); }
 
     private bool _penPressure = true;
+    private bool _keepProportions = true;
     private double _penPressureStrength = FreehandBuilder.DefaultPressureStrength;
 
     /// <summary>True when a pen that reports pressure writes thinner and thicker as it is pressed less and harder (<see cref="InkEditing.UsesPressure"/>).</summary>
+    /// <summary>True when a corner handle keeps the proportions of what is resized (the Windows program does so too, and Shift frees it); off, a corner stretches freely. A
+    /// tablet has no Shift key, so the Properties have a switch for it.</summary>
+    public bool KeepProportions { get => _keepProportions; set => SetField(ref _keepProportions, value); }
+
     public bool PenPressure { get => _penPressure; set => SetField(ref _penPressure, value); }
 
     /// <summary>How strongly the pressure changes the width (0 - 1): 0 = one width, 0.7 = from 0.3 to 1.7 times the pen width (<see cref="FreehandBuilder.PressureFactor"/>).</summary>

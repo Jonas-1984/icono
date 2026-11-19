@@ -24,6 +24,7 @@ Die wichtigsten Gesten und Werkzeuge in wenigen Minuten. Dieses Fenster öffnest
    - Dimension: setze die zwei Punkte, die gemessen werden, dann die Stelle, an der die Maßlinie verläuft. Tippe auf eine Maßzahl, um die Länge einzutippen, ziehe sie, um ihre Linie zu verschieben.
    - Door und Window: tippe für die Standardgröße im Maßstab der Zeichnung oder ziehe sie auf.
    - Text: tippe an die Stelle für den Text und tippe ihn ein. Doppeltippe einen Text oder eine Form, um den Text zu ändern.
+   - Ecken behalten beim Ändern der Größe das Seitenverhältnis; schalte Keep proportions (SIZE & POSITION in den Properties) aus, um eine Ecke frei zu ziehen.
    - Objects öffnet die Bibliothek: Räume, Türen und Fenster, Symbole, Schränke, Formen und deine eigenen Symbole. Ein Tipp setzt ein Objekt ein oder lässt es dich platzieren.
    - More hat die weiteren Werkzeuge: Doppelpfeil, Eigenschaften übertragen, Farbpipette, Flächenfarbe, Punkte hinzufügen und löschen, Wand schneiden, Lineal, Abstand.
 
@@ -56,6 +57,7 @@ Die wichtigsten Gesten und Werkzeuge in wenigen Minuten. Dieses Fenster öffnest
    - Werkzeuge: V Select, I Colour picker, G Region colour, W Wall, D Dimension, M Ruler, B Distance, X Cut wall, Q Match, P Pen, T Text. Enter oder Esc verlässt ein Werkzeug.
      Beim Zeichnen einer Wand oder Polylinie ist Enter Done und Esc bricht sie ab.
    - Strg + Z Rückgängig, Strg + Y (oder Strg + Umschalt + Z) Wiederholen, Strg + C Kopieren, Strg + X Ausschneiden, Strg + V Einfügen, Strg + D Duplizieren, Strg + A Alles auswählen, Entf löscht die Auswahl.
+   - Die Pfeiltasten verschieben die Auswahl um 1 px (10 px mit Umschalt). Strg + P druckt.
    - Strg + G Gruppieren, Strg + Umschalt + G Gruppe auflösen, Strg + Umschalt + X Zerlegen.
    - Strg + N New, Strg + O Open, Strg + S Save, Strg + Umschalt + S Save as, Strg + E Export.
    - Strg + Plus und Strg + Minus zoomen, Strg + 0 ist 100 %, Strg + 1 passt die Seite an. F3 schaltet den Objektfang ein und aus, F1 öffnet diese Hilfe.

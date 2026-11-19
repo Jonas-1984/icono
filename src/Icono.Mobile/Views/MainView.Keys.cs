@@ -55,6 +55,7 @@ public partial class MainView
                 case Key.S when shift: await SaveAsync(saveAs: true); break;
                 case Key.S: await SaveAsync(saveAs: false); break;
                 case Key.E: OnExport(this, e); break;
+                case Key.P: OnExportPrint(this, e); break;
                 case Key.OemPlus or Key.Add: Canvas.ZoomBy(1.25); break;
                 case Key.OemMinus or Key.Subtract: Canvas.ZoomBy(0.8); break;
                 case Key.D0 or Key.NumPad0: Canvas.ZoomTo(1); break;
@@ -70,6 +71,13 @@ public partial class MainView
             case Key.Delete or Key.Back:
                 _context.DeleteSelection();
                 break;
+            case Key.Up or Key.Down or Key.Left or Key.Right when _context.SelectedShapes.Count > 0 && !Canvas.IsDrawingPath:
+            {
+                // the selection moves by 1 px (10 px with Shift), as in the Windows program
+                var step = shift ? 10.0 : 1.0;
+                _context.NudgeSelection(e.Key == Key.Left ? -step : e.Key == Key.Right ? step : 0, e.Key == Key.Up ? -step : e.Key == Key.Down ? step : 0);
+                break;
+            }
             case Key.Enter when Canvas.IsDrawingPath:
                 Canvas.FinishPath(); // as the Done key
                 break;
