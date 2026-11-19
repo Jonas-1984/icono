@@ -9,14 +9,85 @@ namespace Icono.Editor;
 /// ML Kit) and replaced by a text object in a font, at the place and about the size they had. One undo step.</summary>
 public static class HandwritingToText
 {
-    /// <summary>The strokes to convert: the handwriting that is selected, else the strokes written since the last conversion that are still there.
-    /// In the order they were written (the oldest first), which the recognizer needs.</summary>
+    /// <summary>How far apart (as a part of the height of the taller stroke) two strokes of one writing may be: the letters of a word, and the words of a line, are
+    /// close; a drawing beside it is further away.</summary>
+    private const double GapFactor = 1.0;
+
+    /// <summary>The least gap (drawing units) that strokes still belong together - the dot of an i, a stroke of a tiny letter.</summary>
+    private const double MinGap = 6;
+
+    /// <summary>The strokes to convert now: the handwriting that is selected (what the user chose, as it is), else ONE group of the strokes written since the last
+    /// conversion - the group written last, or another one picked with <see cref="EditorContext.SetInkGroup"/> - never all of them: drawings made with the same pen
+    /// stay what they are. In the order they were written (the oldest first), which the recognizer needs.</summary>
     public static IReadOnlyList<Shape> Strokes(EditorContext context)
     {
         var chosen = context.SelectedShapes.Where(s => s.Freehand && !s.Locked).ToList();
-        var pool = chosen.Count > 0 ? chosen : context.RecentInk.Where(s => s.Freehand && !s.Locked).ToList();
+        if (chosen.Count > 0)
+        {
+            return Ordered(context, chosen);
+        }
 
-        // the oldest first: a layer lists its shapes front-most first, so the order of the document read backwards is the order they were written in
+        var groups = RecentGroups(context);
+        if (groups.Count == 0)
+        {
+            return [];
+        }
+
+        return groups[groups.Count - 1 - Math.Clamp(context.InkGroupIndex, 0, groups.Count - 1)];
+    }
+
+    /// <summary>True when the strokes that are offered are the ones the user selected (not the recent writing).</summary>
+    public static bool IsSelection(EditorContext context) => context.SelectedShapes.Any(s => s.Freehand && !s.Locked);
+
+    /// <summary>The recent writing as groups of strokes that lie together (a word, a line), the one written longest ago first and the one touched last at the end.</summary>
+    public static IReadOnlyList<IReadOnlyList<Shape>> RecentGroups(EditorContext context) =>
+        Groups(Ordered(context, context.RecentInk.Where(s => s.Freehand && !s.Locked).ToList()));
+
+    /// <summary>The strokes (in the order they were written) as groups: strokes that are near each other - the gap between their frames is no more than about a
+    /// letter height - belong together, directly or through others. The groups are ordered by the last stroke they have, so the group written last is the last one.</summary>
+    public static IReadOnlyList<IReadOnlyList<Shape>> Groups(IReadOnlyList<Shape> strokes)
+    {
+        var parent = Enumerable.Range(0, strokes.Count).ToArray();
+        int Find(int i)
+        {
+            while (parent[i] != i)
+            {
+                parent[i] = parent[parent[i]];
+                i = parent[i];
+            }
+
+            return i;
+        }
+
+        for (var i = 0; i < strokes.Count; i++)
+        {
+            for (var j = i + 1; j < strokes.Count; j++)
+            {
+                if (Near(strokes[i], strokes[j]))
+                {
+                    parent[Find(j)] = Find(i);
+                }
+            }
+        }
+
+        return Enumerable.Range(0, strokes.Count)
+            .GroupBy(Find)
+            .OrderBy(group => group.Max())
+            .Select(group => (IReadOnlyList<Shape>)group.Select(i => strokes[i]).ToList())
+            .ToList();
+    }
+
+    private static bool Near(Shape a, Shape b)
+    {
+        var dx = Math.Max(0, Math.Max(a.X, b.X) - Math.Min(a.X + a.Width, b.X + b.Width));
+        var dy = Math.Max(0, Math.Max(a.Y, b.Y) - Math.Min(a.Y + a.Height, b.Y + b.Height));
+        var reach = Math.Max(MinGap, GapFactor * Math.Max(a.Height, b.Height));
+        return Math.Sqrt(dx * dx + dy * dy) <= reach;
+    }
+
+    /// <summary>The strokes in the order they were written: a layer lists its shapes front-most first, so the document read backwards is the order of writing.</summary>
+    private static List<Shape> Ordered(EditorContext context, IReadOnlyCollection<Shape> pool)
+    {
         var ordered = new List<Shape>();
         foreach (var layer in context.Document.Layers.Reverse())
         {
@@ -161,7 +232,7 @@ public static class HandwritingToText
         ]));
         context.SelectedShape = textShape;
         context.SelectedLayer = firstLayer;
-        context.ForgetInk();
+        context.InkListChanged(); // the other writing that is left stays on offer
         context.RequestRedraw();
         return true;
     }

@@ -38,6 +38,7 @@ Die wichtigsten Gesten und Werkzeuge in wenigen Minuten. Dieses Fenster öffnest
      Anheben behält sie, weiterziehen zeichnet wieder frei.
    - Handschrift zu Text: schreibe ein Wort, tippe dann in der Leiste oben auf der Zeichnung auf Convert to text und wähle die Sprache (English oder Deutsch).
      Die Schrift wird ein Textobjekt in einer Schriftart. Beim ersten Mal braucht das Tablet einmal Internet, um die Sprache zu laden (etwa 20 MB).
+     Umgewandelt werden nur Striche, die zusammen liegen: andere Zeichnungen mit dem Stift bleiben, wie sie sind. Die Leiste nimmt die zuletzt geschriebene Schrift und umrandet sie; Other writing wählt eine frühere Gruppe. Um mehrere Stücke auf einmal umzuwandeln, wähle vorher ihre Striche aus - jedes Stück wird ein eigener Text.
 
 5. Zahlen, Einheiten und Regler
    - Tippe in den Properties auf ein Zahlenfeld: eine Zahlentastatur öffnet sich. Tippe die Zahl ein und tippe OK. Minus und Plus ändern sie schrittweise.

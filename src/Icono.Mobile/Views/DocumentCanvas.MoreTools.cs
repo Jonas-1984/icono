@@ -313,6 +313,13 @@ public sealed partial class DocumentCanvas
             list.Add(first);
         }
 
+        // several pieces of writing: the group that "Convert to text" would take is outlined
+        if (_context is { ActiveTool: ActiveTool.Freehand, RecentInk.Count: > 1 } writing && Handwriting.Recognize is not null && !HandwritingToText.IsSelection(writing)
+            && HandwritingToText.RecentGroups(writing).Count > 1)
+        {
+            list.AddRange(HandwritingToText.Strokes(writing));
+        }
+
         return list;
     }
 }

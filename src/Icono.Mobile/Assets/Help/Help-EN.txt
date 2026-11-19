@@ -38,6 +38,7 @@ The most important gestures and tools in a few minutes. Open this window again a
      Lift to keep it, or move on to draw freehand again.
    - Handwriting to text: write a word, then tap Convert to text in the bar at the top of the drawing and choose the language (English or Deutsch).
      The writing becomes a text object in a font. The first time, the tablet needs the internet once to load the language (about 20 MB).
+     Only strokes that lie together are converted: other drawings you made with the pen stay as they are. The bar takes the writing you made last and outlines it; Other writing picks an earlier group. To convert several pieces at once, select their strokes first - each piece becomes its own text.
 
 5. Numbers, units and sliders
    - Tap a number box in the Properties: a number pad opens. Type the number and tap OK. The minus and plus keys change it step by step.

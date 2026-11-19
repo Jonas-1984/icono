@@ -152,6 +152,7 @@
                         Margin="0,34,0,0" Padding="10,6" CornerRadius="14">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <TextBlock x:Name="InkText" VerticalAlignment="Center" FontSize="13" Margin="4,0,8,0" Foreground="{DynamicResource ForegroundTextBrush}" />
+                        <Button Classes="tool" x:Name="InkOtherButton" Content="Other writing" Click="OnInkOther" IsVisible="False" ToolTip.Tip="Pick another group of strokes that lie together (the picked one is outlined)" />
                         <Button Classes="tool" x:Name="InkLanguageButton" Click="OnInkLanguage" ToolTip.Tip="The language of the writing" />
                         <Button Classes="tool primary" x:Name="InkConvertButton" Content="Convert to text" Click="OnInkConvert" />
                     </StackPanel>
