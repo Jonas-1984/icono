@@ -54,8 +54,28 @@ public partial class MainView
             else
             {
                 TextEditing.CommitTextObject(_context, request.Shape, request.Layer, request.X, request.Y, text);
+                if (request.Shape is null && _context.SelectedShape is { Kind: ShapeKind.Text } created)
+                {
+                    created.FillColor = Readable(created.FillColor); // a new text must be readable on the page, whatever colour the tools have
+                }
             }
         });
+    }
+
+    /// <summary>The colour for a new text: the colour of the tools, unless it hardly stands out from the page (the pale mint of the fill on a white page) - then a dark ink on
+    /// a light page, a light one on a dark page.</summary>
+    private ArgbColor Readable(ArgbColor wanted)
+    {
+        static double Luminance(ArgbColor c) => (0.2126 * c.R + 0.7152 * c.G + 0.0722 * c.B) / 255.0;
+
+        var document = _context.Document;
+        var page = document.BackgroundMode == BackgroundMode.SolidColor ? Luminance(document.BackgroundColor) : 1.0; // no background: a white sheet
+        if (Math.Abs(Luminance(wanted) - page) >= 0.4)
+        {
+            return wanted;
+        }
+
+        return page > 0.5 ? ArgbColor.FromRgb(0x23, 0x29, 0x33) : ArgbColor.FromRgb(0xF1, 0xF5, 0xFB);
     }
 
     /// <summary>Asks for a text at the top of the screen (the keyboard comes up); OK hands it to <paramref name="commit"/>.</summary>

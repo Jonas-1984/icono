@@ -224,8 +224,10 @@ public partial class MainView
             baseName = "Drawing";
         }
 
-        var pageSuffix = _exportSome ? "-pages" : allPages || document.PageCount == 1 ? "" : $"-page{page + 1}";
         var chosen = ExportPdfPages(allPages, page); // the pages of a PDF or of a PNG set
+        var pageSuffix = _exportSome && chosen is { Count: > 0 } typed
+            ? (typed.Count == 1 ? $"-page{typed[0] + 1}" : "-pages" + string.Join('_', (ExportRangeEntry.Text ?? "").Split([' ', ','], StringSplitOptions.RemoveEmptyEntries)))
+            : allPages || document.PageCount == 1 ? "" : $"-page{page + 1}";
         switch (_exportKind)
         {
             case ExportKind.Svg:

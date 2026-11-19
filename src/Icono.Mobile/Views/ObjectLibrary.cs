@@ -46,6 +46,11 @@ public sealed class ObjectLibrary : UserControl
     private static readonly HashSet<string> OpenAtStart = ["Rooms", "Doors & windows"];
 
     private readonly StackPanel _groups = new() { Spacing = 2 };
+    private readonly TextBlock _noHits = new()
+    {
+        Text = "Nothing found. Try another word: cabinet, sink, door, window, room, star ...", FontSize = 12.5, TextWrapping = TextWrapping.Wrap,
+        Margin = new Thickness(10, 14), IsVisible = false,
+    };
     private readonly TextBox _search;
     private readonly List<(string Group, Button Header, WrapPanel Tiles, List<(LibraryItem Item, Control Tile)> Items)> _built = [];
     private readonly HashSet<string> _open = [.. OpenAtStart];
@@ -58,6 +63,8 @@ public sealed class ObjectLibrary : UserControl
         var layout = new DockPanel();
         DockPanel.SetDock(_search, Dock.Top);
         layout.Children.Add(_search);
+        DockPanel.SetDock(_noHits, Dock.Top);
+        layout.Children.Add(_noHits);
         layout.Children.Add(new ScrollViewer
         {
             Content = _groups, Padding = new Thickness(6, 0, 6, 12), VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
@@ -309,6 +316,7 @@ public sealed class ObjectLibrary : UserControl
     {
         var words = (_search.Text ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries);
         var searching = words.Length > 0;
+        var total = 0;
         foreach (var (group, header, tiles, items) in _built)
         {
             var hits = 0;
@@ -324,7 +332,11 @@ public sealed class ObjectLibrary : UserControl
             header.IsVisible = !searching || hits > 0;
             header.Content = $"{(open ? "▾" : "▸")}  {group.ToUpperInvariant()}  ({(searching ? hits : items.Count)})";
             tiles.IsVisible = open;
+            total += hits;
         }
+
+        _noHits.Foreground = Brush("MutedTextBrush");
+        _noHits.IsVisible = searching && total == 0;
     }
 
     private static IBrush Brush(string key) => AppTheme.Brush(key);

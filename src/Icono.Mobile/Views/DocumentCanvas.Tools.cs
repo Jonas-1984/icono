@@ -292,6 +292,10 @@ public sealed partial class DocumentCanvas
         var symbolClick = ArchitecturalSymbols.IsSymbol(shape.Kind) && shape.Width < 6 && (shape.Height < 6 || ArchitecturalSymbols.IsDoor(shape.Kind));
         var dragFrame = (shape.X, shape.Y, shape.Width, shape.Height);
         ShapeTemplates.ApplyClickSize(shape, context.Document, context.PendingUnit);
+        if (shape.Kind == ShapeKind.CombinedPath && context.PendingUnit is { } unit && string.IsNullOrWhiteSpace(shape.Name))
+        {
+            shape.Name = unit.Name; // a cabinet or unit of the catalogue carries its name (Properties, Layers)
+        }
         if (ArchitecturalSymbols.IsSymbol(shape.Kind))
         {
             var reach = FingerReach * 1.2 / _zoom;
