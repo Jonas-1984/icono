@@ -21,6 +21,7 @@ public partial class MainView
     {
         _exportAllPages = _context.Document.PageCount > 1 && _exportAllPages;
         ExportShareButton.IsVisible = Sharing.ShareFile is not null;
+        ExportPrintButton.IsVisible = Sharing.PrintPdf is not null;
         UpdateExport();
         ExportLayer.IsVisible = true;
     }
@@ -112,6 +113,28 @@ public partial class MainView
         var (width, height) = PngSize();
         var png = await Task.Run(() => DocumentExporter.RenderPng(document, Math.Max(width, height), background, allPages ? null : page));
         return (baseName + pageSuffix + ".png", "image/png", png);
+    }
+
+    /// <summary>"Print...": the pages as a PDF (always a PDF, whatever format is chosen above, so the paper size and the scale are right) go to the print dialog of the
+    /// tablet - as File > Print in the Windows program.</summary>
+    private async void OnExportPrint(object? sender, RoutedEventArgs e)
+    {
+        if (Sharing.PrintPdf is not { } print)
+        {
+            return;
+        }
+
+        ExportLayer.IsVisible = false;
+        StatusText.Text = "Preparing the print ...";
+        var document = _context.Document;
+        var background = ExportBackground.IsChecked == true;
+        var page = _context.CurrentPage;
+        var allPages = _exportAllPages;
+        var name = Path.GetFileNameWithoutExtension(_name);
+        var pdf = await Task.Run(() => DocumentExporter.RenderPdf(document, background, allPages ? null : [page]));
+        StatusText.Text = print(string.IsNullOrWhiteSpace(name) ? "icono drawing" : name, pdf)
+            ? "The print dialog is open."
+            : "The tablet could not open its print dialog.";
     }
 
     private async void OnExportSave(object? sender, RoutedEventArgs e)

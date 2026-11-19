@@ -279,6 +279,7 @@
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,6,0,0">
                         <Button Classes="tool" Content="Cancel" Click="OnExportCancel" />
+                        <Button Classes="tool" x:Name="ExportPrintButton" Content="Print..." Click="OnExportPrint" ToolTip.Tip="Print the page (or all pages) on a printer, or save it as a PDF with the print dialog of the tablet. At 100 % the drawing keeps its scale." />
                         <Button Classes="tool" x:Name="ExportSaveButton" Content="Save..." Click="OnExportSave" />
                         <Button Classes="tool primary" x:Name="ExportShareButton" Content="Share..." Click="OnExportShare" />
                     </StackPanel>

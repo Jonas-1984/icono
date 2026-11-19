@@ -21,6 +21,7 @@ public class MainActivity : AvaloniaMainActivity
         base.OnCreate(savedInstanceState);
         Sharing.ShareFile = ShareFile;
         Handwriting.Recognize = InkRecognizer.RecognizeAsync;
+        Sharing.PrintPdf = (name, pdf) => PdfPrinter.Print(this, name, pdf);
     }
 
     /// <summary>Writes the file into the app's export folder (the only folder the FileProvider hands out), then opens the share sheet with it.</summary>
