@@ -115,6 +115,7 @@ public sealed partial class PropertiesPanel
                 current = !current;
                 key.Classes.Set("on", current);
                 set(current);
+                _context?.NoteSettingsChanged(); // kept for the next start
             };
             grid.Children.Add(key);
         }

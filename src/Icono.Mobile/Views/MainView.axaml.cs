@@ -54,6 +54,7 @@ public partial class MainView : UserControl
         SetUpZoomMenu();
         SetUpCurvePad();
         SetUpKeys();
+        SetUpSettings();
         Loaded += (_, _) => Canvas.Focus();
         _context.PagesChanged += UpdateStatusPills;
         _context.CurrentPageChanged += UpdateStatusPills;
@@ -85,6 +86,7 @@ public partial class MainView : UserControl
             top.BackRequested -= OnBackRequested;
         }
 
+        SaveSettingsNow();
         base.OnDetachedFromVisualTree(e);
     }
 
@@ -382,6 +384,7 @@ public partial class MainView : UserControl
             return;
         }
 
+        SaveSettingsNow(); // the app may be closed by the back key
         if (!HasUnsavedChanges)
         {
             return;

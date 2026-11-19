@@ -11,6 +11,11 @@ public sealed partial class EditorContext
     /// <summary>Raised when strokes were added to or taken off <see cref="RecentInk"/>.</summary>
     public event Action? RecentInkChanged;
 
+    /// <summary>Raised when a setting that is kept for the next start changed in a place that does not announce it (the helpers of the wall tool).</summary>
+    public event Action? SettingsChanged;
+
+    public void NoteSettingsChanged() => SettingsChanged?.Invoke();
+
     public void NoteInk(Shape stroke)
     {
         RecentInk.Add(stroke);
