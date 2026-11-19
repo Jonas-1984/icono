@@ -414,9 +414,9 @@
                     <TextBlock x:Name="QuestionTitle" FontSize="17" FontWeight="SemiBold" Foreground="{DynamicResource ForegroundTextBrush}" />
                     <TextBlock x:Name="QuestionText" FontSize="14" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" />
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Classes="tool" Content="Cancel" Click="OnQuestionCancel" />
-                        <Button Classes="tool" Content="Don't save" Click="OnQuestionDiscard" />
-                        <Button Classes="tool primary" Content="Save" Click="OnQuestionSave" />
+                        <Button Classes="tool" x:Name="QuestionCancelButton" Content="Cancel" Click="OnQuestionCancel" />
+                        <Button Classes="tool" x:Name="QuestionDiscardButton" Content="Don't save" Click="OnQuestionDiscard" />
+                        <Button Classes="tool primary" x:Name="QuestionSaveButton" Content="Save" Click="OnQuestionSave" />
                     </StackPanel>
                 </StackPanel>
             </Border>

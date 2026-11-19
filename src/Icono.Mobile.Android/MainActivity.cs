@@ -24,6 +24,12 @@ public class MainActivity : AvaloniaMainActivity
         Sharing.PrintPdf = (name, pdf) => PdfPrinter.Print(this, name, pdf);
     }
 
+    protected override void OnPause()
+    {
+        Icono.Mobile.AppLifecycle.RaisePausing(); // the drawing that is not saved yet is copied now: Android may end the app from here on
+        base.OnPause();
+    }
+
     /// <summary>Writes the file into the app's export folder (the only folder the FileProvider hands out), then opens the share sheet with it.</summary>
     private Task<bool> ShareFile(string name, string mimeType, byte[] content)
     {

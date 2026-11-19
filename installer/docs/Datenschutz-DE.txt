@@ -27,10 +27,16 @@ für das Windows-Programm und die Android-Tablet-App.
    Ihre Zeichnungen speichert icono nur dort, wo Sie es wählen (Datei > Save / Export).
 
    Android-Tablet-App - im privaten Speicher der App, den andere Apps nicht lesen können:
-   - icono-folder.txt ein Verweis auf den Ordner, den Sie für Ihre Zeichnungen gewählt haben (damit Sie ihn nicht erneut wählen müssen)
+   - icono-folder.txt ein Verweis auf den Ordner, den Sie für Ihre Zeichnungen gewählt haben (damit Sie ihn nicht erneut wählen müssen);
+     icono-picture-folder.txt dasselbe für Bilder
+   - icono-recent.txt die Namen der zuletzt geöffneten oder gespeicherten Zeichnungen, je mit dem Verweis, den Android für die Datei gibt (für "Open Recent")
+   - icono-settings.json Ihre Einstellungen (Stift, Raster, Fang ...) und icono-theme.txt Ihr Farbdesign (wenige Wörter)
+   - icono-recovery.icn   eine Kopie der Zeichnung, an der Sie arbeiten, solange sie nicht gespeichert ist, damit sie nicht verloren geht, wenn Android die App
+                      beendet (und icono-recovery.icn.name, ihr Titel). Sie wird kurz nach jeder Änderung geschrieben, beim Speichern oder beim Beginnen einer
+                      anderen Zeichnung gelöscht und Ihnen beim nächsten Start von icono angeboten. Sie verlässt das Tablet nie.
    - exports\         eine vorübergehende Kopie Ihres letzten Exports (PDF oder PNG), nur damit sie an die App übergeben werden kann, die Sie
                       bei "Share" wählen; der nächste Export ersetzt sie
-   Die Tablet-App speichert kein Farbdesign, keine Liste zuletzt geöffneter Dateien, keine eigene Bibliothek und kein Fehlerprotokoll. Sie
+   Die Tablet-App speichert kein Fehlerprotokoll. Sie
    merkt sich die Sprache Ihrer Handschrift (icono-handwriting.txt) und, sobald Sie "Convert to text" benutzt haben, das Handschrift-Modell dieser
    Sprache (von Google ML Kit geladen, von Android im privaten Speicher der App gehalten). Die Berechtigung, die sie verlangt, ist das Internet,
    und nur zum Laden dieses Modells: Ihr Tablet verbindet sich dann mit Servern von Google (Ihre IP-Adresse ist für sie sichtbar, wie bei jedem Download;
@@ -39,7 +45,7 @@ für das Windows-Programm und die Android-Tablet-App.
    Berechtigungen dieser Komponente, der Start nach einem Neustart und der Vordergrunddienst, sind aus der App entfernt.) Danach funktioniert "Convert to text" ohne Internet; die Schrift wird auf dem Tablet erkannt.
    Android gibt icono nur Zugriff auf den Ordner, den Sie gewählt haben, und auf Dateien, die Sie selbst
    auswählen. Die App ist so eingestellt, dass Android ihre Daten nicht in die automatische Geräte-Sicherung (Cloud-Backup) aufnimmt. Ihre
-   Zeichnungen speichert die App nur dort, wo Sie es wählen (Save as, Export > Save...).
+   Zeichnungen speichert die App nur dort, wo Sie es wählen (Save as, Export > Save...); die Wiederherstellungskopie (siehe oben) bleibt im privaten Speicher der App.
    Tippen Sie auf "Share...", öffnet Android sein Teilen-Menü: Die Datei geht nur an die App, die Sie dort wählen; für sie gelten deren
    Datenschutzbestimmungen.
 

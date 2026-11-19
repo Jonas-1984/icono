@@ -139,6 +139,7 @@ public partial class MainView
 
         CloseNewDialog();
         LoadDocument(DocumentFile.From(document), null, "Untitled");
+        ForgetRecovery(); // a new drawing was started on purpose
         StatusText.Text = $"New drawing ({width} x {height} px, scale 1:{DefaultScale})";
     }
 }

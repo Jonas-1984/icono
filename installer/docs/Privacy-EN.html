@@ -40,10 +40,13 @@
 <li>crash.log - an error log when the program reports an unexpected error (time, error message and technical call list; the message can contain file names or paths)</li>
 </ul>
 <p>This data does not leave your device. I only receive it if you send me the error log voluntarily (for example by e-mail).</p>
-<p>icono saves your drawings only where you choose (File &gt; Save / Export).</p>
+<p>icono saves your drawings only where you choose (File &gt; Save / Export). On the tablet, the only other copy is the recovery copy described below, which stays in the app's private storage.</p>
 <p>Android tablet app - in the private storage of the app, which other apps cannot read:</p>
 <ul>
-<li>icono-folder.txt a reference to the folder you chose for your drawings (so that you need not choose it again)</li>
+<li>icono-folder.txt a reference to the folder you chose for your drawings (so that you need not choose it again); icono-picture-folder.txt the same for pictures</li>
+<li>icono-recent.txt the names of the last drawings you opened or saved, each with the reference Android gives for the file (for "Open Recent")</li>
+<li>icono-settings.json your settings (pen, grid, snapping ...) and icono-theme.txt your colour design (a few words)</li>
+<li>icono-recovery.icn a copy of the drawing you are working on while it is not saved yet, so that it is not lost if Android ends the app (and icono-recovery.icn.name, its title). It is written a moment after every change, deleted when you save the drawing or start another one, and offered to you the next time icono starts. It never leaves the tablet.</li>
 <li>exports\ - a temporary copy of your last export (PDF or PNG), only so that it can be handed to the app you pick in "Share"; the next export replaces it</li>
 </ul>
 <p>The tablet app keeps no theme, no list of recent files, no own library and no error log. It keeps the language of your handwriting (icono-handwriting.txt) and, once you have used "Convert to text", the handwriting model of that language (loaded by Google ML Kit, kept by Android in the app's private storage).</p>

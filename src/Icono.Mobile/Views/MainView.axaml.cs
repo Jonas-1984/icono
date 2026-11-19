@@ -67,6 +67,7 @@ public partial class MainView : UserControl
         SetUpNew();
         LoadDocument(DocumentFile.From(NewDocument()), null, "Untitled");
         StatusText.Text = Hint;
+        SetUpRecovery();
     }
 
     private bool HasUnsavedChanges => _context.UndoManager.Version != _savedVersion;
@@ -88,6 +89,8 @@ public partial class MainView : UserControl
         }
 
         SaveSettingsNow();
+        AppLifecycle.Pausing -= WriteRecoveryNow;
+        WriteRecoveryNow();
         base.OnDetachedFromVisualTree(e);
     }
 
@@ -125,6 +128,7 @@ public partial class MainView : UserControl
         {
             UpdateTitle();
             UpdateCommands();
+            RecoveryChanged();
         }
     }
 
@@ -231,6 +235,7 @@ public partial class MainView : UserControl
             }
 
             LoadDocument(file, picked, picked.Name);
+            ForgetRecovery(); // another drawing was opened on purpose
             await RecentDrawings.AddAsync(picked);
             var document = _context.Document;
             StatusText.Text = $"{picked.Name}: {document.PageCount} page(s), {document.Layers.Sum(l => l.Shapes.Count)} object(s), " +
@@ -281,6 +286,7 @@ public partial class MainView : UserControl
             _name = target.Name;
             _savedVersion = _context.UndoManager.Version;
             UpdateTitle();
+            RecoveryChanged(); // saved: the copy is of no use any more
             StatusText.Text = "Saved: " + target.Name;
             await RecentDrawings.AddAsync(target);
             return true;
@@ -392,6 +398,7 @@ public partial class MainView : UserControl
         }
 
         SaveSettingsNow(); // the app may be closed by the back key
+        WriteRecoveryNow();
         if (!HasUnsavedChanges)
         {
             return;
@@ -402,6 +409,7 @@ public partial class MainView : UserControl
         {
             _savedVersion = _context.UndoManager.Version;
             UpdateTitle();
+            RecoveryChanged();
             StatusText.Text = "Press Back again to close icono.";
         }
     }

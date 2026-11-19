@@ -24,13 +24,19 @@ the Android tablet app.
    - crash.log        an error log when the program reports an unexpected error (time, error message and technical call list;
                       the message can contain file names or paths)
    This data does not leave your device. I only receive it if you send me the error log voluntarily (for example by e-mail).
-   icono saves your drawings only where you choose (File > Save / Export).
+   icono saves your drawings only where you choose (File > Save / Export). On the tablet, the only other copy is the recovery copy described below, which stays in the app's private storage.
 
    Android tablet app - in the private storage of the app, which other apps cannot read:
-   - icono-folder.txt a reference to the folder you chose for your drawings (so that you need not choose it again)
+   - icono-folder.txt a reference to the folder you chose for your drawings (so that you need not choose it again);
+     icono-picture-folder.txt the same for pictures
+   - icono-recent.txt the names of the last drawings you opened or saved, each with the reference Android gives for the file (for "Open Recent")
+   - icono-settings.json your settings (pen, grid, snapping ...) and icono-theme.txt your colour design (a few words)
+   - icono-recovery.icn   a copy of the drawing you are working on while it is not saved yet, so that it is not lost if Android ends the app (and
+                      icono-recovery.icn.name, its title). It is written a moment after every change, deleted when you save the drawing or start
+                      another one, and offered to you the next time icono starts. It never leaves the tablet.
    - exports\         a temporary copy of your last export (PDF or PNG), only so that it can be handed to the app you pick in "Share";
                       the next export replaces it
-   The tablet app keeps no theme, no list of recent files, no own library and no error log. It keeps the language of your handwriting (icono-handwriting.txt)
+   The tablet app keeps no error log. It keeps the language of your handwriting (icono-handwriting.txt)
    and, once you have used "Convert to text", the handwriting model of that language (loaded by Google ML Kit, kept by Android in the app's private storage).
    The permission it asks for is the internet, and only for loading that model: your tablet then contacts Google's servers (your IP address is visible
    to them, as with any download; Google's terms apply). The Google component that loads the model (ML Kit) adds two technical permissions that Android's

@@ -51,6 +51,7 @@ The most important gestures and tools in a few minutes. Open this window again a
 
 7. Files, pictures and export
    - New, Open, Save and Save as are at the left of the top bar. icono shows its own file window; Recent lists the drawings you opened last.
+   - A drawing that is not saved yet is copied to the tablet a moment after every change (and when you leave the app). If Android ends icono before you saved, it asks the next time: Restore brings the drawing back, Delete it throws the copy away. Saving the drawing deletes the copy. The copy never leaves the tablet.
    - Export saves the page or all pages as PDF (real size, vectors), PNG, SVG (vector graphic), Windows icon (.ico) or a zip with PNG pictures from 16 to 512 px, or shares it with another app.
    - New opens a window like the Windows program: a preset for the page (A4, A5, an icon of 256, 512 or 1024 px, full HD or your own size in px) and a white or transparent background. In Export, Some pages takes a list like 1,3-5 for a PDF or a PNG set; Print uses it too. "Only the drawing" (not for a PDF) exports just what is drawn, cut out and on a transparent background, however big the page is.
    - Picture puts a photo or an SVG into the drawing. SVG code... in its window takes pasted SVG code (or only path data) instead of a file. Save as icon (in Arrange) keeps the selection under My icons in Objects.
