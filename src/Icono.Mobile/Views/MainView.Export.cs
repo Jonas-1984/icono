@@ -28,6 +28,9 @@ public partial class MainView
     private bool _exportSome; // the pages typed in the box (PDF and PNG set)
     private int _exportDpi = 150;
 
+    /// <summary>True when only the drawing is exported (cut out, on a transparent background): not for a PDF, which is a sheet of paper.</summary>
+    private bool OnlyDrawing => ExportCropSwitch.IsChecked == true && _exportKind != ExportKind.Pdf;
+
     private void OnExport(object? sender, RoutedEventArgs e)
     {
         _exportAllPages = _context.Document.PageCount > 1 && _exportAllPages;
@@ -72,6 +75,8 @@ public partial class MainView
         ExportAllButton.Classes.Set("on", _exportAllPages);
         ExportSomeButton.Classes.Set("on", _exportSome);
         ExportResolutionPanel.IsVisible = _exportKind == ExportKind.Png;
+        ExportCropRow.IsVisible = _exportKind != ExportKind.Pdf;
+        ExportBackground.IsEnabled = !OnlyDrawing; // only the drawing has no page behind it
         ExportDpi96.Classes.Set("on", _exportDpi == 96);
         ExportDpi150.Classes.Set("on", _exportDpi == 150);
         ExportDpi300.Classes.Set("on", _exportDpi == 300);
@@ -110,11 +115,44 @@ public partial class MainView
                               (_exportAllPages ? " with all pages below each other." : ".") +
                               (Math.Max(width, height) >= MaxPngSide ? " (limited - choose a lower resolution or one page for a sharper picture)" : "");
         }
+
+        if (OnlyDrawing)
+        {
+            try
+            {
+                var area = DocumentExporter.DrawnArea(document, _exportAllPages ? null : page);
+                ExportInfo.Text += $" Only what is drawn ({area.Width:0} x {area.Height:0} px of the page), on a transparent background.";
+            }
+            catch (InvalidOperationException ex)
+            {
+                ExportInfo.Text = ex.Message; // nothing is drawn
+            }
+        }
+    }
+
+    /// <summary>The size of what is exported before it is scaled: the page (or all pages below each other), or only the drawing.</summary>
+    private (int Width, int Height) ExportExtent()
+    {
+        var page = _exportAllPages ? (int?)null : _context.CurrentPage;
+        if (OnlyDrawing)
+        {
+            try
+            {
+                var area = DocumentExporter.DrawnArea(_context.Document, page);
+                return ((int)Math.Ceiling(area.Width), (int)Math.Ceiling(area.Height));
+            }
+            catch (InvalidOperationException)
+            {
+                // nothing is drawn: the message is shown, the page size gives the numbers
+            }
+        }
+
+        return DocumentExporter.Extent(_context.Document, page);
     }
 
     private (int Width, int Height) PngSize()
     {
-        var (width, height) = DocumentExporter.Extent(_context.Document, _exportAllPages ? null : _context.CurrentPage);
+        var (width, height) = ExportExtent();
         var scale = Math.Min(_exportDpi / 96.0, MaxPngSide / (double)Math.Max(width, height));
         return ((int)Math.Round(width * scale), (int)Math.Round(height * scale));
     }
@@ -179,6 +217,7 @@ public partial class MainView
         var background = ExportBackground.IsChecked == true;
         var page = _context.CurrentPage;
         var allPages = _exportAllPages;
+        var onlyDrawing = OnlyDrawing;
         var baseName = Path.GetFileNameWithoutExtension(_name);
         if (string.IsNullOrWhiteSpace(baseName))
         {
@@ -191,19 +230,19 @@ public partial class MainView
         {
             case ExportKind.Svg:
             {
-                var svg = await Task.Run(() => DocumentExporter.RenderSvg(document, background, allPages ? null : page));
+                var svg = await Task.Run(() => DocumentExporter.RenderSvg(document, background, allPages ? null : page, onlyDrawing));
                 return (baseName + pageSuffix + ".svg", "image/svg+xml", svg);
             }
 
             case ExportKind.Ico:
             {
-                var ico = await Task.Run(() => DocumentExporter.RenderIco(document, DocumentExporter.IconSizes, background, page));
+                var ico = await Task.Run(() => DocumentExporter.RenderIco(document, DocumentExporter.IconSizes, background, page, onlyDrawing));
                 return (baseName + pageSuffix + ".ico", "image/vnd.microsoft.icon", ico);
             }
 
             case ExportKind.PngSet:
             {
-                var zip = await Task.Run(() => chosen is { } list ? DocumentExporter.RenderPngSetZip(document, baseName, background, list) : DocumentExporter.RenderPngSetZip(document, baseName, background));
+                var zip = await Task.Run(() => chosen is { } list ? DocumentExporter.RenderPngSetZip(document, baseName, background, list, onlyDrawing) : DocumentExporter.RenderPngSetZip(document, baseName, background, page: null, onlyDrawing: onlyDrawing));
                 return (baseName + pageSuffix + ".zip", "application/zip", zip);
             }
         }
@@ -215,7 +254,7 @@ public partial class MainView
         }
 
         var (width, height) = PngSize();
-        var png = await Task.Run(() => DocumentExporter.RenderPng(document, Math.Max(width, height), background, allPages ? null : page));
+        var png = await Task.Run(() => DocumentExporter.RenderPng(document, Math.Max(width, height), background, allPages ? null : page, onlyDrawing));
         return (baseName + pageSuffix + ".png", "image/png", png);
     }
 

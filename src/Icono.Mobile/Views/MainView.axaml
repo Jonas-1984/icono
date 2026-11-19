@@ -266,6 +266,11 @@
                         <TextBlock Text="With the page background" FontSize="13" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundTextBrush}" />
                         <ToggleSwitch Grid.Column="1" x:Name="ExportBackground" IsChecked="True" OnContent="{x:Null}" OffContent="{x:Null}" MinWidth="0" />
                     </Grid>
+                    <Grid x:Name="ExportCropRow" ColumnDefinitions="*,Auto" MinHeight="30">
+                        <TextBlock Text="Only the drawing (cut out, transparent)" FontSize="13" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundTextBrush}"
+                                   ToolTip.Tip="Exports only what is drawn, cut to its size and on a transparent background - however big the page is." />
+                        <ToggleSwitch Grid.Column="1" x:Name="ExportCropSwitch" IsChecked="False" OnContent="{x:Null}" OffContent="{x:Null}" MinWidth="0" />
+                    </Grid>
                     <TextBlock x:Name="ExportInfo" FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" />
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,6,0,0">

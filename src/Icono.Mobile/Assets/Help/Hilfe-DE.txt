@@ -51,7 +51,7 @@ Die wichtigsten Gesten und Werkzeuge in wenigen Minuten. Dieses Fenster öffnest
 7. Dateien, Bilder und Export
    - New, Open, Save und Save as stehen links in der oberen Leiste. icono zeigt sein eigenes Dateifenster; Recent listet die zuletzt geöffneten Zeichnungen.
    - Export speichert die Seite oder alle Seiten als PDF (echte Größe, Vektoren), PNG, SVG (Vektorgrafik), Windows-Symbol (.ico) oder als ZIP mit PNG-Bildern von 16 bis 512 px oder gibt sie an eine andere App weiter.
-   - New öffnet ein Fenster wie im Windows-Programm: eine Vorgabe für die Seite (A4, A5, ein Symbol mit 256, 512 oder 1024 px, Full HD oder eine eigene Größe in px) und ein weißer oder transparenter Hintergrund. Im Export nimmt Some pages eine Liste wie 1,3-5 für ein PDF oder einen PNG-Satz; auch Print nutzt sie.
+   - New öffnet ein Fenster wie im Windows-Programm: eine Vorgabe für die Seite (A4, A5, ein Symbol mit 256, 512 oder 1024 px, Full HD oder eine eigene Größe in px) und ein weißer oder transparenter Hintergrund. Im Export nimmt Some pages eine Liste wie 1,3-5 für ein PDF oder einen PNG-Satz; auch Print nutzt sie. "Only the drawing" (nicht für PDF) exportiert nur das Gezeichnete, ausgeschnitten und auf transparentem Hintergrund, egal wie groß die Seite ist.
    - Picture setzt ein Foto oder ein SVG in die Zeichnung. SVG code... in seinem Fenster nimmt eingefügten SVG-Code (oder nur Pfaddaten) statt einer Datei. Save as icon (unter Arrange) legt die Auswahl unter My icons in Objects ab.
    - Verlässt du die App mit ungespeicherten Änderungen, fragt icono vorher.
 

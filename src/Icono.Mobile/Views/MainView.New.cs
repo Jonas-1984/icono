@@ -27,6 +27,14 @@ public partial class MainView
 
     private void SetUpNew()
     {
+        ExportCropSwitch.IsCheckedChanged += (_, _) =>
+        {
+            if (ExportLayer.IsVisible)
+            {
+                UpdateExport();
+            }
+        };
+
         ExportRangeEntry.TextChanged += (_, _) =>
         {
             if (ExportLayer.IsVisible)
