@@ -62,6 +62,15 @@ public sealed class WallDrawTyping(EditorContext context)
         Apply(path);
     }
 
+    /// <summary>The whole number is there at once (typed in a box, with the direction chosen by a key): the moving end of <paramref name="path"/> goes to its place in ONE step.
+    /// Typing it character by character would work out the direction again after each character from the end it has just been put on, and the corner before it
+    /// moves a little with every step (the wall before keeps its typed number) - a short first digit then turned the direction round.</summary>
+    public void SetTyped(string? text, Shape path)
+    {
+        Typed = string.Concat((text ?? string.Empty).Where(c => !char.IsWhiteSpace(c)));
+        Apply(path);
+    }
+
     /// <summary>Takes back the last character; false when nothing was typed.</summary>
     public bool Backspace(Shape path)
     {

@@ -43,7 +43,7 @@ public partial class MainView
         var result = Canvas.PlaceTypedLength(LengthEntry.Text, dx, dy);
         if (result == TypedPlacement.NotALength)
         {
-            LengthNote.Text = "That is not a length. Type for example 250, 2.5 m or 2500 mm.";
+            LengthNote.Text = "That is not a length. Type a number, for example 250 (in the unit of the dimensions, usually cm).";
             return;
         }
 

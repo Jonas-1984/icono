@@ -131,7 +131,7 @@
                 </Border>
 
                 <!-- while a wall, polyline or dimension is drawn -->
-                <Border Grid.Column="1" x:Name="PathBar" IsVisible="False" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="10"
+                <Border Grid.Column="1" x:Name="PathBar" IsVisible="False" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10"
                         Background="{DynamicResource FloatBrush}" CornerRadius="12" Padding="10,6"
                         BorderBrush="{DynamicResource RaisedPressedBrush}" BorderThickness="1">
                     <StackPanel Orientation="Horizontal" Spacing="4">
@@ -290,7 +290,7 @@
                     HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,50,0,0">
                 <StackPanel Spacing="10">
                     <TextBlock Text="Next wall" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource ForegroundTextBrush}" />
-                    <TextBox Classes="field" x:Name="LengthEntry" FontSize="15" MinHeight="40" PlaceholderText="Length, e.g. 250 or 2.5 m" />
+                    <TextBox Classes="field" x:Name="LengthEntry" FontSize="15" MinHeight="40" PlaceholderText="Length, e.g. 250" TextInputOptions.ContentType="Number" />
                     <TextBlock x:Name="LengthNote" FontSize="11.5" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}"
                                Text="Type the length (inside length, like the number on the wall), then tap the way the wall goes." />
                     <!-- the four ways a wall can go: the corner is placed there -->

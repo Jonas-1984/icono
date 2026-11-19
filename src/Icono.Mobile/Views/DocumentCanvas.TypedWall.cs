@@ -35,10 +35,7 @@ public sealed partial class DocumentCanvas
         PathBoundsCalculator.Recompute(path);
 
         typing.Clear();
-        foreach (var c in (text ?? string.Empty).Where(c => !char.IsWhiteSpace(c)))
-        {
-            typing.Append(c, path);
-        }
+        typing.SetTyped(text, path); // the whole number in one step, in the direction chosen
 
         var result = typing.Place(path);
         switch (result)
@@ -49,7 +46,7 @@ public sealed partial class DocumentCanvas
                 points[^1] = points[^2]; // the moving end waits on the last corner again
                 path.Points = points;
                 PathBoundsCalculator.Recompute(path);
-                context.Notify("That is not a length. Type for example 250, 2.5 m or 2500 mm.");
+                context.Notify("That is not a length. Type a number, for example 250 (in the unit of the dimensions, usually cm).");
                 context.RequestRedraw();
                 break;
             case TypedPlacement.RoomClosed:

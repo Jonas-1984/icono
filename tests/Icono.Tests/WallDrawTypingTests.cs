@@ -150,3 +150,65 @@ public class WallDrawTypingTests : IDisposable
         Assert.Equal(expected, Geo.Distance(points[0], points[^1]), 0.01);
     }
 }
+
+[Collection("Scale")]
+public class WallDrawTypingWholeNumberTests : IDisposable
+{
+    public void Dispose() => DrawingScale.Denominator = 1;
+
+    private static (EditorContext Context, WallDrawTyping Typing, Shape Wall) NewWall()
+    {
+        var context = new EditorContext();
+        context.Document.ScaleDenominator = 40;
+        var wall = ShapeTemplates.NewPath(ShapeKind.Wall, 500, 500, ArgbColor.FromRgb(0x9E, 0xD9, 0xD1), DimensionKind.Aligned, LengthUnit.Centimeter, 40);
+        return (context, new WallDrawTyping(context), wall);
+    }
+
+    /// <summary>What the Length window does: the moving end is put one step in the chosen direction, the number is typed in at once, the corner is placed.</summary>
+    private static void Go(WallDrawTyping typing, Shape wall, string number, double dx, double dy)
+    {
+        var points = wall.Points!.ToList();
+        var from = points[^2];
+        points[^1] = new CorePoint(from.X + dx * 100, from.Y + dy * 100);
+        wall.Points = points;
+        PathBoundsCalculator.Recompute(wall);
+        typing.Clear();
+        typing.SetTyped(number, wall);
+        Assert.Equal(TypedPlacement.Placed, typing.Place(wall));
+    }
+
+    [Theory]
+    [InlineData(-1, 0, 0, -1)] // left, then up: a right turn
+    [InlineData(-1, 0, 0, 1)]  // left, then down: a left turn
+    [InlineData(1, 0, 0, -1)]
+    [InlineData(1, 0, 0, 1)]
+    [InlineData(0, -1, 1, 0)]
+    [InlineData(0, 1, -1, 0)]
+    public void TheSecondWall_GoesInTheDirectionThatWasChosen(double dx1, double dy1, double dx2, double dy2)
+    {
+        var (_, typing, wall) = NewWall();
+        Go(typing, wall, "250", dx1, dy1);
+        Go(typing, wall, "150", dx2, dy2);
+
+        var points = WallGeometry.AbsolutePoints(wall);
+        var corner = points[1];
+        var end = points[2];
+        Assert.True((end.X - corner.X) * dx2 + (end.Y - corner.Y) * dy2 > 100, $"went {end.X - corner.X:0},{end.Y - corner.Y:0} for direction {dx2},{dy2}");
+        // and the first wall went in its direction too
+        Assert.True((corner.X - points[0].X) * dx1 + (corner.Y - points[0].Y) * dy1 > 100);
+    }
+
+    [Fact]
+    public void ARoomOfTypedWalls_HasTheTypedInsideLengths_AndClosesAtTheStart()
+    {
+        var (_, typing, wall) = NewWall();
+        Go(typing, wall, "400", 1, 0);
+        Go(typing, wall, "300", 0, 1);
+        Go(typing, wall, "400", -1, 0);
+
+        var points = WallGeometry.AbsolutePoints(wall);
+        Assert.Equal(5, points.Count); // four corners and the moving end
+        Assert.True(points[3].X < points[2].X, "the third wall goes left");
+        Assert.True(points[2].Y > points[1].Y, "the second wall goes down");
+    }
+}
