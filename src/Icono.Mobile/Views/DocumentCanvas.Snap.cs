@@ -15,6 +15,11 @@ public sealed partial class DocumentCanvas
     /// <summary>The lines the moved selection lined up on (shown while the finger moves it).</summary>
     private IReadOnlyList<ObjectSnapGuide> _objectGuides = [];
 
+    /// <summary>OSnap in the status line is the master switch of every helper that pulls a point or an object somewhere: the points of other objects, the helpers of the wall
+    /// tool (straight, parallel, in line with ...), the magnet of the first corner, the alignment of edges and dimension lines and the steps of 15 degrees of a rotation.
+    /// With OSnap off nothing is pulled (the grid has its own switch, Snap), as there is no Alt key to hold on a tablet.</summary>
+    private bool SnapsOn => _context is { } context && context.PointSnap.Enabled;
+
     private bool GridSnapping => _context is { SnapToGrid: true, GridSize: > 0 };
 
     /// <summary>The nearest grid line when snapping to the grid is on, else the value itself.</summary>
@@ -43,7 +48,7 @@ public sealed partial class DocumentCanvas
         }
 
         var frame = Icono.Editor.ShapeResizer.GroupBounds(_editShapes);
-        var result = ObjectSnapper.Snap(context.Document, frame, _editShapes, EdgeReach / _zoom, context.ObjectSnap);
+        var result = SnapsOn ? ObjectSnapper.Snap(context.Document, frame, _editShapes, EdgeReach / _zoom, context.ObjectSnap) : ObjectSnapResult.None;
         var dx = result.Dx;
         var dy = result.Dy;
         _objectGuides = result.Guides;

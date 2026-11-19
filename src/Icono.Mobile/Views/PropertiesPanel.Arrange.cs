@@ -41,6 +41,19 @@ public sealed partial class PropertiesPanel
         context.AddDimensionsToSelection(set);
     }
 
+    /// <summary>Union: selected walls are joined into one wall (the outline of a wall as a plain shape would be no wall any more), anything else is united into one shape.</summary>
+    private static void UnionOrJoin(EditorContext context)
+    {
+        if (context.SelectedShapes.Count >= 2 && context.SelectedShapes.All(s => s.Kind == ShapeKind.Wall))
+        {
+            context.JoinSelectedWalls();
+        }
+        else
+        {
+            context.UnionSelection();
+        }
+    }
+
     private void BuildArrange(EditorContext context, IReadOnlyList<Shape> shapes)
     {
         Heading("ARRANGE");
@@ -61,11 +74,11 @@ public sealed partial class PropertiesPanel
 
         Heading("COMBINE");
         ButtonRow(
-            ("Union", context.UnionSelection),
+            ("Union", () => UnionOrJoin(context)),
             ("Merge", context.MergeSelection),
             ("Trim", context.TrimSelection),
             ("Explode", context.ExplodeSelection));
-        Note("Union: the outline of all of them as one shape. Merge: one shape from all of them. Trim: the second cuts the first. " +
+        Note("Union: the outline of all of them as one shape (walls that are selected are joined into one wall instead). Merge: one shape from all of them. Trim: the second cuts the first. " +
              "Explode: a combined object (a sink, a cabinet) falls apart into its pieces.");
 
         Heading("MOVE");
@@ -93,11 +106,12 @@ public sealed partial class PropertiesPanel
         if (shapes.Any(s => s.Kind == ShapeKind.Wall))
         {
             Heading("WALLS");
-            ButtonRow(
-                ("Close room", context.CloseSelectedWalls),
-                ("Join walls", context.JoinSelectedWalls),
-                ("Merge straight", context.MergeStraightWallParts));
-            ButtonRow(("Split at every corner", context.SplitSelectedWallsAtAllPoints));
+            ButtonRow(("Union (join walls)", context.JoinSelectedWalls), ("Close room", context.CloseSelectedWalls));
+            ButtonRow(("Merge straight", context.MergeStraightWallParts), ("Split at corners", context.SplitSelectedWallsAtAllPoints));
+            if (shapes.Count(s => s.Kind == ShapeKind.Wall) >= 2)
+            {
+                Note("Union: two or more walls that follow each other end to end become ONE wall (a gap between them is bridged). Walls that meet in a T cannot be one wall; they are drawn joined anyway.");
+            }
         }
 
         Heading("ADD DIMENSIONS");

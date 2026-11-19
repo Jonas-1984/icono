@@ -33,7 +33,8 @@ public sealed partial class DocumentCanvas
 
         if (selected.Count >= 2)
         {
-            Entry("Union", context.UnionSelection, !locked);
+            Entry(selected.All(x => x.Kind == ShapeKind.Wall) ? "Union (join walls)" : "Union",
+                selected.All(x => x.Kind == ShapeKind.Wall) ? context.JoinSelectedWalls : context.UnionSelection, !locked);
             Entry("Trim (the first one cuts)", context.TrimSelection, !locked && selected.Count == 2);
             Entry("Merge to one shape", context.MergeSelection, !locked);
         }

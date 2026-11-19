@@ -300,7 +300,7 @@ public sealed partial class DocumentCanvas
                 var angle = ShapeResizer.RotationTowards(_editShapes[0], at.X, at.Y);
                 angle = ((angle % 360) + 360) % 360;
                 var nearest = Math.Round(angle / 15) * 15;
-                if (Math.Abs(angle - nearest) <= RotationSnap)
+                if (SnapsOn && Math.Abs(angle - nearest) <= RotationSnap)
                 {
                     angle = nearest % 360;
                 }

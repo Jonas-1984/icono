@@ -132,6 +132,39 @@ public static class WallEditor
         return changed;
     }
 
+    /// <summary>True when the two walls meet in a T: an end of one lies on the side of the other (not at a corner or an end of it) while no end of one is
+    /// near an end of the other. A wall is ONE chain of corners, so such walls cannot become one wall; they are drawn joined where they meet anyway.</summary>
+    public static bool MeetInT(Shape a, Shape b)
+    {
+        var pa = WallGeometry.AbsolutePoints(a);
+        var pb = WallGeometry.AbsolutePoints(b);
+        if (pa.Count < 2 || pb.Count < 2)
+        {
+            return false;
+        }
+
+        var reach = Math.Max(2.0, Math.Max(a.WallThickness, b.WallThickness));
+        var endsA = a.WallClosed && pa.Count >= 3 ? [] : new[] { pa[0], pa[^1] };
+        var endsB = b.WallClosed && pb.Count >= 3 ? [] : new[] { pb[0], pb[^1] };
+
+        // ends that touch: the walls simply join end to end (or at a corner)
+        foreach (var ea in endsA)
+        {
+            foreach (var eb in endsB)
+            {
+                if (Geo.Distance(ea, eb) <= reach * 1.5)
+                {
+                    return false;
+                }
+            }
+        }
+
+        bool EndOnSide(IEnumerable<SKPoint> ends, Shape wall) =>
+            ends.Any(end => Nearest(wall, end.X, end.Y, reach) is { IsVertex: false } spot && spot.Distance <= reach);
+
+        return EndOnSide(endsA, b) || EndOnSide(endsB, a);
+    }
+
     /// <summary>Closest place on the centre line to <paramref name="x"/>,<paramref name="y"/>. Positions within
     /// <paramref name="vertexReach"/> of a corner point count as that point.</summary>
     public static Spot? Nearest(Shape wall, double x, double y, double vertexReach)

@@ -628,7 +628,7 @@ public sealed partial class DocumentCanvas
 
         SKPoint? previous = placed.Count > 0 ? placed[^1] : null;
 
-        if (kind is ShapeKind.Wall or ShapeKind.Polyline && path?.Points is { } own && placed.Count >= 3)
+        if (SnapsOn && kind is ShapeKind.Wall or ShapeKind.Polyline && path?.Points is { } own && placed.Count >= 3)
         {
             var start = new Point(path.X + own[0].X, path.Y + own[0].Y);
             if (Math.Sqrt(Math.Pow(at.X - start.X, 2) + Math.Pow(at.Y - start.Y, 2)) <= FingerReach * 1.6 / _zoom)
@@ -649,7 +649,7 @@ public sealed partial class DocumentCanvas
             return onPoint;
         }
 
-        if (kind == ShapeKind.Wall)
+        if (kind == ShapeKind.Wall && SnapsOn)
         {
             var thickness = path?.WallThickness ?? new Shape { Kind = ShapeKind.Wall }.WallThickness;
             var result = WallSnapper.Snap(

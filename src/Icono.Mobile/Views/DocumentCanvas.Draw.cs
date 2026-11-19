@@ -50,7 +50,8 @@ public sealed partial class DocumentCanvas
             frames, handles, stem, _rotationLabel, pathMarks, snap, MarqueeForRender(), EraserForRender(), DimensionGuideForRender(),
             ObjectGuidesForRender(), grid, CurvePicksForRender(), RulerForRender(), HighlightsForRender(),
             _context.ShowRulers ? (_context.DimensionUnit, _fingerAt) : null,
-            (_wallSnapResult?.Guides ?? []).Select(g => (ToScreen((g.From.X, g.From.Y)), ToScreen((g.To.X, g.To.Y)), g.Kind)).ToList());
+            (_wallSnapResult?.Guides ?? []).Select(g => (ToScreen((g.From.X, g.From.Y)), ToScreen((g.To.X, g.To.Y)), g.Kind)).ToList(),
+            LiveInkForRender());
         context.Custom(new DrawOperation(new Rect(Bounds.Size), _context.Document, PendingForRender(), _zoom, _offset, chrome));
     }
 
@@ -74,7 +75,11 @@ public sealed partial class DocumentCanvas
         (SKPoint From, SKPoint To, string Label)? Ruler,
         IReadOnlyList<Shape> Highlights,
         (LengthUnit Unit, Point? Cursor)? Rulers,
-        IReadOnlyList<(SKPoint From, SKPoint To, SnapKind Kind)> HelperGuides);
+        IReadOnlyList<(SKPoint From, SKPoint To, SnapKind Kind)> HelperGuides,
+        LiveInk? LiveInk = null);
+
+    /// <summary>The stroke of the pen while it is being written: its points (page px) and pressures, the pen colour and width (page px).</summary>
+    private sealed record LiveInk(SKPoint[] Points, float[] Pressures, SKColor Color, float Width, bool UsePressure, double Strength);
 
     /// <summary>The corners of the frame round a shape in drawing units (turned with it), as the Windows program draws it.</summary>
     private static (double X, double Y)[] FrameCorners(Shape shape)
@@ -142,6 +147,11 @@ public sealed partial class DocumentCanvas
             }
 
             DocumentRenderer.Render(canvas, document, document.Width, document.Height, pending);
+            if (chrome.LiveInk is { } liveInk)
+            {
+                DrawLiveInk(canvas, liveInk);
+            }
+
             DrawGrid(canvas);
             canvas.Restore();
 
@@ -153,6 +163,40 @@ public sealed partial class DocumentCanvas
             }
 
             canvas.Restore();
+        }
+
+        /// <summary>The stroke that is being written, drawn straight from the points the pen went through (the canvas is scaled to the page): one smooth line, or
+        /// - with pressure - a few dozen pieces whose width follows the pressure (<see cref="FreehandBuilder.LivePlan"/>). Cheap enough for every move of the pen.</summary>
+        private static void DrawLiveInk(SKCanvas canvas, LiveInk ink)
+        {
+            var points = ink.Points;
+            using var paint = new SKPaint
+            {
+                IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeCap = SKStrokeCap.Round, StrokeJoin = SKStrokeJoin.Round, Color = ink.Color,
+            };
+
+            if (points.Length == 1)
+            {
+                var factor = ink.UsePressure && ink.Pressures.Length > 0 ? FreehandBuilder.PressureFactor(ink.Pressures[0], ink.Strength) : 1;
+                paint.Style = SKPaintStyle.Fill;
+                canvas.DrawCircle(points[0], Math.Max(0.4f, (float)(ink.Width * factor) / 2), paint);
+                return;
+            }
+
+            foreach (var piece in FreehandBuilder.LivePlan(ink.Pressures, points.Length, ink.Width, ink.Strength, ink.UsePressure))
+            {
+                paint.StrokeWidth = Math.Max(0.4f, piece.Width);
+                using var path = new SKPath();
+                path.MoveTo(points[piece.From]);
+                for (var i = piece.From + 1; i < piece.To; i++)
+                {
+                    var middle = new SKPoint((points[i].X + points[i + 1].X) / 2, (points[i].Y + points[i + 1].Y) / 2);
+                    path.QuadTo(points[i], middle);
+                }
+
+                path.LineTo(points[piece.To]);
+                canvas.DrawPath(path, paint);
+            }
         }
 
         /// <summary>The grid of every page, in drawing units (the canvas is already scaled): a hair line at each step, left out where the lines

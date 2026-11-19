@@ -55,6 +55,11 @@ public sealed partial class DocumentCanvas
         }
 
         // then the helpers of the wall tool: straight across / up, parallel and right angle, in line with other points, as long as the piece before
+        if (!SnapsOn)
+        {
+            return null;
+        }
+
         var wall = WallSnapper.Snap(cursor, previous, own, context.Document, context.WallSnap, reach, wallThickness: 0, exclude: edited);
         if (wall.Snapped)
         {

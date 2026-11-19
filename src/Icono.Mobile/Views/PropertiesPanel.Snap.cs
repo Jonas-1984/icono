@@ -50,7 +50,7 @@ public sealed partial class PropertiesPanel
 
         Heading("OBJECT SNAP");
         Chips(
-            [("Object snap on", null, "The master switch (OSnap in the status line). Every tool snaps to the points of all objects; a mark shows what was found.", context.PointSnap.Enabled,
+            [("Object snap on", null, "The master switch (OSnap in the status line) of all snapping: points of other objects, the wall helpers, the first corner of a room, aligned edges and dimension lines, and the 15 degree steps of a rotation. Off: nothing is pulled; only the grid snaps, if Snap to grid is on.", context.PointSnap.Enabled,
                 on => context.PointSnap.Enabled = on)]);
         Chips(PointKinds.Select(k =>
         {

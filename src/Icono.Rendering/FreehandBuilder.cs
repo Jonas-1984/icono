@@ -364,6 +364,72 @@ public static class FreehandBuilder
         };
     }
 
+    /// <summary>One piece of the live stroke: the points <see cref="From"/> to <see cref="To"/> (indices into the stroke, both included) are drawn as one line of
+    /// <see cref="Width"/> (in the unit of the pen width).</summary>
+    public readonly record struct LivePiece(int From, int To, float Width);
+
+    /// <summary>How the stroke is drawn WHILE the pen is still moving: straight from the points the pen went through, without building a shape (which is much too
+    /// much work for every move of a pen that reports hundreds of points a second). Without pressure the whole stroke is one piece of the pen width; with pressure the
+    /// width follows it, smoothed a little over the neighbouring points, and neighbouring points whose widths differ by less than <paramref name="tolerance"/> (a part)
+    /// are one piece, so a long stroke is a few dozen lines, not thousands. Where one piece ends the next begins in the same point. The finished stroke is made by
+    /// <see cref="CreateShape"/> / <see cref="CreatePressureShape"/> when the pen is lifted.</summary>
+    public static List<LivePiece> LivePlan(
+        IReadOnlyList<float> pressure, int pointCount, double penWidth, double strength, bool usePressure, double tolerance = 0.08)
+    {
+        var pieces = new List<LivePiece>();
+        if (pointCount <= 0)
+        {
+            return pieces;
+        }
+
+        if (!usePressure || pressure.Count < pointCount || pointCount < 3)
+        {
+            pieces.Add(new LivePiece(0, Math.Max(0, pointCount - 1), (float)penWidth));
+            return pieces;
+        }
+
+        // the width at every point, lightly averaged with its neighbours (a pen reports pressure with noise)
+        var widths = new float[pointCount];
+        for (var i = 0; i < pointCount; i++)
+        {
+            float sum = 0;
+            var n = 0;
+            for (var d = -2; d <= 2; d++)
+            {
+                var j = i + d;
+                if (j >= 0 && j < pointCount)
+                {
+                    sum += pressure[j];
+                    n++;
+                }
+            }
+
+            widths[i] = (float)(penWidth * PressureFactor(sum / n, strength));
+        }
+
+        var from = 0;
+        float low = widths[0], high = widths[0];
+        for (var i = 1; i < pointCount; i++)
+        {
+            var newLow = Math.Min(low, widths[i]);
+            var newHigh = Math.Max(high, widths[i]);
+            if (newHigh - newLow > tolerance * Math.Max(newHigh, 1e-3))
+            {
+                pieces.Add(new LivePiece(from, i, (low + high) / 2));
+                from = i;
+                low = high = widths[i];
+            }
+            else
+            {
+                low = newLow;
+                high = newHigh;
+            }
+        }
+
+        pieces.Add(new LivePiece(from, pointCount - 1, (low + high) / 2));
+        return pieces;
+    }
+
     /// <summary>The sensitivity the pen starts with: a light touch is 0.3 times the pen width, a hard one 1.7 times.</summary>
     public const double DefaultPressureStrength = 0.7;
 

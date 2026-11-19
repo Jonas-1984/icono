@@ -3,6 +3,7 @@ using Avalonia.Input;
 using Avalonia.Threading;
 using Icono.Core;
 using Icono.Editor;
+using Icono.Rendering;
 using SkiaSharp;
 
 namespace Icono.Mobile.Views;
@@ -150,14 +151,28 @@ public sealed partial class DocumentCanvas
         InvalidateVisual();
     }
 
+    /// <summary>The stroke grew: it is drawn again, straight from its points (see <see cref="LiveInk"/>) - no shape is built while the pen moves. Only the clean
+    /// shape of "hold to make shapes clean" is a shape; the finished stroke is built when the pen is lifted.</summary>
     private void UpdateInkPreview()
     {
-        if (_context is { } context && _inkPoints is { } points)
+        if (_context is { } context && _inkPoints is not null)
         {
-            _inkShape = InkEditing.Preview(context, points, _zoom, _inkPressures);
+            if (_inkSnap is null)
+            {
+                _inkShape = null;
+            }
+
             context.RequestRedraw();
         }
     }
+
+    /// <summary>The stroke that is being written, as the render thread draws it (a copy of the points): null when nothing is being written or the clean shape is shown.</summary>
+    private LiveInk? LiveInkForRender() =>
+        _context is { } context && _inkPoints is { Count: > 0 } points && _inkSnap is null && !_inkErasing
+            ? new LiveInk(
+                points.ToArray(), _inkPressures is { } pressures ? pressures.ToArray() : [], context.PenColor.ToSkColor(), (float)context.PenWidth,
+                InkEditing.UsesPressure(context, _inkPressures), context.PenPressureStrength)
+            : null;
 
     /// <summary>The pen is lifted: the stroke becomes an object (one undo step), or what the eraser deleted is kept as one undo step.</summary>
     private void FinishInk()

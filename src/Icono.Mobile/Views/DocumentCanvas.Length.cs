@@ -98,7 +98,7 @@ public sealed partial class DocumentCanvas
 
         var at = ToDocument(view);
         var pointer = DimensionLineEditing.Snapped(
-            context.Document, drag.Shape, drag.Segment, new SKPoint((float)at.X, (float)at.Y), drag.Direction, (float)(8 / _zoom), out var snap);
+            context.Document, drag.Shape, drag.Segment, new SKPoint((float)at.X, (float)at.Y), SnapsOn ? drag.Direction : null, (float)(8 / _zoom), out var snap);
         _dimensionGuide = snap is null ? null : (snap.From, snap.To);
         DimensionLineEditing.Place(context.Document, drag.Shape, drag.Segment, pointer);
         context.RequestRedraw();

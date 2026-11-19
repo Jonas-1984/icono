@@ -1235,6 +1235,12 @@ public sealed partial class EditorContext : ObservableObject
         var straight = 0;
         for (var i = 1; i < walls.Count; i++)
         {
+            if (WallEditor.MeetInT(current, walls[i]))
+            {
+                StatusMessage?.Invoke("These walls meet in a T (the end of one is on the side of the other). A wall is one chain of corners, so they cannot become one wall - they are drawn joined where they meet. Join the walls that follow each other end to end.");
+                return;
+            }
+
             if (WallEditor.Join(current, walls[i]) is not { } joined)
             {
                 return;
