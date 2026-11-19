@@ -26,7 +26,7 @@ Die wichtigsten Gesten und Werkzeuge in wenigen Minuten. Dieses Fenster öffnest
    - Door und Window: tippe für die Standardgröße im Maßstab der Zeichnung oder ziehe sie auf. Auf eine Wand gesetzt, sitzen sie von allein darin: sie drehen sich zur Wand, nehmen ihre Dicke an und schneiden sie auf, und eine Tür schwingt in den Raum (bei geschlossener Wand) oder zur getippten Seite. An einer Wand aufgezogen bekommt die Öffnung die Länge des Zuges. Fern von einer Wand bleiben sie, wo du sie hinsetzt.
    - Text: tippe an die Stelle für den Text und tippe ihn ein. Doppeltippe einen Text oder eine Form, um den Text zu ändern.
    - Ecken behalten beim Ändern der Größe das Seitenverhältnis; schalte Keep proportions (SIZE & POSITION in den Properties) aus, um eine Ecke frei zu ziehen.
-   - Objects öffnet die Bibliothek: Räume, Türen und Fenster, Symbole, Schränke, Formen und deine eigenen Symbole. Ein Tipp setzt ein Objekt ein oder lässt es dich platzieren.
+   - Objects öffnet die Bibliothek: Räume, Türen und Fenster, Symbole, Schränke, Möbel (Betten, Sofas, Tische, Stühle, Kleiderschränke ...), Badobjekte (Wanne, Dusche, WC, Waschbecken ...), Formen und deine eigenen Symbole. Sie kommen in ihrer echten Größe im Maßstab der Zeichnung. Ein Tipp setzt ein Objekt ein oder lässt es dich platzieren.
    - More hat die weiteren Werkzeuge: Doppelpfeil, Eigenschaften übertragen, Farbpipette, Flächenfarbe, Punkte hinzufügen und löschen, Wand schneiden, Lineal, Abstand.
 
 4. Stift und Handschrift

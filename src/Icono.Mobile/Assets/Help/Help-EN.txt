@@ -26,7 +26,7 @@ The most important gestures and tools in a few minutes. Open this window again a
    - Door and Window: tap for the standard size at the drawing scale, or drag them open. Put on a wall they sit in it by themselves: they turn to the wall, take its thickness and cut it open, and a door swings into the room (on a closed wall) or to the side you tapped. Dragged along a wall the opening gets the length of the drag. Away from a wall they stay where you put them.
    - Text: tap where the text should go and type it. Double tap a text, or a shape, to change its text.
    - Corners keep the proportions while you resize; switch Keep proportions (SIZE & POSITION in the Properties) off to stretch a corner freely.
-   - Objects opens the library: rooms, doors and windows, symbols, cabinets, shapes and your own icons. A tap puts an object in, or lets you place it.
+   - Objects opens the library: rooms, doors and windows, symbols, cabinets, furniture (beds, sofas, tables, chairs, wardrobes ...), bathroom fittings (bathtub, shower, toilet, washbasin ...), shapes and your own icons. They come at their real size in the drawing scale. A tap puts an object in, or lets you place it.
    - More has the other tools: double arrow, match properties, colour picker, region colour, add and delete points, cut wall, ruler, distance.
 
 4. Pen and handwriting

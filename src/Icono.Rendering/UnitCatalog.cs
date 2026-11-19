@@ -26,7 +26,7 @@ public static partial class UnitCatalog
 
     private static List<UnitObject> Collect()
     {
-        List<UnitObject> all = [.. Generated, .. GeneratedKitchenElements, .. GeneratedComputers];
+        List<UnitObject> all = [.. Generated, .. GeneratedKitchenElements, .. GeneratedComputers, .. GeneratedFurniture];
         if (LocalCataloguesAllowed)
         {
             AddLocalCatalogues(all);
