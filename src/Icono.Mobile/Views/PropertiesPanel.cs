@@ -63,7 +63,8 @@ public sealed partial class PropertiesPanel : UserControl
         var layout = new DockPanel();
         DockPanel.SetDock(tabs, Dock.Top);
         layout.Children.Add(tabs);
-        layout.Children.Add(new ScrollViewer { Content = _content, VerticalScrollBarVisibility = ScrollBarVisibility.Auto });
+        _scroll = new ScrollViewer { Content = _content, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+        layout.Children.Add(_scroll);
         Content = layout;
         ShowTab(Tab.Properties);
     }
@@ -407,6 +408,28 @@ public sealed partial class PropertiesPanel : UserControl
     ];
 
     /// <summary>Starts a section: its name is a button that folds the controls below it in and out (until the next section starts).</summary>
+    /// <summary>The header button of the section that was started last (to scroll to it).</summary>
+    private Button? _lastHeader;
+
+    /// <summary>Brings a section header into view after the panel is built (a tapped dimension number shows its settings).</summary>
+    private void ScrollTo(Control? target) =>
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            // after the panel is laid out: the section header goes to the top of the view
+            if (target is null || _scroll is null)
+            {
+                return;
+            }
+
+            _scroll.UpdateLayout();
+            if (target.TranslatePoint(new Point(0, 0), _content) is { } at)
+            {
+                _scroll.Offset = new Vector(0, Math.Max(0, at.Y - 4));
+            }
+        }, Avalonia.Threading.DispatcherPriority.Background);
+
+    private readonly ScrollViewer _scroll;
+
     private void Heading(string text)
     {
         var body = new StackPanel { Spacing = 6 };
@@ -448,6 +471,7 @@ public sealed partial class PropertiesPanel : UserControl
         _content.Children.Add(header);
         _content.Children.Add(card);
         _into = body;
+        _lastHeader = header;
     }
 
     private void Note(string text) => _into.Children.Add(new TextBlock

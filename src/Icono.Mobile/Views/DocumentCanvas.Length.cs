@@ -20,6 +20,9 @@ public sealed partial class DocumentCanvas
     /// <summary>The dimension number under the finger when it went down (wall segment or door / window), or null.</summary>
     private (Shape Shape, Layer Layer, int Segment, SymbolDimension? Symbol)? _pressNumber;
 
+    /// <summary>The dimension number that was tapped last (a second tap on it asks for the length).</summary>
+    private (Shape Shape, int Segment)? _lastTapped;
+
     /// <summary>Raised when the user tapped a dimension number: the window asks for the length.</summary>
     public event EventHandler<LengthRequest>? LengthRequested;
 
@@ -146,8 +149,22 @@ public sealed partial class DocumentCanvas
             return;
         }
 
+        // the first tap SELECTS the dimension (its colour, font and the other settings are in the Properties); a second tap on the same number asks for its length
+        var again = _lastTapped is { } last && ReferenceEquals(last.Shape, number.Shape) && last.Segment == number.Segment
+                    && context.SelectedShapes.Count == 1 && ReferenceEquals(context.SelectedShapes[0], number.Shape);
+        _lastTapped = (number.Shape, number.Segment);
         Select(number.Shape, number.Layer);
+        if (number.Symbol is null)
+        {
+            context.PickedDimensionSegment = number.Segment; // the DIMENSION settings of the wall show this one
+        }
+
         context.RequestRedraw();
+        if (!again)
+        {
+            context.Notify("Dimension selected - its settings are in the Properties. Tap the number again to type its length.");
+            return;
+        }
 
         if (number.Symbol is { } dimension)
         {

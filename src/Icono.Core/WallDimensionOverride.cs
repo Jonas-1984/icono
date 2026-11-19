@@ -23,16 +23,17 @@ public sealed record WallDimensionOverride(
     int Segment, bool Hidden = false, double? Offset = null, bool Flip = false,
     double? TextPosition = null, double? TextShift = null, string? Text = null,
     LengthUnit? Unit = null, int? Precision = null, DimensionArrowStyle? ArrowStyle = null,
-    double? FontSize = null, double? LineWidth = null, double? ArrowSize = null, double? ExtGap = null, double? ExtOvershoot = null, string? FontFamily = null)
+    double? FontSize = null, double? LineWidth = null, double? ArrowSize = null, double? ExtGap = null, double? ExtOvershoot = null, string? FontFamily = null,
+    ArgbColor? Color = null)
 {
     /// <summary>True when this dimension has its own look (unit, decimals, marks, sizes), as opposed to its place.</summary>
     public bool HasOwnStyle =>
         Unit is not null || Precision is not null || ArrowStyle is not null || FontSize is not null || LineWidth is not null ||
-        ArrowSize is not null || ExtGap is not null || ExtOvershoot is not null || FontFamily is not null;
+        ArrowSize is not null || ExtGap is not null || ExtOvershoot is not null || FontFamily is not null || Color is not null;
 
     /// <summary>The same dimension with no look of its own (its place and text stay).</summary>
     public WallDimensionOverride WithoutStyle() =>
-        this with { Unit = null, Precision = null, ArrowStyle = null, FontSize = null, LineWidth = null, ArrowSize = null, ExtGap = null, ExtOvershoot = null, FontFamily = null };
+        this with { Unit = null, Precision = null, ArrowStyle = null, FontSize = null, LineWidth = null, ArrowSize = null, ExtGap = null, ExtOvershoot = null, FontFamily = null, Color = null };
 
     /// <summary>True when nothing differs from the wall's settings (such an entry can be dropped).</summary>
     public bool IsDefault => !Hidden && Offset is null && !Flip && TextPosition is null && TextShift is null && string.IsNullOrEmpty(Text) && !HasOwnStyle;

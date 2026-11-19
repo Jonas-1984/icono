@@ -60,6 +60,7 @@ public sealed class Shape : ObservableObject
     private bool _sketch;
     private bool _freehand;
     private string? _inkCenterline;
+    private ArgbColor? _dimColor;
     private ArgbColor? _textColor;
     private double _wallThickness = 16;
     private bool _wallClosed;
@@ -234,6 +235,10 @@ public sealed class Shape : ObservableObject
 
     /// <summary>A handwriting stroke written with pen pressure is a filled outline of varying width in <see cref="CustomPathData"/>; this is the line down its middle
     /// (path data in the same 24 x 24 space), which is what the stroke was drawn along - kept so the writing can be read as text. Null for a stroke of one width.</summary>
+    /// <summary>The colour of the dimensions of a wall (every one, unless its own entry in <see cref="WallDimensionOverrides"/> says otherwise) or of a door, window or wall
+    /// opening. Null = the usual red.</summary>
+    public ArgbColor? DimColor { get => _dimColor; set => SetField(ref _dimColor, value); }
+
     public string? InkCenterline { get => _inkCenterline; set => SetField(ref _inkCenterline, value); }
 
     /// <summary>Dashed stroke, only meaningful for <see cref="Points"/>-based kinds.</summary>

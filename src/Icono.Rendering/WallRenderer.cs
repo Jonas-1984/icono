@@ -584,11 +584,14 @@ public static class WallRenderer
     /// run outside the plan (see <see cref="ResolveLayouts"/>).</summary>
     private static void DrawDimensions(SKCanvas canvas, Shape wall, byte opacityAlpha)
     {
-        var color = new SKColor(0xC0, 0x39, 0x2B).WithAlpha(opacityAlpha);
-        foreach (var layout in ResolveLayouts(wall))
+        // the red of the dimensions, or the colour of the wall's dimensions, or the colour of this one
+        var layouts = ResolveLayouts(wall);
+        for (var i = 0; i < layouts.Count; i++)
         {
-            if (layout is not null)
+            if (layouts[i] is { } layout)
             {
+                var chosen = FindOverride(wall, i)?.Color ?? wall.DimColor;
+                var color = chosen is { } own ? Multiply(own, opacityAlpha) : new SKColor(0xC0, 0x39, 0x2B).WithAlpha(opacityAlpha);
                 DimensionRenderer.DrawLayout(canvas, layout, color);
             }
         }

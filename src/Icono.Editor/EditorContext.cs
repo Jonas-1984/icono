@@ -261,7 +261,20 @@ public sealed partial class EditorContext : ObservableObject
     };
 
     /// <summary>The wall dimension whose number was just clicked or dragged on the page: the DIMENSION card shows that one (taken once).</summary>
-    public int? PickedDimensionSegment { get; set; }
+    public int? PickedDimensionSegment
+    {
+        get => _pickedDimensionSegment;
+        set
+        {
+            _pickedDimensionSegment = value;
+            if (value is not null)
+            {
+                RaisePropertyChanged(nameof(PickedDimensionSegment)); // the Properties show that dimension (also when its wall was selected already)
+            }
+        }
+    }
+
+    private int? _pickedDimensionSegment;
 
     private int? _wallSegmentHighlight;
 

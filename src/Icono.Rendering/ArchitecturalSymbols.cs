@@ -277,7 +277,9 @@ public static class ArchitecturalSymbols
             canvas.DrawPath(parts.Lines, stroke);
         }
 
-        var dimensionColor = new SKColor(0xC0, 0x39, 0x2B).WithAlpha(opacityAlpha);
+        var dimensionColor = shape.DimColor is { } own
+            ? new SKColor(own.R, own.G, own.B, (byte)(own.A * opacityAlpha / 255.0))
+            : new SKColor(0xC0, 0x39, 0x2B).WithAlpha(opacityAlpha);
         if (SymbolMeasurements.Current is { } document)
         {
             // the width and the distances to the wall corners (the symbol finds its wall in the document being drawn)

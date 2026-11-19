@@ -47,6 +47,7 @@ public sealed partial class PropertiesPanel
         var isDimension = shape.Kind == ShapeKind.Dimension;
         var isSymbol = ArchitecturalSymbols.IsSymbol(shape.Kind);
         Heading("DIMENSION");
+        var dimensionHeader = _lastHeader;
 
         if (isDimension)
         {
@@ -82,6 +83,7 @@ public sealed partial class PropertiesPanel
             {
                 _dimensionSegment = picked;
                 context.PickedDimensionSegment = null;
+                ScrollTo(dimensionHeader); // a number was tapped: its settings come into view
             }
 
             var lengths = WallGeometry.Segments(shape);
@@ -124,6 +126,38 @@ public sealed partial class PropertiesPanel
             {
                 context.SetOnSelection(perShape, HasDimensions);
             }
+        }
+
+        if (isWall || isSymbol)
+        {
+            // the colour of this dimension (a wall: this one, or the whole wall; a door / window: its dimensions)
+            var usual = ArgbColor.FromRgb(0xC0, 0x39, 0x2B);
+            var shown = (isWall ? custom?.Color ?? shape.DimColor : shape.DimColor) ?? usual;
+            Note(isWall ? "Colour of this dimension (lines and number):" : "Colour of the dimensions (lines and numbers):");
+            ColorRow(shown, c => Set(x => x with { Color = c }, s => s.DimColor = c));
+            if (isWall)
+            {
+                ButtonRow(
+                    ("Whole wall", () => context.SetOnSelection(s =>
+                    {
+                        s.DimColor = shown;
+                        s.WallDimensionOverrides = s.WallDimensionOverrides?.Select(o => o with { Color = null }).Where(o => !o.IsDefault).ToList() is { Count: > 0 } kept ? kept : null;
+                    }, s => s.Kind == ShapeKind.Wall)),
+                    ("Usual red", () => Set(x => x with { Color = null }, s => s.DimColor = null)));
+            }
+            else
+            {
+                ButtonRow(("Usual red", () => Set(x => x, s => s.DimColor = null)));
+            }
+        }
+
+        if (isWall && segment >= 0)
+        {
+            // the length of this wall: typed, as when its number is tapped twice
+            var picked = shape;
+            var which = segment;
+            ButtonRow(("Length...", () => TextBoxRequested?.Invoke(this, new LengthRequest(
+                "Wall length", LengthEditing.WallNote, LengthEditing.WallText(picked, which), text => LengthEditing.CommitWall(context, picked, which, text)))));
         }
 
         var unit = isWall ? custom?.Unit ?? shape.WallDimensionUnit : shape.DimUnit;

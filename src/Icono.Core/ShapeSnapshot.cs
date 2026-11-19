@@ -98,7 +98,8 @@ public readonly record struct ShapeSnapshot(
     bool Freehand = false,
     string? InkCenterline = null,
     double BackdropBlurRadius = 0,
-    ShapeKind? Kind = null)
+    ShapeKind? Kind = null,
+    ArgbColor? DimColor = null)
 {
     public static ShapeSnapshot Capture(Shape shape) => new(
         shape.X,
@@ -193,7 +194,8 @@ public readonly record struct ShapeSnapshot(
         shape.Freehand,
         shape.InkCenterline,
         shape.BackdropBlurRadius,
-        shape.Kind);
+        shape.Kind,
+        shape.DimColor);
 
     public void ApplyTo(Shape shape)
     {
@@ -293,5 +295,7 @@ public readonly record struct ShapeSnapshot(
         {
             shape.Kind = kind; // a polyline that was closed becomes a polyline again with undo
         }
+
+        shape.DimColor = DimColor;
     }
 }
