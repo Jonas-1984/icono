@@ -23,7 +23,7 @@ The most important gestures and tools in a few minutes. Open this window again a
    - Arc in a polyline: while you draw a polyline the Arc key of the drawing bar makes the next side an arc, as in AutoCAD: tap a point on the arc, then its end point. Press Arc again to go on with straight sides. Undo point takes back the point on the arc first. An arc can also close the shape.
    - Walls with exact lengths: in the wall bar tap Length..., type the length (250, 2.5 m, 2500 mm) and tap the way the wall goes.
    - Dimension: place the two points to measure, then where the dimension line runs. Tap a dimension number to type its length, drag it to move its line.
-   - Door and Window: tap for the standard size at the drawing scale, or drag them open.
+   - Door and Window: tap for the standard size at the drawing scale, or drag them open. Put on a wall they sit in it by themselves: they turn to the wall, take its thickness and cut it open, and a door swings into the room (on a closed wall) or to the side you tapped. Dragged along a wall the opening gets the length of the drag. Away from a wall they stay where you put them.
    - Text: tap where the text should go and type it. Double tap a text, or a shape, to change its text.
    - Corners keep the proportions while you resize; switch Keep proportions (SIZE & POSITION in the Properties) off to stretch a corner freely.
    - Objects opens the library: rooms, doors and windows, symbols, cabinets, shapes and your own icons. A tap puts an object in, or lets you place it.

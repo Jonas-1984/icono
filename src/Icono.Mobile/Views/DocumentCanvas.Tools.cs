@@ -288,7 +288,31 @@ public sealed partial class DocumentCanvas
             return;
         }
 
+        // a door, window or opening that is put on a wall sits in it (turned to the wall, as thick as it, a door swinging into the room)
+        var symbolClick = ArchitecturalSymbols.IsSymbol(shape.Kind) && shape.Width < 6 && (shape.Height < 6 || ArchitecturalSymbols.IsDoor(shape.Kind));
+        var dragFrame = (shape.X, shape.Y, shape.Width, shape.Height);
         ShapeTemplates.ApplyClickSize(shape, context.Document, context.PendingUnit);
+        if (ArchitecturalSymbols.IsSymbol(shape.Kind))
+        {
+            var reach = FingerReach * 1.2 / _zoom;
+            if (symbolClick)
+            {
+                SymbolWallFit.Fit(context.Document, shape, _placeStart.X, _placeStart.Y, reach);
+            }
+            else
+            {
+                // dragged open: the middle of the frame is where it goes, the part of the drag along the wall is the width of the opening
+                var (fx, fy, fw, fh) = dragFrame;
+                var middleX = fx + fw / 2;
+                var middleY = fy + fh / 2;
+                if (SymbolWallFit.FindWall(context.Document, middleX, middleY, reach) is { } hit)
+                {
+                    var along = Math.Abs(fw * hit.DirectionX) + Math.Abs(fh * hit.DirectionY);
+                    SymbolWallFit.Fit(context.Document, shape, middleX, middleY, reach, Math.Max(24, along));
+                }
+            }
+        }
+
         if (shape.Points is null && !ShapeTemplates.IsBigEnough(shape))
         {
             // a tap: a rectangle, ellipse ... of a handy size
