@@ -17,6 +17,12 @@ public static class PolylineClosing
         if (shape.Points is { Count: >= 3 } points && CorePointsTouch(points[0], points[^1]))
         {
             // the last point lies on the first one already: it is dropped, the polygon closes by itself
+            // (the side that led to it is now the closing side, so it keeps its bulge)
+            if (shape.SegmentBulges is { } bulges && bulges.Count == points.Count)
+            {
+                shape.SegmentBulges = bulges.Take(points.Count - 1).ToList();
+            }
+
             shape.Points = points.Take(points.Count - 1).ToList();
         }
 

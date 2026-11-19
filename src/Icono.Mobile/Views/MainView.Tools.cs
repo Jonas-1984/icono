@@ -326,6 +326,8 @@ public partial class MainView
         PathBar.IsVisible = Canvas.IsDrawingPath;
         PathLengthButton.IsVisible = Canvas.CanTypeLength;
         PathCloseButton.IsVisible = Canvas.CanClosePath;
+        PathArcButton.IsVisible = Canvas.CanUseArcs;
+        PathArcButton.Classes.Set("on", Canvas.ArcMode);
         PathCloseButton.Content = CurrentTool?.Tool == ActiveTool.PathDraw && _context.SelectedShapeKind == ShapeKind.Wall ? "Close room" : "Close shape";
         if (!Canvas.IsDrawingPath)
         {
@@ -334,12 +336,15 @@ public partial class MainView
         }
 
         var points = Canvas.PathPointCount;
-        PathBarText.Text = $"{CurrentTool?.Name}: {points} point{(points == 1 ? "" : "s")}";
-        PathUndoButton.IsEnabled = points > 0;
+        var arcHint = !Canvas.ArcMode ? "" : Canvas.ArcWaitingForEnd ? " - arc: tap the end point" : " - arc: tap a point on the arc";
+        PathBarText.Text = $"{CurrentTool?.Name}: {points} point{(points == 1 ? "" : "s")}{arcHint}";
+        PathUndoButton.IsEnabled = points > 0 || Canvas.ArcWaitingForEnd;
         PathDoneButton.IsEnabled = points >= 2;
     }
 
     private void OnPathUndoPoint(object? sender, RoutedEventArgs e) => Canvas.RemoveLastPathPoint();
+
+    private void OnPathArc(object? sender, RoutedEventArgs e) => Canvas.ToggleArcMode();
 
     private void OnPathCancel(object? sender, RoutedEventArgs e) => Canvas.CancelPath();
 

@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using Icono.Core;
 using SkiaSharp;
 
@@ -20,6 +21,33 @@ public static class DocumentExporter
         var width = Math.Max(1, (int)Math.Round(extentWidth * scale));
         var height = Math.Max(1, (int)Math.Round(extentHeight * scale));
         return Encode(RenderBitmap(document, width, height, includeBackground, page), SKEncodedImageFormat.Png, 100);
+    }
+
+    /// <summary>Sizes (longer side, px) of the pictures of a PNG set.</summary>
+    public static readonly int[] PngSetSizes = [16, 32, 64, 128, 256, 512];
+
+    /// <summary>A zip file with the pictures of a PNG set (<see cref="PngSetSizes"/>) named "{baseName}_{size}.png" - for a project with several pages and
+    /// <paramref name="page"/> null "{baseName}_page{n}_{size}.png" for every page. The Windows program writes the same pictures into a folder.</summary>
+    public static byte[] RenderPngSetZip(Document document, string baseName, bool includeBackground, int? page = null)
+    {
+        using var stream = new MemoryStream();
+        using (var zip = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            var pages = page is { } one ? new[] { one } : Enumerable.Range(0, document.PageCount).ToArray();
+            foreach (var index in pages)
+            {
+                var name = page is null && document.PageCount > 1 ? $"{baseName}_page{index + 1}" : baseName;
+                foreach (var size in PngSetSizes)
+                {
+                    var entry = zip.CreateEntry($"{name}_{size}.png", CompressionLevel.Optimal);
+                    using var output = entry.Open();
+                    var png = RenderPng(document, size, includeBackground, index);
+                    output.Write(png, 0, png.Length);
+                }
+            }
+        }
+
+        return stream.ToArray();
     }
 
     /// <summary>The drawing as an SVG file (vector graphic, text as outlines, sizes in px at 96 per inch): one page, or with <paramref name="page"/> null all

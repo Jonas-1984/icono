@@ -20,6 +20,7 @@ Die wichtigsten Gesten und Werkzeuge in wenigen Minuten. Dieses Fenster öffnest
 3. Formen und Pläne zeichnen
    - Rectangle, Ellipse, Line und Arrow: ziehe sie mit einem Finger auf. Ein Tipp ergibt eine Standardgröße.
    - Polyline und Wall: Finger aufsetzen, zum Punkt gleiten, anheben setzt den Punkt. Done beendet. Bei einer Wand schließt ein Tipp auf die erste Ecke den Raum.
+   - Bogen in einer Polylinie: Beim Zeichnen einer Polylinie macht die Taste Arc der Zeichenleiste die nächste Seite zu einem Bogen, wie in AutoCAD: einen Punkt auf dem Bogen antippen, dann seinen Endpunkt. Arc noch einmal drücken zeichnet wieder gerade Seiten. Undo point nimmt zuerst den Punkt auf dem Bogen zurück. Auch die letzte Seite zum Schließen kann ein Bogen sein.
    - Wände mit genauen Längen: tippe in der Wandleiste auf Length..., tippe die Länge ein (250, 2.5 m, 2500 mm) und tippe die Richtung der Wand an.
    - Dimension: setze die zwei Punkte, die gemessen werden, dann die Stelle, an der die Maßlinie verläuft. Tippe auf eine Maßzahl, um die Länge einzutippen, ziehe sie, um ihre Linie zu verschieben.
    - Door und Window: tippe für die Standardgröße im Maßstab der Zeichnung oder ziehe sie auf.
@@ -49,7 +50,7 @@ Die wichtigsten Gesten und Werkzeuge in wenigen Minuten. Dieses Fenster öffnest
 
 7. Dateien, Bilder und Export
    - New, Open, Save und Save as stehen links in der oberen Leiste. icono zeigt sein eigenes Dateifenster; Recent listet die zuletzt geöffneten Zeichnungen.
-   - Export speichert die Seite oder alle Seiten als PDF (echte Größe, Vektoren) oder PNG oder gibt sie an eine andere App weiter.
+   - Export speichert die Seite oder alle Seiten als PDF (echte Größe, Vektoren), PNG, SVG (Vektorgrafik), Windows-Symbol (.ico) oder als ZIP mit PNG-Bildern von 16 bis 512 px oder gibt sie an eine andere App weiter.
    - Picture setzt ein Foto oder ein SVG in die Zeichnung. SVG code... in seinem Fenster nimmt eingefügten SVG-Code (oder nur Pfaddaten) statt einer Datei. Save as icon (unter Arrange) legt die Auswahl unter My icons in Objects ab.
    - Verlässt du die App mit ungespeicherten Änderungen, fragt icono vorher.
 

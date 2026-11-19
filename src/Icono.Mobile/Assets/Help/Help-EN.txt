@@ -20,6 +20,7 @@ The most important gestures and tools in a few minutes. Open this window again a
 3. Drawing shapes and plans
    - Rectangle, Ellipse, Line and Arrow: drag them open with one finger. A tap gives a standard size.
    - Polyline and Wall: finger down, slide to the point, lift to place it. Done ends. For a wall, tap the first corner again to close the room.
+   - Arc in a polyline: while you draw a polyline the Arc key of the drawing bar makes the next side an arc, as in AutoCAD: tap a point on the arc, then its end point. Press Arc again to go on with straight sides. Undo point takes back the point on the arc first. An arc can also close the shape.
    - Walls with exact lengths: in the wall bar tap Length..., type the length (250, 2.5 m, 2500 mm) and tap the way the wall goes.
    - Dimension: place the two points to measure, then where the dimension line runs. Tap a dimension number to type its length, drag it to move its line.
    - Door and Window: tap for the standard size at the drawing scale, or drag them open.
@@ -49,7 +50,7 @@ The most important gestures and tools in a few minutes. Open this window again a
 
 7. Files, pictures and export
    - New, Open, Save and Save as are at the left of the top bar. icono shows its own file window; Recent lists the drawings you opened last.
-   - Export saves the page or all pages as PDF (real size, vectors) or PNG, or shares it with another app.
+   - Export saves the page or all pages as PDF (real size, vectors), PNG, SVG (vector graphic), Windows icon (.ico) or a zip with PNG pictures from 16 to 512 px, or shares it with another app.
    - Picture puts a photo or an SVG into the drawing. SVG code... in its window takes pasted SVG code (or only path data) instead of a file. Save as icon (in Arrange) keeps the selection under My icons in Objects.
    - When you leave with unsaved changes, icono asks first.
 

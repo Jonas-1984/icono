@@ -139,6 +139,7 @@
                                    Foreground="{DynamicResource ForegroundTextBrush}" />
                         <Button Classes="tool" x:Name="PathLengthButton" Content="Length..." Click="OnPathLength" IsVisible="False" />
                         <Button Classes="tool" x:Name="PathCloseButton" Content="Close shape" Click="OnPathClose" IsVisible="False" ToolTip.Tip="Join the last point with the first: a closed shape (a room for a wall). Tapping the first point does the same." />
+                        <Button Classes="tool" x:Name="PathArcButton" Content="Arc" Click="OnPathArc" IsVisible="False" ToolTip.Tip="Draw the next side as an arc: tap a point on the arc, then its end point. Tap again to draw straight sides." />
                         <Button Classes="tool" x:Name="PathUndoButton" Content="Undo point" Click="OnPathUndoPoint" />
                         <Button Classes="tool" Content="Cancel" Click="OnPathCancel" />
                         <Button Classes="tool primary" x:Name="PathDoneButton" Content="Done" Click="OnPathDone" />
@@ -236,9 +237,12 @@
                     <TextBlock Text="Export" FontSize="17" FontWeight="SemiBold" Foreground="{DynamicResource ForegroundTextBrush}" />
 
                     <TextBlock Text="FORMAT" FontSize="10.5" FontWeight="SemiBold" LetterSpacing="0.8" Foreground="{DynamicResource MutedTextBrush}" />
-                    <UniformGrid Columns="2">
-                        <Button Classes="tool" x:Name="ExportPdfButton" Content="PDF (real size, vectors)" HorizontalAlignment="Stretch" Click="OnExportPdf" />
-                        <Button Classes="tool" x:Name="ExportPngButton" Content="PNG (image)" HorizontalAlignment="Stretch" Click="OnExportPng" />
+                    <UniformGrid Columns="3">
+                        <Button Classes="tool" x:Name="ExportPdfButton" Content="PDF" Tag="Pdf" HorizontalAlignment="Stretch" Click="OnExportFormat" ToolTip.Tip="Real paper size, vectors" />
+                        <Button Classes="tool" x:Name="ExportPngButton" Content="PNG" Tag="Png" HorizontalAlignment="Stretch" Click="OnExportFormat" ToolTip.Tip="A picture" />
+                        <Button Classes="tool" x:Name="ExportSvgButton" Content="SVG" Tag="Svg" HorizontalAlignment="Stretch" Click="OnExportFormat" ToolTip.Tip="Vector graphic" />
+                        <Button Classes="tool" x:Name="ExportIcoButton" Content="Icon (.ico)" Tag="Ico" HorizontalAlignment="Stretch" Click="OnExportFormat" ToolTip.Tip="Windows icon with the sizes 16 to 256 px" />
+                        <Button Classes="tool" x:Name="ExportSetButton" Content="PNG set (.zip)" Tag="PngSet" HorizontalAlignment="Stretch" Click="OnExportFormat" ToolTip.Tip="Six pictures from 16 to 512 px in one zip file" />
                     </UniformGrid>
 
                     <TextBlock Text="PAGES" FontSize="10.5" FontWeight="SemiBold" LetterSpacing="0.8" Foreground="{DynamicResource MutedTextBrush}" />

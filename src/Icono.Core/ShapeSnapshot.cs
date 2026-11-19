@@ -99,7 +99,8 @@ public readonly record struct ShapeSnapshot(
     string? InkCenterline = null,
     double BackdropBlurRadius = 0,
     ShapeKind? Kind = null,
-    ArgbColor? DimColor = null)
+    ArgbColor? DimColor = null,
+    IReadOnlyList<double>? SegmentBulges = null)
 {
     public static ShapeSnapshot Capture(Shape shape) => new(
         shape.X,
@@ -195,7 +196,8 @@ public readonly record struct ShapeSnapshot(
         shape.InkCenterline,
         shape.BackdropBlurRadius,
         shape.Kind,
-        shape.DimColor);
+        shape.DimColor,
+        shape.SegmentBulges);
 
     public void ApplyTo(Shape shape)
     {
@@ -285,6 +287,7 @@ public readonly record struct ShapeSnapshot(
         shape.TextVAlign = TextVAlign;
         shape.TextPlacement = TextPlacement;
         shape.PointRadii = PointRadii;
+        shape.SegmentBulges = SegmentBulges;
         shape.LoopSweep = LoopSweep;
         shape.LineHeadSize = LineHeadSize;
         shape.Sketch = Sketch;

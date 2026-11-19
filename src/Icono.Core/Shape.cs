@@ -55,6 +55,7 @@ public sealed class Shape : ObservableObject
     private TextVerticalAlign _textVAlign;
     private TextPlacement _textPlacement;
     private IReadOnlyList<double>? _pointRadii;
+    private IReadOnlyList<double>? _segmentBulges;
     private double? _loopSweep;
     private double? _lineHeadSize;
     private bool _sketch;
@@ -218,6 +219,11 @@ public sealed class Shape : ObservableObject
     /// <summary>The radius each point of <see cref="Points"/> is curved with (page px, parallel to the points; 0 or a missing list = sharp, or the
     /// general <see cref="CornerRadius"/>). Set by the Curve tool, one corner at a time.</summary>
     public IReadOnlyList<double>? PointRadii { get => _pointRadii; set => SetField(ref _pointRadii, value); }
+
+    /// <summary>The sides of a polyline or polygon that are arcs (see <see cref="ArcSegment"/>): one number per point, parallel to <see cref="Points"/>; entry i is
+    /// the bulge of the side that goes from point i to the next one (for a closed shape the last entry is the side back to the first point). 0 = a straight side.
+    /// Null = no arcs. Only shapes with straight routing and without rounded corners draw them.</summary>
+    public IReadOnlyList<double>? SegmentBulges { get => _segmentBulges; set => SetField(ref _segmentBulges, value); }
 
     /// <summary>How far round the circle a loop arrow goes, in degrees (5 to 359.5). Null = the classic arc. The start stays where it is and the end moves, so
     /// this is the length of the line itself.</summary>

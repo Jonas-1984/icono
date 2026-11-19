@@ -410,7 +410,7 @@ public static class ShapeGeometryFactory
         {
             var pointsPath = BuildFromPoints(
                 shape.Kind, points, shape.X, shape.Y, shape.PathRoutingStyle, shape.CornerRadius,
-                shape.LineStartHead, shape.LineEndHead, shape.PointRadii, shape.LineHeadSize);
+                shape.LineStartHead, shape.LineEndHead, shape.PointRadii, shape.LineHeadSize, shape.SegmentBulges);
 
             if (shape.Rotation != 0)
             {
@@ -1641,7 +1641,8 @@ public static class ShapeGeometryFactory
     private static SKPath BuildFromPoints(
         ShapeKind kind, IReadOnlyList<CorePoint> points, double originX, double originY,
         PathRoutingStyle routingStyle, double cornerRadius = 0,
-        ArrowHeadKind startHead = ArrowHeadKind.None, ArrowHeadKind endHead = ArrowHeadKind.None, IReadOnlyList<double>? pointRadii = null, double? headSize = null)
+        ArrowHeadKind startHead = ArrowHeadKind.None, ArrowHeadKind endHead = ArrowHeadKind.None, IReadOnlyList<double>? pointRadii = null, double? headSize = null,
+        IReadOnlyList<double>? segmentBulges = null)
     {
         var path = new SKPath();
         var pts = new SKPoint[points.Count];
@@ -1702,24 +1703,70 @@ public static class ShapeGeometryFactory
                 ? BuildOrthogonalPoints(pts)
                 : pts;
 
+        // arcs (Shape.SegmentBulges): only for straight sides, one number per point
+        var bulges = effectiveStyle == PathRoutingStyle.Straight && segmentBulges is { } given && given.Count == pts.Length && given.Any(ArcSegment.IsArc) ? given : null;
+
         path.MoveTo(drawnPoints[0]);
         for (var i = 1; i < drawnPoints.Count; i++)
         {
-            path.LineTo(drawnPoints[i]);
+            if (bulges is not null && ArcSegment.IsArc(bulges[i - 1]))
+            {
+                AddArcTo(path, drawnPoints[i - 1], drawnPoints[i], bulges[i - 1]);
+            }
+            else
+            {
+                path.LineTo(drawnPoints[i]);
+            }
         }
 
         if (closeForFill)
         {
+            if (bulges is not null && drawnPoints.Count >= 3 && ArcSegment.IsArc(bulges[^1]))
+            {
+                AddArcTo(path, drawnPoints[^1], drawnPoints[0], bulges[^1]);
+            }
+
             path.Close();
         }
 
         if (drawnPoints.Count >= 2)
         {
-            AddHead(path, drawnPoints[1], drawnPoints[0], startHead, HeadScale(startHead, headSize));
-            AddHead(path, drawnPoints[^2], drawnPoints[^1], endHead, HeadScale(endHead, headSize));
+            if (bulges is not null)
+            {
+                // the ends of a line with arcs leave and arrive along the arc, not along the chord
+                const float lead = 10f;
+                var (startDirection, _) = ArcSegment.Tangents(ToCore(drawnPoints[0]), ToCore(drawnPoints[1]), bulges[0]);
+                var (_, endDirection) = ArcSegment.Tangents(ToCore(drawnPoints[^2]), ToCore(drawnPoints[^1]), bulges[^2]);
+                AddHead(path, new SKPoint(drawnPoints[0].X - (float)startDirection.X * lead, drawnPoints[0].Y - (float)startDirection.Y * lead), drawnPoints[0], startHead, HeadScale(startHead, headSize));
+                AddHead(path, new SKPoint(drawnPoints[^1].X - (float)endDirection.X * lead, drawnPoints[^1].Y - (float)endDirection.Y * lead), drawnPoints[^1], endHead, HeadScale(endHead, headSize));
+            }
+            else
+            {
+                AddHead(path, drawnPoints[1], drawnPoints[0], startHead, HeadScale(startHead, headSize));
+                AddHead(path, drawnPoints[^2], drawnPoints[^1], endHead, HeadScale(endHead, headSize));
+            }
         }
 
         return path;
+    }
+
+    private static CorePoint ToCore(SKPoint point) => new(point.X, point.Y);
+
+    /// <summary>Adds the arc from <paramref name="from"/> to <paramref name="to"/> with the bulge of <see cref="ArcSegment"/> (the path is at <paramref name="from"/>).</summary>
+    private static void AddArcTo(SKPath path, SKPoint from, SKPoint to, double bulge)
+    {
+        if (ArcSegment.Describe(ToCore(from), ToCore(to), bulge) is not { } arc)
+        {
+            path.LineTo(to);
+            return;
+        }
+
+        var radius = (float)arc.Radius;
+        path.ArcTo(
+            radius, radius, 0,
+            Math.Abs(arc.Sweep) > Math.PI ? SKPathArcSize.Large : SKPathArcSize.Small,
+            arc.Sweep > 0 ? SKPathDirection.Clockwise : SKPathDirection.CounterClockwise,
+            to.X, to.Y);
     }
 
     /// <summary>Inserts a right-angle bend between every consecutive pair so the route only ever

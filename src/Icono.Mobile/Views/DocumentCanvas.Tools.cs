@@ -24,6 +24,10 @@ public sealed partial class DocumentCanvas
     private Shape? _pendingPath;
     private bool _placingFirstPoint;
 
+    // polyline: the next side is an arc through three points (the start, a point on the arc, the end), as the Arc option of the AutoCAD polyline
+    private bool _arcMode;
+    private CorePoint? _arcMid; // the point on the arc, in drawing units, once it is tapped
+
     /// <summary>Where the point being placed snapped to, and to what (shown while the finger is down).</summary>
     private (double X, double Y, string Label)? _snapMark;
 
@@ -38,6 +42,61 @@ public sealed partial class DocumentCanvas
 
     /// <summary>True while a wall, polyline or dimension is being drawn.</summary>
     public bool IsDrawingPath => _pendingPath is not null;
+
+    /// <summary>True while the sides of the polyline being drawn are arcs (the Arc key of the drawing bar is on).</summary>
+    public bool ArcMode => _arcMode;
+
+    /// <summary>True when the point on the arc is placed and the end point is what the next tap gives.</summary>
+    public bool ArcWaitingForEnd => _arcMid is not null;
+
+    /// <summary>True while a polyline is being drawn and has its first point: the sides can be switched to arcs (and back).</summary>
+    public bool CanUseArcs => _pendingPath is { Kind: ShapeKind.Polyline } && !_placingFirstPoint;
+
+    /// <summary>The Arc key: the next sides of the polyline are arcs - a tap gives a point on the arc, the next tap its end - until the key is pressed again, then
+    /// the sides are straight again.</summary>
+    public void ToggleArcMode()
+    {
+        if (_pendingPath is not { Kind: ShapeKind.Polyline } path || _placingFirstPoint)
+        {
+            return;
+        }
+
+        _arcMode = !_arcMode;
+        _arcMid = null;
+        UpdateArcPreview(path);
+        PathBoundsCalculator.Recompute(path);
+        PathDrawingChanged?.Invoke(this, EventArgs.Empty);
+        _context?.RequestRedraw();
+    }
+
+    /// <summary>The side from the last placed point to the point that follows the finger: straight, or - once the point on the arc is placed - the arc through
+    /// the three points. The entry of that side in the bulges of the polyline being drawn is what the renderer draws.</summary>
+    private void UpdateArcPreview(Shape path)
+    {
+        if (path.Points is not { Count: >= 2 } points || (path.SegmentBulges is null && _arcMid is null))
+        {
+            return;
+        }
+
+        var bulges = path.SegmentBulges is { } given && given.Count == points.Count ? given.ToList() : Enumerable.Repeat(0.0, points.Count).ToList();
+        var start = new CorePoint(path.X + points[^2].X, path.Y + points[^2].Y);
+        var ghost = new CorePoint(path.X + points[^1].X, path.Y + points[^1].Y);
+        bulges[^2] = _arcMid is { } mid ? ArcSegment.FromThreePoints(start, mid, ghost) : 0;
+        path.SegmentBulges = bulges.Any(ArcSegment.IsArc) ? bulges : null;
+    }
+
+    /// <summary>Forgets a point on the arc that was placed (the arc is not finished): the side goes back to a straight one.</summary>
+    private void DropArcMid(Shape path)
+    {
+        if (_arcMid is null)
+        {
+            return;
+        }
+
+        _arcMid = null;
+        UpdateArcPreview(path);
+        PathBoundsCalculator.Recompute(path);
+    }
 
     /// <summary>How many points the wall / polyline / dimension being drawn has placed.</summary>
     public int PathPointCount => _pendingPath?.Points is { } points ? Math.Max(0, points.Count - 1) : 0;
@@ -286,6 +345,23 @@ public sealed partial class DocumentCanvas
             return;
         }
 
+        if (_arcMode && path.Kind == ShapeKind.Polyline && _arcMid is null)
+        {
+            // the point on the arc is placed; the end point comes next
+            _arcMid = new CorePoint(path.X + points[^1].X, path.Y + points[^1].Y);
+            UpdateArcPreview(path);
+            PathBoundsCalculator.Recompute(path);
+            PathDrawingChanged?.Invoke(this, EventArgs.Empty);
+            _context.RequestRedraw();
+            return;
+        }
+
+        if (path.Kind == ShapeKind.Polyline)
+        {
+            UpdateArcPreview(path); // the arc through its three points is final now
+            _arcMid = null;
+        }
+
         var placed = points.Count - 1;
         if (path.Kind is ShapeKind.Wall or ShapeKind.Polyline && placed >= 3 && IsAtStart(path, points[^1]))
         {
@@ -295,7 +371,13 @@ public sealed partial class DocumentCanvas
 
         var list = points.ToList();
         list.Add(list[^1]);
+        if (path.SegmentBulges is { } bulges && bulges.Count == points.Count)
+        {
+            path.SegmentBulges = bulges.Append(0).ToList(); // the point that follows the finger starts a straight side
+        }
+
         path.Points = list;
+        PathBoundsCalculator.Recompute(path);
 
         if (path.Kind == ShapeKind.Dimension && list.Count - 1 >= ShapeTemplates.DimensionPointsNeeded(path.DimKind))
         {
@@ -317,7 +399,13 @@ public sealed partial class DocumentCanvas
     public void FinishPath(bool closeWall = false)
     {
         var shape = _pendingPath;
+        if (shape is not null)
+        {
+            DropArcMid(shape); // an arc that was not finished goes
+        }
+
         _pendingPath = null;
+        _arcMode = false;
         _placingFirstPoint = false;
         if (shape?.Points is not { } current || _context is not { } context)
         {
@@ -333,6 +421,18 @@ public sealed partial class DocumentCanvas
             PathDrawingChanged?.Invoke(this, EventArgs.Empty);
             context.RequestRedraw();
             return;
+        }
+
+        if (shape.SegmentBulges is { } arcs)
+        {
+            // the ghost goes with its side; the side after the last point means nothing for an open line, but it is the closing side of a closed shape
+            var kept = arcs.Take(points.Count).ToList();
+            if (kept.Count == points.Count && !(closeWall && shape.Kind == ShapeKind.Polyline))
+            {
+                kept[^1] = 0;
+            }
+
+            shape.SegmentBulges = kept.Count == points.Count && kept.Any(ArcSegment.IsArc) ? kept : null;
         }
 
         shape.Points = points;
@@ -376,6 +476,8 @@ public sealed partial class DocumentCanvas
     public void CancelPath()
     {
         _pendingPath = null;
+        _arcMode = false;
+        _arcMid = null;
         _placingFirstPoint = false;
         _snapMark = null;
         _snapDetail = null;
@@ -394,6 +496,15 @@ public sealed partial class DocumentCanvas
             return;
         }
 
+        if (_arcMid is not null)
+        {
+            // the point on the arc is taken back first
+            DropArcMid(path);
+            PathDrawingChanged?.Invoke(this, EventArgs.Empty);
+            _context?.RequestRedraw();
+            return;
+        }
+
         if (points.Count <= 2)
         {
             CancelPath();
@@ -403,6 +514,15 @@ public sealed partial class DocumentCanvas
         var list = points.ToList();
         list.RemoveAt(list.Count - 1);
         list[^1] = list[^2]; // the ghost waits on the point before
+        if (path.SegmentBulges is { } bulges && bulges.Count == points.Count)
+        {
+            // the side to the point that went is gone, and the new last side (to the ghost) is straight
+            var kept = bulges.Take(list.Count).ToList();
+            kept[^1] = 0;
+            kept[^2] = 0;
+            path.SegmentBulges = kept.Any(ArcSegment.IsArc) ? kept : null;
+        }
+
         path.Points = list;
         PathBoundsCalculator.Recompute(path);
         WallTyping?.Forget(); // the typed numbers belong to corners that are not all there any more
@@ -420,6 +540,11 @@ public sealed partial class DocumentCanvas
         var list = points.ToList();
         list[^1] = new CorePoint(at.X - path.X, at.Y - path.Y);
         path.Points = list;
+        if (path.Kind == ShapeKind.Polyline)
+        {
+            UpdateArcPreview(path);
+        }
+
         PathBoundsCalculator.Recompute(path);
     }
 
@@ -521,7 +646,13 @@ public sealed partial class DocumentCanvas
         }
 
         var count = _placingFirstPoint ? 1 : points.Count - 1;
-        return points.Take(Math.Max(1, count)).Select(p => (path.X + p.X, path.Y + p.Y)).ToList();
+        var marks = points.Take(Math.Max(1, count)).Select(p => (path.X + p.X, path.Y + p.Y)).ToList();
+        if (_arcMid is { } mid)
+        {
+            marks.Add((mid.X, mid.Y)); // the point on the arc
+        }
+
+        return marks;
     }
 
     /// <summary>What to hand the renderer as the object under way (a path only once it has some length).</summary>

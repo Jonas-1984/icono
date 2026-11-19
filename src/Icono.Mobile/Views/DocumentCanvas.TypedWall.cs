@@ -16,7 +16,7 @@ public sealed partial class DocumentCanvas
         _context is null ? null : _wallTyping is { } state && ReferenceEquals(state.Context, _context) ? state : _wallTyping = new WallDrawTyping(_context);
 
     /// <summary>True while a wall or polyline has its first point: its next piece can be given a length.</summary>
-    public bool CanTypeLength => _pendingPath is { Kind: ShapeKind.Wall or ShapeKind.Polyline, Points.Count: >= 2 } && !_placingFirstPoint;
+    public bool CanTypeLength => _pendingPath is { Kind: ShapeKind.Wall or ShapeKind.Polyline, Points.Count: >= 2 } && !_placingFirstPoint && !_arcMode;
 
     /// <summary>Places the next corner <paramref name="text"/> away from the last one, in the direction (<paramref name="dx"/>, <paramref name="dy"/>)
     /// (a unit step on the page: right = 1,0; down = 0,1). A room that comes back to its start is closed and the wall is finished.</summary>

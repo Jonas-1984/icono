@@ -15,7 +15,11 @@ public static class PointEditing
 
     /// <summary>The side (its first point) nearest to the place and where the new point goes (on that side), or null when none is within
     /// <paramref name="tolerance"/>.</summary>
-    public static (int After, double X, double Y)? NearestSide(Shape shape, double x, double y, double tolerance)
+    public static (int After, double X, double Y)? NearestSide(Shape shape, double x, double y, double tolerance) =>
+        FindSide(shape, x, y, tolerance) is { } found ? (found.After, found.X, found.Y) : null;
+
+    /// <summary>As <see cref="NearestSide"/>, with how far along the side (0 to 1) the place is - a side that is an arc counts along the arc.</summary>
+    private static (int After, double X, double Y, double Fraction)? FindSide(Shape shape, double x, double y, double tolerance)
     {
         if (shape.Points is not { Count: >= 2 })
         {
@@ -23,30 +27,27 @@ public static class PointEditing
         }
 
         var points = Absolute(shape);
+        var bulges = shape.SegmentBulges is { } given && given.Count == points.Count ? given : null;
         var sides = IsClosed(shape) ? points.Count : points.Count - 1;
-        (int After, double X, double Y, double Distance)? best = null;
+        (int After, double X, double Y, double Fraction, double Distance)? best = null;
         for (var i = 0; i < sides; i++)
         {
             var a = points[i];
             var b = points[(i + 1) % points.Count];
-            double dx = b.X - a.X, dy = b.Y - a.Y;
-            var lengthSquared = dx * dx + dy * dy;
-            var t = lengthSquared < 1e-9 ? 0 : Math.Clamp(((x - a.X) * dx + (y - a.Y) * dy) / lengthSquared, 0, 1);
-            double px = a.X + t * dx, py = a.Y + t * dy;
-            var distance = Math.Sqrt((x - px) * (x - px) + (y - py) * (y - py));
+            var (nearest, distance, fraction) = ArcSegment.Nearest(new CorePoint(a.X, a.Y), new CorePoint(b.X, b.Y), bulges?[i] ?? 0, x, y);
             if (distance <= tolerance && (best is null || distance < best.Value.Distance))
             {
-                best = (i, px, py, distance);
+                best = (i, nearest.X, nearest.Y, fraction, distance);
             }
         }
 
-        return best is { } found ? (found.After, found.X, found.Y) : null;
+        return best is { } found ? (found.After, found.X, found.Y, found.Fraction) : null;
     }
 
     /// <summary>Puts a point into the side nearest to the place. False when no side is near or the shape is locked.</summary>
     public static bool InsertPointNear(EditorContext context, Shape shape, double x, double y, double tolerance)
     {
-        if (shape.Locked || NearestSide(shape, x, y, tolerance) is not { } side)
+        if (shape.Locked || FindSide(shape, x, y, tolerance) is not { } side)
         {
             return false;
         }
@@ -55,6 +56,7 @@ public static class PointEditing
         var list = shape.Points!.ToList();
         list.Insert(side.After + 1, new CorePoint(side.X - shape.X, side.Y - shape.Y));
         shape.PointRadii = CornerFillet.AfterInsert(shape.PointRadii, list.Count - 1, side.After);
+        shape.SegmentBulges = ArcSegment.AfterInsert(shape.SegmentBulges, list.Count - 1, side.After, side.Fraction); // an arc is divided into two arcs
         shape.Points = list;
         if (shape.Kind == ShapeKind.Wall)
         {
@@ -102,6 +104,7 @@ public static class PointEditing
         }
 
         shape.PointRadii = CornerFillet.AfterRemove(shape.PointRadii, list.Count, nearest);
+        shape.SegmentBulges = ArcSegment.AfterRemove(shape.SegmentBulges, list.Count, nearest, IsClosed(shape));
         list.RemoveAt(nearest);
         shape.Points = list;
         PathBoundsCalculator.Recompute(shape);

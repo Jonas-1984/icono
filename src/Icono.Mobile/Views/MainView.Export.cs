@@ -13,7 +13,16 @@ public partial class MainView
     /// <summary>The longest side a PNG may have (a picture of all pages at 300 dpi would need hundreds of megabytes).</summary>
     private const int MaxPngSide = 12000;
 
-    private bool _exportPdf = true;
+    private enum ExportKind
+    {
+        Pdf,
+        Png,
+        Svg,
+        Ico,
+        PngSet,
+    }
+
+    private ExportKind _exportKind = ExportKind.Pdf;
     private bool _exportAllPages;
     private int _exportDpi = 150;
 
@@ -36,22 +45,39 @@ public partial class MainView
             _exportAllPages = false;
         }
 
-        ExportPdfButton.Classes.Set("on", _exportPdf);
-        ExportPngButton.Classes.Set("on", !_exportPdf);
+        ExportPdfButton.Classes.Set("on", _exportKind == ExportKind.Pdf);
+        ExportPngButton.Classes.Set("on", _exportKind == ExportKind.Png);
+        ExportSvgButton.Classes.Set("on", _exportKind == ExportKind.Svg);
+        ExportIcoButton.Classes.Set("on", _exportKind == ExportKind.Ico);
+        ExportSetButton.Classes.Set("on", _exportKind == ExportKind.PngSet);
         ExportCurrentButton.Content = several ? $"Page {page + 1}" : "The page";
         ExportAllButton.Content = $"All {document.PageCount} pages";
-        ExportAllButton.IsVisible = several;
+        ExportAllButton.IsVisible = several && _exportKind != ExportKind.Ico; // an icon is made of one page
         ExportCurrentButton.Classes.Set("on", !_exportAllPages);
         ExportAllButton.Classes.Set("on", _exportAllPages);
-        ExportResolutionPanel.IsVisible = !_exportPdf;
+        ExportResolutionPanel.IsVisible = _exportKind == ExportKind.Png;
         ExportDpi96.Classes.Set("on", _exportDpi == 96);
         ExportDpi150.Classes.Set("on", _exportDpi == 150);
         ExportDpi300.Classes.Set("on", _exportDpi == 300);
 
         var mm = (Width: document.Width / 96.0 * 25.4, Height: document.Height / 96.0 * 25.4);
-        if (_exportPdf)
+        var thePage = several ? $"page {page + 1}" : "the page";
+        if (_exportKind == ExportKind.Svg)
+        {
+            ExportInfo.Text = $"A vector graphic (.svg) of {(_exportAllPages ? "all pages below each other" : thePage)}: lines stay sharp at any size, text becomes outlines.";
+        }
+        else if (_exportKind == ExportKind.Ico)
+        {
+            ExportInfo.Text = $"A Windows icon (.ico) of {thePage} with the sizes 16, 24, 32, 48, 64, 128 and 256 px. The page is fitted into square frames.";
+        }
+        else if (_exportKind == ExportKind.PngSet)
+        {
+            ExportInfo.Text = $"A zip file with six pictures (16, 32, 64, 128, 256 and 512 px on the longer side) of {(_exportAllPages ? "every page" : thePage)}.";
+        }
+        else if (_exportKind == ExportKind.Pdf)
         {
             var pages = _exportAllPages ? document.PageCount : 1;
+
             ExportInfo.Text = $"{pages} PDF page(s) of {mm.Width:0} x {mm.Height:0} mm. Printed at 100 % (no \"fit to page\") the drawing keeps " +
                               $"its scale 1:{document.ScaleDenominator:0.##}.";
         }
@@ -71,9 +97,20 @@ public partial class MainView
         return ((int)Math.Round(width * scale), (int)Math.Round(height * scale));
     }
 
-    private void OnExportPdf(object? sender, RoutedEventArgs e) => SetExport(() => _exportPdf = true);
-
-    private void OnExportPng(object? sender, RoutedEventArgs e) => SetExport(() => _exportPdf = false);
+    private void OnExportFormat(object? sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: string tag } && Enum.TryParse<ExportKind>(tag, out var kind))
+        {
+            SetExport(() =>
+            {
+                _exportKind = kind;
+                if (kind == ExportKind.Ico)
+                {
+                    _exportAllPages = false;
+                }
+            });
+        }
+    }
 
     private void OnExportCurrentPage(object? sender, RoutedEventArgs e) => SetExport(() => _exportAllPages = false);
 
@@ -104,9 +141,30 @@ public partial class MainView
         }
 
         var pageSuffix = allPages || document.PageCount == 1 ? "" : $"-page{page + 1}";
-        if (_exportPdf)
+        switch (_exportKind)
         {
-            var pdf = await Task.Run(() => DocumentExporter.RenderPdf(document, background, allPages ? null : [page]));
+            case ExportKind.Svg:
+            {
+                var svg = await Task.Run(() => DocumentExporter.RenderSvg(document, background, allPages ? null : page));
+                return (baseName + pageSuffix + ".svg", "image/svg+xml", svg);
+            }
+
+            case ExportKind.Ico:
+            {
+                var ico = await Task.Run(() => DocumentExporter.RenderIco(document, DocumentExporter.IconSizes, background, page));
+                return (baseName + pageSuffix + ".ico", "image/vnd.microsoft.icon", ico);
+            }
+
+            case ExportKind.PngSet:
+            {
+                var zip = await Task.Run(() => DocumentExporter.RenderPngSetZip(document, baseName, background, allPages ? null : page));
+                return (baseName + pageSuffix + ".zip", "application/zip", zip);
+            }
+        }
+
+        if (_exportKind == ExportKind.Pdf)
+        {
+            var pdf = await  Task.Run(() => DocumentExporter.RenderPdf(document, background, allPages ? null : [page]));
             return (baseName + pageSuffix + ".pdf", "application/pdf", pdf);
         }
 
@@ -147,10 +205,10 @@ public partial class MainView
 
             // icono's own file window (with Cancel); the Android one only for "Other location..."
             var target = await AskSaveFileAsync(
-                _exportPdf ? "Save the PDF" : "Save the picture",
+                _exportKind switch { ExportKind.Pdf => "Save the PDF", ExportKind.Svg => "Save the vector graphic", ExportKind.Ico => "Save the icon", ExportKind.PngSet => "Save the pictures", _ => "Save the picture" },
                 Path.GetFileNameWithoutExtension(name),
                 Path.GetExtension(name),
-                new FilePickerFileType(_exportPdf ? "PDF document" : "PNG picture") { Patterns = ["*" + Path.GetExtension(name)], MimeTypes = [mime] });
+                new FilePickerFileType(_exportKind switch { ExportKind.Pdf => "PDF document", ExportKind.Svg => "SVG graphic", ExportKind.Ico => "Windows icon", ExportKind.PngSet => "Zip file", _ => "PNG picture" }) { Patterns = ["*" + Path.GetExtension(name)], MimeTypes = [mime] });
             if (target is null)
             {
                 StatusText.Text = "Export cancelled.";
